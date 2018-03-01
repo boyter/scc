@@ -1,0 +1,13 @@
+language: go
+os:
+  - linux
+  - osx
+go:
+  - 1.9.x
+env:
+  - GOOS=windows GOARCH=amd64
+  - GOOS=linux GOARCH=amd64
+  - GOOS=linux GOARCH=386
+  - GOOS=linux GOARCH=arm
+matrix:
+  fast_finish: true
