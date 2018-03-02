@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
+	// "runtime"
 	"sync"
 )
 
@@ -18,15 +18,14 @@ type FileJob struct {
 }
 
 // A buffered channel that we can send work requests on.
-var FileReadJobQueue = make(chan FileJob, runtime.NumCPU()*10)
-var FileProcessJobQueue = make(chan FileJob, runtime.NumCPU()*10)
-var FileSummaryJobQueue = make(chan FileJob, runtime.NumCPU()*10)
+var FileReadJobQueue = make(chan FileJob, 100)
+var FileProcessJobQueue = make(chan FileJob, 100)
+var FileSummaryJobQueue = make(chan FileJob, 100)
 
 /// Get all the files that exist in the directory
-/// We do it this way rather than walk because we want
-/// to group files together potentially
 func walkDirectory(root string) {
 	var wg sync.WaitGroup
+
 	filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -34,19 +33,19 @@ func walkDirectory(root string) {
 		if !info.Mode().IsRegular() {
 			return nil
 		}
+
 		wg.Add(1)
-		go func() { // HL
-			FileReadJobQueue <- FileJob{Location: path}
+		go func() {
+			FileReadJobQueue <- FileJob{Location: path, Filename: info.Name()}
 			wg.Done()
 		}()
 
 		return nil
 	})
-	// Walk has returned, so all calls to wg.Add are done.  Start a
-	// goroutine to close c once all the sends are done.
-	go func() { // HL
+
+	go func() {
 		wg.Wait()
-		close(FileReadJobQueue) // HL
+		close(FileReadJobQueue)
 	}()
 }
 
@@ -61,8 +60,10 @@ func fileReaderWorker() {
 		}()
 	}
 
-	wg.Wait()
-	close(FileProcessJobQueue)
+	go func() {
+		wg.Wait()
+		close(FileProcessJobQueue)
+	}()
 }
 
 func fileProcessorWorker() {
@@ -82,27 +83,33 @@ func fileProcessorWorker() {
 					count2++
 				}
 			}
-
 			FileSummaryJobQueue <- FileJob{Filename: res.Filename, Location: res.Location, Count: int64(count)}
 			wg.Done()
 		}()
 	}
 
-	wg.Wait()
-	close(FileSummaryJobQueue)
+	go func() {
+		wg.Wait()
+		close(FileSummaryJobQueue)
+	}()
 }
 
 func main() {
 	go fileReaderWorker()
 	go fileProcessorWorker()
 
-	walkDirectory("../")
-	fmt.Println("Finished running...")
+	walkDirectory("../../")
 
+	total := int64(0)
+	count := 0
 	for res := range FileSummaryJobQueue {
 		fmt.Println(res.Filename, res.Location, len(res.Content), res.Count)
+		total += res.Count
+		count++
 	}
 
+	fmt.Println(total)
+	fmt.Println("COUNT:", count)
 	// Once done lets print it all out
 	output := []string{
 		"Directory | File | License | Confidence | Size",
