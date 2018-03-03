@@ -25,8 +25,6 @@ var FileSummaryJobQueue = make(chan FileJob, 100)
 
 /// Get all the files that exist in the directory
 func walkDirectory(root string) {
-	var wg sync.WaitGroup
-
 	filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -35,21 +33,14 @@ func walkDirectory(root string) {
 			return nil
 		}
 
-		wg.Add(1)
-		go func() {
-			if !info.IsDir() {
-				FileReadJobQueue <- FileJob{Location: path, Filename: info.Name()}
-			}
-			wg.Done()
-		}()
+		if !info.IsDir() {
+			FileReadJobQueue <- FileJob{Location: path, Filename: info.Name()}
+		}
 
 		return nil
 	})
 
-	go func() {
-		wg.Wait()
-		close(FileReadJobQueue)
-	}()
+	close(FileReadJobQueue)
 }
 
 // func walkDirectory(directory string) {
@@ -81,12 +72,11 @@ func walkDirectory(root string) {
 func fileReaderWorker() {
 	var wg sync.WaitGroup
 	for res := range FileReadJobQueue {
+		fileReadJob := res // Avoid race condition
 		wg.Add(1)
-		// bug is here I think because the below is in goroutine its sharing the same memory and thus overwriting the variables
 		go func() {
-			p := res
-			content, _ := ioutil.ReadFile(p.Location)
-			FileProcessJobQueue <- FileJob{Filename: p.Filename, Location: p.Location, Content: content}
+			content, _ := ioutil.ReadFile(fileReadJob.Location)
+			FileProcessJobQueue <- FileJob{Filename: fileReadJob.Filename, Location: fileReadJob.Location, Content: content}
 			wg.Done()
 		}()
 	}
@@ -100,21 +90,20 @@ func fileReaderWorker() {
 func fileProcessorWorker() {
 	var wg sync.WaitGroup
 	for res := range FileProcessJobQueue {
+		fileReadJob := res // Avoid race condition
 		// Do some pointless work
 		wg.Add(1)
 		go func() {
 			count := 0
 			count2 := 0
-			for _, i := range res.Content {
+			for _, i := range fileReadJob.Content {
 				if i == 0 {
 					count++
-				}
-
-				if i == 1 {
+				} else {
 					count2++
 				}
 			}
-			FileSummaryJobQueue <- FileJob{Filename: res.Filename, Location: res.Location, Count: int64(count)}
+			FileSummaryJobQueue <- FileJob{Filename: fileReadJob.Filename, Location: fileReadJob.Location, Count: int64(count)}
 			wg.Done()
 		}()
 	}
@@ -146,7 +135,18 @@ func fileSummeriser() {
 
 		}
 
-		fmt.Println(res.Filename, res.Location, len(res.Content), res.Count)
+		if strings.HasSuffix(res.Filename, ".yml") {
+			_, ok := languages["Yaml"]
+
+			if ok {
+				languages["Yaml"] = languages["Yaml"] + 1
+			} else {
+				languages["Yaml"] = 1
+			}
+
+		}
+
+		// fmt.Println(res.Filename, res.Location, len(res.Content), res.Count)
 		total += res.Count
 		count++
 	}
@@ -158,14 +158,14 @@ func fileSummeriser() {
 
 func main() {
 	go fileReaderWorker()
-	// go fileProcessorWorker()
+	go fileProcessorWorker()
 
-	walkDirectory("./vendor/")
-	// fileSummeriser()
+	walkDirectory("./")
+	fileSummeriser()
 
-	for res := range FileProcessJobQueue {
-		fmt.Println(res.Location)
-	}
+	// for res := range FileSummaryJobQueue {
+	// 	fmt.Println(res.Location)
+	// }
 
 	// Once done lets print it all out
 	output := []string{
