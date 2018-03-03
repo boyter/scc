@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	// "runtime"
+	"strings"
 	"sync"
 )
 
@@ -36,7 +37,9 @@ func walkDirectory(root string) {
 
 		wg.Add(1)
 		go func() {
-			FileReadJobQueue <- FileJob{Location: path, Filename: info.Name()}
+			if !info.IsDir() {
+				FileReadJobQueue <- FileJob{Location: path, Filename: info.Name()}
+			}
 			wg.Done()
 		}()
 
@@ -49,13 +52,41 @@ func walkDirectory(root string) {
 	}()
 }
 
+// func walkDirectory(directory string) {
+// 	var wg sync.WaitGroup
+// 	all, _ := ioutil.ReadDir(directory)
+
+// 	directories := []string{}
+
+// 	// Work out which directories and files we want to investigate
+// 	for _, f := range all {
+// 		if f.IsDir() {
+// 			directories = append(directories, f.Name())
+// 		} else {
+// 			wg.Add(1)
+// 			go func() {
+// 				FileReadJobQueue <- FileJob{Location: filepath.Join(directory, f.Name()), Filename: f.Name()}
+// 				wg.Done()
+// 			}()
+// 		}
+// 	}
+
+// 	for _, newdirectory := range directories {
+// 		walkDirectory(filepath.Join(directory, newdirectory))
+// 	}
+
+// 	wg.Wait()
+// }
+
 func fileReaderWorker() {
 	var wg sync.WaitGroup
 	for res := range FileReadJobQueue {
 		wg.Add(1)
+		// bug is here I think because the below is in goroutine its sharing the same memory and thus overwriting the variables
 		go func() {
-			content, _ := ioutil.ReadFile(res.Location)
-			FileProcessJobQueue <- FileJob{Filename: res.Filename, Location: res.Location, Content: content}
+			p := res
+			content, _ := ioutil.ReadFile(p.Location)
+			FileProcessJobQueue <- FileJob{Filename: p.Filename, Location: p.Location, Content: content}
 			wg.Done()
 		}()
 	}
@@ -94,22 +125,48 @@ func fileProcessorWorker() {
 	}()
 }
 
-func main() {
-	go fileReaderWorker()
-	go fileProcessorWorker()
-
-	walkDirectory("../../")
-
+func fileSummeriser() {
 	total := int64(0)
 	count := 0
+
+	languages := map[string]int64{}
+
 	for res := range FileSummaryJobQueue {
+
+		// strings.Split(res.Filename, "sep") res.Filename
+
+		if strings.HasSuffix(res.Filename, ".go") {
+			_, ok := languages["Go"]
+
+			if ok {
+				languages["Go"] = languages["Go"] + 1
+			} else {
+				languages["Go"] = 1
+			}
+
+		}
+
 		fmt.Println(res.Filename, res.Location, len(res.Content), res.Count)
 		total += res.Count
 		count++
 	}
 
-	fmt.Println(total)
-	fmt.Println("COUNT:", count)
+	for name, count := range languages {
+		fmt.Println(name, count)
+	}
+}
+
+func main() {
+	go fileReaderWorker()
+	// go fileProcessorWorker()
+
+	walkDirectory("./vendor/")
+	// fileSummeriser()
+
+	for res := range FileProcessJobQueue {
+		fmt.Println(res.Location)
+	}
+
 	// Once done lets print it all out
 	output := []string{
 		"Directory | File | License | Confidence | Size",
