@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	// "runtime"
+	// "runtime/debug"
 	"strings"
 	"sync"
 )
@@ -34,6 +35,7 @@ func walkDirectory(root string) {
 		}
 
 		if !info.IsDir() {
+			// Check if we should exclude the file here
 			FileReadJobQueue <- FileJob{Location: path, Filename: info.Name()}
 		}
 
@@ -42,32 +44,6 @@ func walkDirectory(root string) {
 
 	close(FileReadJobQueue)
 }
-
-// func walkDirectory(directory string) {
-// 	var wg sync.WaitGroup
-// 	all, _ := ioutil.ReadDir(directory)
-
-// 	directories := []string{}
-
-// 	// Work out which directories and files we want to investigate
-// 	for _, f := range all {
-// 		if f.IsDir() {
-// 			directories = append(directories, f.Name())
-// 		} else {
-// 			wg.Add(1)
-// 			go func() {
-// 				FileReadJobQueue <- FileJob{Location: filepath.Join(directory, f.Name()), Filename: f.Name()}
-// 				wg.Done()
-// 			}()
-// 		}
-// 	}
-
-// 	for _, newdirectory := range directories {
-// 		walkDirectory(filepath.Join(directory, newdirectory))
-// 	}
-
-// 	wg.Wait()
-// }
 
 func fileReaderWorker() {
 	var wg sync.WaitGroup
@@ -146,6 +122,28 @@ func fileSummeriser() {
 
 		}
 
+		if strings.HasSuffix(res.Filename, ".toml") {
+			_, ok := languages["TOML"]
+
+			if ok {
+				languages["TOML"] = languages["TOML"] + 1
+			} else {
+				languages["TOML"] = 1
+			}
+
+		}
+
+		if strings.HasSuffix(res.Filename, ".md") {
+			_, ok := languages["Markdown"]
+
+			if ok {
+				languages["Markdown"] = languages["Markdown"] + 1
+			} else {
+				languages["Markdown"] = 1
+			}
+
+		}
+
 		// fmt.Println(res.Filename, res.Location, len(res.Content), res.Count)
 		total += res.Count
 		count++
@@ -156,11 +154,13 @@ func fileSummeriser() {
 	}
 }
 
+//go:generate go run scripts/include.go
 func main() {
+	// debug.SetGCPercent(-1)
 	go fileReaderWorker()
 	go fileProcessorWorker()
 
-	walkDirectory("./")
+	walkDirectory("../../")
 	fileSummeriser()
 
 	// for res := range FileSummaryJobQueue {
