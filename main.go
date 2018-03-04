@@ -6,10 +6,10 @@ import (
 	"github.com/ryanuber/columnize"
 	"io/ioutil"
 	"os"
-	"path/filepath"
-	// "runtime"
-	// "runtime/debug"
 	"path"
+	"path/filepath"
+	"runtime"
+	// "runtime/debug"
 	"strings"
 	"sync"
 )
@@ -22,15 +22,10 @@ type FileJob struct {
 	Count     int64
 }
 
-// A buffered channel that we can send work requests on.
-var FileReadJobQueue = make(chan FileJob, 100)
-var FileProcessJobQueue = make(chan FileJob, 100)
-var FileSummaryJobQueue = make(chan FileJob, 100)
-
 var Exclusions = strings.Split("woff,eot,cur,dm,xpm,emz,db,scc,idx,mpp,dot,pspimage,stl,dml,wmf,rvm,resources,tlb,docx,doc,xls,xlsx,ppt,pptx,msg,vsd,chm,fm,book,dgn,blines,cab,lib,obj,jar,pdb,dll,bin,out,elf,so,msi,nupkg,pyc,ttf,woff2,jpg,jpeg,png,gif,bmp,psd,tif,tiff,yuv,ico,xls,xlsx,pdb,pdf,apk,com,exe,bz2,7z,tgz,rar,gz,zip,zipx,tar,rpm,bin,dmg,iso,vcd,mp3,flac,wma,wav,mid,m4a,3gp,flv,mov,mp4,mpg,rm,wmv,avi,m4v,sqlite,class,rlib,ncb,suo,opt,o,os,pch,pbm,pnm,ppm,pyd,pyo,raw,uyv,uyvy,xlsm,swf", ",")
 
 /// Get all the files that exist in the directory
-func walkDirectory(root string) {
+func walkDirectory(root string, output *chan *FileJob) {
 	filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -40,18 +35,18 @@ func walkDirectory(root string) {
 		}
 
 		if !info.IsDir() {
-			FileReadJobQueue <- FileJob{Location: path, Filename: info.Name()}
+			*output <- &FileJob{Location: path, Filename: info.Name()}
 		}
 
 		return nil
 	})
 
-	close(FileReadJobQueue)
+	close(*output)
 }
 
-func fileReaderWorker() {
+func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 	var wg sync.WaitGroup
-	for res := range FileReadJobQueue {
+	for res := range *input {
 		fileReadJob := res // Avoid race condition
 		wg.Add(1)
 		go func() {
@@ -69,7 +64,7 @@ func fileReaderWorker() {
 				content, _ := ioutil.ReadFile(fileReadJob.Location)
 				fileReadJob.Content = content
 				fileReadJob.Extension = extension
-				FileProcessJobQueue <- fileReadJob
+				*output <- fileReadJob
 			}
 
 			wg.Done()
@@ -78,13 +73,13 @@ func fileReaderWorker() {
 
 	go func() {
 		wg.Wait()
-		close(FileProcessJobQueue)
+		close(*output)
 	}()
 }
 
-func fileProcessorWorker() {
+func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
 	var wg sync.WaitGroup
-	for res := range FileProcessJobQueue {
+	for res := range *input {
 		fileReadJob := res // Avoid race condition
 		// Do some pointless work
 		wg.Add(1)
@@ -101,24 +96,24 @@ func fileProcessorWorker() {
 
 			fileReadJob.Count = int64(count)
 
-			FileSummaryJobQueue <- fileReadJob
+			*output <- fileReadJob
 			wg.Done()
 		}()
 	}
 
 	go func() {
 		wg.Wait()
-		close(FileSummaryJobQueue)
+		close(*output)
 	}()
 }
 
-func fileSummeriser() {
+func fileSummeriser(input *chan *FileJob) {
 	total := int64(0)
 	count := 0
 
 	languages := map[string]int64{}
 
-	for res := range FileSummaryJobQueue {
+	for res := range *input {
 
 		// strings.Split(res.Filename, "sep") res.Filename
 
@@ -178,12 +173,18 @@ func fileSummeriser() {
 
 //go:generate go run scripts/include.go
 func main() {
-	// debug.SetGCPercent(-1) // This can improve performance for some....
-	go fileReaderWorker()
-	go fileProcessorWorker()
 
-	walkDirectory("/home/bboyter/Projects/redis/")
-	fileSummeriser()
+	// A buffered channel that we can send work requests on.
+	fileReadJobQueue := make(chan *FileJob, runtime.NumCPU()*100)
+	fileProcessJobQueue := make(chan *FileJob, runtime.NumCPU()*2)
+	fileSummaryJobQueue := make(chan *FileJob, runtime.NumCPU()*100)
+
+	// debug.SetGCPercent(-1) // This can improve performance for some....
+
+	go walkDirectory("/home/bboyter/Projects/redis/", &fileReadJobQueue)
+	go fileReaderWorker(&fileReadJobQueue, &fileProcessJobQueue)
+	go fileProcessorWorker(&fileProcessJobQueue, &fileSummaryJobQueue)
+	fileSummeriser(&fileSummaryJobQueue) // Bring it all back to you
 
 	// for res := range FileSummaryJobQueue {
 	// 	fmt.Println(res.Location)
