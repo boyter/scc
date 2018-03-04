@@ -32,3 +32,7 @@
 [[constraint]]
   name = "github.com/ryanuber/columnize"
   version = "2.1.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/monochromegane/go-gitignore"

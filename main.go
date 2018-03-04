@@ -2,27 +2,32 @@ package main
 
 import (
 	"fmt"
+	"github.com/monochromegane/go-gitignore"
 	"github.com/ryanuber/columnize"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	// "runtime"
 	// "runtime/debug"
+	"path"
 	"strings"
 	"sync"
 )
 
 type FileJob struct {
-	Filename string
-	Location string
-	Content  []byte
-	Count    int64
+	Filename  string
+	Extension string
+	Location  string
+	Content   []byte
+	Count     int64
 }
 
 // A buffered channel that we can send work requests on.
 var FileReadJobQueue = make(chan FileJob, 100)
 var FileProcessJobQueue = make(chan FileJob, 100)
 var FileSummaryJobQueue = make(chan FileJob, 100)
+
+var Exclusions = strings.Split("woff,eot,cur,dm,xpm,emz,db,scc,idx,mpp,dot,pspimage,stl,dml,wmf,rvm,resources,tlb,docx,doc,xls,xlsx,ppt,pptx,msg,vsd,chm,fm,book,dgn,blines,cab,lib,obj,jar,pdb,dll,bin,out,elf,so,msi,nupkg,pyc,ttf,woff2,jpg,jpeg,png,gif,bmp,psd,tif,tiff,yuv,ico,xls,xlsx,pdb,pdf,apk,com,exe,bz2,7z,tgz,rar,gz,zip,zipx,tar,rpm,bin,dmg,iso,vcd,mp3,flac,wma,wav,mid,m4a,3gp,flv,mov,mp4,mpg,rm,wmv,avi,m4v,sqlite,class,rlib,ncb,suo,opt,o,os,pch,pbm,pnm,ppm,pyd,pyo,raw,uyv,uyvy,xlsm,swf", ",")
 
 /// Get all the files that exist in the directory
 func walkDirectory(root string) {
@@ -35,7 +40,6 @@ func walkDirectory(root string) {
 		}
 
 		if !info.IsDir() {
-			// Check if we should exclude the file here
 			FileReadJobQueue <- FileJob{Location: path, Filename: info.Name()}
 		}
 
@@ -51,8 +55,23 @@ func fileReaderWorker() {
 		fileReadJob := res // Avoid race condition
 		wg.Add(1)
 		go func() {
-			content, _ := ioutil.ReadFile(fileReadJob.Location)
-			FileProcessJobQueue <- FileJob{Filename: fileReadJob.Filename, Location: fileReadJob.Location, Content: content}
+			extension := path.Ext(fileReadJob.Filename)
+
+			// TODO this should be a hashmap lookup for the speeds
+			exclude := false
+			for _, ex := range Exclusions {
+				if strings.HasSuffix(fileReadJob.Filename, ex) {
+					exclude = true
+				}
+			}
+
+			if !exclude {
+				content, _ := ioutil.ReadFile(fileReadJob.Location)
+				fileReadJob.Content = content
+				fileReadJob.Extension = extension
+				FileProcessJobQueue <- fileReadJob
+			}
+
 			wg.Done()
 		}()
 	}
@@ -79,7 +98,10 @@ func fileProcessorWorker() {
 					count2++
 				}
 			}
-			FileSummaryJobQueue <- FileJob{Filename: fileReadJob.Filename, Location: fileReadJob.Location, Count: int64(count)}
+
+			fileReadJob.Count = int64(count)
+
+			FileSummaryJobQueue <- fileReadJob
 			wg.Done()
 		}()
 	}
@@ -156,11 +178,11 @@ func fileSummeriser() {
 
 //go:generate go run scripts/include.go
 func main() {
-	// debug.SetGCPercent(-1)
+	// debug.SetGCPercent(-1) // This can improve performance for some....
 	go fileReaderWorker()
 	go fileProcessorWorker()
 
-	walkDirectory("../../")
+	walkDirectory("/home/bboyter/Projects/redis/")
 	fileSummeriser()
 
 	// for res := range FileSummaryJobQueue {
@@ -174,4 +196,9 @@ func main() {
 
 	result := columnize.SimpleFormat(output)
 	fmt.Println(result)
+
+	// GitIgnore Processing
+	gitignore, _ := gitignore.NewGitIgnore("./.gitignore")
+	fmt.Println(gitignore.Match("./scc", false))
+	fmt.Println(gitignore.Match("./LICENSE", false))
 }

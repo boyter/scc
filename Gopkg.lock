@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/monochromegane/go-gitignore"
+  packages = ["."]
+  revision = "38717d0a108ca0e5af632cd6845ca77d45b50729"
+
+[[projects]]
   name = "github.com/ryanuber/columnize"
   packages = ["."]
   revision = "983d3a5fab1bf04d1b412465d2d9f8430e2e917e"
@@ -10,6 +16,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6713efd1009d9d0c3b1129de573e910cdb6c6117062a33ed8a3bf91294d3c1ba"
+  inputs-digest = "c5a848e613989217ae08c0ac0fa88c3901ca4754d862350c79840c763b3c86f5"
   solver-name = "gps-cdcl"
   solver-version = 1
