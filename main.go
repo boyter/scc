@@ -20,6 +20,10 @@ type FileJob struct {
 	Location  string
 	Content   []byte
 	Count     int64
+	Lines     int64
+	Code      int64
+	Comment   int64
+	Blank     int64
 }
 
 var Exclusions = strings.Split("woff,eot,cur,dm,xpm,emz,db,scc,idx,mpp,dot,pspimage,stl,dml,wmf,rvm,resources,tlb,docx,doc,xls,xlsx,ppt,pptx,msg,vsd,chm,fm,book,dgn,blines,cab,lib,obj,jar,pdb,dll,bin,out,elf,so,msi,nupkg,pyc,ttf,woff2,jpg,jpeg,png,gif,bmp,psd,tif,tiff,yuv,ico,xls,xlsx,pdb,pdf,apk,com,exe,bz2,7z,tgz,rar,gz,zip,zipx,tar,rpm,bin,dmg,iso,vcd,mp3,flac,wma,wav,mid,m4a,3gp,flv,mov,mp4,mpg,rm,wmv,avi,m4v,sqlite,class,rlib,ncb,suo,opt,o,os,pch,pbm,pnm,ppm,pyd,pyo,raw,uyv,uyvy,xlsm,swf", ",")
@@ -84,18 +88,7 @@ func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
 		// Do some pointless work
 		wg.Add(1)
 		go func() {
-			count := 0
-			count2 := 0
-			for _, i := range fileReadJob.Content {
-				if i == 0 {
-					count++
-				} else {
-					count2++
-				}
-			}
-
-			fileReadJob.Count = int64(count)
-
+			fileReadJob.Count = int64(len(fileReadJob.Content))
 			*output <- fileReadJob
 			wg.Done()
 		}()
@@ -114,9 +107,6 @@ func fileSummeriser(input *chan *FileJob) {
 	languages := map[string]int64{}
 
 	for res := range *input {
-
-		// strings.Split(res.Filename, "sep") res.Filename
-
 		if strings.HasSuffix(res.Filename, ".go") {
 			_, ok := languages["Go"]
 
@@ -128,40 +118,17 @@ func fileSummeriser(input *chan *FileJob) {
 
 		}
 
-		if strings.HasSuffix(res.Filename, ".yml") {
-			_, ok := languages["Yaml"]
+		if strings.HasSuffix(res.Filename, ".c") {
+			_, ok := languages["C"]
 
 			if ok {
-				languages["Yaml"] = languages["Yaml"] + 1
+				languages["C"] = languages["C"] + 1
 			} else {
-				languages["Yaml"] = 1
+				languages["C"] = 1
 			}
 
 		}
 
-		if strings.HasSuffix(res.Filename, ".toml") {
-			_, ok := languages["TOML"]
-
-			if ok {
-				languages["TOML"] = languages["TOML"] + 1
-			} else {
-				languages["TOML"] = 1
-			}
-
-		}
-
-		if strings.HasSuffix(res.Filename, ".md") {
-			_, ok := languages["Markdown"]
-
-			if ok {
-				languages["Markdown"] = languages["Markdown"] + 1
-			} else {
-				languages["Markdown"] = 1
-			}
-
-		}
-
-		// fmt.Println(res.Filename, res.Location, len(res.Content), res.Count)
 		total += res.Count
 		count++
 	}
@@ -192,7 +159,7 @@ func main() {
 
 	// Once done lets print it all out
 	output := []string{
-		"Directory | File | License | Confidence | Size",
+		"Language | Files | Lines | Code | Comments | Blank",
 	}
 
 	result := columnize.SimpleFormat(output)
