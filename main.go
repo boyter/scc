@@ -120,6 +120,10 @@ func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 	}()
 }
 
+func clocFileJob(filejob *FileJob) {
+
+}
+
 func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
 	var wg sync.WaitGroup
 	for res := range *input {
@@ -152,8 +156,9 @@ func fileSummerize(input *chan *FileJob) {
 
 	// Once done lets print it all out
 	output := []string{
+		"-----",
 		"Language | Files | Lines | Code | Comment | Blank | Byte",
-		"-------- | -------- | -------- | -------- | -------- | -------- | --------",
+		"-----",
 	}
 
 	languages := map[string]LanguageSummary{}
@@ -213,9 +218,9 @@ func fileSummerize(input *chan *FileJob) {
 		output = append(output, fmt.Sprintf("%s | %d | %d | %d | %d | %d | %d", name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Bytes))
 	}
 
-	output = append(output, "-------- | -------- | -------- | -------- | -------- | -------- | --------")
+	output = append(output, "-----")
 	output = append(output, fmt.Sprintf("Total | %d | %d | %d | %d | %d | %d", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumByte))
-	output = append(output, "-------- | -------- | -------- | -------- | -------- | -------- | --------")
+	output = append(output, "-----")
 
 	result := columnize.SimpleFormat(output)
 	fmt.Println(result)
@@ -235,10 +240,4 @@ func main() {
 	go fileReaderWorker(&fileReadJobQueue, &fileProcessJobQueue)
 	go fileProcessorWorker(&fileProcessJobQueue, &fileSummaryJobQueue)
 	fileSummerize(&fileSummaryJobQueue) // Bring it all back to you
-
-	fmt.Println("")
-	// GitIgnore Processing
-	gitignore, _ := gitignore.NewGitIgnore("./.gitignore")
-	fmt.Println(gitignore.Match("./scc", false))
-	fmt.Println(gitignore.Match("./LICENSE", false))
 }
