@@ -1,0 +1,1038 @@
+[
+  {
+    "language": "Text",
+    "extensions": [
+      "text",
+      "txt"
+    ]
+  },
+  {
+    "language": "XAML",
+    "extensions": [
+      "xaml"
+    ]
+  },
+  {
+    "language": "ASP.Net",
+    "extensions": [
+      "ascx",
+      "asmx",
+      "asax",
+      "aspx"
+    ]
+  },
+  {
+    "language": "HTML",
+    "extensions": [
+      "htm",
+      "html"
+    ]
+  },
+  {
+    "language": "MSBuild scripts",
+    "extensions": [
+      "csproj"
+    ]
+  },
+  {
+    "language": "C#",
+    "extensions": [
+      "cs"
+    ]
+  },
+  {
+    "language": "XSD",
+    "extensions": [
+      "xsd"
+    ]
+  },
+  {
+    "language": "XML",
+    "extensions": [
+      "xml"
+    ]
+  },
+  {
+    "language": "CMake",
+    "extensions": [
+      "cmake"
+    ]
+  },
+  {
+    "language": "C/C++Header",
+    "extensions": [
+      "hpp",
+      "hxx",
+      "hh",
+      "inl",
+      "ipp"
+    ]
+  },
+  {
+    "language": "C++",
+    "extensions": [
+      "cpp",
+      "cc",
+      "cxx"
+    ]
+  },
+  {
+    "language": "make",
+    "extensions": [
+      "makefile",
+      "gnumakefile",
+      "make",
+      "mk"
+    ]
+  },
+  {
+    "language": "CSS",
+    "extensions": [
+      "css"
+    ]
+  },
+  {
+    "language": "Python",
+    "extensions": [
+      "py"
+    ]
+  },
+  {
+    "language": "MATLAB",
+    "extensions": [
+      "m"
+    ]
+  },
+  {
+    "language": "ObjectiveC",
+    "extensions": [
+      "m",
+      "mm"
+    ]
+  },
+  {
+    "language": "Javascript",
+    "extensions": [
+      "js"
+    ]
+  },
+  {
+    "language": "Java",
+    "extensions": [
+      "java"
+    ]
+  },
+  {
+    "language": "PHP",
+    "extensions": [
+      "php4",
+      "php5",
+      "php",
+      "inc"
+    ]
+  },
+  {
+    "language": "Erlang",
+    "extensions": [
+      "erl",
+      "hrl"
+    ]
+  },
+  {
+    "language": "Fortran 77",
+    "extensions": [
+      "f",
+      "f77",
+      "for",
+      "ftn",
+      "fpp",
+      "f95",
+      "f03"
+    ]
+  },
+  {
+    "language": "Fortran 90",
+    "extensions": [
+      "f90",
+      "f",
+      "for",
+      "ftn",
+      "fpp",
+      "f95",
+      "f03"
+    ]
+  },
+  {
+    "language": "C",
+    "extensions": [
+      "c",
+      "ec",
+      "pgc"
+    ]
+  },
+  {
+    "language": "Lisp",
+    "extensions": [
+      "lisp",
+      "el",
+      "lsp",
+      "sc"
+    ]
+  },
+  {
+    "language": "Visual Basic",
+    "extensions": [
+      "vbs",
+      "vb"
+    ]
+  },
+  {
+    "language": "Bourne Shell",
+    "extensions": [
+      "sh",
+      "bash",
+      "zsh"
+    ]
+  },
+  {
+    "language": "Ruby",
+    "extensions": [
+      "rb"
+    ]
+  },
+  {
+    "language": "vimscript",
+    "extensions": [
+      "vim"
+    ]
+  },
+  {
+    "language": "Assembly",
+    "extensions": [
+      "s",
+      "asm"
+    ]
+  },
+  {
+    "language": "Objective C++",
+    "extensions": [
+      "mm",
+      "m"
+    ]
+  },
+  {
+    "language": "DTD",
+    "extensions": [
+      "dtd"
+    ]
+  },
+  {
+    "language": "SQL",
+    "extensions": [
+      "sql"
+    ]
+  },
+  {
+    "language": "YAML",
+    "extensions": [
+      "yaml",
+      "yml"
+    ]
+  },
+  {
+    "language": "Ruby HTML",
+    "extensions": [
+      "rhtml"
+    ]
+  },
+  {
+    "language": "Haskell",
+    "extensions": [
+      "hs",
+      "lhs"
+    ]
+  },
+  {
+    "language": "Bourne Again Shell",
+    "extensions": [
+      "sh",
+      "bash",
+      "zsh"
+    ]
+  },
+  {
+    "language": "ActionScript",
+    "extensions": [
+      "as"
+    ]
+  },
+  {
+    "language": "MXML",
+    "extensions": [
+      "mxml"
+    ]
+  },
+  {
+    "language": "ASP",
+    "extensions": [
+      "asa",
+      "asp"
+    ]
+  },
+  {
+    "language": "D",
+    "extensions": [
+      "d"
+    ]
+  },
+  {
+    "language": "Pascal",
+    "extensions": [
+      "p",
+      "pas"
+    ]
+  },
+  {
+    "language": "Scala",
+    "extensions": [
+      "scala"
+    ]
+  },
+  {
+    "language": "DOSBatch",
+    "extensions": [
+      "bat",
+      "cmd",
+      "bat"
+    ]
+  },
+  {
+    "language": "Groovy",
+    "extensions": [
+      "groovy"
+    ]
+  },
+  {
+    "language": "XSLT",
+    "extensions": [
+      "xsl",
+      "xslt"
+    ]
+  },
+  {
+    "language": "Perl",
+    "extensions": [
+      "cgi",
+      "pl",
+      "pm",
+      "pm6",
+      "pod"
+    ]
+  },
+  {
+    "language": "Teamcenter def",
+    "extensions": [
+      "def"
+    ]
+  },
+  {
+    "language": "IDL",
+    "extensions": [
+      "idl",
+      "pro"
+    ]
+  },
+  {
+    "language": "Lua",
+    "extensions": [
+      "lua",
+      "rockspec"
+    ]
+  },
+  {
+    "language": "Go",
+    "extensions": [
+      "go"
+    ]
+  },
+  {
+    "language": "yacc",
+    "extensions": [
+      "y"
+    ]
+  },
+  {
+    "language": "Cython",
+    "extensions": [
+      "pyx"
+    ]
+  },
+  {
+    "language": "lex",
+    "extensions": [
+      "l"
+    ]
+  },
+  {
+    "language": "Ada",
+    "extensions": [
+      "pad",
+      "adb",
+      "ads",
+      "ada"
+    ]
+  },
+  {
+    "language": "sed",
+    "extensions": [
+      "sed"
+    ]
+  },
+  {
+    "language": "m4",
+    "extensions": [
+      "m4",
+      "ac"
+    ]
+  },
+  {
+    "language": "Ocaml",
+    "extensions": [
+      "ml",
+      "mli",
+      "mly",
+      "mll"
+    ]
+  },
+  {
+    "language": "Smarty",
+    "extensions": [
+      "tpl"
+    ]
+  },
+  {
+    "language": "ColdFusion",
+    "extensions": [
+      "cfm"
+    ]
+  },
+  {
+    "language": "NAnt scripts",
+    "extensions": [
+      "build"
+    ]
+  },
+  {
+    "language": "Expect",
+    "extensions": [
+      "exp"
+    ]
+  },
+  {
+    "language": "CShell",
+    "extensions": [
+      "sh"
+    ]
+  },
+  {
+    "language": "VHDL",
+    "extensions": [
+      "vhd",
+      "vhdl"
+    ]
+  },
+  {
+    "language": "Tcl/Tk",
+    "extensions": [
+      "tcl",
+      "tk",
+      "tkpkg"
+    ]
+  },
+  {
+    "language": "JSP",
+    "extensions": [
+      "jsp"
+    ]
+  },
+  {
+    "language": "SKILL",
+    "extensions": [
+      "il"
+    ]
+  },
+  {
+    "language": "awk",
+    "extensions": [
+      "awk"
+    ]
+  },
+  {
+    "language": "MUMPS",
+    "extensions": [
+      "m",
+      "mps"
+    ]
+  },
+  {
+    "language": "Korn Shell",
+    "extensions": [
+      "ksh"
+    ]
+  },
+  {
+    "language": "Fortran 95",
+    "extensions": [
+      "f95"
+    ]
+  },
+  {
+    "language": "Oracle Forms",
+    "extensions": [
+      "fmt"
+    ]
+  },
+  {
+    "language": "Dart",
+    "extensions": [
+      "dart"
+    ]
+  },
+  {
+    "language": "COBOL",
+    "extensions": [
+      "cob",
+      "cbl",
+      "cbl",
+      "cob"
+    ]
+  },
+  {
+    "language": "Modula3",
+    "extensions": [
+      "i3",
+      "mg",
+      "ig",
+      "m3"
+    ]
+  },
+  {
+    "language": "Oracle Reports",
+    "extensions": [
+      "rex"
+    ]
+  },
+  {
+    "language": "Softbridge Basic",
+    "extensions": [
+      "sbl"
+    ]
+  },
+  {
+    "language": "Markdown",
+    "extensions": [
+      "md",
+      "markdown",
+      "mdown",
+      "mdwn",
+      "mkdn",
+      "mkd"
+    ]
+  },
+  {
+    "language": "git-ignore",
+    "extensions": [
+      "gitignore"
+    ]
+  },
+  {
+    "language": "Freemarker Template",
+    "extensions": [
+      "ftl"
+    ]
+  },
+  {
+    "language": "LessCSS",
+    "extensions": [
+      "less"
+    ]
+  },
+  {
+    "language": "Gradle",
+    "extensions": [
+      "gradle"
+    ]
+  },
+  {
+    "language": "Basic",
+    "extensions": [
+      "bas"
+    ]
+  },
+  {
+    "language": "GolfScript",
+    "extensions": [
+      "golfscript"
+    ]
+  },
+  {
+    "language": "LaTeX",
+    "extensions": [
+      "tex"
+    ]
+  },
+  {
+    "language": "Boo",
+    "extensions": [
+      "boo"
+    ]
+  },
+  {
+    "language": "Julia",
+    "extensions": [
+      "jl"
+    ]
+  },
+  {
+    "language": "Delphi",
+    "extensions": [
+      "delphi",
+      "pas",
+      "dfm",
+      "nfm"
+    ]
+  },
+  {
+    "language": "LOLCODE",
+    "extensions": [
+      "lol"
+    ]
+  },
+  {
+    "language": "B",
+    "extensions": [
+      "b"
+    ]
+  },
+  {
+    "language": "Chef",
+    "extensions": [
+      "ch"
+    ]
+  },
+  {
+    "language": "Racket",
+    "extensions": [
+      "rkt",
+      "rktl",
+      "ss",
+      "scm",
+      "scrbl"
+    ]
+  },
+  {
+    "language": "Swift",
+    "extensions": [
+      "swift"
+    ]
+  },
+  {
+    "language": "JSON",
+    "extensions": [
+      "json"
+    ]
+  },
+  {
+    "language": "Octave",
+    "extensions": [
+      "octave"
+    ]
+  },
+  {
+    "language": "Elixir",
+    "extensions": [
+      "exs"
+    ]
+  },
+  {
+    "language": "Factor",
+    "extensions": [
+      "factor"
+    ]
+  },
+  {
+    "language": "VimScript",
+    "extensions": [
+      "vim"
+    ]
+  },
+  {
+    "language": "Powershell",
+    "extensions": [
+      "ps1",
+      "psm1"
+    ]
+  },
+  {
+    "language": "Eiffel",
+    "extensions": [
+      "eiff"
+    ]
+  },
+  {
+    "language": "Scalable Vector Graphics",
+    "extensions": [
+      "svg"
+    ]
+  },
+  {
+    "language": "Rust",
+    "extensions": [
+      "rs"
+    ]
+  },
+  {
+    "language": "MUSHCode",
+    "extensions": [
+      "mush"
+    ]
+  },
+  {
+    "language": "Logo",
+    "extensions": [
+      "lg"
+    ]
+  },
+  {
+    "language": "Nim",
+    "extensions": [
+      "nim"
+    ]
+  },
+  {
+    "language": "Wolfram Language",
+    "extensions": [
+      "wl"
+    ]
+  },
+  {
+    "language": "Purebasic",
+    "extensions": [
+      "pb"
+    ]
+  },
+  {
+    "language": "ArnoldC",
+    "extensions": [
+      "arnoldc"
+    ]
+  },
+  {
+    "language": "VRML",
+    "extensions": [
+      "wrl"
+    ]
+  },
+  {
+    "language": "Coffeescript",
+    "extensions": [
+      "coffee"
+    ]
+  },
+  {
+    "language": "SPDX",
+    "extensions": [
+      "spdx"
+    ]
+  },
+  {
+    "language": "TypeScript",
+    "extensions": [
+      "ts"
+    ]
+  },
+  {
+    "language": "JSX",
+    "extensions": [
+      "jsx"
+    ]
+  },
+  {
+    "language": "Ruby Template",
+    "extensions": [
+      "erb"
+    ]
+  },
+  {
+    "language": "XML Resource",
+    "extensions": [
+      "resx"
+    ]
+  },
+  {
+    "language": "Varnish Configuration",
+    "extensions": [
+      "vcl"
+    ]
+  },
+  {
+    "language": "Jade Template",
+    "extensions": [
+      "jade"
+    ]
+  },
+  {
+    "language": "ReStructured Text",
+    "extensions": [
+      "rst"
+    ]
+  },
+  {
+    "language": "CSV",
+    "extensions": [
+      "csv"
+    ]
+  },
+  {
+    "language": "Razor Template",
+    "extensions": [
+      "cshtml"
+    ]
+  },
+  {
+    "language": "Handlebars Template",
+    "extensions": [
+      "hbs"
+    ]
+  },
+  {
+    "language": "INIFile",
+    "extensions": [
+      "ini"
+    ]
+  },
+  {
+    "language": "Configuration",
+    "extensions": [
+      "conf"
+    ]
+  },
+  {
+    "language": "Clojure",
+    "extensions": [
+      "clj",
+      "cljs",
+      "cljc",
+      "cljx"
+    ]
+  },
+  {
+    "language": "Visual NDepend",
+    "extensions": [
+      "ndproj"
+    ]
+  },
+  {
+    "language": "Device Tree Source",
+    "extensions": [
+      "dts"
+    ]
+  },
+  {
+    "language": "ASP.NET WebHandler",
+    "extensions": [
+      "ashx"
+    ]
+  },
+  {
+    "language": "Gherkin Specification",
+    "extensions": [
+      "feature"
+    ]
+  },
+  {
+    "language": "Haxe",
+    "extensions": [
+      "hx"
+    ]
+  },
+  {
+    "language": "Qt Meta Language",
+    "extensions": [
+      "qml"
+    ]
+  },
+  {
+    "language": "Style Sheet eXtender",
+    "extensions": [
+      "cssx"
+    ]
+  },
+  {
+    "language": "Scratch Project File",
+    "extensions": [
+      "sb"
+    ]
+  },
+  {
+    "language": "Opalang",
+    "extensions": [
+      "opa"
+    ]
+  },
+  {
+    "language": "Portage Installer",
+    "extensions": [
+      "ebuild"
+    ]
+  },
+  {
+    "language": "Crystal",
+    "extensions": [
+      "cr"
+    ]
+  },
+  {
+    "language": "Jenkins Buildfile",
+    "extensions": [
+      "jenkinsfile"
+    ]
+  },
+  {
+    "language": "Kotlin",
+    "extensions": [
+      "kt"
+    ]
+  },
+  {
+    "language": "Properties File",
+    "extensions": [
+      "properties"
+    ]
+  },
+  {
+    "language": "Tag Library Descriptor",
+    "extensions": [
+      "tld"
+    ]
+  },
+  {
+    "language": "Syntactically Awesome Style Sheets",
+    "extensions": [
+      "scss"
+    ]
+  },
+  {
+    "language": "Embedded JavaScript",
+    "extensions": [
+      "ejs"
+    ]
+  },
+  {
+    "language": "Patch",
+    "extensions": [
+      "patch"
+    ]
+  },
+  {
+    "language": "Cocoapod",
+    "extensions": [
+      "cocoapod"
+    ]
+  },
+  {
+    "language": "F#",
+    "extensions": [
+      "fs",
+      "fsi",
+      "fsx"
+    ]
+  },
+  {
+    "language": "Mathematica",
+    "extensions": [
+      "m",
+      "wl"
+    ]
+  },
+  {
+    "language": "Parrot",
+    "extensions": [
+      "pir",
+      "pasm",
+      "pmc",
+      "ops",
+      "pod",
+      "pg",
+      "tg"
+    ]
+  },
+  {
+    "language": "Puppet",
+    "extensions": [
+      "pp"
+    ]
+  },
+  {
+    "language": "Rakefile",
+    "extensions": [
+      "rakefile"
+    ]
+  },
+  {
+    "language": "PKGBUILD",
+    "extensions": [
+      "pkgbuild"
+    ]
+  },
+  {
+    "language": "Tom's Obvious, Minimal Language ",
+    "extensions": [
+      "toml"
+    ]
+  },
+  {
+    "language": "Lock File",
+    "extensions": [
+      "lock"
+    ]
+  },
+  {
+    "language": "License",
+    "extensions": [
+      "license",
+      "copying",
+      "copying3"
+    ]
+  },
+  {
+    "language": "Typings Definition",
+    "extensions": [
+      "d.ts"
+    ]
+  },
+  {
+    "language": "Robot Framework",
+    "extensions": [
+      "robot"
+    ]
+  },
+  {
+    "language": "Report Definition Language",
+    "extensions": [
+      "rdl"
+    ]
+  },
+  {
+    "language": "Key File",
+    "extensions": [
+      "key"
+    ]
+  },
+  {
+    "language": "Certificate File",
+    "extensions": [
+      "crt"
+    ]
+  }
+]
