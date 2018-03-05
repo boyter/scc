@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	// "github.com/monochromegane/go-gitignore"
+	"github.com/monochromegane/go-gitignore"
 	"github.com/ryanuber/columnize"
 	"io/ioutil"
 	"os"
@@ -66,6 +66,8 @@ func loadDatabase() []Language {
 
 /// Get all the files that exist in the directory
 func walkDirectory(root string, output *chan *FileJob) {
+	gitignore, gitignoreerror := gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
+
 	filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -75,7 +77,9 @@ func walkDirectory(root string, output *chan *FileJob) {
 		}
 
 		if !info.IsDir() {
-			*output <- &FileJob{Location: path, Filename: info.Name()}
+			if gitignoreerror != nil || !gitignore.Match(filepath.Join(path, info.Name()), false) {
+				*output <- &FileJob{Location: path, Filename: info.Name()}
+			}
 		}
 
 		return nil
@@ -234,7 +238,7 @@ func main() {
 
 	fmt.Println("")
 	// GitIgnore Processing
-	// gitignore, _ := gitignore.NewGitIgnore("./.gitignore")
-	// fmt.Println(gitignore.Match("./scc", false))
-	// fmt.Println(gitignore.Match("./LICENSE", false))
+	gitignore, _ := gitignore.NewGitIgnore("./.gitignore")
+	fmt.Println(gitignore.Match("./scc", false))
+	fmt.Println(gitignore.Match("./LICENSE", false))
 }
