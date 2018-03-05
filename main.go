@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/monochromegane/go-gitignore"
+	// "github.com/monochromegane/go-gitignore"
 	"github.com/ryanuber/columnize"
 	"io/ioutil"
 	"os"
@@ -27,6 +27,16 @@ type FileJob struct {
 	Code      int64
 	Comment   int64
 	Blank     int64
+}
+
+type LanguageSummary struct {
+	Name    string
+	Bytes   int64
+	Lines   int64
+	Code    int64
+	Comment int64
+	Blank   int64
+	Count   int64
 }
 
 const (
@@ -84,7 +94,7 @@ func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 			// TODO this should be a hashmap lookup for the speeds
 			exclude := false
 			for _, ex := range Exclusions {
-				if strings.HasSuffix(res.Filename, ex) {
+				if strings.HasSuffix(res.Filename, "."+ex) {
 					exclude = true
 				}
 			}
@@ -112,10 +122,16 @@ func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
 		// Do some pointless work
 		wg.Add(1)
 		go func(res *FileJob) {
-			//res.Lines = int64(len(strings.Split(string(res.Content), "\n"))) // this is slow
-			// res.Lines = int64(strings.Count(string(res.Content), "\n")) // this is also slow
-			res.Lines = int64(bytes.Count(res.Content, []byte("\n"))) // this is much faster than the above
-			res.Blank = int64(bytes.Count(res.Content, []byte("\n\n")))
+			res.Lines = int64(bytes.Count(res.Content, []byte("\n")))   // Fastest way to count newlines
+			res.Blank = int64(bytes.Count(res.Content, []byte("\n\n"))) // Cheap way to calculate blanks
+			// is it? what about the langage "whitespace" where whitespace is significant....
+
+			// Find first instance of a \n
+			// Check the slice before for interesting
+			// Determine if newline
+			// keep running counter
+			// check if spaces etc....
+
 			res.Bytes = int64(len(res.Content))
 			*output <- res
 			wg.Done()
@@ -136,7 +152,7 @@ func fileSummerize(input *chan *FileJob) {
 		"-------- | -------- | -------- | -------- | -------- | -------- | --------",
 	}
 
-	languages := map[string]int64{}
+	languages := map[string]LanguageSummary{}
 	database := loadDatabase()
 
 	// TODO declare type to avoid cast
@@ -161,18 +177,36 @@ func fileSummerize(input *chan *FileJob) {
 				if res.Extension == "."+extention {
 					_, ok := languages[language.Language]
 
-					if ok {
-						languages[language.Language] = languages[language.Language] + 1
+					if !ok {
+						languages[language.Language] = LanguageSummary{
+							Name:    language.Language,
+							Bytes:   res.Bytes,
+							Lines:   res.Lines,
+							Code:    res.Code,
+							Comment: res.Comment,
+							Blank:   res.Blank,
+							Count:   1,
+						}
 					} else {
-						languages[language.Language] = 1
+						tmp := languages[language.Language]
+
+						languages[language.Language] = LanguageSummary{
+							Name:    language.Language,
+							Bytes:   tmp.Bytes + res.Bytes,
+							Lines:   tmp.Lines + res.Lines,
+							Code:    tmp.Code + res.Code,
+							Comment: tmp.Comment + res.Comment,
+							Blank:   tmp.Blank + res.Blank,
+							Count:   tmp.Count + 1,
+						}
 					}
 				}
 			}
 		}
 	}
 
-	for name, count := range languages {
-		output = append(output, fmt.Sprintf("%s | %d | %s | %s | %s | %s | %s", name, count, "0", "0", "0", "0", "0"))
+	for name, summary := range languages {
+		output = append(output, fmt.Sprintf("%s | %d | %d | %d | %d | %d | %d", name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Bytes))
 	}
 
 	output = append(output, "-------- | -------- | -------- | -------- | -------- | -------- | --------")
@@ -192,14 +226,15 @@ func main() {
 
 	// debug.SetGCPercent(-1) // This seems to make no difference for most....
 
-	go walkDirectory("/home/bboyter/Projects/redis/", &fileReadJobQueue)
+	// go walkDirectory("/home/bboyter/Projects/linux/", &fileReadJobQueue)
+	go walkDirectory(os.Args[1], &fileReadJobQueue)
 	go fileReaderWorker(&fileReadJobQueue, &fileProcessJobQueue)
 	go fileProcessorWorker(&fileProcessJobQueue, &fileSummaryJobQueue)
 	fileSummerize(&fileSummaryJobQueue) // Bring it all back to you
 
 	fmt.Println("")
 	// GitIgnore Processing
-	gitignore, _ := gitignore.NewGitIgnore("./.gitignore")
-	fmt.Println(gitignore.Match("./scc", false))
-	fmt.Println(gitignore.Match("./LICENSE", false))
+	// gitignore, _ := gitignore.NewGitIgnore("./.gitignore")
+	// fmt.Println(gitignore.Match("./scc", false))
+	// fmt.Println(gitignore.Match("./LICENSE", false))
 }
