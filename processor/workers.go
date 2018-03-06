@@ -6,10 +6,30 @@ import (
 	"sync"
 )
 
+// If the file contains anything even just a newline its lines > 1
+// If the file size is 0 its lines = 0
+// Newlines belong to the line they started on so a file of \n means only 1 line
 func countStats(fileJob *FileJob) {
-	fileJob.Lines = int64(bytes.Count(fileJob.Content, []byte("\n")))   // Fastest way to count newlines but buggy
-	fileJob.Blank = int64(bytes.Count(fileJob.Content, []byte("\n\n"))) // Cheap way to calculate blanks but probably wrong
+
+	// If the file is empty then we say it has no lines
+	// If length is 0 then everything is empty
 	fileJob.Bytes = int64(len(fileJob.Content))
+	if fileJob.Bytes == 0 {
+		return
+	}
+
+	fileJob.Lines = 1
+	endpoint := fileJob.Bytes - 1
+
+	for i, b := range fileJob.Content {
+		if b == '\n' && int64(i) != endpoint {
+			fileJob.Lines++
+		}
+	}
+
+	// If the file is not empty then it has at least 1 line
+	// fileJob.Lines = int64(bytes.Count(fileJob.Content, []byte("\n")))   // Fastest way to count newlines but buggy
+	fileJob.Blank = int64(bytes.Count(fileJob.Content, []byte("\n\n"))) // Cheap way to calculate blanks but probably wrong
 
 	// Cater for file thats not empty but no newlines
 	if fileJob.Lines == 0 && fileJob.Bytes != 0 {
