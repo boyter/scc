@@ -25,9 +25,13 @@ func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 	for res := range *input {
 		wg.Add(1)
 		go func(res *FileJob) {
-			content, _ := ioutil.ReadFile(res.Location)
-			res.Content = content
-			*output <- res
+			content, err := ioutil.ReadFile(res.Location)
+
+			if err == nil {
+				res.Content = content
+				*output <- res
+			}
+
 			wg.Done()
 		}(res)
 	}
@@ -41,7 +45,6 @@ func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
 	var wg sync.WaitGroup
 	for res := range *input {
-		// Do some pointless work
 		wg.Add(1)
 		go func(res *FileJob) {
 			countStats(res)
