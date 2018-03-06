@@ -7,7 +7,17 @@ import (
 )
 
 func countStats(fileJob *FileJob) {
+	fileJob.Lines = int64(bytes.Count(fileJob.Content, []byte("\n")))   // Fastest way to count newlines
+	fileJob.Blank = int64(bytes.Count(fileJob.Content, []byte("\n\n"))) // Cheap way to calculate blanks but probably wrong
+	fileJob.Bytes = int64(len(fileJob.Content))
 
+	// is it? what about the langage "whitespace" where whitespace is significant....
+
+	// Find first instance of a \n
+	// Check the slice before for interesting
+	// Determine if newline
+	// keep running counter
+	// check if spaces etc....
 }
 
 func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
@@ -34,17 +44,7 @@ func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
 		// Do some pointless work
 		wg.Add(1)
 		go func(res *FileJob) {
-			res.Lines = int64(bytes.Count(res.Content, []byte("\n")))   // Fastest way to count newlines
-			res.Blank = int64(bytes.Count(res.Content, []byte("\n\n"))) // Cheap way to calculate blanks but probably wrong
-			// is it? what about the langage "whitespace" where whitespace is significant....
-
-			// Find first instance of a \n
-			// Check the slice before for interesting
-			// Determine if newline
-			// keep running counter
-			// check if spaces etc....
-
-			res.Bytes = int64(len(res.Content))
+			countStats(res)
 			*output <- res
 			wg.Done()
 		}(res)
