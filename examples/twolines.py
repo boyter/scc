@@ -1,0 +1,2 @@
+import this
+print this
