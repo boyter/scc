@@ -6,6 +6,10 @@ import (
 	"sync"
 )
 
+func countStats(fileJob *FileJob) {
+
+}
+
 func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 	var wg sync.WaitGroup
 	for res := range *input {

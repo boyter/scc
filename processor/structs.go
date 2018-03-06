@@ -22,8 +22,3 @@ type LanguageSummary struct {
 	Blank   int64
 	Count   int64
 }
-
-type Language struct {
-	Extensions []string `json:"extensions"`
-	Language   string   `json:"language"`
-}
