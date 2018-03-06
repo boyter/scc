@@ -1,7 +1,7 @@
 package processor
 
 import (
-	"bytes"
+	// "bytes"
 	"io/ioutil"
 	"sync"
 )
@@ -11,25 +11,29 @@ import (
 // Newlines belong to the line they started on so a file of \n means only 1 line
 func countStats(fileJob *FileJob) {
 
-	// If the file is empty then we say it has no lines
-	// If length is 0 then everything is empty
+	// If the file has a length of 0 it is is empty then we say it has no lines
 	fileJob.Bytes = int64(len(fileJob.Content))
 	if fileJob.Bytes == 0 {
+		fileJob.Lines = 0
 		return
 	}
 
 	fileJob.Lines = 1
-	endpoint := fileJob.Bytes - 1
+	endPoint := fileJob.Bytes - 1
+
+	// This means we look at every byte so there may be a better way to do this
+
+	// State
 
 	for i, b := range fileJob.Content {
-		if b == '\n' && int64(i) != endpoint {
+		if b == '\n' && int64(i) != endPoint {
 			fileJob.Lines++
 		}
 	}
 
 	// If the file is not empty then it has at least 1 line
 	// fileJob.Lines = int64(bytes.Count(fileJob.Content, []byte("\n")))   // Fastest way to count newlines but buggy
-	fileJob.Blank = int64(bytes.Count(fileJob.Content, []byte("\n\n"))) // Cheap way to calculate blanks but probably wrong
+	// fileJob.Blank = int64(bytes.Count(fileJob.Content, []byte("\n\n"))) // Cheap way to calculate blanks but probably wrong
 
 	// Cater for file thats not empty but no newlines
 	if fileJob.Lines == 0 && fileJob.Bytes != 0 {
@@ -45,6 +49,7 @@ func countStats(fileJob *FileJob) {
 	// check if spaces etc....
 }
 
+// Reads file into memory
 func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 	var wg sync.WaitGroup
 	for res := range *input {
@@ -67,6 +72,7 @@ func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 	}()
 }
 
+// Does the actual processing of stats and is the hot path
 func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
 	var wg sync.WaitGroup
 	for res := range *input {

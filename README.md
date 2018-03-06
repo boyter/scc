@@ -28,54 +28,65 @@ Benchmark #1: tokei .
 ```
 
 ```
-# bboyter @ SurfaceBook2 in ~/Projects/linux on git:master o [11:13:34]
+# bboyter @ SurfaceBook2 in ~/Projects/linux on git:master o [10:11:43]
 $ scc .
-----------------------------------------------------------------------------
-Language                  Files  Lines     Code  Comment  Blank    Byte
-----------------------------------------------------------------------------
-LaTeX                     1      1015      0     0        103      50901
-Configuration             15     2380      0     0        244      81669
-Device Tree Source        1474   286088    0     0        36037    6727525
-Objective C++             1      244       0     0        51       10878
-git-ignore                211    944       0     0        24       12062
-Bourne Shell              204    20120     0     0        2778     488723
-C                         26191  17908117  0     0        2538497  485987093
-CShell                    204    20120     0     0        2778     488723
-CSV                       4      171       0     0        1        10050
-m4                        1      111       0     0        15       3325
-Text                      4127   446028    0     0        84971    15988404
-HTML                      5      6161      0     0        668      245751
-Python                    80     18918     0     0        2252     614271
-yacc                      9      5667      0     0        685      119490
-Gherkin Specification     1      234       0     0        28       7710
-Scalable Vector Graphics  57     39425     0     0        92       1916717
-ReStructured Text         850    168686    0     0        38551    5492158
-NAnt scripts              2      779       0     0        160      24290
-XSLT                      5      100       0     0        13       3492
-Teamcenter def            1      8         0     0        0        147
-sed                       1      12        0     0        2        379
-make                      3      160       0     0        26       5340
-JSON                      214    108494    0     0        0        4507604
-awk                       9      1896      0     0        177      45929
-Perl                      42     29706     0     0        4239     782182
-VimScript                 1      42        0     0        3        1355
-ObjectiveC                1      244       0     0        51       10878
-PHP                       5      440       0     0        71       10903
-Bourne Again Shell        204    20120     0     0        2778     488723
-Markdown                  1      1297      0     0        220      65732
-Assembly                  2      1417      0     0        186      68020
-lex                       8      2542      0     0        298      58626
-CSS                       1      89        0     0        18       2258
-vimscript                 1      42        0     0        3        1355
-C/C++Header               2      125       0     0        19       3859
-C++                       7      2202      0     0        284      53118
-----------------------------------------------------------------------------
-Total                     62870  26272203  0     0        3365900  974903395
-----------------------------------------------------------------------------
+-------------------------------------------------------------------
+Language           Files  Lines     Code  Comment  Blank  Byte
+-------------------------------------------------------------------
+TeX                1      1015      0     0        0      50901
+CSS                1      89        0     0        0      2258
+C Header           20516  5163057   0     0        0      224102981
+Autoconf           7      182       0     0        0      10943
+Unreal Script      5      694       0     0        0      17261
+Plain Text         4127   446032    0     0        0      15988404
+Assembly           1477   418489    0     0        0      10719553
+HEX                2      87        0     0        0      4144
+ReStructuredText   850    168686    0     0        0      5492158
+Vim Script         1      42        0     0        0      1355
+C++                7      2202      0     0        0      53118
+Perl               43     29724     0     0        0      783087
+Markdown           1      1297      0     0        0      65732
+LD Script          20     607       0     0        0      11906
+C++ Header         2      125       0     0        0      3859
+Module-Definition  1      8         0     0        0      147
+Makefile           2469   58205     0     0        0      1874552
+Python             80     18918     0     0        0      614271
+Shell              204    20122     0     0        0      488723
+Device Tree        2587   644437    0     0        0      15749617
+Objective C++      1      244       0     0        0      10878
+Happy              9      5667      0     0        0      119490
+JSON               214    108649    0     0        0      4507604
+SVG                57     39430     0     0        0      1916717
+HTML               5      6161      0     0        0      245751
+C                  26191  17908117  0     0        0      485987093
+-------------------------------------------------------------------
+Total              58878  25042286  0     0        0      768822503
+-------------------------------------------------------------------
 ```
 
 To benchmark,
 
 ```
 go test -bench .
+```
+
+Quick comparsion using ripgrep as the 'king' of directory scanning performance against the linux source code
+
+```
+# bboyter @ SurfaceBook2 in ~/Projects/linux on git:master o [10:05:05]
+$ hyperfine 'rg a .'
+Benchmark #1: rg a .
+
+  Time (mean ± σ):      3.537 s ±  0.458 s    [User: 5.651 s, System: 18.141 s]
+
+  Range (min … max):    3.045 s …  4.480 s
+
+# bboyter @ SurfaceBook2 in ~/Projects/linux on git:master o [10:06:41]
+$ hyperfine 'scc .'
+Benchmark #1: scc .
+
+  Time (mean ± σ):      4.257 s ±  0.149 s    [User: 3.343 s, System: 12.779 s]
+
+  Range (min … max):    4.116 s …  4.576 s
+
 ```
