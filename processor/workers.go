@@ -7,9 +7,14 @@ import (
 )
 
 func countStats(fileJob *FileJob) {
-	fileJob.Lines = int64(bytes.Count(fileJob.Content, []byte("\n")))   // Fastest way to count newlines
+	fileJob.Lines = int64(bytes.Count(fileJob.Content, []byte("\n")))   // Fastest way to count newlines but buggy
 	fileJob.Blank = int64(bytes.Count(fileJob.Content, []byte("\n\n"))) // Cheap way to calculate blanks but probably wrong
 	fileJob.Bytes = int64(len(fileJob.Content))
+
+	// Cater for file thats not empty but no newlines
+	if fileJob.Lines == 0 && fileJob.Bytes != 0 {
+		fileJob.Lines = 1
+	}
 
 	// is it? what about the langage "whitespace" where whitespace is significant....
 
