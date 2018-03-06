@@ -17,6 +17,7 @@ import (
 )
 
 type FileJob struct {
+	Language  string
 	Filename  string
 	Extension string
 	Location  string
@@ -61,7 +62,7 @@ func loadDatabase() []Language {
 func walkDirectory(root string, output *chan *FileJob) {
 	gitignore, gitignoreerror := gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
 
-	filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	filepath.Walk(root, func(root string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -69,14 +70,37 @@ func walkDirectory(root string, output *chan *FileJob) {
 			return nil
 		}
 
-		// Need to exclud git, hg, svn etc...
-		if strings.HasPrefix(path, ".git/") {
+		// Need to exclude git, hg, svn etc...
+		if strings.HasPrefix(root, ".git/") {
 			return filepath.SkipDir
 		}
 
 		if !info.IsDir() {
-			if gitignoreerror != nil || !gitignore.Match(filepath.Join(path, info.Name()), false) {
-				*output <- &FileJob{Location: path, Filename: info.Name()}
+			if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
+
+				extension := strings.ToLower(path.Ext(info.Name()))
+
+				if !strings.HasPrefix(info.Name(), ".") && strings.Count(info.Name(), ".") == 1 {
+					extension = strings.TrimLeft(extension, ".")
+				}
+
+				if extension == "" {
+					extension = strings.ToLower(info.Name())
+				}
+
+				// TODO this should be a hashmap lookup for the speeds
+				// exclude := false
+				// for _, ex := range Exclusions {
+				// 	if strings.HasSuffix(info.Name(), ex) {
+				// 		exclude = true
+				// 	}
+				// }
+
+				language, ok := ExtensionToLanguage[extension]
+
+				if ok {
+					*output <- &FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language}
+				}
 			}
 		}
 
@@ -91,27 +115,9 @@ func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 	for res := range *input {
 		wg.Add(1)
 		go func(res *FileJob) {
-			extension := path.Ext(res.Filename)
-
-			if extension == "" {
-				extension = strings.ToLower(res.Filename)
-			}
-
-			// TODO this should be a hashmap lookup for the speeds
-			exclude := false
-			for _, ex := range Exclusions {
-				if strings.HasSuffix(res.Filename, "."+ex) {
-					exclude = true
-				}
-			}
-
-			if !exclude {
-				content, _ := ioutil.ReadFile(res.Location)
-				res.Content = content
-				res.Extension = extension
-				*output <- res
-			}
-
+			content, _ := ioutil.ReadFile(res.Location)
+			res.Content = content
+			*output <- res
 			wg.Done()
 		}(res)
 	}
@@ -120,10 +126,6 @@ func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 		wg.Wait()
 		close(*output)
 	}()
-}
-
-func clocFileJob(filejob *FileJob) {
-
 }
 
 func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
@@ -164,7 +166,6 @@ func fileSummerize(input *chan *FileJob) {
 	}
 
 	languages := map[string]LanguageSummary{}
-	database := loadDatabase()
 
 	// TODO declare type to avoid cast
 	sumFiles := int64(0)
@@ -185,35 +186,29 @@ func fileSummerize(input *chan *FileJob) {
 		// TODO this is SLOW refactor to use pre-generated hashmap lookups
 		// its probably not a huge issue because this runs as things come in but
 		// lets not make the CPU work harder than it needs to
-		for _, language := range database {
-			for _, extention := range language.Extensions {
-				if res.Extension == "."+extention {
-					_, ok := languages[language.Language]
+		_, ok := languages[res.Language]
 
-					if !ok {
-						languages[language.Language] = LanguageSummary{
-							Name:    language.Language,
-							Bytes:   res.Bytes,
-							Lines:   res.Lines,
-							Code:    res.Code,
-							Comment: res.Comment,
-							Blank:   res.Blank,
-							Count:   1,
-						}
-					} else {
-						tmp := languages[language.Language]
+		if !ok {
+			languages[res.Language] = LanguageSummary{
+				Name:    res.Language,
+				Bytes:   res.Bytes,
+				Lines:   res.Lines,
+				Code:    res.Code,
+				Comment: res.Comment,
+				Blank:   res.Blank,
+				Count:   1,
+			}
+		} else {
+			tmp := languages[res.Language]
 
-						languages[language.Language] = LanguageSummary{
-							Name:    language.Language,
-							Bytes:   tmp.Bytes + res.Bytes,
-							Lines:   tmp.Lines + res.Lines,
-							Code:    tmp.Code + res.Code,
-							Comment: tmp.Comment + res.Comment,
-							Blank:   tmp.Blank + res.Blank,
-							Count:   tmp.Count + 1,
-						}
-					}
-				}
+			languages[res.Language] = LanguageSummary{
+				Name:    res.Language,
+				Bytes:   tmp.Bytes + res.Bytes,
+				Lines:   tmp.Lines + res.Lines,
+				Code:    tmp.Code + res.Code,
+				Comment: tmp.Comment + res.Comment,
+				Blank:   tmp.Blank + res.Blank,
+				Count:   tmp.Count + 1,
 			}
 		}
 	}

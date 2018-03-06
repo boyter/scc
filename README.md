@@ -12,20 +12,18 @@ https://www.dwheeler.com/sloccount/
 Running against the linux kernel compared to tokei
 
 ```
-$ hyperfine 'scc .'
+$ hyperfine 'scc .' && hyperfine 'tokei .'
 Benchmark #1: scc .
 
-  Time (mean ± σ):      4.544 s ±  0.419 s    [User: 5.061 s, System: 14.172 s]
+  Time (mean ± σ):      4.129 s ±  0.071 s    [User: 3.408 s, System: 12.125 s]
 
-  Range (min … max):    4.324 s …  5.704 s
+  Range (min … max):    4.041 s …  4.290 s
 
-# bboyter @ SurfaceBook2 in ~/Projects/linux on git:master o [16:31:47]
-$ hyperfine 'tokei .'
 Benchmark #1: tokei .
 
-  Time (mean ± σ):     14.178 s ±  4.436 s    [User: 38.484 s, System: 29.486 s]
+  Time (mean ± σ):     10.263 s ±  2.077 s    [User: 31.570 s, System: 22.635 s]
 
-  Range (min … max):    8.006 s … 22.099 s
+  Range (min … max):    8.418 s … 14.675 s
 
 ```
 
