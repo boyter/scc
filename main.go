@@ -2,8 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"github.com/monochromegane/go-gitignore"
 	"github.com/ryanuber/columnize"
@@ -68,7 +66,8 @@ func walkDirectory(root string, output *chan *FileJob) {
 
 				extension := strings.ToLower(path.Ext(info.Name()))
 
-				if !strings.HasPrefix(info.Name(), ".") && strings.Count(info.Name(), ".") == 1 {
+				// if name starts with . don't trim UNLESS there is more than one
+				if !strings.HasPrefix(info.Name(), ".") || strings.Count(info.Name(), ".") != 1 {
 					extension = strings.TrimLeft(extension, ".")
 				}
 
@@ -137,8 +136,6 @@ func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
 }
 
 func fileSummerize(input *chan *FileJob) {
-
-	// Once done lets print it all out
 	output := []string{
 		"-----",
 		"Language | Files | Lines | Code | Comment | Blank | Byte",
@@ -147,13 +144,7 @@ func fileSummerize(input *chan *FileJob) {
 
 	languages := map[string]LanguageSummary{}
 
-	// TODO declare type to avoid cast
-	sumFiles := int64(0)
-	sumLines := int64(0)
-	sumCode := int64(0)
-	sumComment := int64(0)
-	sumBlank := int64(0)
-	sumByte := int64(0)
+	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumByte int64 = 0, 0, 0, 0, 0, 0
 
 	for res := range *input {
 		sumFiles++
@@ -163,9 +154,6 @@ func fileSummerize(input *chan *FileJob) {
 		sumBlank += res.Blank
 		sumByte += res.Bytes
 
-		// TODO this is SLOW refactor to use pre-generated hashmap lookups
-		// its probably not a huge issue because this runs as things come in but
-		// lets not make the CPU work harder than it needs to
 		_, ok := languages[res.Language]
 
 		if !ok {
