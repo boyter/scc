@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -11,8 +12,6 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
-	// "runtime/debug"
-	"bytes"
 	"strings"
 	"sync"
 )
@@ -233,9 +232,6 @@ func main() {
 	fileProcessJobQueue := make(chan *FileJob, runtime.NumCPU())
 	fileSummaryJobQueue := make(chan *FileJob, runtime.NumCPU()*20)
 
-	// debug.SetGCPercent(-1) // This seems to make no difference for most....
-
-	// go walkDirectory("/home/bboyter/Projects/linux/", &fileReadJobQueue)
 	go walkDirectory(os.Args[1], &fileReadJobQueue)
 	go fileReaderWorker(&fileReadJobQueue, &fileProcessJobQueue)
 	go fileProcessorWorker(&fileProcessJobQueue, &fileSummaryJobQueue)
