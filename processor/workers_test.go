@@ -43,6 +43,16 @@ func TestCountStatsLines(t *testing.T) {
 	if fileJob.Lines != 3 {
 		t.Errorf("Three lines expected got %d", fileJob.Lines)
 	}
+
+	content := ""
+	for i := 0; i < 5000; i++ {
+		content += "a\n"
+		fileJob.Content = []byte(content)
+		countStats(&fileJob)
+		if fileJob.Lines != int64(i+1) {
+			t.Errorf("Expected %d got %d", i+1, fileJob.Lines)
+		}
+	}
 }
 
 func BenchmarkCountStatsLinesEmpty(b *testing.B) {

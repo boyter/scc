@@ -9,6 +9,8 @@ https://github.com/Aaronepower/tokei
 https://github.com/AlDanial/cloc
 https://www.dwheeler.com/sloccount/
 
+http://www.locmetrics.com/alternatives.html
+
 Running against the linux kernel compared to tokei
 
 ```
