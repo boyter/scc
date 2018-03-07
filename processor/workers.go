@@ -12,6 +12,9 @@ const (
 	S_MULTICOMMENT int64 = 4
 )
 
+// If the file contains anything even just a newline its lines > 1
+// If the file size is 0 its lines = 0
+// Newlines belong to the line they started on so a file of \n means only 1 line
 func countStats(fileJob *FileJob) {
 	// If the file has a length of 0 it is is empty then we say it has no lines
 	fileJob.Bytes = int64(len(fileJob.Content))
@@ -25,7 +28,7 @@ func countStats(fileJob *FileJob) {
 
 	for i, b := range fileJob.Content {
 
-		if b != ' ' { // TODO Check if another if to avoid setting S_CODE is faster
+		if b != ' ' && b != '\t' { // TODO Check if another if to avoid setting S_CODE is faster
 			currentState = S_CODE
 		}
 
@@ -40,33 +43,6 @@ func countStats(fileJob *FileJob) {
 			fileJob.Lines++
 			currentState = S_BLANK
 		}
-	}
-}
-
-// If the file contains anything even just a newline its lines > 1
-// If the file size is 0 its lines = 0
-// Newlines belong to the line they started on so a file of \n means only 1 line
-func countStats2(fileJob *FileJob) {
-
-	// If the file has a length of 0 it is is empty then we say it has no lines
-	fileJob.Bytes = int64(len(fileJob.Content))
-	if fileJob.Bytes == 0 {
-		fileJob.Lines = 0
-		return
-	}
-
-	fileJob.Lines = 1
-	endPoint := fileJob.Bytes - 1
-
-	for i, b := range fileJob.Content {
-		if b == '\n' && int64(i) != endPoint {
-			fileJob.Lines++
-		}
-	}
-
-	// Cater for file thats not empty but no newlines
-	if fileJob.Lines == 0 && fileJob.Bytes != 0 {
-		fileJob.Lines = 1
 	}
 }
 
