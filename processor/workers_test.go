@@ -65,11 +65,77 @@ func BenchmarkCountStatsLinesEmpty(b *testing.B) {
 	}
 }
 
-func BenchmarkCountStatsLinesSomething(b *testing.B) {
+func BenchmarkCountStatsLinesSingleChar(b *testing.B) {
 	fileJob := FileJob{
-		Content: []byte("this is a test\nof some stuff\n to see how fast things go"),
+		Content: []byte("a"),
 	}
 
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
+
+func BenchmarkCountStatsLinesTwoLines(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte("a\na"),
+	}
+
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
+
+func BenchmarkCountStatsLinesThreeLines(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte("a\na\na"),
+	}
+
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
+
+func BenchmarkCountStatsLinesShortLine(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte("1234567890"),
+	}
+
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
+
+func BenchmarkCountStatsLinesThreeShortLines(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte("1234567890\n1234567890\n1234567890"),
+	}
+
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
+
+func BenchmarkCountStatsLinesLongLine(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"),
+	}
+
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
+
+func BenchmarkCountStatsLinesMany(b *testing.B) {
+	b.StopTimer()
+	content := ""
+	for i := 0; i < 500; i++ {
+		content += "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890\n"
+	}
+
+	fileJob := FileJob{
+		Content: []byte(content),
+	}
+	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		countStats(&fileJob)
 	}
