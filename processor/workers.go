@@ -24,6 +24,11 @@ func countStats(fileJob *FileJob) {
 	currentState := S_BLANK
 
 	for i, b := range fileJob.Content {
+
+		if b != ' ' { // TODO Check if another if to avoid setting S_CODE is faster
+			currentState = S_CODE
+		}
+
 		if b == '\n' || i == endPoint { // This means the end of processing so calculate the stats
 			switch {
 			case currentState == S_BLANK:
@@ -34,8 +39,6 @@ func countStats(fileJob *FileJob) {
 
 			fileJob.Lines++
 			currentState = S_BLANK
-		} else if b != ' ' { // TODO Check if another if to avoid setting S_CODE is faster
-			currentState = S_CODE
 		}
 	}
 }

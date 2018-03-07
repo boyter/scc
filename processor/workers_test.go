@@ -68,6 +68,70 @@ func TestCountStatsLines(t *testing.T) {
 	}
 }
 
+func TestCountStatsCode(t *testing.T) {
+	fileJob := FileJob{
+		Content: []byte(""),
+		Code:    0,
+	}
+
+	// Both tokei and sloccount count this as 0 so lets follow suit
+	// cloc ignores the file itself because it is empty
+	countStats(&fileJob)
+	if fileJob.Code != 0 {
+		t.Errorf("Zero lines expected got %d", fileJob.Code)
+	}
+
+	// Interestingly this file would be 0 lines in "wc -l" because it only counts newlines
+	// all others count this as 1
+	fileJob.Code = 0
+	fileJob.Content = []byte("a")
+	countStats(&fileJob)
+	if fileJob.Code != 1 {
+		t.Errorf("One line expected got %d", fileJob.Code)
+	}
+
+	fileJob.Code = 0
+	fileJob.Content = []byte("a\n")
+	countStats(&fileJob)
+	if fileJob.Code != 1 {
+		t.Errorf("One line expected got %d", fileJob.Code)
+	}
+
+	// tokei counts this as 1 because its still on a single line unless something follows
+	// the newline its still 1 line
+	fileJob.Code = 0
+	fileJob.Content = []byte("1\n")
+	countStats(&fileJob)
+	if fileJob.Code != 1 {
+		t.Errorf("One line expected got %d", fileJob.Code)
+	}
+
+	fileJob.Code = 0
+	fileJob.Content = []byte("1\n2\n")
+	countStats(&fileJob)
+	if fileJob.Code != 2 {
+		t.Errorf("Two lines expected got %d", fileJob.Code)
+	}
+
+	fileJob.Code = 0
+	fileJob.Content = []byte("1\n2\n3")
+	countStats(&fileJob)
+	if fileJob.Code != 3 {
+		t.Errorf("Three lines expected got %d", fileJob.Code)
+	}
+
+	content := ""
+	for i := 0; i < 5000; i++ {
+		content += "a\n"
+		fileJob.Code = 0
+		fileJob.Content = []byte(content)
+		countStats(&fileJob)
+		if fileJob.Code != int64(i+1) {
+			t.Errorf("Expected %d got %d", i+1, fileJob.Code)
+		}
+	}
+}
+
 // func TestCountStatsBlankLines(t *testing.T) {
 // 	fileJob := FileJob{
 // 		Content: []byte(""),
