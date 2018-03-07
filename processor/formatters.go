@@ -8,7 +8,7 @@ import (
 func fileSummerize(input *chan *FileJob) {
 	output := []string{
 		"-----",
-		"Language | Files | Lines | Code | Comment | Blank | Byte",
+		"Language | Files | Lines | Code | Comment | Blank | Complexity | Byte",
 		"-----",
 	}
 
@@ -52,11 +52,11 @@ func fileSummerize(input *chan *FileJob) {
 	}
 
 	for name, summary := range languages {
-		output = append(output, fmt.Sprintf("%s | %d | %d | %d | %d | %d | %d", name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Bytes))
+		output = append(output, fmt.Sprintf("%s | %d | %d | %d | %d | %d | %d | %d", name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, 0, summary.Bytes))
 	}
 
 	output = append(output, "-----")
-	output = append(output, fmt.Sprintf("Total | %d | %d | %d | %d | %d | %d", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumByte))
+	output = append(output, fmt.Sprintf("Total | %d | %d | %d | %d | %d | %d | %d", sumFiles, sumLines, sumCode, sumComment, sumBlank, 0, sumByte))
 	output = append(output, "-----")
 
 	result := columnize.SimpleFormat(output)
