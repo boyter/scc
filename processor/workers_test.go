@@ -143,12 +143,54 @@ func TestCountStatsBlankLines(t *testing.T) {
 		t.Errorf("Zero lines expected got %d", fileJob.Blank)
 	}
 
-	// fileJob.Blank = 0
-	// fileJob.Content = []byte(" \n")
-	// countStats(&fileJob)
-	// if fileJob.Blank != 1 {
-	// 	t.Errorf("One line expected got %d", fileJob.Blank)
-	// }
+	fileJob.Blank = 0
+	fileJob.Content = []byte(" ")
+	countStats(&fileJob)
+	if fileJob.Blank != 1 {
+		t.Errorf("One line expected got %d", fileJob.Blank)
+	}
+
+	fileJob.Blank = 0
+	fileJob.Content = []byte("\n")
+	countStats(&fileJob)
+	if fileJob.Blank != 1 {
+		t.Errorf("One line expected got %d", fileJob.Blank)
+	}
+
+	fileJob.Blank = 0
+	fileJob.Content = []byte("\n ")
+	countStats(&fileJob)
+	if fileJob.Blank != 2 {
+		t.Errorf("Two line expected got %d", fileJob.Blank)
+	}
+
+	fileJob.Blank = 0
+	fileJob.Content = []byte("            ")
+	countStats(&fileJob)
+	if fileJob.Blank != 1 {
+		t.Errorf("One line expected got %d", fileJob.Blank)
+	}
+
+	fileJob.Blank = 0
+	fileJob.Content = []byte("            \n             ")
+	countStats(&fileJob)
+	if fileJob.Blank != 2 {
+		t.Errorf("Two lines expected got %d", fileJob.Blank)
+	}
+
+	fileJob.Blank = 0
+	fileJob.Content = []byte("\r\n\r\n")
+	countStats(&fileJob)
+	if fileJob.Blank != 2 {
+		t.Errorf("Two lines expected got %d", fileJob.Blank)
+	}
+
+	fileJob.Blank = 0
+	fileJob.Content = []byte("\r\n")
+	countStats(&fileJob)
+	if fileJob.Blank != 1 {
+		t.Errorf("One line expected got %d", fileJob.Blank)
+	}
 }
 
 //////////////////////////////////////////////////
@@ -260,6 +302,24 @@ func BenchmarkCountStatsLinesFiveHundredLongLines(b *testing.B) {
 	content := ""
 	for i := 0; i < 500; i++ {
 		content += "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890\n"
+	}
+
+	fileJob := FileJob{
+		Content: []byte(content),
+	}
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
+
+func BenchmarkCountStatsLinesSixHundredLongLinesMixed(b *testing.B) {
+	b.StopTimer()
+	content := ""
+	for i := 0; i < 200; i++ {
+		content += "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890\n"
+		content += "1234567890          1234567890          1234567890          1234567890          1234567890          \n"
+		content += "                                                                                                    \n"
 	}
 
 	fileJob := FileJob{
