@@ -14,56 +14,57 @@ http://www.locmetrics.com/alternatives.html
 Running against the linux kernel compared to tokei
 
 ```
+# bboyter @ SurfaceBook2 in ~/Projects/linux on git:master o [21:29:09]
 $ hyperfine 'scc .' && hyperfine 'tokei .'
 Benchmark #1: scc .
 
-  Time (mean ± σ):      4.129 s ±  0.071 s    [User: 3.408 s, System: 12.125 s]
+  Time (mean ± σ):      5.094 s ±  0.451 s    [User: 6.014 s, System: 15.770 s]
 
-  Range (min … max):    4.041 s …  4.290 s
+  Range (min … max):    4.350 s …  5.925 s
 
 Benchmark #1: tokei .
 
-  Time (mean ± σ):     10.263 s ±  2.077 s    [User: 31.570 s, System: 22.635 s]
+  Time (mean ± σ):     10.333 s ±  1.101 s    [User: 36.295 s, System: 24.282 s]
 
-  Range (min … max):    8.418 s … 14.675 s
-
-```
+  Range (min … max):    8.214 s … 11.619 s
 
 ```
-# bboyter @ SurfaceBook2 in ~/Projects/linux on git:master o [10:11:43]
+
+```
+# bboyter @ SurfaceBook2 in ~/Projects/linux on git:master o [21:32:09]
 $ scc .
--------------------------------------------------------------------
-Language           Files  Lines     Code  Comment  Blank  Byte
--------------------------------------------------------------------
-TeX                1      1015      0     0        0      50901
-CSS                1      89        0     0        0      2258
-C Header           20516  5163057   0     0        0      224102981
-Autoconf           7      182       0     0        0      10943
-Unreal Script      5      694       0     0        0      17261
-Plain Text         4127   446032    0     0        0      15988404
-Assembly           1477   418489    0     0        0      10719553
-HEX                2      87        0     0        0      4144
-ReStructuredText   850    168686    0     0        0      5492158
-Vim Script         1      42        0     0        0      1355
-C++                7      2202      0     0        0      53118
-Perl               43     29724     0     0        0      783087
-Markdown           1      1297      0     0        0      65732
-LD Script          20     607       0     0        0      11906
-C++ Header         2      125       0     0        0      3859
-Module-Definition  1      8         0     0        0      147
-Makefile           2469   58205     0     0        0      1874552
-Python             80     18918     0     0        0      614271
-Shell              204    20122     0     0        0      488723
-Device Tree        2587   644437    0     0        0      15749617
-Objective C++      1      244       0     0        0      10878
-Happy              9      5667      0     0        0      119490
-JSON               214    108649    0     0        0      4507604
-SVG                57     39430     0     0        0      1916717
-HTML               5      6161      0     0        0      245751
-C                  26191  17908117  0     0        0      485987093
--------------------------------------------------------------------
-Total              58878  25042286  0     0        0      768822503
--------------------------------------------------------------------
+-------------------------------------------------------------------------
+Language           Files  Lines     Code      Comment  Blank    Byte
+-------------------------------------------------------------------------
+Perl               43     29724     25446     0        4278     783087
+CSS                1      89        71        0        18       2258
+LD Script          20     607       549       0        58       11906
+Device Tree        2587   644437    568201    0        76236    15749617
+Autoconf           7      182       153       0        29       10943
+C++                7      2202      1915      0        287      53118
+HEX                2      87        87        0        0        4144
+SVG                57     39430     39338     0        92       1916717
+JSON               214    108649    108649    0        0        4507604
+ReStructuredText   850    168686    126677    0        42009    5492158
+Python             80     18918     16499     0        2419     614271
+Vim Script         1      42        39        0        3        1355
+C Header           20516  5163057   4651285   0        511772   224102981
+Module-Definition  1      8         8         0        0        147
+Plain Text         4127   446032    354657    0        91375    15988404
+Makefile           2469   58205     49119     0        9086     1874552
+Objective C++      1      244       189       0        55       10878
+TeX                1      1015      907       0        108      50901
+C                  26191  17908117  15337258  0        2570859  485987093
+Shell              204    20122     17312     0        2810     488723
+Markdown           1      1297      1077      0        220      65732
+C++ Header         2      125       106       0        19       3859
+Happy              9      5667      4975      0        692      119490
+Unreal Script      5      694       591       0        103      17261
+Assembly           1477   418489    368220    0        50269    10719553
+HTML               5      6161      5492      0        669      245751
+-------------------------------------------------------------------------
+Total              58878  25042286  21678820  0        3363466  768822503
+-------------------------------------------------------------------------
 ```
 
 To benchmark,
