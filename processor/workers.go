@@ -1,15 +1,49 @@
 package processor
 
 import (
-	// "bytes"
 	"io/ioutil"
 	"sync"
 )
 
+const (
+	S_BLANK        int64 = 1
+	S_CODE         int64 = 2
+	S_COMMENT      int64 = 3
+	S_MULTICOMMENT int64 = 4
+)
+
+func countStats(fileJob *FileJob) {
+	// If the file has a length of 0 it is is empty then we say it has no lines
+	fileJob.Bytes = int64(len(fileJob.Content))
+	if fileJob.Bytes == 0 {
+		fileJob.Lines = 0
+		return
+	}
+
+	endPoint := int(fileJob.Bytes - 1)
+	currentState := S_BLANK
+
+	for i, b := range fileJob.Content {
+		if b == '\n' || i == endPoint { // This means the end of processing so calculate the stats
+			switch {
+			case currentState == S_BLANK:
+				fileJob.Blank++
+			case currentState == S_CODE:
+				fileJob.Code++
+			}
+
+			fileJob.Lines++
+			currentState = S_BLANK
+		} else if b != ' ' { // TODO Check if another if to avoid setting S_CODE is faster
+			currentState = S_CODE
+		}
+	}
+}
+
 // If the file contains anything even just a newline its lines > 1
 // If the file size is 0 its lines = 0
 // Newlines belong to the line they started on so a file of \n means only 1 line
-func countStats(fileJob *FileJob) {
+func countStats2(fileJob *FileJob) {
 
 	// If the file has a length of 0 it is is empty then we say it has no lines
 	fileJob.Bytes = int64(len(fileJob.Content))
@@ -21,32 +55,16 @@ func countStats(fileJob *FileJob) {
 	fileJob.Lines = 1
 	endPoint := fileJob.Bytes - 1
 
-	// This means we look at every byte so there may be a better way to do this
-
-	// State
-
 	for i, b := range fileJob.Content {
 		if b == '\n' && int64(i) != endPoint {
 			fileJob.Lines++
 		}
 	}
 
-	// If the file is not empty then it has at least 1 line
-	// fileJob.Lines = int64(bytes.Count(fileJob.Content, []byte("\n")))   // Fastest way to count newlines but buggy
-	// fileJob.Blank = int64(bytes.Count(fileJob.Content, []byte("\n\n"))) // Cheap way to calculate blanks but probably wrong
-
 	// Cater for file thats not empty but no newlines
 	if fileJob.Lines == 0 && fileJob.Bytes != 0 {
 		fileJob.Lines = 1
 	}
-
-	// is it? what about the langage "whitespace" where whitespace is significant....
-
-	// Find first instance of a \n
-	// Check the slice before for interesting
-	// Determine if newline
-	// keep running counter
-	// check if spaces etc....
 }
 
 // Reads file into memory
