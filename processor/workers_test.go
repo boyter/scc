@@ -132,22 +132,28 @@ func TestCountStatsCode(t *testing.T) {
 	}
 }
 
-// func TestCountStatsBlankLines(t *testing.T) {
-// 	fileJob := FileJob{
-// 		Content: []byte(""),
-// 	}
+func TestCountStatsBlankLines(t *testing.T) {
+	fileJob := FileJob{
+		Content: []byte(""),
+		Blank:   0,
+	}
 
-// 	countStats(&fileJob)
-// 	if fileJob.Blank != 0 {
-// 		t.Errorf("Zero lines expected got %d", fileJob.Blank)
-// 	}
+	countStats(&fileJob)
+	if fileJob.Blank != 0 {
+		t.Errorf("Zero lines expected got %d", fileJob.Blank)
+	}
 
-// 	fileJob.Content = []byte("\n")
-// 	countStats(&fileJob)
-// 	if fileJob.Blank != 1 {
-// 		t.Errorf("One line expected got %d", fileJob.Blank)
-// 	}
-// }
+	// fileJob.Blank = 0
+	// fileJob.Content = []byte(" \n")
+	// countStats(&fileJob)
+	// if fileJob.Blank != 1 {
+	// 	t.Errorf("One line expected got %d", fileJob.Blank)
+	// }
+}
+
+//////////////////////////////////////////////////
+// Benchmarks Below
+//////////////////////////////////////////////////
 
 func BenchmarkCountStatsLinesEmpty(b *testing.B) {
 	fileJob := FileJob{
@@ -199,6 +205,16 @@ func BenchmarkCountStatsLinesShortLine(b *testing.B) {
 	}
 }
 
+func BenchmarkCountStatsLinesShortEmptyLine(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte("          "),
+	}
+
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
+
 func BenchmarkCountStatsLinesThreeShortLines(b *testing.B) {
 	fileJob := FileJob{
 		Content: []byte("1234567890\n1234567890\n1234567890"),
@@ -209,9 +225,29 @@ func BenchmarkCountStatsLinesThreeShortLines(b *testing.B) {
 	}
 }
 
+func BenchmarkCountStatsLinesThreeShortEmptyLines(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte("          \n          \n          "),
+	}
+
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
+
 func BenchmarkCountStatsLinesLongLine(b *testing.B) {
 	fileJob := FileJob{
 		Content: []byte("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"),
+	}
+
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
+
+func BenchmarkCountStatsLinesLongMixedLine(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte("1234567890          1234567890          1234567890          1234567890          1234567890          "),
 	}
 
 	for i := 0; i < b.N; i++ {
