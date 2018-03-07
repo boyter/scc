@@ -8,25 +8,48 @@ Goal is to be the fastest code counter possible, but also perform license analys
 https://github.com/Aaronepower/tokei
 https://github.com/AlDanial/cloc
 https://www.dwheeler.com/sloccount/
+https://github.com/cgag/loc
 
 http://www.locmetrics.com/alternatives.html
 
-Running against the linux kernel compared to tokei
+Quick comparsion using ripgrep as the best in class of directory scanning performance against the redis source code
 
 ```
-# bboyter @ SurfaceBook2 in ~/Projects/linux on git:master o [21:29:09]
-$ hyperfine 'scc .' && hyperfine 'tokei .'
-Benchmark #1: scc .
+# bboyter @ SurfaceBook2 in ~/Projects/redis on git:unstable o [9:12:34]
+$ hyperfine -w 3 -m 10 'rg a .'
+Benchmark #1: rg a .
 
-  Time (mean ± σ):      5.094 s ±  0.451 s    [User: 6.014 s, System: 15.770 s]
+  Time (mean ± σ):      86.6 ms ±  25.2 ms    [User: 47.5 ms, System: 221.2 ms]
 
-  Range (min … max):    4.350 s …  5.925 s
+  Range (min … max):    50.4 ms … 136.1 ms
 
+
+# bboyter @ SurfaceBook2 in ~/Projects/redis on git:unstable o [9:12:53]
+$ hyperfine -w 3 -m 10 'tokei .'
 Benchmark #1: tokei .
 
-  Time (mean ± σ):     10.333 s ±  1.101 s    [User: 36.295 s, System: 24.282 s]
+  Time (mean ± σ):     147.7 ms ±  38.0 ms    [User: 180.1 ms, System: 180.0 ms]
 
-  Range (min … max):    8.214 s … 11.619 s
+  Range (min … max):   106.6 ms … 219.4 ms
+
+
+# bboyter @ SurfaceBook2 in ~/Projects/redis on git:unstable o [9:13:08]
+$ hyperfine -w 3 -m 10 'loc .'
+Benchmark #1: loc .
+
+  Time (mean ± σ):     357.5 ms ±  10.2 ms    [User: 118.4 ms, System: 184.5 ms]
+
+  Range (min … max):   343.9 ms … 374.3 ms
+
+
+# bboyter @ SurfaceBook2 in ~/Projects/redis on git:unstable o [9:13:21]
+$ hyperfine -w 3 -m 10 'scc .'
+Benchmark #1: scc .
+
+  Time (mean ± σ):      68.2 ms ±  22.9 ms    [User: 48.9 ms, System: 169.3 ms]
+
+  Range (min … max):    47.3 ms … 135.2 ms
+
 
 ```
 
@@ -73,23 +96,3 @@ To benchmark,
 go test -bench .
 ```
 
-Quick comparsion using ripgrep as the 'king' of directory scanning performance against the linux source code
-
-```
-# bboyter @ SurfaceBook2 in ~/Projects/linux on git:master o [10:05:05]
-$ hyperfine 'rg a .'
-Benchmark #1: rg a .
-
-  Time (mean ± σ):      3.537 s ±  0.458 s    [User: 5.651 s, System: 18.141 s]
-
-  Range (min … max):    3.045 s …  4.480 s
-
-# bboyter @ SurfaceBook2 in ~/Projects/linux on git:master o [10:06:41]
-$ hyperfine 'scc .'
-Benchmark #1: scc .
-
-  Time (mean ± σ):      4.257 s ±  0.149 s    [User: 3.343 s, System: 12.779 s]
-
-  Range (min … max):    4.116 s …  4.576 s
-
-```
