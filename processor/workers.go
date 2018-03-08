@@ -28,7 +28,7 @@ func countStats(fileJob *FileJob) {
 
 	for i, b := range fileJob.Content {
 
-		if b != ' ' && b != '\t' && b != '\n' && b != '\r' { // TODO Check if another if to avoid setting S_CODE is faster
+		if currentState == S_BLANK && b != ' ' && b != '\t' && b != '\n' && b != '\r' { // TODO Check if another if to avoid setting S_CODE is faster
 			currentState = S_CODE
 		}
 

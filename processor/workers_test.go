@@ -297,6 +297,16 @@ func BenchmarkCountStatsLinesLongMixedLine(b *testing.B) {
 	}
 }
 
+func BenchmarkCountStatsLinesLongAlternateLine(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte("a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a "),
+	}
+
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
+
 func BenchmarkCountStatsLinesFiveHundredLongLines(b *testing.B) {
 	b.StopTimer()
 	content := ""
