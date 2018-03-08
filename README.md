@@ -12,6 +12,9 @@ https://github.com/cgag/loc
 
 http://www.locmetrics.com/alternatives.html
 
+Interesting read https://www.reddit.com/r/rust/comments/59bm3t/a_fast_cloc_replacement_in_rust/
+https://www.reddit.com/r/rust/comments/82k9iy/loc_count_lines_of_code_quickly/
+
 Quick comparsion using ripgrep as the best in class of directory scanning performance against the redis source code
 
 ```
@@ -96,3 +99,36 @@ To benchmark,
 go test -bench .
 ```
 
+
+Quick comparsion using ripgrep as the baseline best in class of file scanning performance against the linux source code
+
+
+```
+root@ubuntu-c-8-16gib-sgp1-01:~/linux# hyperfine -w 3 -m 10 'rg a .'
+Benchmark #1: rg a .
+
+  Time (mean ± σ):     601.3 ms ±   8.7 ms    [User: 3.763 s, System: 0.791 s]
+
+  Range (min … max):   590.9 ms … 616.1 ms
+
+root@ubuntu-c-8-16gib-sgp1-01:~/linux# hyperfine -w 3 -m 10 'tokei .'
+Benchmark #1: tokei .
+
+  Time (mean ± σ):      4.049 s ±  0.952 s    [User: 22.917 s, System: 1.107 s]
+
+  Range (min … max):    3.222 s …  5.646 s
+
+root@ubuntu-c-8-16gib-sgp1-01:~/linux# hyperfine -w 3 -m 10 'loc .'
+Benchmark #1: loc .
+
+  Time (mean ± σ):      3.065 s ±  0.605 s    [User: 7.413 s, System: 3.894 s]
+
+  Range (min … max):    2.354 s …  4.179 s
+
+root@ubuntu-c-8-16gib-sgp1-01:~/linux# hyperfine -w 3 -m 10 'scc .'
+Benchmark #1: scc .
+
+  Time (mean ± σ):      1.805 s ±  0.064 s    [User: 5.386 s, System: 0.982 s]
+
+  Range (min … max):    1.721 s …  1.929 s
+```
