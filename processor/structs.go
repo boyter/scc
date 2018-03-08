@@ -15,11 +15,12 @@ type FileJob struct {
 }
 
 type LanguageSummary struct {
-	Name    string
-	Bytes   int64
-	Lines   int64
-	Code    int64
-	Comment int64
-	Blank   int64
-	Count   int64
+	Name       string
+	Bytes      int64
+	Lines      int64
+	Code       int64
+	Comment    int64
+	Blank      int64
+	Complexity int64
+	Count      int64
 }

@@ -193,6 +193,15 @@ func TestCountStatsBlankLines(t *testing.T) {
 	}
 }
 
+func TestCountStatsComplexityCount(t *testing.T) {
+	fileJob := FileJob{
+		Content: []byte("f"),
+		Blank:   0,
+	}
+
+	countStats(&fileJob)
+}
+
 //////////////////////////////////////////////////
 // Benchmarks Below
 //////////////////////////////////////////////////
@@ -312,6 +321,38 @@ func BenchmarkCountStatsLinesFiveHundredLongLines(b *testing.B) {
 	content := ""
 	for i := 0; i < 500; i++ {
 		content += "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890\n"
+	}
+
+	fileJob := FileJob{
+		Content: []byte(content),
+	}
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
+
+func BenchmarkCountStatsLinesFiveHundredLongLinesTriggerComplexityIf(b *testing.B) {
+	b.StopTimer()
+	content := ""
+	for i := 0; i < 500; i++ {
+		content += "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii\n"
+	}
+
+	fileJob := FileJob{
+		Content: []byte(content),
+	}
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
+
+func BenchmarkCountStatsLinesFiveHundredLongLinesTriggerComplexityFor(b *testing.B) {
+	b.StopTimer()
+	content := ""
+	for i := 0; i < 500; i++ {
+		content += "fofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofo\n"
 	}
 
 	fileJob := FileJob{

@@ -1,6 +1,7 @@
 package processor
 
 import (
+	// "fmt"
 	"io/ioutil"
 	"sync"
 )
@@ -15,6 +16,7 @@ const (
 // If the file contains anything even just a newline its lines > 1
 // If the file size is 0 its lines = 0
 // Newlines belong to the line they started on so a file of \n means only 1 line
+// This is the 'hot' path for the application and needs to be as fast as possible
 func countStats(fileJob *FileJob) {
 	// If the file has a length of 0 it is is empty then we say it has no lines
 	fileJob.Bytes = int64(len(fileJob.Content))
@@ -23,21 +25,63 @@ func countStats(fileJob *FileJob) {
 		return
 	}
 
+	// WIP should be in the list of languages
+	complexityChecks := [][]byte{
+		[]byte(" for "),
+		[]byte(" for("),
+		[]byte(" if "),
+		[]byte(" if("),
+		[]byte(" switch "),
+	}
+
 	endPoint := int(fileJob.Bytes - 1)
 	currentState := S_BLANK
 
-	for i, b := range fileJob.Content {
+	for index, currentByte := range fileJob.Content {
 
-		if currentState == S_BLANK && b != ' ' && b != '\t' && b != '\n' && b != '\r' { // TODO Check if another if to avoid setting S_CODE is faster
+		// WIP If the line is still blank we can move into single line comment otherwise its still a code line just with a comment at the end
+		// TODO buffer checks
+		if currentState == S_BLANK && (currentByte == '#' || (currentByte == '/' && fileJob.Content[index+1] == '/')) {
+			currentState = S_COMMENT
+		}
+
+		// Check currentState first to save on the extra checks for a small speed boost, then check in order of most common characters
+		if currentState == S_BLANK && currentByte != ' ' && currentByte != '\t' && currentByte != '\n' && currentByte != '\r' {
 			currentState = S_CODE
 		}
 
-		if b == '\n' || i == endPoint { // This means the end of processing the line so calculate the stats
+		// Complexity calculation
+		// In reality this is going to need to pull from the list of languages to see how to do this
+		// TODO this is really bad because we are looking at every byte multiple times...
+		if (currentState == S_BLANK || currentState == S_CODE) && (currentByte == ' ' || currentByte == '\t') {
+			for _, edge := range complexityChecks {
+				if currentByte == edge[0] {
+					potentialMatch := true
+
+					// Start at 1 to avoid doing the check we just did again
+					for j := 1; j < len(edge); j++ {
+						if index+j >= endPoint || edge[j] != fileJob.Content[index+j] {
+							potentialMatch = false
+							break
+						}
+					}
+
+					if potentialMatch {
+						fileJob.Complexity++
+					}
+				}
+			}
+		}
+
+		// This means the end of processing the line so calculate the stats
+		if currentByte == '\n' || index == endPoint {
 			switch {
 			case currentState == S_BLANK:
 				fileJob.Blank++
 			case currentState == S_CODE:
 				fileJob.Code++
+			case currentState == S_COMMENT:
+				fileJob.Comment++
 			}
 
 			fileJob.Lines++
