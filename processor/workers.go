@@ -26,6 +26,7 @@ func countStats(fileJob *FileJob) {
 	}
 
 	// WIP should be in the list of languages
+	// TODO shouldn't require the space in front, should be handled by the check
 	complexityChecks := [][]byte{
 		[]byte(" for "),
 		[]byte(" for("),
@@ -34,15 +35,39 @@ func countStats(fileJob *FileJob) {
 		[]byte(" switch "),
 	}
 
+	// WIP should be in the list of lanugages
+	singleLineCommentChecks := [][]byte{
+		[]byte("#"),
+		[]byte("//"),
+		[]byte("/*"),
+	}
+
+	/* test */
 	endPoint := int(fileJob.Bytes - 1)
 	currentState := S_BLANK
 
 	for index, currentByte := range fileJob.Content {
 
 		// WIP If the line is still blank we can move into single line comment otherwise its still a code line just with a comment at the end
-		// TODO buffer checks
-		if currentState == S_BLANK && (currentByte == '#' || (currentByte == '/' && fileJob.Content[index+1] == '/')) {
-			currentState = S_COMMENT
+		if currentState == S_BLANK {
+			for _, edge := range singleLineCommentChecks {
+				if currentByte == edge[0] {
+					potentialMatch := true
+
+					// Start at 1 to avoid doing the check we just did again
+					// Check BenchmarkCheckByteEquality if you doubt this is the fastest way to do it
+					for j := 1; j < len(edge); j++ {
+						if index+j >= endPoint || edge[j] != fileJob.Content[index+j] {
+							potentialMatch = false
+							break
+						}
+					}
+
+					if potentialMatch {
+						currentState = S_COMMENT
+					}
+				}
+			}
 		}
 
 		// Check currentState first to save on the extra checks for a small speed boost, then check in order of most common characters
@@ -59,6 +84,7 @@ func countStats(fileJob *FileJob) {
 					potentialMatch := true
 
 					// Start at 1 to avoid doing the check we just did again
+					// Check BenchmarkCheckByteEquality if you doubt this is the fastest way to do it
 					for j := 1; j < len(edge); j++ {
 						if index+j >= endPoint || edge[j] != fileJob.Content[index+j] {
 							potentialMatch = false
