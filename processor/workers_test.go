@@ -366,13 +366,14 @@ func BenchmarkCountStatsLinesFiveHundredLongLinesTriggerComplexityFor(b *testing
 	}
 }
 
-func BenchmarkCountStatsLinesSixHundredLongLinesMixed(b *testing.B) {
+func BenchmarkCountStatsLinesFourHundredLongLinesMixed(b *testing.B) {
 	b.StopTimer()
 	content := ""
-	for i := 0; i < 200; i++ {
+	for i := 0; i < 100; i++ {
 		content += "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890\n"
 		content += "1234567890          1234567890          1234567890          1234567890          1234567890          \n"
 		content += "                                                                                                    \n"
+		content += "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a \n"
 	}
 
 	fileJob := FileJob{
@@ -422,6 +423,8 @@ func BenchmarkCheckByteEqualityBytes(b *testing.B) {
 	b.Log(count)
 }
 
+// This appears to be faster than bytes.Equal because it does not need
+// to do length comparison checks at the start
 func BenchmarkCheckByteEqualityLoop(b *testing.B) {
 	b.StopTimer()
 	one := []byte("for")
@@ -434,6 +437,34 @@ func BenchmarkCheckByteEqualityLoop(b *testing.B) {
 		equal := true
 
 		for j := 1; j < len(one); j++ {
+			if one[j] != two[j] {
+				equal = false
+				break
+			}
+		}
+
+		if equal {
+			count++
+		}
+	}
+
+	b.Log(count)
+}
+
+// Check if the 1 offset makes a difference, which it does by ~1 ns
+func BenchmarkCheckByteEqualityLoopWithAddtional(b *testing.B) {
+	b.StopTimer()
+	one := []byte("for")
+	two := []byte("for")
+
+	count := 0
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		equal := true
+
+		// Don't start at 1 like the above but 0 to do a full scan
+		for j := 0; j < len(one); j++ {
 			if one[j] != two[j] {
 				equal = false
 				break
