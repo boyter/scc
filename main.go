@@ -22,6 +22,12 @@ func main() {
 			Value:       ".git,.hg,.svn",
 			Destination: &processor.PathBlacklist,
 		},
+		cli.StringFlag{
+			Name:        "files",
+			Usage:       "Set this to anything non blank to specify you want to see the output for every file",
+			Value:       " ",
+			Destination: &processor.FilesOutput,
+		},
 	}
 
 	app.Action = func(c *cli.Context) error {

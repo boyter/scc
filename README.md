@@ -132,3 +132,34 @@ Benchmark #1: scc .
 
   Range (min … max):    1.721 s …  1.929 s
 ```
+
+
+Trying things out limited to a single CPU
+
+```
+$ hyperfine 'taskset 0x01 scc .'
+Benchmark #1: taskset 0x01 scc .
+
+  Time (mean ± σ):      54.7 ms ±   5.1 ms    [User: 2.2 ms, System: 18.4 ms]
+
+  Range (min … max):    46.0 ms …  66.8 ms
+
+
+# bboyter @ SurfaceBook2 in ~/Go/src/github.com/boyter/scc on git:master x [11:57:27]
+$ hyperfine 'taskset 0x01 tokei .'
+Benchmark #1: taskset 0x01 tokei .
+
+  Time (mean ± σ):      86.5 ms ±   9.5 ms    [User: 4.8 ms, System: 30.0 ms]
+
+  Range (min … max):    73.0 ms … 115.3 ms
+
+
+# bboyter @ SurfaceBook2 in ~/Go/src/github.com/boyter/scc on git:master x [11:57:39]
+$ hyperfine 'taskset 0x01 loc .'
+Benchmark #1: taskset 0x01 loc .
+
+  Time (mean ± σ):     100.0 ms ±   9.2 ms    [User: 4.1 ms, System: 27.6 ms]
+
+  Range (min … max):    80.5 ms … 126.1 ms
+
+```

@@ -393,7 +393,7 @@ func BenchmarkCheckByteEqualityReflect(b *testing.B) {
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		equal := reflect.DeepEqual(one, two)
+		equal := reflect.DeepEqual(one[1:], two[1:])
 
 		if equal {
 			count++
@@ -412,7 +412,7 @@ func BenchmarkCheckByteEqualityBytes(b *testing.B) {
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		equal := bytes.Equal(one, two)
+		equal := bytes.Equal(one[1:], two[1:])
 
 		if equal {
 			count++
@@ -432,8 +432,9 @@ func BenchmarkCheckByteEqualityLoop(b *testing.B) {
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		equal := true
-		for in, by := range one {
-			if by != two[in] {
+
+		for j := 1; j < len(one); j++ {
+			if one[j] != two[j] {
 				equal = false
 				break
 			}
