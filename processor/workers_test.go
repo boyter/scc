@@ -208,181 +208,181 @@ func TestCountStatsComplexityCount(t *testing.T) {
 // Benchmarks Below
 //////////////////////////////////////////////////
 
-// func BenchmarkCountStatsLinesEmpty(b *testing.B) {
-// 	fileJob := FileJob{
-// 		Content: []byte(""),
-// 	}
+func BenchmarkCountStatsLinesEmpty(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte(""),
+	}
 
-// 	for i := 0; i < b.N; i++ {
-// 		countStats(&fileJob)
-// 	}
-// }
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
 
-// func BenchmarkCountStatsLinesSingleChar(b *testing.B) {
-// 	fileJob := FileJob{
-// 		Content: []byte("a"),
-// 	}
+func BenchmarkCountStatsLinesSingleChar(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte("a"),
+	}
 
-// 	for i := 0; i < b.N; i++ {
-// 		countStats(&fileJob)
-// 	}
-// }
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
 
-// func BenchmarkCountStatsLinesTwoLines(b *testing.B) {
-// 	fileJob := FileJob{
-// 		Content: []byte("a\na"),
-// 	}
+func BenchmarkCountStatsLinesTwoLines(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte("a\na"),
+	}
 
-// 	for i := 0; i < b.N; i++ {
-// 		countStats(&fileJob)
-// 	}
-// }
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
 
-// func BenchmarkCountStatsLinesThreeLines(b *testing.B) {
-// 	fileJob := FileJob{
-// 		Content: []byte("a\na\na"),
-// 	}
+func BenchmarkCountStatsLinesThreeLines(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte("a\na\na"),
+	}
 
-// 	for i := 0; i < b.N; i++ {
-// 		countStats(&fileJob)
-// 	}
-// }
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
 
-// func BenchmarkCountStatsLinesShortLine(b *testing.B) {
-// 	fileJob := FileJob{
-// 		Content: []byte("1234567890"),
-// 	}
+func BenchmarkCountStatsLinesShortLine(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte("1234567890"),
+	}
 
-// 	for i := 0; i < b.N; i++ {
-// 		countStats(&fileJob)
-// 	}
-// }
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
 
-// func BenchmarkCountStatsLinesShortEmptyLine(b *testing.B) {
-// 	fileJob := FileJob{
-// 		Content: []byte("          "),
-// 	}
+func BenchmarkCountStatsLinesShortEmptyLine(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte("          "),
+	}
 
-// 	for i := 0; i < b.N; i++ {
-// 		countStats(&fileJob)
-// 	}
-// }
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
 
-// func BenchmarkCountStatsLinesThreeShortLines(b *testing.B) {
-// 	fileJob := FileJob{
-// 		Content: []byte("1234567890\n1234567890\n1234567890"),
-// 	}
+func BenchmarkCountStatsLinesThreeShortLines(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte("1234567890\n1234567890\n1234567890"),
+	}
 
-// 	for i := 0; i < b.N; i++ {
-// 		countStats(&fileJob)
-// 	}
-// }
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
 
-// func BenchmarkCountStatsLinesThreeShortEmptyLines(b *testing.B) {
-// 	fileJob := FileJob{
-// 		Content: []byte("          \n          \n          "),
-// 	}
+func BenchmarkCountStatsLinesThreeShortEmptyLines(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte("          \n          \n          "),
+	}
 
-// 	for i := 0; i < b.N; i++ {
-// 		countStats(&fileJob)
-// 	}
-// }
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
 
-// func BenchmarkCountStatsLinesLongLine(b *testing.B) {
-// 	fileJob := FileJob{
-// 		Content: []byte("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"),
-// 	}
+func BenchmarkCountStatsLinesLongLine(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"),
+	}
 
-// 	for i := 0; i < b.N; i++ {
-// 		countStats(&fileJob)
-// 	}
-// }
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
 
-// func BenchmarkCountStatsLinesLongMixedLine(b *testing.B) {
-// 	fileJob := FileJob{
-// 		Content: []byte("1234567890          1234567890          1234567890          1234567890          1234567890          "),
-// 	}
+func BenchmarkCountStatsLinesLongMixedLine(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte("1234567890          1234567890          1234567890          1234567890          1234567890          "),
+	}
 
-// 	for i := 0; i < b.N; i++ {
-// 		countStats(&fileJob)
-// 	}
-// }
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
 
-// func BenchmarkCountStatsLinesLongAlternateLine(b *testing.B) {
-// 	fileJob := FileJob{
-// 		Content: []byte("a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a "),
-// 	}
+func BenchmarkCountStatsLinesLongAlternateLine(b *testing.B) {
+	fileJob := FileJob{
+		Content: []byte("a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a "),
+	}
 
-// 	for i := 0; i < b.N; i++ {
-// 		countStats(&fileJob)
-// 	}
-// }
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
 
-// func BenchmarkCountStatsLinesFiveHundredLongLines(b *testing.B) {
-// 	b.StopTimer()
-// 	content := ""
-// 	for i := 0; i < 500; i++ {
-// 		content += "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890\n"
-// 	}
+func BenchmarkCountStatsLinesFiveHundredLongLines(b *testing.B) {
+	b.StopTimer()
+	content := ""
+	for i := 0; i < 500; i++ {
+		content += "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890\n"
+	}
 
-// 	fileJob := FileJob{
-// 		Content: []byte(content),
-// 	}
-// 	b.StartTimer()
-// 	for i := 0; i < b.N; i++ {
-// 		countStats(&fileJob)
-// 	}
-// }
+	fileJob := FileJob{
+		Content: []byte(content),
+	}
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
 
-// func BenchmarkCountStatsLinesFiveHundredLongLinesTriggerComplexityIf(b *testing.B) {
-// 	b.StopTimer()
-// 	content := ""
-// 	for i := 0; i < 500; i++ {
-// 		content += "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii\n"
-// 	}
+func BenchmarkCountStatsLinesFiveHundredLongLinesTriggerComplexityIf(b *testing.B) {
+	b.StopTimer()
+	content := ""
+	for i := 0; i < 500; i++ {
+		content += "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii\n"
+	}
 
-// 	fileJob := FileJob{
-// 		Content: []byte(content),
-// 	}
-// 	b.StartTimer()
-// 	for i := 0; i < b.N; i++ {
-// 		countStats(&fileJob)
-// 	}
-// }
+	fileJob := FileJob{
+		Content: []byte(content),
+	}
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
 
-// func BenchmarkCountStatsLinesFiveHundredLongLinesTriggerComplexityFor(b *testing.B) {
-// 	b.StopTimer()
-// 	content := ""
-// 	for i := 0; i < 500; i++ {
-// 		content += "fofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofo\n"
-// 	}
+func BenchmarkCountStatsLinesFiveHundredLongLinesTriggerComplexityFor(b *testing.B) {
+	b.StopTimer()
+	content := ""
+	for i := 0; i < 500; i++ {
+		content += "fofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofo\n"
+	}
 
-// 	fileJob := FileJob{
-// 		Content: []byte(content),
-// 	}
-// 	b.StartTimer()
-// 	for i := 0; i < b.N; i++ {
-// 		countStats(&fileJob)
-// 	}
-// }
+	fileJob := FileJob{
+		Content: []byte(content),
+	}
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
 
-// func BenchmarkCountStatsLinesSixHundredLongLinesMixed(b *testing.B) {
-// 	b.StopTimer()
-// 	content := ""
-// 	for i := 0; i < 200; i++ {
-// 		content += "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890\n"
-// 		content += "1234567890          1234567890          1234567890          1234567890          1234567890          \n"
-// 		content += "                                                                                                    \n"
-// 	}
+func BenchmarkCountStatsLinesSixHundredLongLinesMixed(b *testing.B) {
+	b.StopTimer()
+	content := ""
+	for i := 0; i < 200; i++ {
+		content += "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890\n"
+		content += "1234567890          1234567890          1234567890          1234567890          1234567890          \n"
+		content += "                                                                                                    \n"
+	}
 
-// 	fileJob := FileJob{
-// 		Content: []byte(content),
-// 	}
-// 	b.StartTimer()
-// 	for i := 0; i < b.N; i++ {
-// 		countStats(&fileJob)
-// 	}
-// }
+	fileJob := FileJob{
+		Content: []byte(content),
+	}
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		countStats(&fileJob)
+	}
+}
 
 func BenchmarkCheckByteEqualityReflect(b *testing.B) {
 	b.StopTimer()
