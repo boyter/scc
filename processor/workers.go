@@ -1,6 +1,7 @@
 package processor
 
 import (
+	// "fmt"
 	"io/ioutil"
 	"sync"
 )
@@ -27,11 +28,14 @@ func countStats(fileJob *FileJob) {
 	// WIP should be in the list of languages
 	// TODO shouldn't require the space in front, should be handled by the check
 	complexityChecks := [][]byte{
-		[]byte(" for "),
-		[]byte(" for("),
-		[]byte(" if "),
-		[]byte(" if("),
-		[]byte(" switch "),
+		[]byte("for "),
+		[]byte("for("),
+		[]byte("if "),
+		[]byte("if("),
+		[]byte("switch "),
+		[]byte("|| "),
+		[]byte("&& "),
+		[]byte("!= "),
 	}
 
 	// WIP should be in the list of lanugages
@@ -76,8 +80,7 @@ func countStats(fileJob *FileJob) {
 
 		// Complexity calculation
 		// In reality this is going to need to pull from the list of languages to see how to do this
-		// TODO this is really bad because we are looking at every byte multiple times...
-		if (currentState == S_BLANK || currentState == S_CODE) && (currentByte == ' ' || currentByte == '\t') {
+		if currentState == S_BLANK || currentState == S_CODE {
 			for _, edge := range complexityChecks {
 				if currentByte == edge[0] {
 					potentialMatch := true
@@ -85,9 +88,16 @@ func countStats(fileJob *FileJob) {
 					// Start at 1 to avoid doing the check we just did again
 					// Check BenchmarkCheckByteEquality if you doubt this is the fastest way to do it
 					for j := 1; j < len(edge); j++ {
-						if index+j >= endPoint || edge[j] != fileJob.Content[index+j] {
+						if index+j > endPoint || edge[j] != fileJob.Content[index+j] {
 							potentialMatch = false
 							break
+						}
+					}
+
+					// Check if the previous byte is space tab or newline otherwise its not a match
+					if index != 0 {
+						if fileJob.Content[index-1] != ' ' && fileJob.Content[index-1] != '\t' && fileJob.Content[index-1] != '\n' && fileJob.Content[index-1] != '\r' {
+							potentialMatch = false
 						}
 					}
 

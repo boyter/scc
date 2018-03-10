@@ -196,12 +196,46 @@ func TestCountStatsBlankLines(t *testing.T) {
 }
 
 func TestCountStatsComplexityCount(t *testing.T) {
-	fileJob := FileJob{
-		Content: []byte("f"),
-		Blank:   0,
+	fileJob := FileJob{}
+
+	checks := []string{
+		"if ",
+		"	if ",
+		"if a == b {",
+		"if(",
+		" if(i==0)",
+		"    if(",
+		"    if( ",
 	}
 
-	countStats(&fileJob)
+	for _, check := range checks {
+		fileJob.Complexity = 0
+		fileJob.Content = []byte(check)
+		countStats(&fileJob)
+		if fileJob.Complexity != 1 {
+			t.Errorf("Expected complexity of 1 got %d for %s", fileJob.Complexity, check)
+		}
+	}
+}
+
+func TestCountStatsComplexityCountFalse(t *testing.T) {
+	fileJob := FileJob{}
+
+	checks := []string{
+		"if",
+		"aif ",
+		"aif(",
+	}
+
+	for _, check := range checks {
+		fileJob.Complexity = 0
+		fileJob.Content = []byte(check)
+		countStats(&fileJob)
+		if fileJob.Complexity != 0 {
+			t.Errorf("Expected complexity of 0 got %d for %s", fileJob.Complexity, check)
+		}
+	}
+
 }
 
 //////////////////////////////////////////////////
