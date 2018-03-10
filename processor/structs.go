@@ -23,4 +23,5 @@ type LanguageSummary struct {
 	Blank      int64
 	Complexity int64
 	Count      int64
+	Files      []*FileJob
 }
