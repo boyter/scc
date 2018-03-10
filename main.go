@@ -25,12 +25,13 @@ func main() {
 		cli.StringFlag{
 			Name:        "files",
 			Usage:       "Set this to anything non blank to specify you want to see the output for every file",
-			Value:       " ",
+			Value:       "",
 			Destination: &processor.FilesOutput,
 		},
 	}
 
 	app.Action = func(c *cli.Context) error {
+		processor.DirFilePaths = c.Args()
 		processor.Process()
 		return nil
 	}

@@ -26,16 +26,18 @@ func countStats(fileJob *FileJob) {
 	}
 
 	// WIP should be in the list of languages
-	// TODO shouldn't require the space in front, should be handled by the check
 	complexityChecks := [][]byte{
 		[]byte("for "),
 		[]byte("for("),
 		[]byte("if "),
 		[]byte("if("),
 		[]byte("switch "),
+		[]byte("while "),
+		[]byte("else "),
 		[]byte("|| "),
 		[]byte("&& "),
 		[]byte("!= "),
+		[]byte("== "),
 	}
 
 	// WIP should be in the list of lanugages

@@ -3,13 +3,16 @@ package processor
 import (
 	"fmt"
 	"github.com/ryanuber/columnize"
-	"path/filepath"
+	// "path/filepath"
 )
 
 // TODO write our own formatter code becuase columnize is actually too slow for our purposes
 // since it requires that we loop over the results again in order to work out the sizes which
 // we already know because they should be no longer than the summary
 // For the files summary it slows things down from ~5 seconds to ~10 seconds
+// Also needs to support sorting of values actually...
+// Maybe have a guesser which guesses the size and if it gets it right output looks good
+// otherwise it just takes longer to get it right... guesses could be pretty accurate
 
 func fileSummerizeFiles(input *chan *FileJob) {
 	output := []string{
@@ -75,7 +78,7 @@ func fileSummerizeFiles(input *chan *FileJob) {
 		output = append(output, "-----")
 		for _, res := range summary.Files {
 
-			tmp := filepath.Join(res.Location, res.Filename)
+			tmp := res.Location
 
 			if len(tmp) >= 31 {
 				totrim := len(tmp) - 30

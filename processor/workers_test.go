@@ -201,9 +201,9 @@ func TestCountStatsComplexityCount(t *testing.T) {
 	checks := []string{
 		"if ",
 		"	if ",
-		"if a == b {",
+		"if a.equals(b) {",
 		"if(",
-		" if(i==0)",
+		" if(i.equals(0))",
 		"    if(",
 		"    if( ",
 	}
