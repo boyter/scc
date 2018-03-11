@@ -113,22 +113,11 @@ func Format(lines []string, config *Config) string {
 	conf := MergeConfig(DefaultConfig(), config)
 	widths := getWidthsFromLines(conf, lines)
 
-	width := (len(widths) * 2) - 2
-	for _, w := range widths {
-		width += w
-	}
-
-	linebreak := strings.Repeat("-", width)
-
 	// Create the formatted output using the format string
 	for _, line := range lines {
-		if line == "-----" {
-			result += linebreak + "\n"
-		} else {
-			elems := getElementsFromLine(conf, line)
-			stringfmt := conf.getStringFormat(widths, len(elems))
-			result += fmt.Sprintf(stringfmt, elems...)
-		}
+		elems := getElementsFromLine(conf, line)
+		stringfmt := conf.getStringFormat(widths, len(elems))
+		result += fmt.Sprintf(stringfmt, elems...)
 	}
 
 	// Remove trailing newline without removing leading/trailing space

@@ -44,6 +44,9 @@ func countStats(fileJob *FileJob) {
 	singleLineCommentChecks := [][]byte{
 		[]byte("#"),
 		[]byte("//"),
+	}
+
+	multiLineCommentChecks := [][]byte{
 		[]byte("/*"),
 	}
 
@@ -70,6 +73,28 @@ func countStats(fileJob *FileJob) {
 
 					if potentialMatch {
 						currentState = S_COMMENT
+					}
+				}
+			}
+		}
+
+		// If we arent in a comment its possible to enter multiline comment
+		if currentState != S_BLANK {
+			for _, edge := range multiLineCommentChecks {
+				if currentByte == edge[0] {
+					potentialMatch := true
+
+					// Start at 1 to avoid doing the check we just did again
+					// Check BenchmarkCheckByteEquality if you doubt this is the fastest way to do it
+					for j := 1; j < len(edge); j++ {
+						if index+j >= endPoint || edge[j] != fileJob.Content[index+j] {
+							potentialMatch = false
+							break
+						}
+					}
+
+					if potentialMatch {
+						currentState = S_MULTICOMMENT
 					}
 				}
 			}
@@ -119,10 +144,15 @@ func countStats(fileJob *FileJob) {
 				fileJob.Code++
 			case currentState == S_COMMENT:
 				fileJob.Comment++
+			case currentState == S_MULTICOMMENT:
+				fileJob.Comment++
 			}
 
 			fileJob.Lines++
-			currentState = S_BLANK
+
+			if currentState != S_MULTICOMMENT {
+				currentState = S_BLANK
+			}
 		}
 	}
 }

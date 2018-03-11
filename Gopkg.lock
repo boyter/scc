@@ -3,9 +3,33 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/MichaelTJones/walk"
+  packages = ["."]
+  revision = "4748e29d5718c2df4028a6543edf86fd8cc0f881"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/iafan/cwalk"
+  packages = ["."]
+  revision = "4c301c02b9f45b8589be22ceac59cf24eeddad63"
+
+[[projects]]
+  name = "github.com/karrick/godirwalk"
+  packages = ["."]
+  revision = "6755865b2b7331ebc40fa150a71e2a8e05a90333"
+  version = "v1.6.2"
+
+[[projects]]
+  branch = "master"
   name = "github.com/monochromegane/go-gitignore"
   packages = ["."]
   revision = "38717d0a108ca0e5af632cd6845ca77d45b50729"
+
+[[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
 
 [[projects]]
   name = "github.com/ryanuber/columnize"
@@ -13,9 +37,15 @@
   revision = "983d3a5fab1bf04d1b412465d2d9f8430e2e917e"
   version = "v2.1.0"
 
+[[projects]]
+  name = "github.com/urfave/cli"
+  packages = ["."]
+  revision = "cfb38830724cc34fedffe9a2a29fb54fa9169cd1"
+  version = "v1.20.0"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c5a848e613989217ae08c0ac0fa88c3901ca4754d862350c79840c763b3c86f5"
+  inputs-digest = "52b6376db43a3af22405c376605602a8b936a527f90289bcd38ccb5d0ea959ec"
   solver-name = "gps-cdcl"
   solver-version = 1
