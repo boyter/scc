@@ -1,6 +1,7 @@
 package processor
 
 import (
+	// "github.com/karrick/godirwalk"
 	"github.com/monochromegane/go-gitignore"
 	"os"
 	"path"
@@ -18,6 +19,7 @@ var DirFilePaths = []string{}
 func walkDirectory(root string, output *chan *FileJob) {
 	gitignore, gitignoreerror := gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
 
+	// Checking out each of the below
 	filepath.Walk(root, func(root string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
