@@ -7,12 +7,15 @@ import (
 )
 
 func main() {
+	count := 0
 	filepath.Walk("./", func(root string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		fmt.Println(info.Name())
+		count++
 		return nil
 	})
+
+	fmt.Println(count)
 }

@@ -6,13 +6,16 @@ import (
 )
 
 func main() {
+	count := 0
 	godirwalk.Walk("./", &godirwalk.Options{
+		Unsorted: true,
 		Callback: func(osPathname string, de *godirwalk.Dirent) error {
-			fmt.Println(osPathname)
+			count++
 			return nil
 		},
 		ErrorCallback: func(osPathname string, err error) godirwalk.ErrorAction {
 			return godirwalk.SkipNode
 		},
 	})
+	fmt.Println(count)
 }

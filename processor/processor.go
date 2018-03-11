@@ -1,9 +1,8 @@
 package processor
 
 import (
-	// "github.com/karrick/godirwalk"
+	"github.com/karrick/godirwalk"
 	"github.com/monochromegane/go-gitignore"
-	"os"
 	"path"
 	"path/filepath"
 	"runtime"
@@ -19,43 +18,40 @@ var DirFilePaths = []string{}
 func walkDirectory(root string, output *chan *FileJob) {
 	gitignore, gitignoreerror := gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
 
-	// Checking out each of the below
-	filepath.Walk(root, func(root string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !info.Mode().IsRegular() {
-			return nil
-		}
+	godirwalk.Walk(root, &godirwalk.Options{
+		Unsorted: true,
+		Callback: func(root string, info *godirwalk.Dirent) error {
+			if strings.HasPrefix(root, ".git/") || strings.HasPrefix(root, ".hg/") || strings.HasPrefix(root, ".svn/") {
+				return filepath.SkipDir
+			}
 
-		// Need to exclude git, hg, svn etc...
-		if strings.HasPrefix(root, ".git/") || strings.HasPrefix(root, ".hg/") || strings.HasPrefix(root, ".svn/") {
-			return filepath.SkipDir
-		}
+			if !info.IsDir() {
+				if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
 
-		if !info.IsDir() {
-			if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
+					extension := strings.ToLower(path.Ext(info.Name()))
 
-				extension := strings.ToLower(path.Ext(info.Name()))
+					// if name starts with . don't trim UNLESS there is more than one
+					if !strings.HasPrefix(info.Name(), ".") || strings.Count(info.Name(), ".") != 1 {
+						extension = strings.TrimLeft(extension, ".")
+					}
 
-				// if name starts with . don't trim UNLESS there is more than one
-				if !strings.HasPrefix(info.Name(), ".") || strings.Count(info.Name(), ".") != 1 {
-					extension = strings.TrimLeft(extension, ".")
-				}
+					if extension == "" {
+						extension = strings.ToLower(info.Name())
+					}
 
-				if extension == "" {
-					extension = strings.ToLower(info.Name())
-				}
+					language, ok := ExtensionToLanguage[extension]
 
-				language, ok := ExtensionToLanguage[extension]
-
-				if ok {
-					*output <- &FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language}
+					if ok {
+						*output <- &FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language}
+					}
 				}
 			}
-		}
 
-		return nil
+			return nil
+		},
+		ErrorCallback: func(osPathname string, err error) godirwalk.ErrorAction {
+			return godirwalk.SkipNode
+		},
 	})
 
 	close(*output)
