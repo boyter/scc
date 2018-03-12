@@ -153,7 +153,7 @@ func fileSummerize(input *chan *FileJob) {
 	}
 
 	// TODO have this configurable through CLI
-	sortBy := "count"
+	sortBy := "complexity"
 
 	switch {
 	case sortBy == "name":
@@ -163,6 +163,10 @@ func fileSummerize(input *chan *FileJob) {
 	case sortBy == "count":
 		sort.Slice(language, func(i, j int) bool {
 			return language[i].Count > language[j].Count
+		})
+	case sortBy == "complexity":
+		sort.Slice(language, func(i, j int) bool {
+			return language[i].Complexity > language[j].Complexity
 		})
 	}
 
