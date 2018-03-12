@@ -53,11 +53,11 @@ func Process() {
 
 	// TODO these should be configurable by command line
 	// TODO need to add an error channel and spit them out
-	fileListQueue := make(chan *FileJob, 100000)                 // Files ready to be read from disk
-	fileReadJobQueue := make(chan *FileJob, 10)                  // Workers reading from disk
-	fileReadContentJobQueue := make(chan *FileJob, 100000)       // Files ready to be processed
-	fileProcessJobQueue := make(chan *FileJob, runtime.NumCPU()) // Workers doing the hard work
-	fileSummaryJobQueue := make(chan *FileJob, 100000)           // Files ready to be summerised
+	fileListQueue := make(chan *FileJob, runtime.NumCPU()*10000)          // Files ready to be read from disk
+	fileReadJobQueue := make(chan *FileJob, runtime.NumCPU()*10)          // Workers reading from disk
+	fileReadContentJobQueue := make(chan *FileJob, runtime.NumCPU()*5000) // Files ready to be processed
+	fileProcessJobQueue := make(chan *FileJob, runtime.NumCPU())          // Workers doing the hard work
+	fileSummaryJobQueue := make(chan *FileJob, runtime.NumCPU()*1000)     // Files ready to be summerised
 
 	go walkDirectory(DirFilePaths[0], &fileListQueue)
 	go fileBufferReader(&fileListQueue, &fileReadJobQueue)

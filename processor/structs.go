@@ -25,3 +25,8 @@ type LanguageSummary struct {
 	Count      int64
 	Files      []*FileJob
 }
+
+type MultiLineComment struct {
+	Open  []byte
+	Close []byte
+}

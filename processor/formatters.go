@@ -3,7 +3,8 @@ package processor
 import (
 	"fmt"
 	"github.com/ryanuber/columnize"
-	// "sort"
+	"sort"
+	"strings"
 )
 
 // TODO write our own formatter code becuase columnize is actually too slow for our purposes
@@ -149,9 +150,27 @@ func fileSummerize(input *chan *FileJob) {
 	// sort.Slice(languages, func(i, j int) bool {
 	// 	return i.
 	// })
-	// Convert map to list then sort and done
+	// Convert map keys to list then sort and done
 
+	language := []LanguageSummary{}
 	for _, summary := range languages {
+		language = append(language, summary)
+	}
+
+	sortBy := "count"
+
+	switch {
+	case sortBy == "name":
+		sort.Slice(language, func(i, j int) bool {
+			return strings.Compare(language[i].Name, language[j].Name) < 0
+		})
+	case sortBy == "count":
+		sort.Slice(language, func(i, j int) bool {
+			return language[i].Count > language[j].Count
+		})
+	}
+
+	for _, summary := range language {
 		output = append(output, fmt.Sprintf("%s | %d | %d | %d | %d | %d | %d | %d", summary.Name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity, summary.Bytes))
 	}
 
