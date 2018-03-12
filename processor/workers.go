@@ -157,6 +157,23 @@ func countStats(fileJob *FileJob) {
 	}
 }
 
+// Reads from the file first queue and pushes to the next as a buffer
+func fileBufferReader(input *chan *FileJob, output *chan *FileJob) {
+	var wg sync.WaitGroup
+	for res := range *input {
+		wg.Add(1)
+		go func(res *FileJob) {
+			*output <- res
+			wg.Done()
+		}(res)
+	}
+
+	go func() {
+		wg.Wait()
+		close(*output)
+	}()
+}
+
 // Reads file into memory
 func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 	var wg sync.WaitGroup
