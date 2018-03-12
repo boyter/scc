@@ -3,7 +3,7 @@ package processor
 import (
 	"fmt"
 	"github.com/ryanuber/columnize"
-	// "path/filepath"
+	// "sort"
 )
 
 // TODO write our own formatter code becuase columnize is actually too slow for our purposes
@@ -146,8 +146,13 @@ func fileSummerize(input *chan *FileJob) {
 		}
 	}
 
-	for name, summary := range languages {
-		output = append(output, fmt.Sprintf("%s | %d | %d | %d | %d | %d | %d | %d", name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity, summary.Bytes))
+	// sort.Slice(languages, func(i, j int) bool {
+	// 	return i.
+	// })
+	// Convert map to list then sort and done
+
+	for _, summary := range languages {
+		output = append(output, fmt.Sprintf("%s | %d | %d | %d | %d | %d | %d | %d", summary.Name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity, summary.Bytes))
 	}
 
 	output = append(output, "-----")
