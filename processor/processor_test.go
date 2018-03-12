@@ -11,6 +11,33 @@ import (
 	"testing"
 )
 
+func TestGetExtension(t *testing.T) {
+	got := getExtension("something.c")
+	expected := "c"
+
+	if got != expected {
+		t.Errorf("Expected %s got %s", expected, got)
+	}
+}
+
+func TestGetExtensionNoExtension(t *testing.T) {
+	got := getExtension("something")
+	expected := "something"
+
+	if got != expected {
+		t.Errorf("Expected %s got %s", expected, got)
+	}
+}
+
+func TestGetExtensionMultipleDots(t *testing.T) {
+	got := getExtension(".travis.yml")
+	expected := "yml"
+
+	if got != expected {
+		t.Errorf("Expected %s got %s", expected, got)
+	}
+}
+
 func BenchmarkNativeWalk(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		filepath.Walk("./", func(root string, info os.FileInfo, err error) error {
@@ -82,5 +109,12 @@ func BenchmarkGoDirWalk(b *testing.B) {
 				return godirwalk.SkipNode
 			},
 		})
+	}
+}
+
+func BenchmarkGetExtension(b *testing.B) {
+	name := "something.c"
+	for i := 0; i < b.N; i++ {
+		getExtension(name)
 	}
 }

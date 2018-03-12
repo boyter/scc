@@ -14,7 +14,33 @@ var PathBlacklist = ""
 var FilesOutput = ""
 var DirFilePaths = []string{}
 
-/// Get all the files that exist in the directory
+var extensionCache = map[string]string{}
+
+func getExtension(name string) string {
+
+	extension, ok := extensionCache[name]
+
+	if ok {
+		return extension
+	}
+
+	extension = strings.ToLower(path.Ext(name))
+
+	// if name starts with . don't trim UNLESS there is more than one
+	if !strings.HasPrefix(name, ".") || strings.Count(name, ".") != 1 {
+		extension = strings.TrimLeft(extension, ".")
+	}
+
+	if extension == "" {
+		extension = strings.ToLower(name)
+	}
+
+	extensionCache[name] = extension
+
+	return extension
+}
+
+// Get all the files that exist in the directory
 func walkDirectory(root string, output *chan *FileJob) {
 	gitignore, gitignoreerror := gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
 
@@ -28,17 +54,7 @@ func walkDirectory(root string, output *chan *FileJob) {
 			if !info.IsDir() {
 				if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
 
-					extension := strings.ToLower(path.Ext(info.Name()))
-
-					// if name starts with . don't trim UNLESS there is more than one
-					if !strings.HasPrefix(info.Name(), ".") || strings.Count(info.Name(), ".") != 1 {
-						extension = strings.TrimLeft(extension, ".")
-					}
-
-					if extension == "" {
-						extension = strings.ToLower(info.Name())
-					}
-
+					extension := getExtension(info.Name())
 					language, ok := ExtensionToLanguage[extension]
 
 					if ok {
@@ -62,6 +78,7 @@ func Process() {
 		DirFilePaths = append(DirFilePaths, ".")
 	}
 
+	// TODO these should be configurable by command line
 	// A buffered channel that we can send work requests on.
 	fileReadJobQueue := make(chan *FileJob, runtime.NumCPU()*20)
 	fileProcessJobQueue := make(chan *FileJob, runtime.NumCPU())
