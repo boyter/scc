@@ -147,16 +147,12 @@ func fileSummerize(input *chan *FileJob) {
 		}
 	}
 
-	// sort.Slice(languages, func(i, j int) bool {
-	// 	return i.
-	// })
-	// Convert map keys to list then sort and done
-
 	language := []LanguageSummary{}
 	for _, summary := range languages {
 		language = append(language, summary)
 	}
 
+	// TODO have this configurable through CLI
 	sortBy := "count"
 
 	switch {

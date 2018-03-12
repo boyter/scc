@@ -20,6 +20,7 @@ func walkDirectory(root string, output *chan *FileJob) {
 	godirwalk.Walk(root, &godirwalk.Options{
 		Unsorted: true,
 		Callback: func(root string, info *godirwalk.Dirent) error {
+			// TODO this should be configurable via command line
 			if strings.HasPrefix(root, ".git/") || strings.HasPrefix(root, ".hg/") || strings.HasPrefix(root, ".svn/") {
 				return filepath.SkipDir
 			}
