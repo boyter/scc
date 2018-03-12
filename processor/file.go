@@ -7,18 +7,16 @@ import (
 var extensionCache = map[string]string{}
 
 func getExtension(name string) string {
+	extension = strings.ToLower(name)
 	extension, ok := extensionCache[name]
 
 	if ok {
 		return extension
 	}
 
-	extension = strings.ToLower(name)
 	loc := strings.LastIndex(extension, ".")
 
-	if loc == -1 {
-		return extension
-	} else {
+	if loc != -1 {
 		extension = extension[loc+1:]
 	}
 
