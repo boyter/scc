@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"fmt"
 	"github.com/karrick/godirwalk"
 	"github.com/monochromegane/go-gitignore"
 	"path/filepath"
@@ -71,4 +72,6 @@ func Process() {
 	} else {
 		fileSummerizeFiles(&fileSummaryJobQueue)
 	}
+
+	fmt.Println("NumCPU", runtime.NumCPU())
 }

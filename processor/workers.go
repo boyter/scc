@@ -1,7 +1,6 @@
 package processor
 
 import (
-	// "fmt"
 	"io/ioutil"
 	"sync"
 )
@@ -19,11 +18,11 @@ const (
 // This is the 'hot' path for the application and needs to be as fast as possible
 func countStats(fileJob *FileJob) {
 	// If the file has a length of 0 it is is empty then we say it has no lines
-	fileJob.Bytes = int64(len(fileJob.Content))
-	if fileJob.Bytes == 0 {
-		fileJob.Lines = 0
-		return
-	}
+	// fileJob.Bytes = int64(len(fileJob.Content))
+	// if fileJob.Bytes == 0 {
+	// 	fileJob.Lines = 0
+	// 	return
+	// }
 
 	// WIP should be in the list of languages
 	complexityChecks := [][]byte{

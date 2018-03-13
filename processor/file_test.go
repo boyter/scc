@@ -41,13 +41,21 @@ func TestGetExtensionMultipleExtensions(t *testing.T) {
 	}
 }
 
-func BenchmarkGetExtension(b *testing.B) {
+func BenchmarkGetExtensionDifferent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 
 		b.StopTimer()
 		name := randStringBytes(3) + "." + randStringBytes(2)
 		b.StartTimer()
 
+		getExtension(name)
+	}
+}
+
+func BenchmarkGetExtensionSame(b *testing.B) {
+	name := randStringBytes(7) + "." + randStringBytes(3)
+
+	for i := 0; i < b.N; i++ {
 		getExtension(name)
 	}
 }
