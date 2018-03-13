@@ -34,7 +34,7 @@ func BenchmarkIoUtilOpenDirectory(b *testing.B) {
 	count := 0
 	for i := 0; i < b.N; i++ {
 
-		filepath.Walk("/root/django", func(root string, info os.FileInfo, err error) error {
+		filepath.Walk("/root/linux", func(root string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
@@ -51,7 +51,7 @@ func BenchmarkIoUtilOpenDirectory(b *testing.B) {
 func BenchmarkMmapUtilOpenDirectory(b *testing.B) {
 	count := 0
 	for i := 0; i < b.N; i++ {
-		filepath.Walk("/root/django", func(root string, info os.FileInfo, err error) error {
+		filepath.Walk("/root/linux", func(root string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
