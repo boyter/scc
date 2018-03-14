@@ -196,6 +196,32 @@ func TestCountStatsCommentTricks(t *testing.T) {
 	if fileJob.Comment != 3 {
 		t.Errorf("Three line expected got %d", fileJob.Comment)
 	}
+
+	fileJob.Code = 0
+	fileJob.Comment = 0
+	fileJob.Content = []byte(`i++; /* 
+		i++ comment 
+		*/`)
+	countStats(&fileJob)
+	if fileJob.Code != 1 {
+		t.Errorf("One line expected got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 2 {
+		t.Errorf("Two line expected got %d", fileJob.Comment)
+	}
+
+	fileJob.Code = 0
+	fileJob.Comment = 0
+	fileJob.Content = []byte(`/* 
+		i++ comment 
+		*/ i++;`)
+	countStats(&fileJob)
+	if fileJob.Code != 1 {
+		t.Errorf("One line expected got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 2 {
+		t.Errorf("Two line expected got %d", fileJob.Comment)
+	}
 }
 
 func TestCountStatsBlankLines(t *testing.T) {
