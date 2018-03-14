@@ -178,10 +178,23 @@ func TestCountStatsCommentTricks(t *testing.T) {
 	fileJob.Content = []byte("/* i++ comment */")
 	countStats(&fileJob)
 	if fileJob.Code != 0 {
-		t.Errorf("One line expected got %d", fileJob.Code)
+		t.Errorf("No line expected got %d", fileJob.Code)
 	}
 	if fileJob.Comment != 1 {
-		t.Errorf("No line expected got %d", fileJob.Comment)
+		t.Errorf("One line expected got %d", fileJob.Comment)
+	}
+
+	fileJob.Code = 0
+	fileJob.Comment = 0
+	fileJob.Content = []byte(`/* 
+		i++ comment 
+		*/`)
+	countStats(&fileJob)
+	if fileJob.Code != 0 {
+		t.Errorf("One line expected got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 3 {
+		t.Errorf("Three line expected got %d", fileJob.Comment)
 	}
 }
 
