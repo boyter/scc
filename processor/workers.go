@@ -33,6 +33,23 @@ func checkForMatch(currentByte byte, index int, endPoint int, matches [][]byte, 
 	return false
 }
 
+func checkForMatchMulti(currentByte byte, index int, endPoint int, matches []MultiLineComment, fileJob *FileJob) bool {
+	for _, edge := range matches {
+		if currentByte == edge.Open[0] {
+
+			for j := 1; j < len(edge.Open); j++ {
+				if index+j >= endPoint || edge.Open[j] != fileJob.Content[index+j] {
+					return false
+				}
+			}
+
+			return true
+		}
+	}
+
+	return false
+}
+
 // If the file contains anything even just a newline its lines > 1
 // If the file size is 0 its lines = 0
 // Newlines belong to the line they started on so a file of \n means only 1 line
@@ -91,42 +108,12 @@ func countStats(fileJob *FileJob) {
 		}
 
 		// If we arent in a comment its possible to enter multiline comment
-		if currentState == S_BLANK {
-			for _, edge := range multiLineCommentChecks {
-				if currentByte == edge.Open[0] {
-					potentialMatch := true
-
-					for j := 1; j < len(edge.Open); j++ {
-						if index+j >= endPoint || edge.Open[j] != fileJob.Content[index+j] {
-							potentialMatch = false
-							break
-						}
-					}
-
-					if potentialMatch {
-						currentState = S_MULTICOMMENT
-					}
-				}
-			}
+		if currentState == S_BLANK && checkForMatchMulti(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
+			currentState = S_MULTICOMMENT
 		}
 
-		if currentState != S_BLANK && currentState != S_COMMENT && currentState != S_COMMENT_CODE {
-			for _, edge := range multiLineCommentChecks {
-				if currentByte == edge.Open[0] {
-					potentialMatch := true
-
-					for j := 1; j < len(edge.Open); j++ {
-						if index+j >= endPoint || edge.Open[j] != fileJob.Content[index+j] {
-							potentialMatch = false
-							break
-						}
-					}
-
-					if potentialMatch {
-						currentState = S_MULTICOMMENT_CODE
-					}
-				}
-			}
+		if currentState != S_BLANK && currentState != S_COMMENT && currentState != S_COMMENT_CODE && checkForMatchMulti(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
+			currentState = S_MULTICOMMENT_CODE
 		}
 
 		// Check currentState first to save on the extra checks for a small speed boost, then check in order of most common characters
