@@ -102,7 +102,7 @@ func countStats(fileJob *FileJob) {
 			currentState = S_COMMENT
 		}
 
-		// If we are in code its possible to move into single line comment BUT we don't count it later
+		// If we are in code its possible to move into single line comment
 		if currentState == S_CODE && checkForMatch(currentByte, index, endPoint, singleLineCommentChecks, fileJob) {
 			currentState = S_COMMENT_CODE
 		}
@@ -112,7 +112,8 @@ func countStats(fileJob *FileJob) {
 			currentState = S_MULTICOMMENT
 		}
 
-		if currentState != S_BLANK && currentState != S_COMMENT && currentState != S_COMMENT_CODE && checkForMatchMulti(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
+		// If we are in code its possible to move unto a multie line comment
+		if currentState == S_CODE && checkForMatchMulti(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
 			currentState = S_MULTICOMMENT_CODE
 		}
 
