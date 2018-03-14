@@ -6,15 +6,16 @@ import (
 )
 
 const (
-	S_BLANK        int64 = 1
-	S_CODE         int64 = 2
-	S_COMMENT      int64 = 3
-	S_COMMENT_CODE int64 = 4 // Indicates comment AFTER code
-	S_MULTICOMMENT int64 = 5
+	S_BLANK             int64 = 1
+	S_CODE              int64 = 2
+	S_COMMENT           int64 = 3
+	S_COMMENT_CODE      int64 = 4 // Indicates comment after code
+	S_MULTICOMMENT      int64 = 5
+	S_MULTICOMMENT_CODE int64 = 6 // Indicates multi comment after code
 )
 
-func checkForSingleLineComment(currentByte byte, index int, endPoint int, singleLineComments [][]byte, fileJob *FileJob) bool {
-	for _, edge := range singleLineComments {
+func checkForMatch(currentByte byte, index int, endPoint int, matches [][]byte, fileJob *FileJob) bool {
+	for _, edge := range matches {
 		if currentByte == edge[0] {
 
 			// Start at 1 to avoid doing the check we just did again
@@ -79,29 +80,22 @@ func countStats(fileJob *FileJob) {
 
 	for index, currentByte := range fileJob.Content {
 
-		// WIP If the line is still blank we can move into single line comment otherwise its still a code line just with a comment at the end
-		if currentState == S_BLANK {
-			if checkForSingleLineComment(currentByte, index, endPoint, singleLineCommentChecks, fileJob) {
-				currentState = S_COMMENT
-			}
+		// If the line is still blank we can move into single line comment otherwise its still a code line just with a comment at the end
+		if currentState == S_BLANK && checkForMatch(currentByte, index, endPoint, singleLineCommentChecks, fileJob) {
+			currentState = S_COMMENT
 		}
 
 		// If we are in code its possible to move into single line comment BUT we don't count it later
-		// TODO merge with the above
-		if currentState == S_CODE {
-			if checkForSingleLineComment(currentByte, index, endPoint, singleLineCommentChecks, fileJob) {
-				currentState = S_COMMENT_CODE
-			}
+		if currentState == S_CODE && checkForMatch(currentByte, index, endPoint, singleLineCommentChecks, fileJob) {
+			currentState = S_COMMENT_CODE
 		}
 
 		// If we arent in a comment its possible to enter multiline comment
-		if currentState != S_COMMENT && currentState != S_COMMENT_CODE {
+		if currentState == S_BLANK {
 			for _, edge := range multiLineCommentChecks {
 				if currentByte == edge.Open[0] {
 					potentialMatch := true
 
-					// Start at 1 to avoid doing the check we just did again
-					// Check BenchmarkCheckByteEquality if you doubt this is the fastest way to do it
 					for j := 1; j < len(edge.Open); j++ {
 						if index+j >= endPoint || edge.Open[j] != fileJob.Content[index+j] {
 							potentialMatch = false
@@ -111,6 +105,25 @@ func countStats(fileJob *FileJob) {
 
 					if potentialMatch {
 						currentState = S_MULTICOMMENT
+					}
+				}
+			}
+		}
+
+		if currentState != S_BLANK && currentState != S_COMMENT && currentState != S_COMMENT_CODE {
+			for _, edge := range multiLineCommentChecks {
+				if currentByte == edge.Open[0] {
+					potentialMatch := true
+
+					for j := 1; j < len(edge.Open); j++ {
+						if index+j >= endPoint || edge.Open[j] != fileJob.Content[index+j] {
+							potentialMatch = false
+							break
+						}
+					}
+
+					if potentialMatch {
+						currentState = S_MULTICOMMENT_CODE
 					}
 				}
 			}
@@ -156,7 +169,7 @@ func countStats(fileJob *FileJob) {
 			switch {
 			case currentState == S_BLANK:
 				fileJob.Blank++
-			case currentState == S_CODE || currentState == S_COMMENT_CODE:
+			case currentState == S_CODE || currentState == S_COMMENT_CODE || currentState == S_MULTICOMMENT_CODE:
 				fileJob.Code++
 			case currentState == S_COMMENT:
 				fileJob.Comment++
@@ -168,6 +181,10 @@ func countStats(fileJob *FileJob) {
 
 			if currentState != S_MULTICOMMENT {
 				currentState = S_BLANK
+			}
+
+			if currentState == S_MULTICOMMENT_CODE {
+				currentState = S_MULTICOMMENT
 			}
 		}
 	}
