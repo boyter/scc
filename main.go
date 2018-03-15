@@ -22,12 +22,27 @@ func main() {
 			Value:       ".git,.hg,.svn",
 			Destination: &processor.PathBlacklist,
 		},
-		cli.StringFlag{
+		cli.BoolFlag{
 			Name:        "files",
 			Usage:       "Set this to anything non blank to specify you want to see the output for every file",
-			Value:       "",
-			Destination: &processor.FilesOutput,
+			Destination: &processor.Files,
 		},
+		cli.BoolFlag{
+			Name:        "verbose, v",
+			Usage:       "Set this to enable verbose output",
+			Destination: &processor.Verbose,
+		},
+		cli.BoolFlag{
+			Name:        "veryverbose, vv",
+			Usage:       "Set this to enable very verbose output",
+			Destination: &processor.VeryVerbose,
+		},
+	}
+
+	// Override version flag
+	cli.VersionFlag = cli.BoolFlag{
+		Name:  "version, ver",
+		Usage: "print the version",
 	}
 
 	app.Action = func(c *cli.Context) error {

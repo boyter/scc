@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"fmt"
 	"io/ioutil"
 	"sync"
 )
@@ -199,6 +200,7 @@ func fileBufferReader(input *chan *FileJob, output *chan *FileJob) {
 
 // Reads file into memory
 func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
+	startTime := makeTimestampMilli()
 	var wg sync.WaitGroup
 	for res := range *input {
 		wg.Add(1)
@@ -218,10 +220,12 @@ func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 		wg.Wait()
 		close(*output)
 	}()
+	printDebug(fmt.Sprintf("milliseconds reading files into memory: %d", makeTimestampMilli()-startTime))
 }
 
 // Does the actual processing of stats and is the hot path
 func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
+	startTime := makeTimestampMilli()
 	var wg sync.WaitGroup
 	for res := range *input {
 		wg.Add(1)
@@ -236,4 +240,5 @@ func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
 		wg.Wait()
 		close(*output)
 	}()
+	printDebug(fmt.Sprintf("milliseconds proessing files: %d", makeTimestampMilli()-startTime))
 }

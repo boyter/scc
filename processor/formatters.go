@@ -5,6 +5,7 @@ import (
 	"github.com/ryanuber/columnize"
 	"sort"
 	"strings"
+	"time"
 )
 
 // TODO write our own formatter code becuase columnize is actually too slow for our purposes
@@ -180,4 +181,23 @@ func fileSummerize(input *chan *FileJob) {
 
 	result := columnize.SimpleFormat(output)
 	fmt.Println(result)
+}
+
+// Get the time as standard UTC/Zulu format
+func getFormattedTime() string {
+	return time.Now().UTC().Format(time.RFC3339)
+}
+
+// Prints a message to stdout if flags to enable debug output are set
+func printDebug(msg string) {
+	if VeryVerbose {
+		fmt.Println(fmt.Sprintf("DEBUG %s: %s", getFormattedTime(), msg))
+	}
+}
+
+// Prints a message to stdout if flags to enable warning output are set
+func printWarn(msg string) {
+	if Verbose || VeryVerbose {
+		fmt.Println(fmt.Sprintf(" WARN %s: %s", getFormattedTime(), msg))
+	}
 }
