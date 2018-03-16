@@ -51,8 +51,8 @@ func checkForMatchMulti(currentByte byte, index int, endPoint int, matches []Mul
 	return false
 }
 
-// If the file contains anything even just a newline its lines > 1
-// If the file size is 0 its lines = 0
+// If the file contains anything even just a newline its line count should be >= 1.
+// If the file has a size of 0 its line count should be 0.
 // Newlines belong to the line they started on so a file of \n means only 1 line
 // This is the 'hot' path for the application and needs to be as fast as possible
 func countStats(fileJob *FileJob) {
@@ -92,7 +92,6 @@ func countStats(fileJob *FileJob) {
 		},
 	}
 
-	/* test */
 	endPoint := int(fileJob.Bytes - 1)
 	currentState := S_BLANK
 
