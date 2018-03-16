@@ -153,21 +153,36 @@ func fileSummerize(input *chan *FileJob) {
 		language = append(language, summary)
 	}
 
-	// TODO have this configurable through CLI
-	sortBy := "complexity"
-
+	// Cater for the common case of adding plural even for those options that don't make sense
+	// as its quite common for those who English is not a first language to make a simple mistake
 	switch {
-	case sortBy == "name":
+	case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "languages":
 		sort.Slice(language, func(i, j int) bool {
 			return strings.Compare(language[i].Name, language[j].Name) < 0
 		})
-	case sortBy == "count":
+	case SortBy == "line" || SortBy == "lines":
 		sort.Slice(language, func(i, j int) bool {
-			return language[i].Count > language[j].Count
+			return language[i].Lines > language[j].Lines
 		})
-	case sortBy == "complexity":
+	case SortBy == "blank" || SortBy == "blanks":
+		sort.Slice(language, func(i, j int) bool {
+			return language[i].Blank > language[j].Blank
+		})
+	case SortBy == "code" || SortBy == "codes":
+		sort.Slice(language, func(i, j int) bool {
+			return language[i].Code > language[j].Code
+		})
+	case SortBy == "comment" || SortBy == "comments":
+		sort.Slice(language, func(i, j int) bool {
+			return language[i].Comment > language[j].Comment
+		})
+	case SortBy == "complexity" || SortBy == "complexitys":
 		sort.Slice(language, func(i, j int) bool {
 			return language[i].Complexity > language[j].Complexity
+		})
+	default:
+		sort.Slice(language, func(i, j int) bool {
+			return language[i].Count > language[j].Count
 		})
 	}
 
@@ -188,16 +203,23 @@ func getFormattedTime() string {
 	return time.Now().UTC().Format(time.RFC3339)
 }
 
-// Prints a message to stdout if flags to enable debug output are set
+// Prints a message to stdout if flag to enable warning output is set
+func printWarn(msg string) {
+	if Verbose {
+		fmt.Println(fmt.Sprintf(" WARN %s: %s", getFormattedTime(), msg))
+	}
+}
+
+// Prints a message to stdout if flag to enable debug output is set
 func printDebug(msg string) {
-	if VeryVerbose {
+	if Debug {
 		fmt.Println(fmt.Sprintf("DEBUG %s: %s", getFormattedTime(), msg))
 	}
 }
 
-// Prints a message to stdout if flags to enable warning output are set
-func printWarn(msg string) {
-	if Verbose || VeryVerbose {
-		fmt.Println(fmt.Sprintf(" WARN %s: %s", getFormattedTime(), msg))
+// Prints a message to stdout if flag to enable trace output is set
+func printTrace(msg string) {
+	if Trace {
+		fmt.Println(fmt.Sprintf("TRACE %s: %s", getFormattedTime(), msg))
 	}
 }

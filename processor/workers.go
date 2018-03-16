@@ -205,7 +205,9 @@ func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 	for res := range *input {
 		wg.Add(1)
 		go func(res *FileJob) {
+			fileStartTime := makeTimestampNano()
 			content, err := ioutil.ReadFile(res.Location)
+			printTrace(fmt.Sprintf("nanoseconds read into memory: %s: %d", res.Location, makeTimestampNano()-fileStartTime))
 
 			if err == nil {
 				res.Content = content
@@ -230,7 +232,10 @@ func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
 	for res := range *input {
 		wg.Add(1)
 		go func(res *FileJob) {
+			fileStartTime := makeTimestampNano()
 			countStats(res)
+			printTrace(fmt.Sprintf("nanoseconds process: %s: %d", res.Location, makeTimestampNano()-fileStartTime))
+
 			*output <- res
 			wg.Done()
 		}(res)
