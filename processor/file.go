@@ -12,6 +12,9 @@ import (
 
 var extensionCache sync.Map
 
+// A custom version of extracting extensions for a file
+// which also has a case insensitive cache in order to save
+// some needless processing
 func getExtension(name string) string {
 	name = strings.ToLower(name)
 	extension, ok := extensionCache.Load(name)
@@ -32,9 +35,14 @@ func getExtension(name string) string {
 	return extension.(string)
 }
 
-// Get all the files that exist in the directory
+// Iterate over the supplied directory in parallel and each file that is not
+// excluded by the .gitignore and we know the extension of add to the supplied
+// channel. This attempts to span out in parallel based on the number of directories
+// in the supplied directory.
 func walkDirectory(root string, output *chan *FileJob) {
 	startTime := makeTimestampMilli()
+
+	blackList := strings.Split(PathBlacklist, ",")
 
 	var wg sync.WaitGroup
 	all, _ := ioutil.ReadDir(root)
@@ -44,6 +52,18 @@ func walkDirectory(root string, output *chan *FileJob) {
 		// Godirwalk despite being faster than the default walk is still too slow to feed the
 		// CPU's and so we need to walk in parallel to keep up as much as possible
 		if f.IsDir() {
+			// shouldBreak := false
+			// for _, black := range blackList {
+			// 	if strings.HasPrefix(filepath.Join(root, f.Name()), black) {
+			// 		shouldBreak = true
+			// 		printWarn(fmt.Sprintf("1skipping directory due to being in blacklist: %s", filepath.Join(root, f.Name())))
+			// 	}
+			// }
+
+			// if shouldBreak {
+			// 	break
+			// }
+
 			wg.Add(1)
 			go func(toWalk string) {
 				godirwalk.Walk(toWalk, &godirwalk.Options{
@@ -52,9 +72,11 @@ func walkDirectory(root string, output *chan *FileJob) {
 					Callback: func(root string, info *godirwalk.Dirent) error {
 						// TODO this should be configurable via command line
 						if info.IsDir() {
-							if strings.HasPrefix(root, ".git/") || strings.HasPrefix(root, ".hg/") || strings.HasPrefix(root, ".svn/") {
-								printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", root))
-								return filepath.SkipDir
+							for _, black := range blackList {
+								if strings.HasPrefix(root, black+"/") {
+									printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", root))
+									return filepath.SkipDir
+								}
 							}
 						}
 

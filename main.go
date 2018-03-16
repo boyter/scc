@@ -18,7 +18,7 @@ func main() {
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:        "pathblacklist, pbl",
-			Usage:       "Which directories should be ignored as comma seperated list `.git,.hg,.svn`",
+			Usage:       "Which directories should be ignored as comma seperated list",
 			Value:       ".git,.hg,.svn",
 			Destination: &processor.PathBlacklist,
 		},
@@ -47,6 +47,11 @@ func main() {
 			Name:        "trace, tr",
 			Usage:       "Set this to enable trace output, not reccomended for multiple files",
 			Destination: &processor.Trace,
+		},
+		cli.IntFlag{
+			Name:        "threads, j",
+			Usage:       "Set the approx number of threads to use",
+			Destination: &processor.NoThreads,
 		},
 	}
 

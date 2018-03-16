@@ -123,8 +123,7 @@ func countStats(fileJob *FileJob) {
 			currentState = S_CODE
 		}
 
-		// Complexity calculation
-		// In reality this is going to need to pull from the list of languages to see how to do this
+		// Complexity calculations for this file
 		if currentState == S_BLANK || currentState == S_CODE {
 			for _, edge := range complexityChecks {
 				if currentByte == edge[0] {
@@ -139,7 +138,7 @@ func countStats(fileJob *FileJob) {
 						}
 					}
 
-					// Check if the previous byte is space tab or newline otherwise its not a match
+					// Check if the previous byte is space tab or newline otherwise it is not a match
 					if index != 0 {
 						if fileJob.Content[index-1] != ' ' && fileJob.Content[index-1] != '\t' && fileJob.Content[index-1] != '\n' && fileJob.Content[index-1] != '\r' {
 							potentialMatch = false
@@ -153,8 +152,11 @@ func countStats(fileJob *FileJob) {
 			}
 		}
 
-		// This means the end of processing the line so calculate the stats
+		// This means the end of processing the line so calculate the stats according to what state
+		// we are currently in
 		if currentByte == '\n' || index == endPoint {
+			fileJob.Lines++
+
 			switch {
 			case currentState == S_BLANK:
 				fileJob.Blank++
@@ -166,12 +168,12 @@ func countStats(fileJob *FileJob) {
 				fileJob.Comment++
 			}
 
-			fileJob.Lines++
-
 			if currentState != S_MULTICOMMENT {
 				currentState = S_BLANK
 			}
 
+			// If we are in a multiline comment that started after some code then we need
+			// to move to a normal multiline comment
 			if currentState == S_MULTICOMMENT_CODE {
 				currentState = S_MULTICOMMENT
 			}
@@ -198,7 +200,7 @@ func fileBufferReader(input *chan *FileJob, output *chan *FileJob) {
 	}()
 }
 
-// Reads file into memory
+// Reads entire file into memory and then pushes it onto the next queue
 func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 	startTime := makeTimestampMilli()
 	var wg sync.WaitGroup
@@ -225,7 +227,7 @@ func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 	printDebug(fmt.Sprintf("milliseconds reading files into memory: %d", makeTimestampMilli()-startTime))
 }
 
-// Does the actual processing of stats and is the hot path
+// Does the actual processing of stats and as such contains the hot patch CPU call
 func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
 	startTime := makeTimestampMilli()
 	var wg sync.WaitGroup
