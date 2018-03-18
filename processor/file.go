@@ -41,6 +41,9 @@ func getExtension(name string) string {
 // channel. This attempts to span out in parallel based on the number of directories
 // in the supplied directory.
 func walkDirectory(root string, output *chan *FileJob) {
+	// Turning off the GC during the walk process gains approx 15% performance gains
+	// on some directory types. However we want the user to be able to override this
+	// in case they run into some very large directory type.
 	if !GarbageCollect {
 		debug.SetGCPercent(-1)
 	}

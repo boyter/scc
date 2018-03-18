@@ -29,12 +29,13 @@ func Process() {
 
 	// Less than or 0 threads is invalid so set to at least one
 	if NoThreads <= 0 {
+		// Need to consider if we should set https://golang.org/pkg/runtime/debug/#SetMaxThreads
 		printDebug(fmt.Sprintf("NoThreads set to less than 0 changing to: %d", runtime.NumCPU()))
 
 		// runtime.NumCPU() should never return zero or negative but lets be sure about that
 		NoThreads = max(1, runtime.NumCPU())
 	} else if NoThreads > 1000000 {
-		// Anything over one million is likely to cause issues so lets limit to that
+		// Anything over one million is likely to cause issues so lets limit
 		printDebug(fmt.Sprintf("NoThreads set to greater than 1000000 changing to: 1000000"))
 		NoThreads = 1000000
 	}
