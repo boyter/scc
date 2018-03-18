@@ -33,7 +33,7 @@ for x in range(21):
 # Create a directory that has a single level and put 10000 files in it
 deep_dir = './2/'
 make_sure_path_exists(deep_dir)
-for x in range(100):
+for x in range(10000):
     with open(deep_dir + str(x) +'.py', 'w') as myfile:
         myfile.write("some content")
 
@@ -48,12 +48,45 @@ for x in range(10000):
         myfile.write("some content")
 
 # Case 4
-# Create a directory that branches out widely with 10 directories each with 10 directories etc...
+# Create a directory that with 10 subdirectories and 1000 files in each
 deep_dir = './4/'
-stack = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 make_sure_path_exists(deep_dir)
-for x in range(10000):
+for x in range(10):
     tmp_dir = deep_dir + str(x) + '/'
     make_sure_path_exists(tmp_dir)
-    with open(tmp_dir + '1.py', 'w') as myfile:
-        myfile.write("some content")
+    for x in range(1000):
+        with open(tmp_dir + str(x) +'.py', 'w') as myfile:
+            myfile.write("some content")
+
+# Case 5
+# Create a directory that with 20 subdirectories and 500 files in each
+deep_dir = './5/'
+make_sure_path_exists(deep_dir)
+for x in range(20):
+    tmp_dir = deep_dir + str(x) + '/'
+    make_sure_path_exists(tmp_dir)
+    for x in range(500):
+        with open(tmp_dir + str(x) +'.py', 'w') as myfile:
+            myfile.write("some content")
+
+# Case 6
+# Create a directory that with 5 subdirectories and 2000 files in each
+deep_dir = './6/'
+make_sure_path_exists(deep_dir)
+for x in range(5):
+    tmp_dir = deep_dir + str(x) + '/'
+    make_sure_path_exists(tmp_dir)
+    for x in range(2000):
+        with open(tmp_dir + str(x) +'.py', 'w') as myfile:
+            myfile.write("some content")
+
+# Case 7
+# Create a directory that with 100 subdirectories and 100 files in each
+deep_dir = './7/'
+make_sure_path_exists(deep_dir)
+for x in range(100):
+    tmp_dir = deep_dir + str(x) + '/'
+    make_sure_path_exists(tmp_dir)
+    for x in range(100):
+        with open(tmp_dir + str(x) +'.py', 'w') as myfile:
+            myfile.write("some content")

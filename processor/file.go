@@ -6,6 +6,7 @@ import (
 	"github.com/monochromegane/go-gitignore"
 	"io/ioutil"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"sync"
 )
@@ -40,6 +41,10 @@ func getExtension(name string) string {
 // channel. This attempts to span out in parallel based on the number of directories
 // in the supplied directory.
 func walkDirectory(root string, output *chan *FileJob) {
+	if !GarbageCollect {
+		debug.SetGCPercent(-1)
+	}
+
 	startTime := makeTimestampMilli()
 
 	blackList := strings.Split(PathBlacklist, ",")
@@ -122,4 +127,8 @@ func walkDirectory(root string, output *chan *FileJob) {
 
 	close(*output)
 	printDebug(fmt.Sprintf("milliseconds to walk directory: %d", makeTimestampMilli()-startTime))
+
+	if !GarbageCollect {
+		debug.SetGCPercent(100)
+	}
 }

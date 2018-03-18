@@ -53,6 +53,11 @@ func main() {
 			Usage:       "Set the approx number of threads to use",
 			Destination: &processor.NoThreads,
 		},
+		cli.BoolFlag{
+			Name:        "garbagecollect, gc",
+			Usage:       "Set to enable garbage collection during file walk. This may be required for very large directories",
+			Destination: &processor.GarbageCollect,
+		},
 	}
 
 	// Override the default version flag because we want v for verbose
