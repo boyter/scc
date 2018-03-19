@@ -3,6 +3,7 @@ package processor
 import (
 	"fmt"
 	"runtime"
+	"strings"
 )
 
 // This is generated and set to be a map to be as fast a lookup as possible
@@ -17,7 +18,6 @@ var SortBy = ""
 var PathBlacklist = ""
 var NoThreads = 0
 var GarbageCollect = false
-var SingleFileWalker = false
 var Format = ""
 var WhiteListExtensions = ""
 
@@ -29,6 +29,8 @@ func Process() {
 	if len(DirFilePaths) == 0 {
 		DirFilePaths = append(DirFilePaths, ".")
 	}
+
+	SortBy = strings.ToLower(SortBy)
 
 	// Less than or 0 threads is invalid so set to at least one
 	if NoThreads <= 0 {
@@ -60,5 +62,6 @@ func Process() {
 	go fileBufferReader(&fileReadContentJobQueue, &fileProcessJobQueue)
 	go fileProcessorWorker(&fileProcessJobQueue, &fileSummaryJobQueue)
 
-	fileSummerize(&fileSummaryJobQueue)
+	result := fileSummerize(&fileSummaryJobQueue)
+	fmt.Println(result)
 }

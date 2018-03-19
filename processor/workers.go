@@ -241,6 +241,8 @@ func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 			if err == nil {
 				res.Content = content
 				*output <- res
+			} else {
+				printWarn(fmt.Sprintf("error reading: %s %s", res.Location, err))
 			}
 
 			wg.Done()

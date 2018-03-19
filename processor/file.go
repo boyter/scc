@@ -112,7 +112,6 @@ func walkDirectory(root string, output *chan *FileJob) {
 							if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
 
 								extension := getExtension(info.Name())
-
 								language, ok := extensionLookup[extension]
 
 								if ok {

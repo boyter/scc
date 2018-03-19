@@ -2,11 +2,13 @@ package processor
 
 import (
 	"fmt"
-	"github.com/ryanuber/columnize"
+	// "github.com/ryanuber/columnize"
 	"sort"
 	"strings"
 	"time"
 )
+
+var tabularBreak = "-------------------------------------------------------------------------------\n"
 
 // TODO write our own formatter code becuase columnize is actually too slow for our purposes
 // since it requires that we loop over the results again in order to work out the sizes which
@@ -15,95 +17,16 @@ import (
 // Also needs to support sorting of values actually...
 // Maybe have a guesser which guesses the size and if it gets it right output looks good
 // otherwise it just takes longer to get it right... guesses could be pretty accurate
+func fileSummerize(input *chan *FileJob) string {
+	startTime := makeTimestampMilli()
 
-func fileSummerizeFiles(input *chan *FileJob) {
-	output := []string{
-		"-----",
-		"Language | Files | Lines | Code | Comment | Blank | Complexity | Byte",
-		"-----",
-	}
+	var str strings.Builder
 
-	languages := map[string]LanguageSummary{}
+	str.WriteString(tabularBreak)
+	str.WriteString("Language                     Files    Lines    Code Comments  Blanks Complexity\n")
 
-	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumByte, sumComplexity int64 = 0, 0, 0, 0, 0, 0, 0
-
-	for res := range *input {
-		sumFiles++
-		sumLines += res.Lines
-		sumCode += res.Code
-		sumComment += res.Comment
-		sumBlank += res.Blank
-		sumByte += res.Bytes
-		sumComplexity += res.Complexity
-
-		_, ok := languages[res.Language]
-
-		if !ok {
-
-			files := []*FileJob{}
-			files = append(files, res)
-
-			languages[res.Language] = LanguageSummary{
-				Name:       res.Language,
-				Bytes:      res.Bytes,
-				Lines:      res.Lines,
-				Code:       res.Code,
-				Comment:    res.Comment,
-				Blank:      res.Blank,
-				Complexity: res.Complexity,
-				Count:      1,
-				Files:      files,
-			}
-
-		} else {
-			tmp := languages[res.Language]
-
-			files := append(tmp.Files, res)
-
-			languages[res.Language] = LanguageSummary{
-				Name:       res.Language,
-				Bytes:      tmp.Bytes + res.Bytes,
-				Lines:      tmp.Lines + res.Lines,
-				Code:       tmp.Code + res.Code,
-				Comment:    tmp.Comment + res.Comment,
-				Blank:      tmp.Blank + res.Blank,
-				Complexity: tmp.Complexity + res.Complexity,
-				Count:      tmp.Count + 1,
-				Files:      files,
-			}
-		}
-	}
-
-	for name, summary := range languages {
-		output = append(output, "-----")
-		output = append(output, fmt.Sprintf("%s | %d | %d | %d | %d | %d | %d | %d", name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity, summary.Bytes))
-		output = append(output, "-----")
-		for _, res := range summary.Files {
-
-			tmp := res.Location
-
-			if len(tmp) >= 31 {
-				totrim := len(tmp) - 30
-				tmp = "~" + tmp[totrim:]
-			}
-
-			output = append(output, fmt.Sprintf("%s |  | %d | %d | %d | %d | %d | %d", tmp, res.Lines, res.Code, res.Comment, res.Blank, res.Complexity, res.Bytes))
-		}
-	}
-
-	output = append(output, "-----")
-	output = append(output, fmt.Sprintf("Total | %d | %d | %d | %d | %d | %d | %d", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumByte))
-	output = append(output, "-----")
-
-	result := columnize.SimpleFormat(output)
-	fmt.Println(result)
-}
-
-func fileSummerize(input *chan *FileJob) {
-	output := []string{
-		"-----",
-		"Language | Files | Lines | Code | Comments | Blanks | Complexity",
-		"-----",
+	if !Files {
+		str.WriteString(tabularBreak)
 	}
 
 	languages := map[string]LanguageSummary{}
@@ -191,31 +114,32 @@ func fileSummerize(input *chan *FileJob) {
 
 	for _, summary := range language {
 		if Files {
-			output = append(output, "-----")
+			str.WriteString(tabularBreak)
 		}
-		output = append(output, fmt.Sprintf("%s | %d | %d | %d | %d | %d | %d", summary.Name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity))
+
+		str.WriteString(fmt.Sprintf("%-26s %7d %8d %7d %8d %7d %10d\n", summary.Name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity))
 
 		if Files {
-			output = append(output, "-----")
+			str.WriteString(tabularBreak)
 			for _, res := range summary.Files {
 				tmp := res.Location
 
-				if len(tmp) >= 31 {
-					totrim := len(tmp) - 30
+				if len(tmp) >= 26 {
+					totrim := len(tmp) - 26
 					tmp = "~" + tmp[totrim:]
 				}
 
-				output = append(output, fmt.Sprintf("%s |  | %d | %d | %d | %d | %d | %d", tmp, res.Lines, res.Code, res.Comment, res.Blank, res.Complexity, res.Bytes))
+				str.WriteString(fmt.Sprintf("%-26s %15d %7d %8d %7d %10d\n", tmp, res.Lines, res.Code, res.Comment, res.Blank, res.Complexity))
 			}
 		}
 	}
 
-	output = append(output, "-----")
-	output = append(output, fmt.Sprintf("Total | %d | %d | %d | %d | %d | %d", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity))
-	output = append(output, "-----")
+	str.WriteString(tabularBreak)
+	str.WriteString(fmt.Sprintf("Total %28d %8d %7d %8d %7d %10d\n", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity))
+	str.WriteString(tabularBreak)
 
-	result := columnize.SimpleFormat(output)
-	fmt.Println(result)
+	printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
+	return str.String()
 }
 
 // Get the time as standard UTC/Zulu format

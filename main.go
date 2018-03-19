@@ -24,7 +24,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:        "sort, s",
-			Usage:       "Sort languages/files based on column [possible values: files, name, lines, blanks, code, comments, complexity]",
+			Usage:       "Sort languages / files based on column [possible values: files, name, lines, blanks, code, comments, complexity]",
 			Value:       "files",
 			Destination: &processor.SortBy,
 		},
@@ -36,44 +36,39 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:        "whitelist, wl",
-			Usage:       "Restrict file extensions to just those provided as a comma seperated list",
+			Usage:       "Restrict file extensions to just those provided as a comma seperated list E.G. go,java,js",
 			Value:       "",
 			Destination: &processor.WhiteListExtensions,
 		},
 		cli.BoolFlag{
 			Name:        "files",
-			Usage:       "Set this to anything non blank to specify you want to see the output for every file",
+			Usage:       "Set to specify you want to see the output for every file",
 			Destination: &processor.Files,
 		},
 		cli.BoolFlag{
 			Name:        "verbose, v",
-			Usage:       "Set this to enable verbose output",
+			Usage:       "Set to enable verbose output",
 			Destination: &processor.Verbose,
 		},
 		cli.BoolFlag{
-			Name:        "debug, db",
-			Usage:       "Set this to enable debug output",
+			Name:        "debug",
+			Usage:       "Set to enable debug output",
 			Destination: &processor.Debug,
 		},
 		cli.BoolFlag{
-			Name:        "trace, tr",
-			Usage:       "Set this to enable trace output, not reccomended for multiple files",
+			Name:        "trace",
+			Usage:       "Set to enable trace output, not reccomended for multiple files",
 			Destination: &processor.Trace,
 		},
 		cli.IntFlag{
 			Name:        "threads, j",
-			Usage:       "Set the approx number of threads to use",
+			Usage:       "Set the approx number of goroutines to use",
 			Destination: &processor.NoThreads,
 		},
 		cli.BoolFlag{
 			Name:        "garbagecollect, gc",
 			Usage:       "Set to enable garbage collection during file walk. This may be required for very large directories",
 			Destination: &processor.GarbageCollect,
-		},
-		cli.BoolFlag{
-			Name:        "sfw",
-			Usage:       "Have a single file walker which may be faster on none SSD drives",
-			Destination: &processor.SingleFileWalker,
 		},
 	}
 
