@@ -18,6 +18,8 @@ var PathBlacklist = ""
 var NoThreads = 0
 var GarbageCollect = false
 var SingleFileWalker = false
+var Format = ""
+var WhiteListExtensions = ""
 
 // Not set via flags but by arguments following the the flags
 var DirFilePaths = []string{}

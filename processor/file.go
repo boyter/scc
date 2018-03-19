@@ -51,6 +51,24 @@ func walkDirectory(root string, output *chan *FileJob) {
 
 	startTime := makeTimestampMilli()
 	blackList := strings.Split(PathBlacklist, ",")
+	whiteList := strings.Split(WhiteListExtensions, ",")
+	extensionLookup := ExtensionToLanguage
+
+	// If input has a supplied white list of extensions then loop through them
+	// and modify the lookup we use to cut down on extra checks
+	if len(whiteList) != 0 {
+		wlExtensionLookup := map[string]string{}
+
+		for _, white := range whiteList {
+			language, ok := extensionLookup[white]
+
+			if ok {
+				wlExtensionLookup[white] = language
+			}
+		}
+
+		extensionLookup = wlExtensionLookup
+	}
 
 	var wg sync.WaitGroup
 	all, _ := ioutil.ReadDir(root)
@@ -94,7 +112,8 @@ func walkDirectory(root string, output *chan *FileJob) {
 							if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
 
 								extension := getExtension(info.Name())
-								language, ok := ExtensionToLanguage[extension]
+
+								language, ok := extensionLookup[extension]
 
 								if ok {
 									*output <- &FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language}
@@ -117,7 +136,7 @@ func walkDirectory(root string, output *chan *FileJob) {
 			if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, f.Name()), false) {
 
 				extension := getExtension(f.Name())
-				language, ok := ExtensionToLanguage[extension]
+				language, ok := extensionLookup[extension]
 
 				if ok {
 					*output <- &FileJob{Location: filepath.Join(root, f.Name()), Filename: f.Name(), Extension: extension, Language: language}

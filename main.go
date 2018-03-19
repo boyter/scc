@@ -28,6 +28,18 @@ func main() {
 			Value:       "files",
 			Destination: &processor.SortBy,
 		},
+		cli.StringFlag{
+			Name:        "format, f",
+			Usage:       "What format output should be used [possible values: tabular, json, csv]",
+			Value:       "tabular",
+			Destination: &processor.SortBy,
+		},
+		cli.StringFlag{
+			Name:        "whitelist, wl",
+			Usage:       "Restrict file extensions to just those provided as a comma seperated list",
+			Value:       "",
+			Destination: &processor.WhiteListExtensions,
+		},
 		cli.BoolFlag{
 			Name:        "files",
 			Usage:       "Set this to anything non blank to specify you want to see the output for every file",
