@@ -58,6 +58,11 @@ func main() {
 			Usage:       "Set to enable garbage collection during file walk. This may be required for very large directories",
 			Destination: &processor.GarbageCollect,
 		},
+		cli.BoolFlag{
+			Name:        "sfw",
+			Usage:       "Have a single file walker which may be faster on none SSD drives",
+			Destination: &processor.SingleFileWalker,
+		},
 	}
 
 	// Override the default version flag because we want v for verbose

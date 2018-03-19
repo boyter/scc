@@ -17,6 +17,7 @@ var SortBy = ""
 var PathBlacklist = ""
 var NoThreads = 0
 var GarbageCollect = false
+var SingleFileWalker = false
 
 // Not set via flags but by arguments following the the flags
 var DirFilePaths = []string{}
@@ -51,7 +52,12 @@ func Process() {
 	fileProcessJobQueue := make(chan *FileJob, NoThreads)           // Workers doing the hard work
 	fileSummaryJobQueue := make(chan *FileJob, 1000)                // Files ready to be summerised
 
-	go walkDirectory(DirFilePaths[0], &fileListQueue)
+	if SingleFileWalker {
+		go walkDirectory(DirFilePaths[0], &fileListQueue)
+
+	} else {
+		go walkDirectorySingle(DirFilePaths[0], &fileListQueue)
+	}
 	go fileBufferReader(&fileListQueue, &fileReadJobQueue)
 	go fileReaderWorker(&fileReadJobQueue, &fileReadContentJobQueue)
 	go fileBufferReader(&fileReadContentJobQueue, &fileProcessJobQueue)
