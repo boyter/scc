@@ -41,6 +41,15 @@ func TestGetExtensionMultipleExtensions(t *testing.T) {
 	}
 }
 
+func TestGetExtensionStartsWith(t *testing.T) {
+	got := getExtension(".gitignore")
+	expected := ".gitignore"
+
+	if got != expected {
+		t.Errorf("Expected %s got %s", expected, got)
+	}
+}
+
 func BenchmarkGetExtensionDifferent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 

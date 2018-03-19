@@ -52,12 +52,7 @@ func Process() {
 	fileProcessJobQueue := make(chan *FileJob, NoThreads)           // Workers doing the hard work
 	fileSummaryJobQueue := make(chan *FileJob, 1000)                // Files ready to be summerised
 
-	if SingleFileWalker {
-		go walkDirectory(DirFilePaths[0], &fileListQueue)
-
-	} else {
-		go walkDirectorySingle(DirFilePaths[0], &fileListQueue)
-	}
+	go walkDirectory(DirFilePaths[0], &fileListQueue)
 	go fileBufferReader(&fileListQueue, &fileReadJobQueue)
 	go fileReaderWorker(&fileReadJobQueue, &fileReadContentJobQueue)
 	go fileBufferReader(&fileReadContentJobQueue, &fileProcessJobQueue)

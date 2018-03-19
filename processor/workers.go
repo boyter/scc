@@ -20,7 +20,7 @@ func checkForMatch(currentByte byte, index int, endPoint int, matches [][]byte, 
 		if currentByte == edge[0] {
 
 			// Start at 1 to avoid doing the check we just did again
-			// Check BenchmarkCheckByteEquality if you doubt this is the fastest way to do it
+			// see BenchmarkCheckByteEquality if you doubt this is the fastest way to do it
 			for j := 1; j < len(edge); j++ {
 				if index+j >= endPoint || edge[j] != fileJob.Content[index+j] {
 					return false
@@ -38,6 +38,8 @@ func checkForMatchMulti(currentByte byte, index int, endPoint int, matches []Mul
 	for _, edge := range matches {
 		if currentByte == edge.Open[0] {
 
+			// Start at 1 to avoid doing the check we just did again
+			// see BenchmarkCheckByteEquality if you doubt this is the fastest way to do it
 			for j := 1; j < len(edge.Open); j++ {
 				if index+j >= endPoint || edge.Open[j] != fileJob.Content[index+j] {
 					return false
@@ -56,6 +58,7 @@ func checkForMatchMulti(currentByte byte, index int, endPoint int, matches []Mul
 // Newlines belong to the line they started on so a file of \n means only 1 line
 // This is the 'hot' path for the application and needs to be as fast as possible
 func countStats(fileJob *FileJob) {
+
 	// If the file has a length of 0 it is is empty then we say it has no lines
 	fileJob.Bytes = int64(len(fileJob.Content))
 	if fileJob.Bytes == 0 {
@@ -226,7 +229,7 @@ func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 	printDebug(fmt.Sprintf("milliseconds reading files into memory: %d", makeTimestampMilli()-startTime))
 }
 
-// Does the actual processing of stats and as such contains the hot patch CPU call
+// Does the actual processing of stats and as such contains the hot path CPU call
 func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
 	startTime := makeTimestampMilli()
 	var wg sync.WaitGroup
