@@ -34,7 +34,7 @@ func checkForMatch(currentByte byte, index int, endPoint int, matches [][]byte, 
 	return false
 }
 
-func checkForMatchMulti(currentByte byte, index int, endPoint int, matches []MultiLineComment, fileJob *FileJob) bool {
+func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, matches []MultiLineComment, fileJob *FileJob) bool {
 	for _, edge := range matches {
 		if currentByte == edge.Open[0] {
 
@@ -42,6 +42,25 @@ func checkForMatchMulti(currentByte byte, index int, endPoint int, matches []Mul
 			// see BenchmarkCheckByteEquality if you doubt this is the fastest way to do it
 			for j := 1; j < len(edge.Open); j++ {
 				if index+j >= endPoint || edge.Open[j] != fileJob.Content[index+j] {
+					return false
+				}
+			}
+
+			return true
+		}
+	}
+
+	return false
+}
+
+func checkForMatchMultiClose(currentByte byte, index int, endPoint int, matches []MultiLineComment, fileJob *FileJob) bool {
+	for _, edge := range matches {
+		if currentByte == edge.Close[0] {
+
+			// Start at 1 to avoid doing the check we just did again
+			// see BenchmarkCheckByteEquality if you doubt this is the fastest way to do it
+			for j := 1; j < len(edge.Close); j++ {
+				if index+j >= endPoint || edge.Close[j] != fileJob.Content[index+j] {
 					return false
 				}
 			}
@@ -111,12 +130,17 @@ func countStats(fileJob *FileJob) {
 		}
 
 		// If we arent in a comment its possible to enter multiline comment
-		if currentState == S_BLANK && checkForMatchMulti(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
+		if currentState == S_BLANK && checkForMatchMultiOpen(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
 			currentState = S_MULTICOMMENT
 		}
 
 		// If we are in code its possible to move unto a multie line comment
-		if currentState == S_CODE && checkForMatchMulti(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
+		if currentState == S_CODE && checkForMatchMultiOpen(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
+			currentState = S_MULTICOMMENT_CODE
+		}
+
+		// If we are in multiline comment its possible to move back to code
+		if (currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE) && checkForMatchMultiClose(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
 			currentState = S_MULTICOMMENT_CODE
 		}
 
@@ -132,7 +156,7 @@ func countStats(fileJob *FileJob) {
 					potentialMatch := true
 
 					// Start at 1 to avoid doing the check we just did again
-					// Check BenchmarkCheckByteEquality if you doubt this is the fastest way to do it
+					// see BenchmarkCheckByteEquality if you doubt this is the fastest way to do it
 					for j := 1; j < len(edge); j++ {
 						if index+j > endPoint || edge[j] != fileJob.Content[index+j] {
 							potentialMatch = false
@@ -158,6 +182,7 @@ func countStats(fileJob *FileJob) {
 		// we are currently in
 		if currentByte == '\n' || index == endPoint {
 			fileJob.Lines++
+			printTrace(fmt.Sprintf("%s line %d ended with state: %d", fileJob.Location, fileJob.Lines, currentState))
 
 			switch {
 			case currentState == S_BLANK:
@@ -170,7 +195,7 @@ func countStats(fileJob *FileJob) {
 				fileJob.Comment++
 			}
 
-			if currentState != S_MULTICOMMENT {
+			if currentState != S_MULTICOMMENT && currentState != S_MULTICOMMENT_CODE {
 				currentState = S_BLANK
 			}
 

@@ -80,10 +80,12 @@ func walkDirectory(root string, output *chan *FileJob) {
 					Callback: func(root string, info *godirwalk.Dirent) error {
 						// TODO this should be configurable via command line
 						if info.IsDir() {
-							for _, black := range blackList {
-								if strings.HasPrefix(root, black+"/") {
-									printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", root))
-									return filepath.SkipDir
+							if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
+								for _, black := range blackList {
+									if strings.HasPrefix(root, black+"/") {
+										printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", root))
+										return filepath.SkipDir
+									}
 								}
 							}
 						}
