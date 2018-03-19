@@ -58,9 +58,5 @@ func Process() {
 	go fileBufferReader(&fileReadContentJobQueue, &fileProcessJobQueue)
 	go fileProcessorWorker(&fileProcessJobQueue, &fileSummaryJobQueue)
 
-	if Files {
-		fileSummerizeFiles(&fileSummaryJobQueue)
-	} else {
-		fileSummerize(&fileSummaryJobQueue)
-	}
+	fileSummerize(&fileSummaryJobQueue)
 }

@@ -102,13 +102,13 @@ func fileSummerizeFiles(input *chan *FileJob) {
 func fileSummerize(input *chan *FileJob) {
 	output := []string{
 		"-----",
-		"Language | Files | Lines | Code | Comment | Blank | Complexity | Byte",
+		"Language | Files | Lines | Code | Comments | Blanks | Complexity",
 		"-----",
 	}
 
 	languages := map[string]LanguageSummary{}
 
-	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumByte, sumComplexity int64 = 0, 0, 0, 0, 0, 0, 0
+	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
 
 	for res := range *input {
 		sumFiles++
@@ -116,34 +116,37 @@ func fileSummerize(input *chan *FileJob) {
 		sumCode += res.Code
 		sumComment += res.Comment
 		sumBlank += res.Blank
-		sumByte += res.Bytes
 		sumComplexity += res.Complexity
 
 		_, ok := languages[res.Language]
 
 		if !ok {
+			files := []*FileJob{}
+			files = append(files, res)
+
 			languages[res.Language] = LanguageSummary{
 				Name:       res.Language,
-				Bytes:      res.Bytes,
 				Lines:      res.Lines,
 				Code:       res.Code,
 				Comment:    res.Comment,
 				Blank:      res.Blank,
 				Complexity: res.Complexity,
 				Count:      1,
+				Files:      files,
 			}
 		} else {
 			tmp := languages[res.Language]
+			files := append(tmp.Files, res)
 
 			languages[res.Language] = LanguageSummary{
 				Name:       res.Language,
-				Bytes:      tmp.Bytes + res.Bytes,
 				Lines:      tmp.Lines + res.Lines,
 				Code:       tmp.Code + res.Code,
 				Comment:    tmp.Comment + res.Comment,
 				Blank:      tmp.Blank + res.Blank,
 				Complexity: tmp.Complexity + res.Complexity,
 				Count:      tmp.Count + 1,
+				Files:      files,
 			}
 		}
 	}
@@ -187,11 +190,28 @@ func fileSummerize(input *chan *FileJob) {
 	}
 
 	for _, summary := range language {
-		output = append(output, fmt.Sprintf("%s | %d | %d | %d | %d | %d | %d | %d", summary.Name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity, summary.Bytes))
+		if Files {
+			output = append(output, "-----")
+		}
+		output = append(output, fmt.Sprintf("%s | %d | %d | %d | %d | %d | %d", summary.Name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity))
+
+		if Files {
+			output = append(output, "-----")
+			for _, res := range summary.Files {
+				tmp := res.Location
+
+				if len(tmp) >= 31 {
+					totrim := len(tmp) - 30
+					tmp = "~" + tmp[totrim:]
+				}
+
+				output = append(output, fmt.Sprintf("%s |  | %d | %d | %d | %d | %d | %d", tmp, res.Lines, res.Code, res.Comment, res.Blank, res.Complexity, res.Bytes))
+			}
+		}
 	}
 
 	output = append(output, "-----")
-	output = append(output, fmt.Sprintf("Total | %d | %d | %d | %d | %d | %d | %d", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumByte))
+	output = append(output, fmt.Sprintf("Total | %d | %d | %d | %d | %d | %d", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity))
 	output = append(output, "-----")
 
 	result := columnize.SimpleFormat(output)
