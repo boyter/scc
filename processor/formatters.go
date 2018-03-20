@@ -13,6 +13,39 @@ var tabularShortFormatHead = "%-25s %8s %8s %7s %7s %7s %9s\n"
 var tabularShortFormatBody = "%-25s %8d %8d %7d %7d %7d %11d\n"
 var tabularShortFormatFile = "%-34s %8d %7d %7d %7d %11d\n"
 
+func sortSummaryFiles(summary *LanguageSummary) {
+	switch {
+	case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "languages":
+		sort.Slice(summary.Files, func(i, j int) bool {
+			return summary.Files[i].Lines > summary.Files[j].Lines
+		})
+	case SortBy == "line" || SortBy == "lines":
+		sort.Slice(summary.Files, func(i, j int) bool {
+			return summary.Files[i].Lines > summary.Files[j].Lines
+		})
+	case SortBy == "blank" || SortBy == "blanks":
+		sort.Slice(summary.Files, func(i, j int) bool {
+			return summary.Files[i].Blank > summary.Files[j].Blank
+		})
+	case SortBy == "code" || SortBy == "codes":
+		sort.Slice(summary.Files, func(i, j int) bool {
+			return summary.Files[i].Code > summary.Files[j].Code
+		})
+	case SortBy == "comment" || SortBy == "comments":
+		sort.Slice(summary.Files, func(i, j int) bool {
+			return summary.Files[i].Comment > summary.Files[j].Comment
+		})
+	case SortBy == "complexity" || SortBy == "complexitys":
+		sort.Slice(summary.Files, func(i, j int) bool {
+			return summary.Files[i].Complexity > summary.Files[j].Complexity
+		})
+	default:
+		sort.Slice(summary.Files, func(i, j int) bool {
+			return summary.Files[i].Lines > summary.Files[j].Lines
+		})
+	}
+}
+
 // TODO write our own formatter code becuase columnize is actually too slow for our purposes
 // since it requires that we loop over the results again in order to work out the sizes which
 // we already know because they should be no longer than the summary
@@ -21,8 +54,6 @@ var tabularShortFormatFile = "%-34s %8d %7d %7d %7d %11d\n"
 // Maybe have a guesser which guesses the size and if it gets it right output looks good
 // otherwise it just takes longer to get it right... guesses could be pretty accurate
 func fileSummerize(input *chan *FileJob) string {
-	startTime := makeTimestampMilli()
-
 	var str strings.Builder
 
 	str.WriteString(tabularShortBreak)
@@ -33,7 +64,6 @@ func fileSummerize(input *chan *FileJob) string {
 	}
 
 	languages := map[string]LanguageSummary{}
-
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
 
 	for res := range *input {
@@ -115,6 +145,7 @@ func fileSummerize(input *chan *FileJob) string {
 		})
 	}
 
+	startTime := makeTimestampMilli()
 	for _, summary := range language {
 		if Files {
 			str.WriteString(tabularShortBreak)
@@ -123,39 +154,9 @@ func fileSummerize(input *chan *FileJob) string {
 		str.WriteString(fmt.Sprintf(tabularShortFormatBody, summary.Name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity))
 
 		if Files {
-
-			switch {
-			case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "languages":
-				sort.Slice(summary.Files, func(i, j int) bool {
-					return summary.Files[i].Lines > summary.Files[j].Lines
-				})
-			case SortBy == "line" || SortBy == "lines":
-				sort.Slice(summary.Files, func(i, j int) bool {
-					return summary.Files[i].Lines > summary.Files[j].Lines
-				})
-			case SortBy == "blank" || SortBy == "blanks":
-				sort.Slice(summary.Files, func(i, j int) bool {
-					return summary.Files[i].Blank > summary.Files[j].Blank
-				})
-			case SortBy == "code" || SortBy == "codes":
-				sort.Slice(summary.Files, func(i, j int) bool {
-					return summary.Files[i].Code > summary.Files[j].Code
-				})
-			case SortBy == "comment" || SortBy == "comments":
-				sort.Slice(summary.Files, func(i, j int) bool {
-					return summary.Files[i].Comment > summary.Files[j].Comment
-				})
-			case SortBy == "complexity" || SortBy == "complexitys":
-				sort.Slice(summary.Files, func(i, j int) bool {
-					return summary.Files[i].Complexity > summary.Files[j].Complexity
-				})
-			default:
-				sort.Slice(summary.Files, func(i, j int) bool {
-					return summary.Files[i].Lines > summary.Files[j].Lines
-				})
-			}
-
+			sortSummaryFiles(&summary)
 			str.WriteString(tabularShortBreak)
+
 			for _, res := range summary.Files {
 				tmp := res.Location
 
@@ -168,12 +169,12 @@ func fileSummerize(input *chan *FileJob) string {
 			}
 		}
 	}
+	printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
 
 	str.WriteString(tabularShortBreak)
 	str.WriteString(fmt.Sprintf(tabularShortFormatBody, "Total", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity))
 	str.WriteString(tabularShortBreak)
 
-	printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
 	return str.String()
 }
 
