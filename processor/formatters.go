@@ -8,7 +8,10 @@ import (
 	"time"
 )
 
-var tabularBreak = "-------------------------------------------------------------------------------\n"
+var tabularShortBreak = "-------------------------------------------------------------------------------\n"
+var tabularShortFormatHead = "%-25s %8s %8s %7s %7s %7s %9s\n"
+var tabularShortFormatBody = "%-25s %8d %8d %7d %7d %7d %11d\n"
+var tabularShortFormatFile = "%-34s %8d %7d %7d %7d %11d\n"
 
 // TODO write our own formatter code becuase columnize is actually too slow for our purposes
 // since it requires that we loop over the results again in order to work out the sizes which
@@ -22,11 +25,11 @@ func fileSummerize(input *chan *FileJob) string {
 
 	var str strings.Builder
 
-	str.WriteString(tabularBreak)
-	str.WriteString("Language                     Files    Lines    Code Comments  Blanks Complexity\n")
+	str.WriteString(tabularShortBreak)
+	str.WriteString(fmt.Sprintf(tabularShortFormatHead, "Language", "Files", "Lines", "Code", "Comments", "Blanks", "Complexity"))
 
 	if !Files {
-		str.WriteString(tabularBreak)
+		str.WriteString(tabularShortBreak)
 	}
 
 	languages := map[string]LanguageSummary{}
@@ -114,29 +117,61 @@ func fileSummerize(input *chan *FileJob) string {
 
 	for _, summary := range language {
 		if Files {
-			str.WriteString(tabularBreak)
+			str.WriteString(tabularShortBreak)
 		}
 
-		str.WriteString(fmt.Sprintf("%-26s %7d %8d %7d %8d %7d %10d\n", summary.Name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity))
+		str.WriteString(fmt.Sprintf(tabularShortFormatBody, summary.Name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity))
 
 		if Files {
-			str.WriteString(tabularBreak)
+
+			switch {
+			case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "languages":
+				sort.Slice(summary.Files, func(i, j int) bool {
+					return summary.Files[i].Lines > summary.Files[j].Lines
+				})
+			case SortBy == "line" || SortBy == "lines":
+				sort.Slice(summary.Files, func(i, j int) bool {
+					return summary.Files[i].Lines > summary.Files[j].Lines
+				})
+			case SortBy == "blank" || SortBy == "blanks":
+				sort.Slice(summary.Files, func(i, j int) bool {
+					return summary.Files[i].Blank > summary.Files[j].Blank
+				})
+			case SortBy == "code" || SortBy == "codes":
+				sort.Slice(summary.Files, func(i, j int) bool {
+					return summary.Files[i].Code > summary.Files[j].Code
+				})
+			case SortBy == "comment" || SortBy == "comments":
+				sort.Slice(summary.Files, func(i, j int) bool {
+					return summary.Files[i].Comment > summary.Files[j].Comment
+				})
+			case SortBy == "complexity" || SortBy == "complexitys":
+				sort.Slice(summary.Files, func(i, j int) bool {
+					return summary.Files[i].Complexity > summary.Files[j].Complexity
+				})
+			default:
+				sort.Slice(summary.Files, func(i, j int) bool {
+					return summary.Files[i].Lines > summary.Files[j].Lines
+				})
+			}
+
+			str.WriteString(tabularShortBreak)
 			for _, res := range summary.Files {
 				tmp := res.Location
 
-				if len(tmp) >= 26 {
-					totrim := len(tmp) - 26
+				if len(tmp) >= 33 {
+					totrim := len(tmp) - 33
 					tmp = "~" + tmp[totrim:]
 				}
 
-				str.WriteString(fmt.Sprintf("%-26s %15d %7d %8d %7d %10d\n", tmp, res.Lines, res.Code, res.Comment, res.Blank, res.Complexity))
+				str.WriteString(fmt.Sprintf(tabularShortFormatFile, tmp, res.Lines, res.Code, res.Comment, res.Blank, res.Complexity))
 			}
 		}
 	}
 
-	str.WriteString(tabularBreak)
-	str.WriteString(fmt.Sprintf("Total %28d %8d %7d %8d %7d %10d\n", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity))
-	str.WriteString(tabularBreak)
+	str.WriteString(tabularShortBreak)
+	str.WriteString(fmt.Sprintf(tabularShortFormatBody, "Total", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity))
+	str.WriteString(tabularShortBreak)
 
 	printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
 	return str.String()

@@ -5,7 +5,7 @@ import (
 )
 
 // When using columise  ~28726 ns/op
-// When using optimised ~11293 ns/op
+// When using optimised ~14293 ns/op
 func BenchmarkFileSummerize(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
