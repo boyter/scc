@@ -116,6 +116,9 @@ func countStats(fileJob *FileJob) {
 
 	endPoint := int(fileJob.Bytes - 1)
 	currentState := S_BLANK
+	// It is possible to have a comment like /*/**/*/ which requires a primitive stack
+	// implementation to ensure that it is closed off
+	currentMultiLine := 0
 
 	for index, currentByte := range fileJob.Content {
 
@@ -130,18 +133,23 @@ func countStats(fileJob *FileJob) {
 		}
 
 		// If we arent in a comment its possible to enter multiline comment
-		if currentState == S_BLANK && checkForMatchMultiOpen(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
+		if (currentState == S_BLANK || currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE) && checkForMatchMultiOpen(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
 			currentState = S_MULTICOMMENT
+			currentMultiLine++
 		}
 
 		// If we are in code its possible to move unto a multie line comment
 		if currentState == S_CODE && checkForMatchMultiOpen(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
 			currentState = S_MULTICOMMENT_CODE
+			currentMultiLine++
 		}
 
 		// If we are in multiline comment its possible to move back to code
 		if (currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE) && checkForMatchMultiClose(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
-			currentState = S_MULTICOMMENT_CODE
+			currentMultiLine--
+			if currentMultiLine == 0 {
+				currentState = S_MULTICOMMENT_CODE
+			}
 		}
 
 		// Check currentState first to save on the extra checks for a small speed boost, then check in order of most common characters

@@ -47,12 +47,7 @@ func Process() {
 	fileProcessJobQueue := make(chan *FileJob, FileProcessJobQueueSize)         // Workers doing the hard work
 	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)         // Files ready to be summerised
 
-	if runtime.NumCPU() >= 4 {
-		go walkDirectory(DirFilePaths[0], &fileListQueue)
-	} else {
-		go walkDirectoryParallel(DirFilePaths[0], &fileListQueue)
-	}
-
+	go walkDirectoryParallel(DirFilePaths[0], &fileListQueue)
 	go fileBufferReader(&fileListQueue, &fileReadJobQueue)
 	go fileReaderWorker(&fileReadJobQueue, &fileReadContentJobQueue)
 	go fileBufferReader(&fileReadContentJobQueue, &fileProcessJobQueue)
