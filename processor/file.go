@@ -6,7 +6,7 @@ import (
 	"github.com/monochromegane/go-gitignore"
 	"io/ioutil"
 	"path/filepath"
-	"runtime/debug"
+	// "runtime/debug"
 	"strings"
 	"sync"
 )
@@ -36,19 +36,78 @@ func getExtension(name string) string {
 	return extension.(string)
 }
 
+func walkDirectory(root string, output *chan *FileJob) {
+	startTime := makeTimestampMilli()
+	blackList := strings.Split(PathBlacklist, ",")
+	whiteList := strings.Split(WhiteListExtensions, ",")
+	extensionLookup := ExtensionToLanguage
+
+	// If input has a supplied white list of extensions then loop through them
+	// and modify the lookup we use to cut down on extra checks
+	if len(WhiteListExtensions) != 0 {
+		wlExtensionLookup := map[string]string{}
+
+		for _, white := range whiteList {
+			language, ok := extensionLookup[white]
+
+			if ok {
+				wlExtensionLookup[white] = language
+			}
+		}
+
+		extensionLookup = wlExtensionLookup
+	}
+
+	gitignore, gitignoreerror := gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
+
+	godirwalk.Walk(root, &godirwalk.Options{
+		// Unsorted is meant to make the walk faster and we need to sort after processing
+		Unsorted: true,
+		Callback: func(root string, info *godirwalk.Dirent) error {
+			// TODO this should be configurable via command line
+			if info.IsDir() {
+				if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
+					for _, black := range blackList {
+						if strings.HasPrefix(root, black+"/") {
+							printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", root))
+							return filepath.SkipDir
+						}
+					}
+				}
+			}
+
+			if !info.IsDir() {
+				if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
+
+					extension := getExtension(info.Name())
+					language, ok := extensionLookup[extension]
+
+					if ok {
+						*output <- &FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language}
+					} else {
+						printWarn(fmt.Sprintf("skipping file unknown extension: %s", info.Name()))
+					}
+				}
+			}
+
+			return nil
+		},
+		ErrorCallback: func(osPathname string, err error) godirwalk.ErrorAction {
+			printWarn(fmt.Sprintf("error walking: %s %s", osPathname, err))
+			return godirwalk.SkipNode
+		},
+	})
+
+	close(*output)
+	printDebug(fmt.Sprintf("milliseconds to walk directory: %d", makeTimestampMilli()-startTime))
+}
+
 // Iterate over the supplied directory in parallel and each file that is not
 // excluded by the .gitignore and we know the extension of add to the supplied
 // channel. This attempts to span out in parallel based on the number of directories
 // in the supplied directory. Tests using a single process showed no lack of performance
 // even when hitting older spinning platter disks for this way
-func walkDirectory(root string, output *chan *FileJob) {
-	// Turning off the GC during the walk process gains approx 15% performance gains
-	// on some directory types. However we want the user to be able to override this
-	// in case they run into some very large directory type.
-	if !GarbageCollect {
-		debug.SetGCPercent(-1)
-	}
-
+func walkDirectoryParallel(root string, output *chan *FileJob) {
 	startTime := makeTimestampMilli()
 	blackList := strings.Split(PathBlacklist, ",")
 	whiteList := strings.Split(WhiteListExtensions, ",")
@@ -150,8 +209,4 @@ func walkDirectory(root string, output *chan *FileJob) {
 
 	close(*output)
 	printDebug(fmt.Sprintf("milliseconds to walk directory: %d", makeTimestampMilli()-startTime))
-
-	if !GarbageCollect {
-		debug.SetGCPercent(100)
-	}
 }

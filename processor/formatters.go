@@ -2,16 +2,16 @@ package processor
 
 import (
 	"fmt"
-	// "github.com/ryanuber/columnize"
 	"sort"
 	"strings"
 	"time"
 )
 
 var tabularShortBreak = "-------------------------------------------------------------------------------\n"
-var tabularShortFormatHead = "%-25s %8s %8s %7s %8s %7s %10s\n"
-var tabularShortFormatBody = "%-25s %8d %8d %7d %8d %7d %10d\n"
-var tabularShortFormatFile = "%-34s %8d %7d %8d %7d %10d\n"
+var tabularShortFormatHead = "%-20s %9s %9s %8s %9s %8s %10s\n"
+var tabularShortFormatBody = "%-20s %9d %9d %8d %9d %8d %10d\n"
+var tabularShortFormatFile = "%-30s %9d %8d %9d %8d %10d\n"
+var shortFormatFileTrucate = 29
 
 func sortSummaryFiles(summary *LanguageSummary) {
 	switch {
@@ -65,6 +65,7 @@ func fileSummerize(input *chan *FileJob) string {
 
 	languages := map[string]LanguageSummary{}
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
+	var sumWeightedComplexity float64 = 0
 
 	for res := range *input {
 		sumFiles++
@@ -74,6 +75,13 @@ func fileSummerize(input *chan *FileJob) string {
 		sumBlank += res.Blank
 		sumComplexity += res.Complexity
 
+		var weightedComplexity float64 = 0
+		if res.Lines != 0 {
+			weightedComplexity = float64(res.Complexity) / float64(res.Lines)
+		}
+
+		sumWeightedComplexity += weightedComplexity
+
 		_, ok := languages[res.Language]
 
 		if !ok {
@@ -81,14 +89,15 @@ func fileSummerize(input *chan *FileJob) string {
 			files = append(files, res)
 
 			languages[res.Language] = LanguageSummary{
-				Name:       res.Language,
-				Lines:      res.Lines,
-				Code:       res.Code,
-				Comment:    res.Comment,
-				Blank:      res.Blank,
-				Complexity: res.Complexity,
-				Count:      1,
-				Files:      files,
+				Name:               res.Language,
+				Lines:              res.Lines,
+				Code:               res.Code,
+				Comment:            res.Comment,
+				Blank:              res.Blank,
+				Complexity:         res.Complexity,
+				Count:              1,
+				WeightedComplexity: weightedComplexity,
+				Files:              files,
 			}
 		} else {
 			tmp := languages[res.Language]
@@ -160,17 +169,17 @@ func fileSummerize(input *chan *FileJob) string {
 			for _, res := range summary.Files {
 				tmp := res.Location
 
-				if len(tmp) >= 33 {
-					totrim := len(tmp) - 33
+				if len(tmp) >= shortFormatFileTrucate {
+					totrim := len(tmp) - shortFormatFileTrucate
 					tmp = "~" + tmp[totrim:]
 				}
-
+				fmt.Println(res.Location, float64(res.Complexity)/float64(res.Lines))
 				str.WriteString(fmt.Sprintf(tabularShortFormatFile, tmp, res.Lines, res.Code, res.Comment, res.Blank, res.Complexity))
 			}
 		}
 	}
-	printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
 
+	printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
 	str.WriteString(tabularShortBreak)
 	str.WriteString(fmt.Sprintf(tabularShortFormatBody, "Total", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity))
 	str.WriteString(tabularShortBreak)

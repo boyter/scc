@@ -4,6 +4,7 @@ import (
 	"github.com/boyter/scc/processor"
 	"github.com/urfave/cli"
 	"os"
+	"runtime"
 )
 
 //go:generate go run scripts/include.go
@@ -32,7 +33,7 @@ func main() {
 			Name:        "format, f",
 			Usage:       "What format output should be used [possible values: tabular, json, csv]",
 			Value:       "tabular",
-			Destination: &processor.SortBy,
+			Destination: &processor.Format,
 		},
 		cli.StringFlag{
 			Name:        "whitelist, wl",
@@ -61,14 +62,28 @@ func main() {
 			Destination: &processor.Trace,
 		},
 		cli.IntFlag{
-			Name:        "threads, j",
-			Usage:       "Set the approx number of goroutines to use",
-			Destination: &processor.NoThreads,
+			Name:        "flqs",
+			Usage:       "Set the size of the file list queue",
+			Value:       runtime.NumCPU(),
+			Destination: &processor.FileListQueueSize,
 		},
-		cli.BoolFlag{
-			Name:        "garbagecollect, gc",
-			Usage:       "Set to enable garbage collection during file walk. This may be required for very large directories",
-			Destination: &processor.GarbageCollect,
+		cli.IntFlag{
+			Name:        "frqs",
+			Usage:       "Set the size of the file read content queue",
+			Value:       runtime.NumCPU(),
+			Destination: &processor.FileReadContentJobQueueSize,
+		},
+		cli.IntFlag{
+			Name:        "fpqs",
+			Usage:       "Set the size of the file process content queue",
+			Value:       runtime.NumCPU(),
+			Destination: &processor.FileProcessJobQueueSize,
+		},
+		cli.IntFlag{
+			Name:        "fsqs",
+			Usage:       "Set the size of the file summary queue",
+			Value:       runtime.NumCPU() * 100,
+			Destination: &processor.FileSummaryJobQueueSize,
 		},
 	}
 

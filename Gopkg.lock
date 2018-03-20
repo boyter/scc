@@ -9,6 +9,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/edsrzf/mmap-go"
+  packages = ["."]
+  revision = "0bce6a6887123b67a60366d2c9fe2dfb74289d2e"
+
+[[projects]]
+  branch = "master"
   name = "github.com/iafan/cwalk"
   packages = ["."]
   revision = "4c301c02b9f45b8589be22ceac59cf24eeddad63"
@@ -32,12 +38,6 @@
   version = "v0.8.0"
 
 [[projects]]
-  name = "github.com/ryanuber/columnize"
-  packages = ["."]
-  revision = "983d3a5fab1bf04d1b412465d2d9f8430e2e917e"
-  version = "v2.1.0"
-
-[[projects]]
   name = "github.com/urfave/cli"
   packages = ["."]
   revision = "cfb38830724cc34fedffe9a2a29fb54fa9169cd1"
@@ -46,6 +46,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "52b6376db43a3af22405c376605602a8b936a527f90289bcd38ccb5d0ea959ec"
+  inputs-digest = "3f9b8b4726b0b323891a315332d9fd4ab27ce65f62a9bb70fbc6d0948023d8db"
   solver-name = "gps-cdcl"
   solver-version = 1

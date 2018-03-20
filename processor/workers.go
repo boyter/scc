@@ -206,6 +206,9 @@ func countStats(fileJob *FileJob) {
 			}
 		}
 	}
+
+	// Save memory by unsetting the content as we no longer require it
+	fileJob.Content = []byte{}
 }
 
 // Reads from the file first queue and pushes to the next

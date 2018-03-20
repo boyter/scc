@@ -16,8 +16,13 @@ var Debug = false
 var Trace = false
 var SortBy = ""
 var PathBlacklist = ""
-var NoThreads = 0
-var GarbageCollect = false
+var FileListQueueSize = 1
+var FileReadJobQueueSize = 1
+var FileReadContentJobQueueSize = 1
+var FileProcessJobQueueSize = 1
+var FileSummaryJobQueueSize = 1
+
+// var GarbageCollect = false
 var Format = ""
 var WhiteListExtensions = ""
 
@@ -32,31 +37,22 @@ func Process() {
 
 	SortBy = strings.ToLower(SortBy)
 
-	// Less than or 0 threads is invalid so set to at least one
-	if NoThreads <= 0 {
-		// Need to consider if we should set https://golang.org/pkg/runtime/debug/#SetMaxThreads
-		printDebug(fmt.Sprintf("NoThreads set to less than 0 changing to: %d", runtime.NumCPU()))
-
-		// runtime.NumCPU() should never return zero or negative but lets be sure about that
-		NoThreads = max(1, runtime.NumCPU())
-	} else if NoThreads > 1000000 {
-		// Anything over one million is likely to cause issues so lets limit
-		printDebug(fmt.Sprintf("NoThreads set to greater than 1000000 changing to: 1000000"))
-		NoThreads = 1000000
-	}
-
 	printDebug(fmt.Sprintf("NumCPU: %d", runtime.NumCPU()))
-	printDebug(fmt.Sprintf("NoThreads: %d", NoThreads))
 	printDebug(fmt.Sprintf("SortBy: %s", SortBy))
 	printDebug(fmt.Sprintf("PathBlacklist: %s", PathBlacklist))
 
-	fileListQueue := make(chan *FileJob, 1000)                      // Files ready to be read from disk
-	fileReadJobQueue := make(chan *FileJob, min(100, NoThreads*10)) // Workers reading from disk
-	fileReadContentJobQueue := make(chan *FileJob, 1000)            // Files ready to be processed
-	fileProcessJobQueue := make(chan *FileJob, NoThreads)           // Workers doing the hard work
-	fileSummaryJobQueue := make(chan *FileJob, 1000)                // Files ready to be summerised
+	fileListQueue := make(chan *FileJob, FileListQueueSize)                     // Files ready to be read from disk
+	fileReadJobQueue := make(chan *FileJob, FileReadJobQueueSize)               // Workers reading from disk
+	fileReadContentJobQueue := make(chan *FileJob, FileReadContentJobQueueSize) // Files ready to be processed
+	fileProcessJobQueue := make(chan *FileJob, FileProcessJobQueueSize)         // Workers doing the hard work
+	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)         // Files ready to be summerised
 
-	go walkDirectory(DirFilePaths[0], &fileListQueue)
+	if runtime.NumCPU() >= 4 {
+		go walkDirectory(DirFilePaths[0], &fileListQueue)
+	} else {
+		go walkDirectoryParallel(DirFilePaths[0], &fileListQueue)
+	}
+
 	go fileBufferReader(&fileListQueue, &fileReadJobQueue)
 	go fileReaderWorker(&fileReadJobQueue, &fileReadContentJobQueue)
 	go fileBufferReader(&fileReadContentJobQueue, &fileProcessJobQueue)
