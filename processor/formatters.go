@@ -9,9 +9,9 @@ import (
 )
 
 var tabularShortBreak = "-------------------------------------------------------------------------------\n"
-var tabularShortFormatHead = "%-25s %8s %8s %7s %7s %7s %9s\n"
-var tabularShortFormatBody = "%-25s %8d %8d %7d %7d %7d %11d\n"
-var tabularShortFormatFile = "%-34s %8d %7d %7d %7d %11d\n"
+var tabularShortFormatHead = "%-25s %8s %8s %7s %8s %7s %10s\n"
+var tabularShortFormatBody = "%-25s %8d %8d %7d %8d %7d %10d\n"
+var tabularShortFormatFile = "%-34s %8d %7d %8d %7d %10d\n"
 
 func sortSummaryFiles(summary *LanguageSummary) {
 	switch {
