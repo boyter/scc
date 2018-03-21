@@ -37,9 +37,11 @@ func Process() {
 
 	SortBy = strings.ToLower(SortBy)
 
-	printDebug(fmt.Sprintf("NumCPU: %d", runtime.NumCPU()))
-	printDebug(fmt.Sprintf("SortBy: %s", SortBy))
-	printDebug(fmt.Sprintf("PathBlacklist: %s", PathBlacklist))
+	if Debug {
+		printDebug(fmt.Sprintf("NumCPU: %d", runtime.NumCPU()))
+		printDebug(fmt.Sprintf("SortBy: %s", SortBy))
+		printDebug(fmt.Sprintf("PathBlacklist: %s", PathBlacklist))
+	}
 
 	fileListQueue := make(chan *FileJob, FileListQueueSize)                     // Files ready to be read from disk
 	fileReadJobQueue := make(chan *FileJob, FileReadJobQueueSize)               // Workers reading from disk

@@ -268,22 +268,33 @@ func TestCountStatsCommentTricks(t *testing.T) {
 	if fileJob.Comment != 1 {
 		t.Errorf("One line expected got %d", fileJob.Comment)
 	}
+
+	fileJob.Code = 0
+	fileJob.Comment = 0
+	fileJob.Content = []byte(`int i = 0; /* /**//**//**//**//**//**/*/`)
+	countStats(&fileJob)
+	if fileJob.Code != 1 {
+		t.Errorf("One line expected got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 0 {
+		t.Errorf("One line expected got %d", fileJob.Comment)
+	}
 }
 
-// func TestCountStatsWithQuotes(t *testing.T) {
-// 	fileJob := FileJob{}
+func TestCountStatsWithQuotes(t *testing.T) {
+	fileJob := FileJob{}
 
-// 	fileJob.Code = 0
-// 	fileJob.Comment = 0
-// 	fileJob.Content = []byte("/* /**/ */")
-// 	countStats(&fileJob)
-// 	if fileJob.Code !=  {
-// 		t.Errorf("One line expected got %d", fileJob.Code)
-// 	}
-// 	if fileJob.Comment != 0 {
-// 		t.Errorf("No line expected got %d", fileJob.Comment)
-// 	}
-// }
+	fileJob.Code = 0
+	fileJob.Comment = 0
+	fileJob.Content = []byte(`var test = "/*";`)
+	countStats(&fileJob)
+	if fileJob.Code != 1 {
+		t.Errorf("One line expected got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 0 {
+		t.Errorf("No line expected got %d", fileJob.Comment)
+	}
+}
 
 func TestCountStatsBlankLines(t *testing.T) {
 	fileJob := FileJob{

@@ -179,7 +179,10 @@ func fileSummerize(input *chan *FileJob) string {
 		}
 	}
 
-	printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
+	if Debug {
+		printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
+	}
+
 	str.WriteString(tabularShortBreak)
 	str.WriteString(fmt.Sprintf(tabularShortFormatBody, "Total", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity))
 	str.WriteString(tabularShortBreak)

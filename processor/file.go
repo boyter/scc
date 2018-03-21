@@ -93,7 +93,9 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 							if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
 								for _, black := range blackList {
 									if strings.HasPrefix(root, black+"/") {
-										printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", root))
+										if Verbose {
+											printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", root))
+										}
 										return filepath.SkipDir
 									}
 								}
@@ -108,7 +110,7 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 
 								if ok {
 									*output <- &FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language}
-								} else {
+								} else if Verbose {
 									printWarn(fmt.Sprintf("skipping file unknown extension: %s", info.Name()))
 								}
 							}
@@ -117,7 +119,9 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 						return nil
 					},
 					ErrorCallback: func(osPathname string, err error) godirwalk.ErrorAction {
-						printWarn(fmt.Sprintf("error walking: %s %s", osPathname, err))
+						if Verbose {
+							printWarn(fmt.Sprintf("error walking: %s %s", osPathname, err))
+						}
 						return godirwalk.SkipNode
 					},
 				})
@@ -125,13 +129,12 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 			}(filepath.Join(root, f.Name()))
 		} else {
 			if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, f.Name()), false) {
-
 				extension := getExtension(f.Name())
 				language, ok := extensionLookup[extension]
 
 				if ok {
 					*output <- &FileJob{Location: filepath.Join(root, f.Name()), Filename: f.Name(), Extension: extension, Language: language}
-				} else {
+				} else if Verbose {
 					printWarn(fmt.Sprintf("skipping file unknown extension: %s", f.Name()))
 				}
 			}
@@ -141,5 +144,7 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 	wg.Wait()
 
 	close(*output)
-	printDebug(fmt.Sprintf("milliseconds to walk directory: %d", makeTimestampMilli()-startTime))
+	if Debug {
+		printDebug(fmt.Sprintf("milliseconds to walk directory: %d", makeTimestampMilli()-startTime))
+	}
 }
