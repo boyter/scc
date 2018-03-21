@@ -35,20 +35,25 @@ func checkForMatch(currentByte byte, index int, endPoint int, matches [][]byte, 
 	return false
 }
 
+// TODO bug in here. Bails out without checking all the conditions it needs to finish and report sucess or failure
 func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, matches []MultiLineComment, fileJob *FileJob) bool {
 	for index := 0; index < len(matches); index++ {
+		isMatch := true
 		if currentByte == matches[index].Open[0] {
 
 			// Start at 1 to avoid doing the check we just did again
 			// see BenchmarkCheckByteEquality if you doubt this is the fastest way to do it
 			for j := 1; j < len(matches[index].Open); j++ {
 				if index+j >= endPoint || matches[index].Open[j] != fileJob.Content[index+j] {
-					return false
+					isMatch = false
+					break
 				}
 			}
 
 			// TODO return the size of matches so we can increment the core loop index and save some lookups
-			return true
+			if isMatch {
+				return true
+			}
 		}
 	}
 
@@ -167,55 +172,46 @@ func countStats(fileJob *FileJob) {
 	// implementation to ensure that it is closed off which is what this is for
 	currentMultiLine := 0
 	var currentByte byte = ' '
-	movedState := false
 
 	// for index, currentByte := range fileJob.Content {
 	for index := 0; index < len(fileJob.Content); index++ {
 		currentByte = fileJob.Content[index]
 
-		// If the line is still blank we can move into single line comment otherwise its still a code line just with a comment at the end
-		if currentState == S_BLANK && checkForMatch(currentByte, index, endPoint, singleLineCommentChecks, fileJob) {
-			currentState = S_COMMENT
-			movedState = true
-		}
-
-		// If we are in code its possible to move into single line comment
-		if !movedState && currentState == S_CODE && checkForMatch(currentByte, index, endPoint, singleLineCommentChecks, fileJob) {
-			currentState = S_COMMENT_CODE
-			movedState = true
-		}
-
-		// If we arent in a comment its possible to enter multiline comment
-		if !movedState && (currentState == S_BLANK || currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE) && checkForMatchMultiOpen(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
-			currentState = S_MULTICOMMENT
-			currentMultiLine++
-			movedState = true
-		}
-
-		// If we are in code its possible to move unto a multiline comment
-		if !movedState && currentState == S_CODE && checkForMatchMultiOpen(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
-			currentState = S_MULTICOMMENT_CODE
-			currentMultiLine++
-			movedState = true
-		}
-
-		// If we are in multiline comment its possible to move back to code
-		if !movedState && (currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE) && checkForMatchMultiClose(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
-			currentMultiLine--
-			if currentMultiLine == 0 {
-				currentState = S_MULTICOMMENT_CODE
+		// Based on our current state determine if the state should change by checking
+		// what the character is. The below is very CPU bound so need to be careful if
+		// changing anything in here and profile/measure afterwards!
+		switch {
+		case currentState == S_BLANK:
+			// From blank we can move into comment, move into a multiline comment
+			// or move into code but we can only do one.
+			if checkForMatch(currentByte, index, endPoint, singleLineCommentChecks, fileJob) {
+				currentState = S_COMMENT
+			} else if checkForMatchMultiOpen(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
+				currentState = S_MULTICOMMENT
+				currentMultiLine++
+			} else if currentByte != ' ' && currentByte != '\t' && currentByte != '\n' && currentByte != '\r' {
+				currentState = S_CODE
 			}
-			movedState = true
+		case currentState == S_CODE:
+			// From code we can move into a multiline comment
+			if checkForMatchMultiOpen(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
+				currentState = S_MULTICOMMENT_CODE
+				currentMultiLine++
+			}
+		case currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE:
+			// If we are in a multiline comment we can either add another one EG /* /**/ /* or exit
+			if checkForMatchMultiOpen(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
+				currentState = S_MULTICOMMENT_CODE
+				currentMultiLine++
+			} else if checkForMatchMultiClose(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
+				currentMultiLine--
+				if currentMultiLine == 0 {
+					currentState = S_MULTICOMMENT_CODE
+				}
+			}
 		}
 
-		// Check currentState first to save on the extra checks for a small speed boost, then check in order of most common characters
-		if !movedState && currentState == S_BLANK && currentByte != ' ' && currentByte != '\t' && currentByte != '\n' && currentByte != '\r' {
-			currentState = S_CODE
-			movedState = true
-		}
-
-		// Complexity calculations for this file
-		if (currentState == S_BLANK || currentState == S_CODE) && checkComplexity(currentByte, index, endPoint, complexityChecks, fileJob) {
+		if currentState == S_CODE && checkComplexity(currentByte, index, endPoint, complexityChecks, fileJob) {
 			fileJob.Complexity++
 		}
 
@@ -224,13 +220,12 @@ func countStats(fileJob *FileJob) {
 		if currentByte == '\n' || index == endPoint {
 			addStats(currentState, fileJob)
 
+			// If we are in a multiline comment that started after some code then we need
+			// to move to a multiline comment if a multiline comment then stay there
+			// otherwise we reset back into a blank state
 			if currentState != S_MULTICOMMENT && currentState != S_MULTICOMMENT_CODE {
 				currentState = S_BLANK
-			}
-
-			// If we are in a multiline comment that started after some code then we need
-			// to move to a normal multiline comment
-			if currentState == S_MULTICOMMENT_CODE {
+			} else {
 				currentState = S_MULTICOMMENT
 			}
 		}
