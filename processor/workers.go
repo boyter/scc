@@ -17,20 +17,20 @@ const (
 )
 
 func checkForMatch(currentByte byte, index int, endPoint int, matches [][]byte, fileJob *FileJob) bool {
+	potentialMatch := true
 	for i := 0; i < len(matches); i++ {
-		isMatch := true
 		if currentByte == matches[i][0] {
 
 			// Start at 1 to avoid doing the check we just did again
 			// see BenchmarkCheckByteEquality as this is faster than bytes.Equal
 			for j := 1; j < len(matches[i]); j++ {
 				if index+j >= endPoint || matches[i][j] != fileJob.Content[index+j] {
-					isMatch = false
+					potentialMatch = false
 					break
 				}
 			}
 
-			if isMatch {
+			if potentialMatch {
 				return true
 			}
 		}
@@ -114,9 +114,9 @@ func checkComplexity(currentByte byte, index int, endPoint int, matches [][]byte
 				}
 			}
 
-			// Return the lenth of matches and use that to step pass the bytes we just checked
+			// Return the length of match and use that to step past the bytes we just checked
 			if potentialMatch {
-				return true, len(matches)
+				return true, len(matches[i])
 			}
 		}
 	}
@@ -176,7 +176,6 @@ func countStats(fileJob *FileJob) {
 
 	endPoint := int(fileJob.Bytes - 1)
 	currentState := S_BLANK
-	var currentByte byte = ' '
 
 	// If we have checked bytes ahead of where we are we can jump ahead and save time
 	// this value stores that jump
@@ -184,7 +183,6 @@ func countStats(fileJob *FileJob) {
 
 	for index := 0; index < len(fileJob.Content); index++ {
 		offsetJump = 0
-		currentByte = fileJob.Content[index]
 
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
@@ -193,29 +191,28 @@ func countStats(fileJob *FileJob) {
 		case currentState == S_BLANK:
 			// From blank we can move into comment, move into a multiline comment
 			// or move into code but we can only do one.
-			if checkForMatch(currentByte, index, endPoint, singleLineCommentChecks, fileJob) {
+			if checkForMatch(fileJob.Content[index], index, endPoint, singleLineCommentChecks, fileJob) {
 				currentState = S_COMMENT
-			} else if checkForMatchMultiOpen(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
+			} else if checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob) {
 				currentState = S_MULTICOMMENT
-			} else if !isWhitespace(currentByte) {
+			} else if !isWhitespace(fileJob.Content[index]) {
 				currentState = S_CODE
 			}
 		case currentState == S_CODE:
 			// From code we can move into a multiline comment
-			if checkForMatchMultiOpen(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
+			if checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob) {
 				currentState = S_MULTICOMMENT_CODE
 			}
 		case currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE:
-			// If we are in a multiline comment we can either add another one EG /* /**/ /* or exit
-			if checkForMatchMultiOpen(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
+			if checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob) {
 				currentState = S_MULTICOMMENT
-			} else if checkForMatchMultiClose(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
+			} else if checkForMatchMultiClose(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob) {
 
-				// If we started as multiline code just switch back there
+				// If we started as multiline code switch back to code so we count correctly
 				if currentState == S_MULTICOMMENT_CODE {
 					currentState = S_CODE
 				} else {
-					// If we are the end of the file OR next byte is whitespace move to
+					// If we are the end of the file OR next byte is whitespace move to comment blank
 					if index+1 >= endPoint || isWhitespace(fileJob.Content[index+1]) {
 						currentState = S_MULTICOMMENT_BLANK
 					} else {
@@ -226,7 +223,7 @@ func countStats(fileJob *FileJob) {
 		}
 
 		if currentState == S_CODE {
-			success, offset := checkComplexity(currentByte, index, endPoint, complexityChecks, fileJob)
+			success, offset := checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, fileJob)
 			if success {
 				offsetJump = offset
 				fileJob.Complexity++
@@ -235,7 +232,7 @@ func countStats(fileJob *FileJob) {
 
 		// This means the end of processing the line so calculate the stats according to what state
 		// we are currently in
-		if currentByte == '\n' || index == endPoint {
+		if fileJob.Content[index] == '\n' || index == endPoint {
 			fileJob.Lines++
 
 			if Trace {
