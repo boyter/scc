@@ -17,6 +17,24 @@ const (
 )
 
 func checkForMatch(currentByte byte, index int, endPoint int, matches [][]byte, fileJob *FileJob) bool {
+
+	complexityBytes := []byte{
+		'#',
+		'/',
+	}
+
+	hasMatch := false
+	for i := 0; i < len(complexityBytes); i++ {
+		if complexityBytes[i] == currentByte {
+			hasMatch = true
+			break
+		}
+	}
+
+	if !hasMatch {
+		return false
+	}
+
 	potentialMatch := true
 	for i := 0; i < len(matches); i++ {
 		if currentByte == matches[i][0] {
@@ -40,6 +58,23 @@ func checkForMatch(currentByte byte, index int, endPoint int, matches [][]byte, 
 }
 
 func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, matches []MultiLineComment, fileJob *FileJob) bool {
+
+	complexityBytes := []byte{
+		'/',
+	}
+
+	hasMatch := false
+	for i := 0; i < len(complexityBytes); i++ {
+		if complexityBytes[i] == currentByte {
+			hasMatch = true
+			break
+		}
+	}
+
+	if !hasMatch {
+		return false
+	}
+
 	potentialMatch := true
 	for i := 0; i < len(matches); i++ {
 		if currentByte == matches[i].Open[0] {
@@ -64,6 +99,23 @@ func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, matches [
 }
 
 func checkForMatchMultiClose(currentByte byte, index int, endPoint int, matches []MultiLineComment, fileJob *FileJob) bool {
+
+	complexityBytes := []byte{
+		'*',
+	}
+
+	hasMatch := false
+	for i := 0; i < len(complexityBytes); i++ {
+		if complexityBytes[i] == currentByte {
+			hasMatch = true
+			break
+		}
+	}
+
+	if !hasMatch {
+		return false
+	}
+
 	potentialMatch := true
 	for i := 0; i < len(matches); i++ {
 		if currentByte == matches[i].Close[0] {
@@ -98,6 +150,30 @@ func checkComplexity(currentByte byte, index int, endPoint int, matches [][]byte
 		if fileJob.Content[index-1] != ' ' && fileJob.Content[index-1] != '\t' && fileJob.Content[index-1] != '\n' && fileJob.Content[index-1] != '\r' {
 			return false, 0
 		}
+	}
+
+	complexityBytes := []byte{
+		'f',
+		'i',
+		's',
+		'w',
+		'e',
+		'|',
+		'&',
+		'!',
+		'=',
+	}
+
+	hasMatch := false
+	for i := 0; i < len(complexityBytes); i++ {
+		if complexityBytes[i] == currentByte {
+			hasMatch = true
+			break
+		}
+	}
+
+	if !hasMatch {
+		return false, 0
 	}
 
 	potentialMatch := true

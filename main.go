@@ -5,15 +5,15 @@ import (
 	"github.com/urfave/cli"
 	"os"
 	"runtime"
-	"runtime/pprof"
+	// "runtime/pprof"
 )
 
 //go:generate go run scripts/include.go
 func main() {
 
-	f, _ := os.Create("scc.pprof")
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
+	// f, _ := os.Create("scc.pprof")
+	// pprof.StartCPUProfile(f)
+	// defer pprof.StopCPUProfile()
 
 	app := cli.NewApp()
 	app.EnableBashCompletion = true
