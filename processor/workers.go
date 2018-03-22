@@ -17,25 +17,29 @@ const (
 
 func checkForMatch(currentByte byte, index int, endPoint int, matches [][]byte, fileJob *FileJob) bool {
 	for index := 0; index < len(matches); index++ {
+		isMatch := true
 		if currentByte == matches[index][0] {
 
 			// Start at 1 to avoid doing the check we just did again
 			// see BenchmarkCheckByteEquality if you doubt this is the fastest way to do it
 			for j := 1; j < len(matches[index]); j++ {
 				if index+j >= endPoint || matches[index][j] != fileJob.Content[index+j] {
-					return false
+					isMatch = false
+					break
 				}
 			}
 
 			// TODO return the size of matches so we can increment the core loop index and save some lookups
-			return true
+			if isMatch {
+				return true
+			}
 		}
 	}
 
 	return false
 }
 
-// TODO bug in here. Bails out without checking all the conditions it needs to finish and report sucess or failure
+// TODO bug in here. Bails out without checking all the conditions it needs to finish and report success or failure
 func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, matches []MultiLineComment, fileJob *FileJob) bool {
 	for index := 0; index < len(matches); index++ {
 		isMatch := true
@@ -62,18 +66,22 @@ func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, matches [
 
 func checkForMatchMultiClose(currentByte byte, index int, endPoint int, matches []MultiLineComment, fileJob *FileJob) bool {
 	for index := 0; index < len(matches); index++ {
+		isMatch := true
 		if currentByte == matches[index].Close[0] {
 
 			// Start at 1 to avoid doing the check we just did again
 			// see BenchmarkCheckByteEquality if you doubt this is the fastest way to do it
 			for j := 1; j < len(matches[index].Close); j++ {
 				if index+j >= endPoint || matches[index].Close[j] != fileJob.Content[index+j] {
-					return false
+					isMatch = false
+					break
 				}
 			}
 
 			// TODO return the size of matches so we can increment the core loop index and save some lookups
-			return true
+			if isMatch {
+				return true
+			}
 		}
 	}
 
@@ -173,7 +181,6 @@ func countStats(fileJob *FileJob) {
 	currentMultiLine := 0
 	var currentByte byte = ' '
 
-	// for index, currentByte := range fileJob.Content {
 	for index := 0; index < len(fileJob.Content); index++ {
 		currentByte = fileJob.Content[index]
 
@@ -201,7 +208,7 @@ func countStats(fileJob *FileJob) {
 		case currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE:
 			// If we are in a multiline comment we can either add another one EG /* /**/ /* or exit
 			if checkForMatchMultiOpen(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
-				currentState = S_MULTICOMMENT_CODE
+				currentState = S_MULTICOMMENT
 				currentMultiLine++
 			} else if checkForMatchMultiClose(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
 				currentMultiLine--
