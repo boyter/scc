@@ -17,20 +17,19 @@ const (
 )
 
 func checkForMatch(currentByte byte, index int, endPoint int, matches [][]byte, fileJob *FileJob) bool {
-	for index := 0; index < len(matches); index++ {
+	for i := 0; i < len(matches); i++ {
 		isMatch := true
-		if currentByte == matches[index][0] {
+		if currentByte == matches[i][0] {
 
 			// Start at 1 to avoid doing the check we just did again
-			// see BenchmarkCheckByteEquality if you doubt this is the fastest way to do it
-			for j := 1; j < len(matches[index]); j++ {
-				if index+j >= endPoint || matches[index][j] != fileJob.Content[index+j] {
+			// see BenchmarkCheckByteEquality as this is faster than bytes.Equal
+			for j := 1; j < len(matches[i]); j++ {
+				if index+j >= endPoint || matches[i][j] != fileJob.Content[index+j] {
 					isMatch = false
 					break
 				}
 			}
 
-			// TODO return the size of matches so we can increment the core loop index and save some lookups
 			if isMatch {
 				return true
 			}
@@ -40,7 +39,6 @@ func checkForMatch(currentByte byte, index int, endPoint int, matches [][]byte, 
 	return false
 }
 
-// TODO bug in here. Bails out without checking all the conditions it needs to finish and report success or failure
 func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, matches []MultiLineComment, fileJob *FileJob) bool {
 	potentialMatch := true
 	for i := 0; i < len(matches); i++ {
@@ -56,7 +54,6 @@ func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, matches [
 				}
 			}
 
-			// TODO return the lenth of matches and use that to step pass the bytes we just checked
 			if potentialMatch {
 				return true
 			}
@@ -81,7 +78,6 @@ func checkForMatchMultiClose(currentByte byte, index int, endPoint int, matches 
 				}
 			}
 
-			// TODO return the lenth of matches and use that to step pass the bytes we just checked
 			if potentialMatch {
 				return true
 			}
@@ -94,13 +90,13 @@ func checkForMatchMultiClose(currentByte byte, index int, endPoint int, matches 
 // What I want to know is given a list of strings and a current position are any
 // of them there starting from where we check, and if yes say so
 
-func checkComplexity(currentByte byte, index int, endPoint int, matches [][]byte, fileJob *FileJob) bool {
+func checkComplexity(currentByte byte, index int, endPoint int, matches [][]byte, fileJob *FileJob) (bool, int) {
 	// Special case if the thing we are matching is not the first thing in the file
 	// then we need to check that there was a whitespace before it
 	if index != 0 {
 		// If the byte before our current postion is not a whitespace then return false
 		if fileJob.Content[index-1] != ' ' && fileJob.Content[index-1] != '\t' && fileJob.Content[index-1] != '\n' && fileJob.Content[index-1] != '\r' {
-			return false
+			return false, 0
 		}
 	}
 
@@ -118,14 +114,14 @@ func checkComplexity(currentByte byte, index int, endPoint int, matches [][]byte
 				}
 			}
 
-			// TODO return the lenth of matches and use that to step pass the bytes we just checked
+			// Return the lenth of matches and use that to step pass the bytes we just checked
 			if potentialMatch {
-				return true
+				return true, len(matches)
 			}
 		}
 	}
 
-	return false
+	return false, 0
 }
 
 func isWhitespace(currentByte byte) bool {
@@ -182,7 +178,12 @@ func countStats(fileJob *FileJob) {
 	currentState := S_BLANK
 	var currentByte byte = ' '
 
+	// If we have checked bytes ahead of where we are we can jump ahead and save time
+	// this value stores that jump
+	offsetJump := 0
+
 	for index := 0; index < len(fileJob.Content); index++ {
+		offsetJump = 0
 		currentByte = fileJob.Content[index]
 
 		// Based on our current state determine if the state should change by checking
@@ -224,8 +225,12 @@ func countStats(fileJob *FileJob) {
 			}
 		}
 
-		if currentState == S_CODE && checkComplexity(currentByte, index, endPoint, complexityChecks, fileJob) {
-			fileJob.Complexity++
+		if currentState == S_CODE {
+			success, offset := checkComplexity(currentByte, index, endPoint, complexityChecks, fileJob)
+			if success {
+				offsetJump = offset
+				fileJob.Complexity++
+			}
 		}
 
 		// This means the end of processing the line so calculate the stats according to what state
@@ -242,9 +247,7 @@ func countStats(fileJob *FileJob) {
 				fileJob.Blank++
 			case currentState == S_CODE || currentState == S_COMMENT_CODE || currentState == S_MULTICOMMENT_CODE:
 				fileJob.Code++
-			case currentState == S_COMMENT:
-				fileJob.Comment++
-			case currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_BLANK:
+			case currentState == S_COMMENT || currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_BLANK:
 				fileJob.Comment++
 			}
 
@@ -257,6 +260,10 @@ func countStats(fileJob *FileJob) {
 				currentState = S_MULTICOMMENT
 			}
 		}
+
+		// If we checked ahead on bytes we are able to jump ahead and save some time reprocessing
+		// the same values again
+		index += offsetJump
 	}
 
 	// Save memory by unsetting the content as we no longer require it

@@ -173,7 +173,7 @@ func fileSummerize(input *chan *FileJob) string {
 					totrim := len(tmp) - shortFormatFileTrucate
 					tmp = "~" + tmp[totrim:]
 				}
-				fmt.Println(res.Location, float64(res.Complexity)/float64(res.Lines))
+				// fmt.Println(res.Location, float64(res.Complexity)/float64(res.Lines))
 				str.WriteString(fmt.Sprintf(tabularShortFormatFile, tmp, res.Lines, res.Code, res.Comment, res.Blank, res.Complexity))
 			}
 		}
