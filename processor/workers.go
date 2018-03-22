@@ -7,12 +7,13 @@ import (
 )
 
 const (
-	S_BLANK             int64 = 1
-	S_CODE              int64 = 2
-	S_COMMENT           int64 = 3
-	S_COMMENT_CODE      int64 = 4 // Indicates comment after code
-	S_MULTICOMMENT      int64 = 5
-	S_MULTICOMMENT_CODE int64 = 6 // Indicates multi comment after code
+	S_BLANK              int64 = 1
+	S_CODE               int64 = 2
+	S_COMMENT            int64 = 3
+	S_COMMENT_CODE       int64 = 4 // Indicates comment after code
+	S_MULTICOMMENT       int64 = 5
+	S_MULTICOMMENT_CODE  int64 = 6 // Indicates multi comment after code
+	S_MULTICOMMENT_BLANK int64 = 7 // Indicates multi comment ended with blank afterwards
 )
 
 func checkForMatch(currentByte byte, index int, endPoint int, matches [][]byte, fileJob *FileJob) bool {
@@ -41,21 +42,22 @@ func checkForMatch(currentByte byte, index int, endPoint int, matches [][]byte, 
 
 // TODO bug in here. Bails out without checking all the conditions it needs to finish and report success or failure
 func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, matches []MultiLineComment, fileJob *FileJob) bool {
-	for index := 0; index < len(matches); index++ {
-		isMatch := true
-		if currentByte == matches[index].Open[0] {
+	potentialMatch := true
+	for i := 0; i < len(matches); i++ {
+		if currentByte == matches[i].Open[0] {
+			potentialMatch = true
 
 			// Start at 1 to avoid doing the check we just did again
-			// see BenchmarkCheckByteEquality if you doubt this is the fastest way to do it
-			for j := 1; j < len(matches[index].Open); j++ {
-				if index+j >= endPoint || matches[index].Open[j] != fileJob.Content[index+j] {
-					isMatch = false
+			// see BenchmarkCheckByteEquality as this is faster than bytes.Equal
+			for j := 1; j < len(matches[i].Open); j++ {
+				if index+j > endPoint || matches[i].Open[j] != fileJob.Content[index+j] {
+					potentialMatch = false
 					break
 				}
 			}
 
-			// TODO return the size of matches so we can increment the core loop index and save some lookups
-			if isMatch {
+			// TODO return the lenth of matches and use that to step pass the bytes we just checked
+			if potentialMatch {
 				return true
 			}
 		}
@@ -65,21 +67,22 @@ func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, matches [
 }
 
 func checkForMatchMultiClose(currentByte byte, index int, endPoint int, matches []MultiLineComment, fileJob *FileJob) bool {
-	for index := 0; index < len(matches); index++ {
-		isMatch := true
-		if currentByte == matches[index].Close[0] {
+	potentialMatch := true
+	for i := 0; i < len(matches); i++ {
+		if currentByte == matches[i].Close[0] {
+			potentialMatch = true
 
 			// Start at 1 to avoid doing the check we just did again
-			// see BenchmarkCheckByteEquality if you doubt this is the fastest way to do it
-			for j := 1; j < len(matches[index].Close); j++ {
-				if index+j >= endPoint || matches[index].Close[j] != fileJob.Content[index+j] {
-					isMatch = false
+			// see BenchmarkCheckByteEquality as this is faster than bytes.Equal
+			for j := 1; j < len(matches[i].Close); j++ {
+				if index+j > endPoint || matches[i].Close[j] != fileJob.Content[index+j] {
+					potentialMatch = false
 					break
 				}
 			}
 
-			// TODO return the size of matches so we can increment the core loop index and save some lookups
-			if isMatch {
+			// TODO return the lenth of matches and use that to step pass the bytes we just checked
+			if potentialMatch {
 				return true
 			}
 		}
@@ -88,47 +91,49 @@ func checkForMatchMultiClose(currentByte byte, index int, endPoint int, matches 
 	return false
 }
 
+// What I want to know is given a list of strings and a current position are any
+// of them there starting from where we check, and if yes say so
+
 func checkComplexity(currentByte byte, index int, endPoint int, matches [][]byte, fileJob *FileJob) bool {
-	for index := 0; index < len(matches); index++ {
-		if currentByte == matches[index][0] {
+	// Special case if the thing we are matching is not the first thing in the file
+	// then we need to check that there was a whitespace before it
+	if index != 0 {
+		// If the byte before our current postion is not a whitespace then return false
+		if fileJob.Content[index-1] != ' ' && fileJob.Content[index-1] != '\t' && fileJob.Content[index-1] != '\n' && fileJob.Content[index-1] != '\r' {
+			return false
+		}
+	}
 
-			for j := 1; j < len(matches[index]); j++ {
-				if index+j > endPoint || matches[index][j] != fileJob.Content[index+j] {
-					return false
+	potentialMatch := true
+	for i := 0; i < len(matches); i++ { // Loop each match
+		if currentByte == matches[i][0] { // If the first byte of the match is not the current byte skip
+			potentialMatch = true
+
+			// Assume that we have a match and then see if we don't
+			for j := 1; j < len(matches[i]); j++ {
+				// Bounds check first and if that is ok check if the bytes match
+				if index+j > endPoint || matches[i][j] != fileJob.Content[index+j] {
+					potentialMatch = false
+					break
 				}
 			}
 
-			// Check if the previous byte is space tab or newline otherwise it is not a match
-			if index != 0 {
-				if fileJob.Content[index-1] != ' ' && fileJob.Content[index-1] != '\t' && fileJob.Content[index-1] != '\n' && fileJob.Content[index-1] != '\r' {
-					return false
-				}
+			// TODO return the lenth of matches and use that to step pass the bytes we just checked
+			if potentialMatch {
+				return true
 			}
-
-			return true
 		}
 	}
 
 	return false
 }
 
-func addStats(currentState int64, fileJob *FileJob) {
-	fileJob.Lines++
-
-	if Trace {
-		printTrace(fmt.Sprintf("%s line %d ended with state: %d", fileJob.Location, fileJob.Lines, currentState))
+func isWhitespace(currentByte byte) bool {
+	if currentByte != ' ' && currentByte != '\t' && currentByte != '\n' && currentByte != '\r' {
+		return false
 	}
 
-	switch {
-	case currentState == S_BLANK:
-		fileJob.Blank++
-	case currentState == S_CODE || currentState == S_COMMENT_CODE || currentState == S_MULTICOMMENT_CODE:
-		fileJob.Code++
-	case currentState == S_COMMENT:
-		fileJob.Comment++
-	case currentState == S_MULTICOMMENT:
-		fileJob.Comment++
-	}
+	return true
 }
 
 // If the file contains anything even just a newline its line count should be >= 1.
@@ -175,10 +180,6 @@ func countStats(fileJob *FileJob) {
 
 	endPoint := int(fileJob.Bytes - 1)
 	currentState := S_BLANK
-
-	// It is possible to have a comment like /*/**/*/ which requires a primitive stack
-	// implementation to ensure that it is closed off which is what this is for
-	currentMultiLine := 0
 	var currentByte byte = ' '
 
 	for index := 0; index < len(fileJob.Content); index++ {
@@ -195,25 +196,30 @@ func countStats(fileJob *FileJob) {
 				currentState = S_COMMENT
 			} else if checkForMatchMultiOpen(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
 				currentState = S_MULTICOMMENT
-				currentMultiLine++
-			} else if currentByte != ' ' && currentByte != '\t' && currentByte != '\n' && currentByte != '\r' {
+			} else if !isWhitespace(currentByte) {
 				currentState = S_CODE
 			}
 		case currentState == S_CODE:
 			// From code we can move into a multiline comment
 			if checkForMatchMultiOpen(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
 				currentState = S_MULTICOMMENT_CODE
-				currentMultiLine++
 			}
 		case currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE:
 			// If we are in a multiline comment we can either add another one EG /* /**/ /* or exit
 			if checkForMatchMultiOpen(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
 				currentState = S_MULTICOMMENT
-				currentMultiLine++
 			} else if checkForMatchMultiClose(currentByte, index, endPoint, multiLineCommentChecks, fileJob) {
-				currentMultiLine--
-				if currentMultiLine == 0 {
-					currentState = S_MULTICOMMENT_CODE
+
+				// If we started as multiline code just switch back there
+				if currentState == S_MULTICOMMENT_CODE {
+					currentState = S_CODE
+				} else {
+					// If we are the end of the file OR next byte is whitespace move to
+					if index+1 >= endPoint || isWhitespace(fileJob.Content[index+1]) {
+						currentState = S_MULTICOMMENT_BLANK
+					} else {
+						currentState = S_MULTICOMMENT_CODE
+					}
 				}
 			}
 		}
@@ -225,7 +231,22 @@ func countStats(fileJob *FileJob) {
 		// This means the end of processing the line so calculate the stats according to what state
 		// we are currently in
 		if currentByte == '\n' || index == endPoint {
-			addStats(currentState, fileJob)
+			fileJob.Lines++
+
+			if Trace {
+				printTrace(fmt.Sprintf("%s line %d ended with state: %d", fileJob.Location, fileJob.Lines, currentState))
+			}
+
+			switch {
+			case currentState == S_BLANK:
+				fileJob.Blank++
+			case currentState == S_CODE || currentState == S_COMMENT_CODE || currentState == S_MULTICOMMENT_CODE:
+				fileJob.Code++
+			case currentState == S_COMMENT:
+				fileJob.Comment++
+			case currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_BLANK:
+				fileJob.Comment++
+			}
 
 			// If we are in a multiline comment that started after some code then we need
 			// to move to a multiline comment if a multiline comment then stay there
