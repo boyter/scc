@@ -75,7 +75,7 @@ func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, matches [
 	}
 
 	if !hasMatch {
-		return 0, []byte{}
+		return 0, nil
 	}
 
 	potentialMatch := true
@@ -98,7 +98,7 @@ func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, matches [
 		}
 	}
 
-	return 0, []byte{}
+	return 0, nil
 }
 
 func checkForMatchMultiClose(currentByte byte, index int, endPoint int, matches []OpenClose, fileJob *FileJob) int {
@@ -330,7 +330,6 @@ func countStats(fileJob *FileJob) {
 			}
 		case currentState == S_STRING:
 			// TODO should be using the close state and checking of the character is escaped
-			// if fileJob.Content[index] == '"' || fileJob.Content[index] == '`' {
 			if fileJob.Content[index] == endString[0] {
 				currentState = S_CODE
 			}
