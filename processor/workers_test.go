@@ -277,17 +277,6 @@ func TestCountStatsCommentTricks(t *testing.T) {
 
 	fileJob.Code = 0
 	fileJob.Comment = 0
-	fileJob.Content = []byte(`/*/**//**//**//**//**//**//**//**//**/*/`)
-	countStats(&fileJob)
-	if fileJob.Code != 0 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 1 {
-		t.Errorf("One line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
 	fileJob.Content = []byte(`i/**/`)
 	countStats(&fileJob)
 	if fileJob.Code != 1 {
@@ -297,38 +286,71 @@ func TestCountStatsCommentTricks(t *testing.T) {
 		t.Errorf("No line expected got %d", fileJob.Comment)
 	}
 
-	// fileJob.Code = 0
-	// fileJob.Comment = 0
-	// fileJob.Content = []byte(`int i = 0; /* /**//**//**//**//**//**/`)
-	// countStats(&fileJob)
-	// if fileJob.Code != 1 {
-	// 	t.Errorf("One line expected got %d", fileJob.Code)
-	// }
-	// if fileJob.Comment != 0 {
-	// 	t.Errorf("No line expected got %d", fileJob.Comment)
-	// }
+	fileJob.Code = 0
+	fileJob.Comment = 0
+	fileJob.Content = []byte(`// This is a comment`)
+	countStats(&fileJob)
+	if fileJob.Code != 0 {
+		t.Errorf("No line expected got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 1 {
+		t.Errorf("One line expected got %d", fileJob.Comment)
+	}
 
-	// fileJob.Code = 0
-	// fileJob.Comment = 0
-	// fileJob.Content = []byte(`// This is a comment`)
-	// countStats(&fileJob)
-	// if fileJob.Code != 0 {
-	// 	t.Errorf("No line expected got %d", fileJob.Code)
-	// }
-	// if fileJob.Comment != 1 {
-	// 	t.Errorf("One line expected got %d", fileJob.Comment)
-	// }
+	fileJob.Code = 0
+	fileJob.Comment = 0
+	fileJob.Content = []byte(`int i = 0; /* /**//**//**//**//**//**/`)
+	countStats(&fileJob)
+	if fileJob.Code != 1 {
+		t.Errorf("One line expected got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 0 {
+		t.Errorf("No line expected got %d", fileJob.Comment)
+	}
 
-	// fileJob.Code = 0
-	// fileJob.Comment = 0
-	// fileJob.Content = []byte(`/* i++ comment */    `)
-	// countStats(&fileJob)
-	// if fileJob.Code != 0 {
-	// 	t.Errorf("No line expected got %d", fileJob.Code)
-	// }
-	// if fileJob.Comment != 1 {
-	// 	t.Errorf("One line expected got %d", fileJob.Comment)
-	// }
+	fileJob.Code = 0
+	fileJob.Comment = 0
+	fileJob.Content = []byte(`/* i++ comment */    `)
+	countStats(&fileJob)
+	if fileJob.Code != 0 {
+		t.Errorf("No line expected got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 1 {
+		t.Errorf("One line expected got %d", fileJob.Comment)
+	}
+
+	fileJob.Code = 0
+	fileJob.Comment = 0
+	fileJob.Content = []byte(`////////////////// Something`)
+	countStats(&fileJob)
+	if fileJob.Code != 0 {
+		t.Errorf("No line expected got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 1 {
+		t.Errorf("One line expected got %d", fileJob.Comment)
+	}
+
+	fileJob.Code = 0
+	fileJob.Comment = 0
+	fileJob.Content = []byte("`/*` i++")
+	countStats(&fileJob)
+	if fileJob.Code != 1 {
+		t.Errorf("No line expected got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 0 {
+		t.Errorf("One line expected got %d", fileJob.Comment)
+	}
+
+	fileJob.Code = 0
+	fileJob.Comment = 0
+	fileJob.Content = []byte("\"``/* i++\"")
+	countStats(&fileJob)
+	if fileJob.Code != 1 {
+		t.Errorf("No line expected got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 0 {
+		t.Errorf("One line expected got %d", fileJob.Comment)
+	}
 }
 
 func TestCountStatsWithQuotes(t *testing.T) {
@@ -336,6 +358,7 @@ func TestCountStatsWithQuotes(t *testing.T) {
 
 	fileJob.Code = 0
 	fileJob.Comment = 0
+	fileJob.Complexity = 0
 	fileJob.Content = []byte(`var test = "/*";`)
 	countStats(&fileJob)
 	if fileJob.Code != 1 {
@@ -343,6 +366,36 @@ func TestCountStatsWithQuotes(t *testing.T) {
 	}
 	if fileJob.Comment != 0 {
 		t.Errorf("No line expected got %d", fileJob.Comment)
+	}
+
+	fileJob.Code = 0
+	fileJob.Comment = 0
+	fileJob.Complexity = 0
+	fileJob.Content = []byte(`t = " if ";`)
+	countStats(&fileJob)
+	if fileJob.Code != 1 {
+		t.Errorf("One line expected got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 0 {
+		t.Errorf("No line expected got %d", fileJob.Comment)
+	}
+	if fileJob.Complexity != 0 {
+		t.Errorf("No line expected got %d", fileJob.Complexity)
+	}
+
+	fileJob.Code = 0
+	fileJob.Comment = 0
+	fileJob.Complexity = 0
+	fileJob.Content = []byte(`t = " if switch for while do loop != == && || ";`)
+	countStats(&fileJob)
+	if fileJob.Code != 1 {
+		t.Errorf("One line expected got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 0 {
+		t.Errorf("No line expected got %d", fileJob.Comment)
+	}
+	if fileJob.Complexity != 0 {
+		t.Errorf("No line expected got %d", fileJob.Complexity)
 	}
 }
 

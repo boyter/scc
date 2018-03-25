@@ -27,7 +27,7 @@ type LanguageSummary struct {
 	Files              []*FileJob
 }
 
-type MultiLineComment struct {
+type OpenClose struct {
 	Open  []byte
 	Close []byte
 }
