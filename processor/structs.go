@@ -1,5 +1,10 @@
 package processor
 
+import (
+	"bytes"
+	"sync"
+)
+
 type FileJob struct {
 	Language   string
 	Filename   string
@@ -12,6 +17,7 @@ type FileJob struct {
 	Comment    int64
 	Blank      int64
 	Complexity int64
+	Hash       []byte
 }
 
 type LanguageSummary struct {
@@ -30,4 +36,37 @@ type LanguageSummary struct {
 type OpenClose struct {
 	Open  []byte
 	Close []byte
+}
+
+type CheckDuplicates struct {
+	hashes map[int64][][]byte
+	mux    sync.Mutex
+}
+
+func (c *CheckDuplicates) Add(key int64, hash []byte) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	hashes, ok := c.hashes[key]
+	if ok {
+		c.hashes[key] = append(hashes, hash)
+	} else {
+		c.hashes[key] = [][]byte{hash}
+	}
+}
+
+func (c *CheckDuplicates) Check(key int64, hash []byte) bool {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	hashes, ok := c.hashes[key]
+	if ok {
+		for _, h := range hashes {
+			if bytes.Equal(h, hash) {
+				return true
+			}
+		}
+	}
+
+	return false
 }

@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"crypto/md5"
 	"fmt"
 	"io/ioutil"
 	"sync"
@@ -273,7 +274,12 @@ func countStats(fileJob *FileJob) {
 	// this value stores that jump
 	offsetJump := 0
 
+	digest := md5.New()
 	for index := 0; index < len(fileJob.Content); index++ {
+		if Duplicates {
+			digest.Write([]byte{fileJob.Content[index]})
+		}
+
 		offsetJump = 0
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
@@ -354,7 +360,7 @@ func countStats(fileJob *FileJob) {
 
 		// This means the end of processing the line so calculate the stats according to what state
 		// we are currently in
-		if fileJob.Content[index] == '\n' || index == endPoint || index+offsetJump >= endPoint {
+		if fileJob.Content[index] == '\n' || index == endPoint || index+offsetJump > endPoint {
 			fileJob.Lines++
 
 			if Trace {
@@ -385,6 +391,10 @@ func countStats(fileJob *FileJob) {
 		index += offsetJump
 	}
 
+	if Duplicates {
+		hashed := make([]byte, 0)
+		fileJob.Hash = digest.Sum(hashed)
+	}
 	// Save memory by unsetting the content as we no longer require it
 	fileJob.Content = []byte{}
 }
@@ -445,6 +455,10 @@ func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 	}
 }
 
+var duplicates = CheckDuplicates{
+	hashes: make(map[int64][][]byte),
+}
+
 // Does the actual processing of stats and as such contains the hot path CPU call
 func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
 	startTime := makeTimestampMilli()
@@ -454,6 +468,21 @@ func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
 		go func(res *FileJob) {
 			fileStartTime := makeTimestampNano()
 			countStats(res)
+
+			// If duplicate detection check if duplicate here
+			// mutex lock around hash containing duplicates then see if any of same length
+			// if so check hashes and if duplicate don't add it
+			if Duplicates {
+				if duplicates.Check(res.Bytes, res.Hash) {
+					if Verbose {
+						printWarn(fmt.Sprintf("skipping duplicate file: %s", res.Location))
+					}
+					wg.Done()
+					return
+				} else {
+					duplicates.Add(res.Bytes, res.Hash)
+				}
+			}
 
 			if Trace {
 				printTrace(fmt.Sprintf("nanoseconds process: %s: %d", res.Location, makeTimestampNano()-fileStartTime))

@@ -5,15 +5,15 @@ import (
 	"github.com/urfave/cli"
 	"os"
 	"runtime"
-	"runtime/pprof"
+	// "runtime/pprof"
 )
 
 //go:generate go run scripts/include.go
 func main() {
 
-	f, _ := os.Create("scc.pprof")
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
+	// f, _ := os.Create("scc.pprof")
+	// pprof.StartCPUProfile(f)
+	// defer pprof.StopCPUProfile()
 
 	app := cli.NewApp()
 	app.EnableBashCompletion = true
@@ -56,6 +56,11 @@ func main() {
 			Name:        "verbose, v",
 			Usage:       "Set to enable verbose output",
 			Destination: &processor.Verbose,
+		},
+		cli.BoolFlag{
+			Name:        "duplicates, d",
+			Usage:       "Set to check for and remove duplicate files from stats and output",
+			Destination: &processor.Duplicates,
 		},
 		cli.BoolFlag{
 			Name:        "debug",

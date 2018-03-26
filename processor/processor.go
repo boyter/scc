@@ -14,6 +14,7 @@ var Files = false
 var Verbose = false
 var Debug = false
 var Trace = false
+var Duplicates = false
 var SortBy = ""
 var PathBlacklist = ""
 var FileListQueueSize = 1
