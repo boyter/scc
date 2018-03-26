@@ -275,9 +275,11 @@ func countStats(fileJob *FileJob) {
 	offsetJump := 0
 
 	digest := md5.New()
+	digestable := []byte{' '}
 	for index := 0; index < len(fileJob.Content); index++ {
 		if Duplicates {
-			digest.Write([]byte{fileJob.Content[index]})
+			digestable[0] = fileJob.Content[index]
+			digest.Write(digestable)
 		}
 
 		offsetJump = 0
@@ -469,9 +471,6 @@ func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
 			fileStartTime := makeTimestampNano()
 			countStats(res)
 
-			// If duplicate detection check if duplicate here
-			// mutex lock around hash containing duplicates then see if any of same length
-			// if so check hashes and if duplicate don't add it
 			if Duplicates {
 				if duplicates.Check(res.Bytes, res.Hash) {
 					if Verbose {
