@@ -23,9 +23,6 @@ var FileReadJobQueueSize = 1
 var FileReadContentJobQueueSize = 1
 var FileProcessJobQueueSize = 1
 var FileSummaryJobQueueSize = 1
-
-// var GarbageCollect = false
-var Format = ""
 var WhiteListExtensions = ""
 
 // Not set via flags but by arguments following the the flags

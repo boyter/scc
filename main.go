@@ -36,12 +36,6 @@ func main() {
 			Destination: &processor.SortBy,
 		},
 		cli.StringFlag{
-			Name:        "format, f",
-			Usage:       "What format output should be used [possible values: tabular, json, csv]",
-			Value:       "tabular",
-			Destination: &processor.Format,
-		},
-		cli.StringFlag{
 			Name:        "whitelist, wl",
 			Usage:       "Restrict file extensions to just those provided as a comma seperated list E.G. go,java,js",
 			Value:       "",
