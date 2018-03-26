@@ -63,6 +63,11 @@ func main() {
 			Destination: &processor.Duplicates,
 		},
 		cli.BoolFlag{
+			Name:        "more, m",
+			Usage:       "Set to check produce more output such as code vs complexity ranking",
+			Destination: &processor.More,
+		},
+		cli.BoolFlag{
 			Name:        "debug",
 			Usage:       "Set to enable debug output",
 			Destination: &processor.Debug,

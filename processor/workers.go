@@ -274,15 +274,22 @@ func countStats(fileJob *FileJob) {
 	// this value stores that jump
 	offsetJump := 0
 
+	// For determining duplicates we need the below. The reason for creating
+	// the byte array here is to avoid GC pressure
 	digest := md5.New()
 	digestable := []byte{' '}
+
 	for index := 0; index < len(fileJob.Content); index++ {
+		offsetJump = 0
+
 		if Duplicates {
+			// Technically this is wrong because we skip bytes so this is not a true
+			// hash of the file contents, but for duplicate files it shouldn't matter
+			// as both will skip the same way
 			digestable[0] = fileJob.Content[index]
 			digest.Write(digestable)
 		}
 
-		offsetJump = 0
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
 		// changing anything in here and profile/measure afterwards!
