@@ -94,7 +94,7 @@ func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, matches [
 			}
 
 			if potentialMatch {
-				return len(matches[i].Open), matches[i].Open
+				return len(matches[i].Open), matches[i].Close
 			}
 		}
 	}

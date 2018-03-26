@@ -6,7 +6,7 @@ import (
 
 func CheckDuplicatesTest(t *testing.T) {
 	c := CheckDuplicates{
-		hashes: make(map[int][][]byte),
+		hashes: make(map[int64][][]byte),
 	}
 
 	c.Add(1, []byte("hash"))
