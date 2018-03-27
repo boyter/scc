@@ -200,6 +200,20 @@ func fileSummerizeLong(input *chan *FileJob) string {
 	str.WriteString(fmt.Sprintf(tabularWideFormatBody, "Total", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumWeightedComplexity))
 	str.WriteString(tabularWideBreak)
 
+	if !Cocomo {
+		estimatedEffort := EstimateEffort(int64(sumCode))
+		estimatedCost := EstimateCost(estimatedEffort, AverageWage)
+		estimatedScheduleMonths := EstimateScheduleMonths(estimatedEffort)
+		estimatedPeopleRequired := estimatedEffort / estimatedScheduleMonths
+
+		p := gmessage.NewPrinter(glang.English)
+
+		str.WriteString(p.Sprintf("Estimated Cost to Develop $%d\n", int64(estimatedCost)))
+		str.WriteString(fmt.Sprintf("Estimated Schedule Effort %d months\n", estimatedScheduleMonths))
+		str.WriteString(fmt.Sprintf("Estimated People Required %d\n", estimatedPeopleRequired))
+		str.WriteString(tabularWideBreak)
+	}
+
 	return str.String()
 }
 
@@ -328,9 +342,19 @@ func fileSummerizeShort(input *chan *FileJob) string {
 	str.WriteString(fmt.Sprintf(tabularShortFormatBody, "Total", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity))
 	str.WriteString(tabularShortBreak)
 
-	p := gmessage.NewPrinter(glang.English)
-	str.WriteString(p.Sprintf("Estimated Cost to Develop $%d\n", int64(EstimateCost(EstimateEffort(int64(sumCode)), 56286))))
-	str.WriteString(tabularShortBreak)
+	if !Cocomo {
+		estimatedEffort := EstimateEffort(int64(sumCode))
+		estimatedCost := EstimateCost(estimatedEffort, AverageWage)
+		estimatedScheduleMonths := EstimateScheduleMonths(estimatedEffort)
+		estimatedPeopleRequired := estimatedEffort / estimatedScheduleMonths
+
+		p := gmessage.NewPrinter(glang.English)
+
+		str.WriteString(p.Sprintf("Estimated Cost to Develop $%d\n", int64(estimatedCost)))
+		str.WriteString(fmt.Sprintf("Estimated Schedule Effort %f months\n", estimatedScheduleMonths))
+		str.WriteString(fmt.Sprintf("Estimated People Required %f\n", estimatedPeopleRequired))
+		str.WriteString(tabularShortBreak)
+	}
 
 	return str.String()
 }

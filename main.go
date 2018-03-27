@@ -4,7 +4,6 @@ import (
 	"github.com/boyter/scc/processor"
 	"github.com/urfave/cli"
 	"os"
-	"runtime"
 	// "runtime/pprof"
 )
 
@@ -61,6 +60,17 @@ func main() {
 			Usage:       "Set to check produce more output such as code vs complexity ranking",
 			Destination: &processor.More,
 		},
+		cli.Int64Flag{
+			Name:        "averageage, aw",
+			Usage:       "Set as integer to set the average wage used for basic COCOMO calculation",
+			Destination: &processor.AverageWage,
+			Value:       56286,
+		},
+		cli.BoolFlag{
+			Name:        "cocomo, co",
+			Usage:       "Set to check remove cocomo calculation output",
+			Destination: &processor.Cocomo,
+		},
 		cli.BoolFlag{
 			Name:        "debug",
 			Usage:       "Set to enable debug output",
@@ -70,30 +80,6 @@ func main() {
 			Name:        "trace",
 			Usage:       "Set to enable trace output, not reccomended for multiple files",
 			Destination: &processor.Trace,
-		},
-		cli.IntFlag{
-			Name:        "flqs",
-			Usage:       "Set the size of the file list queue",
-			Value:       runtime.NumCPU(),
-			Destination: &processor.FileListQueueSize,
-		},
-		cli.IntFlag{
-			Name:        "frqs",
-			Usage:       "Set the size of the file read content queue",
-			Value:       runtime.NumCPU(),
-			Destination: &processor.FileReadContentJobQueueSize,
-		},
-		cli.IntFlag{
-			Name:        "fpqs",
-			Usage:       "Set the size of the file process content queue",
-			Value:       runtime.NumCPU(),
-			Destination: &processor.FileProcessJobQueueSize,
-		},
-		cli.IntFlag{
-			Name:        "fsqs",
-			Usage:       "Set the size of the file summary queue",
-			Value:       runtime.NumCPU() * 100,
-			Destination: &processor.FileSummaryJobQueueSize,
 		},
 	}
 

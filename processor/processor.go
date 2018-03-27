@@ -16,14 +16,16 @@ var Debug = false
 var Trace = false
 var Duplicates = false
 var More = false
+var Cocomo = false
 var SortBy = ""
 var PathBlacklist = ""
-var FileListQueueSize = 1
-var FileReadJobQueueSize = 1
-var FileReadContentJobQueueSize = 1
-var FileProcessJobQueueSize = 1
-var FileSummaryJobQueueSize = 1
+var FileListQueueSize = runtime.NumCPU()
+var FileReadJobQueueSize = runtime.NumCPU()
+var FileReadContentJobQueueSize = runtime.NumCPU()
+var FileProcessJobQueueSize = runtime.NumCPU()
+var FileSummaryJobQueueSize = runtime.NumCPU()
 var WhiteListExtensions = ""
+var AverageWage int64 = 56286
 
 // Not set via flags but by arguments following the the flags
 var DirFilePaths = []string{}

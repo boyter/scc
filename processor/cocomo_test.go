@@ -23,3 +23,13 @@ func TestEstimateCostManyLines(t *testing.T) {
 		t.Errorf("Got %f", got)
 	}
 }
+
+func TestEstimateScheduleMonths(t *testing.T) {
+	eff := EstimateEffort(537)
+	got := EstimateScheduleMonths(eff)
+
+	// Should be around 3.03
+	if got < 3 || got > 3.1 {
+		t.Errorf("Got %f", got)
+	}
+}
