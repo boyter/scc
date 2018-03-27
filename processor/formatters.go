@@ -17,8 +17,8 @@ var shortFormatFileTrucate = 29
 
 var tabularWideBreak = "-------------------------------------------------------------------------------------------------------------\n"
 var tabularWideFormatHead = "%-33s %9s %9s %8s %9s %8s %10s %16s\n"
-var tabularWideFormatBody = "%-33s %9d %9d %8d %9d %8d %10d %16f\n"
-var tabularWideFormatFile = "%-43s %9d %8d %9d %8d %10d %16f\n"
+var tabularWideFormatBody = "%-33s %9d %9d %8d %9d %8d %10d %16.2f\n"
+var tabularWideFormatFile = "%-43s %9d %8d %9d %8d %10d %16.2f\n"
 var wideFormatFileTrucate = 42
 
 func sortSummaryFiles(summary *LanguageSummary) {
@@ -88,8 +88,8 @@ func fileSummerizeLong(input *chan *FileJob) string {
 		sumComplexity += res.Complexity
 
 		var weightedComplexity float64 = 0
-		if res.Lines != 0 {
-			weightedComplexity = float64(res.Complexity) / float64(res.Lines)
+		if res.Code != 0 {
+			weightedComplexity = (float64(res.Complexity) / float64(res.Code)) * 100
 		}
 		res.WeightedComplexity = weightedComplexity
 		sumWeightedComplexity += weightedComplexity
@@ -173,7 +173,7 @@ func fileSummerizeLong(input *chan *FileJob) string {
 			str.WriteString(tabularWideBreak)
 		}
 
-		str.WriteString(fmt.Sprintf(tabularWideFormatBody, summary.Name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity, sumWeightedComplexity))
+		str.WriteString(fmt.Sprintf(tabularWideFormatBody, summary.Name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity, summary.WeightedComplexity))
 
 		if Files {
 			sortSummaryFiles(&summary)
@@ -209,8 +209,8 @@ func fileSummerizeLong(input *chan *FileJob) string {
 		p := gmessage.NewPrinter(glang.English)
 
 		str.WriteString(p.Sprintf("Estimated Cost to Develop $%d\n", int64(estimatedCost)))
-		str.WriteString(fmt.Sprintf("Estimated Schedule Effort %d months\n", estimatedScheduleMonths))
-		str.WriteString(fmt.Sprintf("Estimated People Required %d\n", estimatedPeopleRequired))
+		str.WriteString(fmt.Sprintf("Estimated Schedule Effort %f months\n", estimatedScheduleMonths))
+		str.WriteString(fmt.Sprintf("Estimated People Required %f\n", estimatedPeopleRequired))
 		str.WriteString(tabularWideBreak)
 	}
 
