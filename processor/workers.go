@@ -408,25 +408,6 @@ func countStats(fileJob *FileJob) {
 	fileJob.Content = []byte{}
 }
 
-// Reads from the file first queue and pushes to the next
-// use this to chain from buffers where we don't want processing to
-// stop into more CPU bound task we want to run on the number of CPU's
-func fileBufferReader(input *chan *FileJob, output *chan *FileJob) {
-	var wg sync.WaitGroup
-	for res := range *input {
-		wg.Add(1)
-		go func(res *FileJob) {
-			*output <- res
-			wg.Done()
-		}(res)
-	}
-
-	go func() {
-		wg.Wait()
-		close(*output)
-	}()
-}
-
 // Reads entire file into memory and then pushes it onto the next queue
 func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 	startTime := makeTimestampMilli()
