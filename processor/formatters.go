@@ -2,6 +2,8 @@ package processor
 
 import (
 	"fmt"
+	glang "golang.org/x/text/language"
+	gmessage "golang.org/x/text/message"
 	"sort"
 	"strings"
 	"time"
@@ -15,7 +17,7 @@ var shortFormatFileTrucate = 29
 
 var tabularWideBreak = "-------------------------------------------------------------------------------------------------------------\n"
 var tabularWideFormatHead = "%-33s %9s %9s %8s %9s %8s %10s %16s\n"
-var tabularWideFormatBody = "%-33s %9d %9d %8d %9d %8d %10d\n"
+var tabularWideFormatBody = "%-33s %9d %9d %8d %9d %8d %10d %16f\n"
 var tabularWideFormatFile = "%-43s %9d %8d %9d %8d %10d %16f\n"
 var wideFormatFileTrucate = 42
 
@@ -89,7 +91,7 @@ func fileSummerizeLong(input *chan *FileJob) string {
 		if res.Lines != 0 {
 			weightedComplexity = float64(res.Complexity) / float64(res.Lines)
 		}
-
+		res.WeightedComplexity = weightedComplexity
 		sumWeightedComplexity += weightedComplexity
 
 		_, ok := languages[res.Language]
@@ -114,14 +116,15 @@ func fileSummerizeLong(input *chan *FileJob) string {
 			files := append(tmp.Files, res)
 
 			languages[res.Language] = LanguageSummary{
-				Name:       res.Language,
-				Lines:      tmp.Lines + res.Lines,
-				Code:       tmp.Code + res.Code,
-				Comment:    tmp.Comment + res.Comment,
-				Blank:      tmp.Blank + res.Blank,
-				Complexity: tmp.Complexity + res.Complexity,
-				Count:      tmp.Count + 1,
-				Files:      files,
+				Name:               res.Language,
+				Lines:              tmp.Lines + res.Lines,
+				Code:               tmp.Code + res.Code,
+				Comment:            tmp.Comment + res.Comment,
+				Blank:              tmp.Blank + res.Blank,
+				Complexity:         tmp.Complexity + res.Complexity,
+				Count:              tmp.Count + 1,
+				WeightedComplexity: tmp.WeightedComplexity + weightedComplexity,
+				Files:              files,
 			}
 		}
 	}
@@ -170,7 +173,7 @@ func fileSummerizeLong(input *chan *FileJob) string {
 			str.WriteString(tabularWideBreak)
 		}
 
-		str.WriteString(fmt.Sprintf(tabularWideFormatBody, summary.Name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity))
+		str.WriteString(fmt.Sprintf(tabularWideFormatBody, summary.Name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity, sumWeightedComplexity))
 
 		if Files {
 			sortSummaryFiles(&summary)
@@ -184,8 +187,7 @@ func fileSummerizeLong(input *chan *FileJob) string {
 					tmp = "~" + tmp[totrim:]
 				}
 
-				complexity := (float64(res.Complexity) / float64(res.Lines)) * 100
-				str.WriteString(fmt.Sprintf(tabularWideFormatFile, tmp, res.Lines, res.Code, res.Comment, res.Blank, res.Complexity, complexity))
+				str.WriteString(fmt.Sprintf(tabularWideFormatFile, tmp, res.Lines, res.Code, res.Comment, res.Blank, res.Complexity, res.WeightedComplexity))
 			}
 		}
 	}
@@ -195,7 +197,7 @@ func fileSummerizeLong(input *chan *FileJob) string {
 	}
 
 	str.WriteString(tabularWideBreak)
-	str.WriteString(fmt.Sprintf(tabularWideFormatBody, "Total", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity))
+	str.WriteString(fmt.Sprintf(tabularWideFormatBody, "Total", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumWeightedComplexity))
 	str.WriteString(tabularWideBreak)
 
 	return str.String()
@@ -213,7 +215,6 @@ func fileSummerizeShort(input *chan *FileJob) string {
 
 	languages := map[string]LanguageSummary{}
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
-	var sumWeightedComplexity float64 = 0
 
 	for res := range *input {
 		sumFiles++
@@ -223,13 +224,6 @@ func fileSummerizeShort(input *chan *FileJob) string {
 		sumBlank += res.Blank
 		sumComplexity += res.Complexity
 
-		var weightedComplexity float64 = 0
-		if res.Lines != 0 {
-			weightedComplexity = float64(res.Complexity) / float64(res.Lines)
-		}
-
-		sumWeightedComplexity += weightedComplexity
-
 		_, ok := languages[res.Language]
 
 		if !ok {
@@ -237,15 +231,14 @@ func fileSummerizeShort(input *chan *FileJob) string {
 			files = append(files, res)
 
 			languages[res.Language] = LanguageSummary{
-				Name:               res.Language,
-				Lines:              res.Lines,
-				Code:               res.Code,
-				Comment:            res.Comment,
-				Blank:              res.Blank,
-				Complexity:         res.Complexity,
-				Count:              1,
-				WeightedComplexity: weightedComplexity,
-				Files:              files,
+				Name:       res.Language,
+				Lines:      res.Lines,
+				Code:       res.Code,
+				Comment:    res.Comment,
+				Blank:      res.Blank,
+				Complexity: res.Complexity,
+				Count:      1,
+				Files:      files,
 			}
 		} else {
 			tmp := languages[res.Language]
@@ -333,6 +326,10 @@ func fileSummerizeShort(input *chan *FileJob) string {
 
 	str.WriteString(tabularShortBreak)
 	str.WriteString(fmt.Sprintf(tabularShortFormatBody, "Total", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity))
+	str.WriteString(tabularShortBreak)
+
+	p := gmessage.NewPrinter(glang.English)
+	str.WriteString(p.Sprintf("Estimated Cost to Develop $%d\n", int64(EstimateCost(EstimateEffort(int64(sumCode)), 56286))))
 	str.WriteString(tabularShortBreak)
 
 	return str.String()
