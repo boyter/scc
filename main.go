@@ -18,7 +18,7 @@ func main() {
 	app.EnableBashCompletion = true
 	app.Name = "scc"
 	app.Version = "0.0.1"
-	app.Usage = "Count lines of code in a directory"
+	app.Usage = "Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation."
 	app.UsageText = "scc DIRECTORY"
 
 	app.Flags = []cli.Flag{
@@ -56,7 +56,7 @@ func main() {
 			Destination: &processor.Duplicates,
 		},
 		cli.BoolFlag{
-			Name:        "more, m",
+			Name:        "wide, w",
 			Usage:       "Set to check produce more output such as code vs complexity ranking",
 			Destination: &processor.More,
 		},
