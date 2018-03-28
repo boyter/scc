@@ -1,5 +1,10 @@
+#!/usr/bin/python
+ # -*- coding: utf-8 -*-
+
 import json
 import pprint
+import codecs
+import sys
 
 database1 = None
 database2 = None
@@ -15,22 +20,41 @@ output = {}
 
 # Build the master list based on theirs
 for key, value in database2['languages'].iteritems():
-    if 'extensions' in value:
-        name = key
-        if 'name' in value:
-            name = value['name']
-        if 'line_comment' in value:
-            # print ">>>>>", value['line_comment']
-            pass
-        if 'multi_line' in value:
-            # print ">>>>>", value['multi_line']
-            pass
-        if 'quotes' in value:
-            print ">>>>>", value['quotes']
+    
+    extensions = []
+    line_comment = []
+    multi_line = []
+    quotes = []
+    name = key
+    base = ''
 
-        output[name] = {
-            'extensions': value['extensions']
-        }
+    if 'name' in value:
+        name = value['name']
+    if 'extensions' in value:
+        extensions = value['extensions']
+    if 'line_comment' in value:
+        line_comment = value['line_comment']
+    if 'multi_line' in value:
+        multi_line = value['multi_line']
+    if 'quotes' in value:
+        quotes = value['quotes']
+    if 'base' in value:
+        base = value['base']
+
+        if base == 'c':
+            if len(line_comment) == 0:
+                line_comment = ['//']
+            if len(multi_line) == 0:
+                multi_line = [['/*', '*/']]
+            if len(quotes) == 0:
+                quotes = [['"','"']]
+
+    output[name] = {
+        'extensions': extensions,
+        'line_comment': line_comment,
+        'multi_line': multi_line,
+        'quotes': quotes,
+    }
 
 
 # Merge in whats missing where we can
@@ -80,12 +104,12 @@ print outputstr
 outputstr = 'var LanguageFeatures = map[string]LanguageFeature{' + '\n'
 for key, value in output.iteritems():
     outputstr += '"' + key + '": LanguageFeature{' + '\n'
-    if key in ['']:
+    if key in ['Plain Text', 'Text', 'XML', 'JSON', 'Markdown']:
         outputstr += 'CountCode: false,'
         outputstr += 'CheckComplexity: false,'
     else:
-        outputstr += 'CountCode: true,'
-        outputstr += 'CheckComplexity: true,'
+        outputstr += 'CountCode: true,' + '\n'
+        outputstr += 'CheckComplexity: true,' + '\n'
         outputstr += '''        ComplexityChecks: [][]byte{
                 []byte("for "),
                 []byte("for("),
@@ -110,10 +134,46 @@ for key, value in output.iteritems():
                 '!',
                 '=',
             },''' + '\n'
-    outputstr += 'SingleLineComment: [][]byte{},' + '\n'
-    outputstr += 'MultiLineComment: []OpenClose{},' + '\n'
-    outputstr += 'StringChecks: []OpenClose{},},' + '\n'
+    if 'line_comment' in value and len(value['line_comment']) != 0:
+        outputstr += '''SingleLineComment: [][]byte{''' + '\n'
+        for x in  value['line_comment']:
+            outputstr += '[]byte("%s"),' % x
+        outputstr += '},' + '\n'
+    else:
+        outputstr += 'SingleLineComment: [][]byte{},' + '\n'
+
+    if 'multi_line' in value and len(value['multi_line']) != 0:
+        # print value['multi_line']
+        outputstr += 'MultiLineComment: []OpenClose{' + '\n'
+        for x in value['multi_line']:
+            outputstr += 'OpenClose{' + '\n'
+            outputstr += 'Open:  []byte("%s"),' % x[0]  + '\n'
+            outputstr += 'Close: []byte("%s"),' % x[1] + '\n'
+            outputstr += '},' + '\n'
+        outputstr += '},' + '\n'
+        
+    else:
+        outputstr += 'MultiLineComment: []OpenClose{},' + '\n'
+
+    if 'quotes' in value and len(value['quotes']) != 0:
+        for x in value['quotes']:
+            outputstr += 'OpenClose{' + '\n'
+            if x[0] == '"':
+                outputstr += '''Open: []byte("\\""),''' + '\n'
+            else:
+                outputstr += 'Open: []byte("%s"),' % x[0] + '\n'
+            if x[1] == '"':
+                outputstr += '''Close: []byte("\\""),''' + '\n'
+            else:
+                outputstr += 'Close: []byte("%s"),' % x[1] + '\n'
+
+        outputstr += '},' + '\n'
+    else:
+        outputstr += 'StringChecks: []OpenClose{},},' + '\n'
 outputstr += '}'
 
+
+UTF8Writer = codecs.getwriter('utf8')
+sys.stdout = UTF8Writer(sys.stdout)
 print
-print outputstr
+print unicode(outputstr)
