@@ -24,10 +24,10 @@ func readFile(filepath string) []byte {
 // and encodes them as strings literals in constants.go
 func main() {
 	files, _ := ioutil.ReadDir(".")
-	out, _ := os.Create("./constants.go")
+	out, _ := os.Create("./processor/constants.go")
 
 	// Open constants
-	out.Write([]byte("package main \n\nconst (\n"))
+	out.Write([]byte("package processor \n\nconst (\n"))
 
 	for _, f := range files {
 		if strings.HasSuffix(f.Name(), ".json") {

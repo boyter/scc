@@ -404,6 +404,7 @@ func countStats(fileJob *FileJob) {
 		hashed := make([]byte, 0)
 		fileJob.Hash = digest.Sum(hashed)
 	}
+
 	// Save memory by unsetting the content as we no longer require it
 	fileJob.Content = []byte{}
 }

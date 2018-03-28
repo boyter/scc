@@ -19,10 +19,19 @@ for key, value in database2['languages'].iteritems():
         name = key
         if 'name' in value:
             name = value['name']
+        if 'line_comment' in value:
+            # print ">>>>>", value['line_comment']
+            pass
+        if 'multi_line' in value:
+            # print ">>>>>", value['multi_line']
+            pass
+        if 'quotes' in value:
+            print ">>>>>", value['quotes']
 
-        output[name] = {'extensions': value['extensions']}
-    # else:
-    #     print 'Missing extensions for', key
+        output[name] = {
+            'extensions': value['extensions']
+        }
+
 
 # Merge in whats missing where we can
 for language in database1:
@@ -58,11 +67,53 @@ for key, value in output.iteritems():
         extension_mapping[extension] = key
 
 
-output = 'map[string]string{'
+outputstr = 'var ExtensionToLanguage = map[string]string{'
 for key, value in extension_mapping.iteritems():
     # If not starts with . add one in
-    output += '''"%s": "%s", ''' % (key, value)
-output += '}'
+    outputstr += '''"%s": "%s", ''' % (key, value)
+outputstr += '}'
 
 print
-print output
+print outputstr
+
+
+outputstr = 'var LanguageFeatures = map[string]LanguageFeature{' + '\n'
+for key, value in output.iteritems():
+    outputstr += '"' + key + '": LanguageFeature{' + '\n'
+    if key in ['']:
+        outputstr += 'CountCode: false,'
+        outputstr += 'CheckComplexity: false,'
+    else:
+        outputstr += 'CountCode: true,'
+        outputstr += 'CheckComplexity: true,'
+        outputstr += '''        ComplexityChecks: [][]byte{
+                []byte("for "),
+                []byte("for("),
+                []byte("if "),
+                []byte("if("),
+                []byte("switch "),
+                []byte("while "),
+                []byte("else "),
+                []byte("|| "),
+                []byte("&& "),
+                []byte("!= "),
+                []byte("== "),
+            },
+            ComplexityBytes: []byte{
+                'f',
+                'i',
+                's',
+                'w',
+                'e',
+                '|',
+                '&',
+                '!',
+                '=',
+            },''' + '\n'
+    outputstr += 'SingleLineComment: [][]byte{},' + '\n'
+    outputstr += 'MultiLineComment: []OpenClose{},' + '\n'
+    outputstr += 'StringChecks: []OpenClose{},},' + '\n'
+outputstr += '}'
+
+print
+print outputstr
