@@ -3,7 +3,7 @@ os:
   - linux
   - osx
 go:
-  - 1.9.x
+  - 1.10.x
 env:
   - GOOS=windows GOARCH=amd64
   - GOOS=linux GOARCH=amd64
