@@ -19,31 +19,10 @@ const (
 )
 
 func checkForMatch(currentByte byte, index int, endPoint int, matches [][]byte, fileJob *FileJob) bool {
-
-	complexityBytes := []byte{
-		'#',
-		'/',
-	}
-
-	hasMatch := false
-	for i := 0; i < len(complexityBytes); i++ {
-		if complexityBytes[i] == currentByte {
-			hasMatch = true
-			break
-		}
-	}
-
-	if !hasMatch {
-		return false
-	}
-
 	potentialMatch := true
 	for i := 0; i < len(matches); i++ {
 		if currentByte == matches[i][0] {
-
-			// Start at 1 to avoid doing the check we just did again
-			// see BenchmarkCheckByteEquality as this is faster than bytes.Equal
-			for j := 1; j < len(matches[i]); j++ {
+			for j := 0; j < len(matches[i]); j++ {
 				if index+j >= endPoint || matches[i][j] != fileJob.Content[index+j] {
 					potentialMatch = false
 					break
@@ -59,33 +38,32 @@ func checkForMatch(currentByte byte, index int, endPoint int, matches [][]byte, 
 	return false
 }
 
-func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, matches []OpenClose, fileJob *FileJob) (int, []byte) {
+func checkForMatchSingle(currentByte byte, index int, endPoint int, matches []byte, fileJob *FileJob) bool {
+	potentialMatch := true
 
-	complexityBytes := []byte{
-		'/',
-		'"',
-		'`',
-	}
+	if currentByte == matches[0] {
+		for j := 0; j < len(matches); j++ {
+			if index+j >= endPoint || matches[j] != fileJob.Content[index+j] {
+				potentialMatch = false
+				break
+			}
+		}
 
-	hasMatch := false
-	for i := 0; i < len(complexityBytes); i++ {
-		if complexityBytes[i] == currentByte {
-			hasMatch = true
-			break
+		if potentialMatch {
+			return true
 		}
 	}
 
-	if !hasMatch {
-		return 0, nil
-	}
+	return false
+}
+
+func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, matches []OpenClose, fileJob *FileJob) (int, []byte) {
 
 	potentialMatch := true
 	for i := 0; i < len(matches); i++ {
 		if currentByte == matches[i].Open[0] {
 			potentialMatch = true
 
-			// Start at 1 to avoid doing the check we just did again
-			// see BenchmarkCheckByteEquality as this is faster than bytes.Equal
 			for j := 1; j < len(matches[i].Open); j++ {
 				if index+j > endPoint || matches[i].Open[j] != fileJob.Content[index+j] {
 					potentialMatch = false
@@ -104,29 +82,11 @@ func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, matches [
 
 func checkForMatchMultiClose(currentByte byte, index int, endPoint int, matches []OpenClose, fileJob *FileJob) int {
 
-	complexityBytes := []byte{
-		'*',
-	}
-
-	hasMatch := false
-	for i := 0; i < len(complexityBytes); i++ {
-		if complexityBytes[i] == currentByte {
-			hasMatch = true
-			break
-		}
-	}
-
-	if !hasMatch {
-		return 0
-	}
-
 	potentialMatch := true
 	for i := 0; i < len(matches); i++ {
 		if currentByte == matches[i].Close[0] {
 			potentialMatch = true
 
-			// Start at 1 to avoid doing the check we just did again
-			// see BenchmarkCheckByteEquality as this is faster than bytes.Equal
 			for j := 1; j < len(matches[i].Close); j++ {
 				if index+j > endPoint || matches[i].Close[j] != fileJob.Content[index+j] {
 					potentialMatch = false
@@ -156,6 +116,8 @@ func checkComplexity(currentByte byte, index int, endPoint int, matches [][]byte
 		}
 	}
 
+	// Because the number of complexity checks is usually quite high this check speeds
+	// up the processing quite a lot and is worth implementing
 	complexityBytes := []byte{
 		'f',
 		'i',
@@ -186,6 +148,7 @@ func checkComplexity(currentByte byte, index int, endPoint int, matches [][]byte
 			potentialMatch = true
 
 			// Assume that we have a match and then see if we don't
+			// Start from 1 as we already checked the first byte for a match
 			for j := 1; j < len(matches[i]); j++ {
 				// Bounds check first and if that is ok check if the bytes match
 				if index+j > endPoint || matches[i][j] != fileJob.Content[index+j] {
@@ -345,7 +308,7 @@ func countStats(fileJob *FileJob) {
 			}
 		case currentState == S_STRING:
 			// TODO should be using the close state and checking of the character is escaped
-			if fileJob.Content[index] == endString[0] {
+			if fileJob.Content[index-1] != '\\' && checkForMatchSingle(fileJob.Content[index], index, endPoint, endString, fileJob) {
 				currentState = S_CODE
 			}
 			break state
