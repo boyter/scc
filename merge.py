@@ -19,6 +19,7 @@ with open('database_languages2.json') as json_data:
 output = {}
 
 # Build the master list based on theirs
+# Need to pull the bases from https://github.com/Aaronepower/tokei/blob/fe4b8b3b378692455bb5144ebbeb450a75f92d0d/src/language/language.rs#L45
 for key, value in database2['languages'].iteritems():
     
     extensions = []
@@ -91,89 +92,93 @@ for key, value in output.iteritems():
         extension_mapping[extension] = key
 
 
-outputstr = 'var ExtensionToLanguage = map[string]string{'
-for key, value in extension_mapping.iteritems():
-    # If not starts with . add one in
-    outputstr += '''"%s": "%s", ''' % (key, value)
-outputstr += '}'
-
-print
-print outputstr
+with open('languages.json', 'w') as myfile:
+    myfile.write(json.dumps(output))
 
 
-outputstr = 'var LanguageFeatures = map[string]LanguageFeature{' + '\n'
-for key, value in output.iteritems():
-    outputstr += '"' + key + '": LanguageFeature{' + '\n'
-    if key in ['Plain Text', 'Text', 'XML', 'JSON', 'Markdown']:
-        outputstr += 'CountCode: false,'
-        outputstr += 'CheckComplexity: false,'
-    else:
-        outputstr += 'CountCode: true,' + '\n'
-        outputstr += 'CheckComplexity: true,' + '\n'
-        outputstr += '''        ComplexityChecks: [][]byte{
-                []byte("for "),
-                []byte("for("),
-                []byte("if "),
-                []byte("if("),
-                []byte("switch "),
-                []byte("while "),
-                []byte("else "),
-                []byte("|| "),
-                []byte("&& "),
-                []byte("!= "),
-                []byte("== "),
-            },
-            ComplexityBytes: []byte{
-                'f',
-                'i',
-                's',
-                'w',
-                'e',
-                '|',
-                '&',
-                '!',
-                '=',
-            },''' + '\n'
-    if 'line_comment' in value and len(value['line_comment']) != 0:
-        outputstr += '''SingleLineComment: [][]byte{''' + '\n'
-        for x in  value['line_comment']:
-            outputstr += '[]byte("%s"),' % x
-        outputstr += '},' + '\n'
-    else:
-        outputstr += 'SingleLineComment: [][]byte{},' + '\n'
+# outputstr = 'var ExtensionToLanguage = map[string]string{'
+# for key, value in extension_mapping.iteritems():
+#     # If not starts with . add one in
+#     outputstr += '''"%s": "%s", ''' % (key, value)
+# outputstr += '}'
 
-    if 'multi_line' in value and len(value['multi_line']) != 0:
-        # print value['multi_line']
-        outputstr += 'MultiLineComment: []OpenClose{' + '\n'
-        for x in value['multi_line']:
-            outputstr += 'OpenClose{' + '\n'
-            outputstr += 'Open:  []byte("%s"),' % x[0]  + '\n'
-            outputstr += 'Close: []byte("%s"),' % x[1] + '\n'
-            outputstr += '},' + '\n'
-        outputstr += '},' + '\n'
+# print
+# print outputstr
+
+
+# outputstr = 'var LanguageFeatures = map[string]LanguageFeature{' + '\n'
+# for key, value in output.iteritems():
+#     outputstr += '"' + key + '": LanguageFeature{' + '\n'
+#     if key in ['Plain Text', 'Text', 'XML', 'JSON', 'Markdown']:
+#         outputstr += 'CountCode: false,'
+#         outputstr += 'CheckComplexity: false,'
+#     else:
+#         outputstr += 'CountCode: true,' + '\n'
+#         outputstr += 'CheckComplexity: true,' + '\n'
+#         outputstr += '''        ComplexityChecks: [][]byte{
+#                 []byte("for "),
+#                 []byte("for("),
+#                 []byte("if "),
+#                 []byte("if("),
+#                 []byte("switch "),
+#                 []byte("while "),
+#                 []byte("else "),
+#                 []byte("|| "),
+#                 []byte("&& "),
+#                 []byte("!= "),
+#                 []byte("== "),
+#             },
+#             ComplexityBytes: []byte{
+#                 'f',
+#                 'i',
+#                 's',
+#                 'w',
+#                 'e',
+#                 '|',
+#                 '&',
+#                 '!',
+#                 '=',
+#             },''' + '\n'
+#     if 'line_comment' in value and len(value['line_comment']) != 0:
+#         outputstr += '''SingleLineComment: [][]byte{''' + '\n'
+#         for x in  value['line_comment']:
+#             outputstr += '[]byte("%s"),' % x
+#         outputstr += '},' + '\n'
+#     else:
+#         outputstr += 'SingleLineComment: [][]byte{},' + '\n'
+
+#     if 'multi_line' in value and len(value['multi_line']) != 0:
+#         outputstr += 'MultiLineComment: []OpenClose{' + '\n'
+#         for x in value['multi_line']:
+#             outputstr += 'OpenClose{' + '\n'
+#             outputstr += 'Open:  []byte("%s"),' % x[0]  + '\n'
+#             outputstr += 'Close: []byte("%s"),' % x[1] + '\n'
+#             outputstr += '},' + '\n'
+#         outputstr += '},' + '\n'
         
-    else:
-        outputstr += 'MultiLineComment: []OpenClose{},' + '\n'
+#     else:
+#         outputstr += 'MultiLineComment: []OpenClose{},' + '\n'
 
-    if 'quotes' in value and len(value['quotes']) != 0:
-        for x in value['quotes']:
-            outputstr += 'OpenClose{' + '\n'
-            if x[0] == '"':
-                outputstr += '''Open: []byte("\\""),''' + '\n'
-            else:
-                outputstr += 'Open: []byte("%s"),' % x[0] + '\n'
-            if x[1] == '"':
-                outputstr += '''Close: []byte("\\""),''' + '\n'
-            else:
-                outputstr += 'Close: []byte("%s"),' % x[1] + '\n'
+#     if 'quotes' in value and len(value['quotes']) != 0:
+#         for x in value['quotes']:
+#             outputstr += 'OpenClose{' + '\n'
+#             if x[0] == '"':
+#                 outputstr += '''Open: []byte("\\""),''' + '\n'
+#             else:
+#                 outputstr += 'Open: []byte("%s"),' % x[0] + '\n'
+#             if x[1] == '"':
+#                 outputstr += '''Close: []byte("\\""),''' + '\n'
+#             else:
+#                 outputstr += 'Close: []byte("%s"),' % x[1] + '\n'
 
-        outputstr += '},' + '\n'
-    else:
-        outputstr += 'StringChecks: []OpenClose{},},' + '\n'
-outputstr += '}'
+#         outputstr += '},' + '\n'
+#     else:
+#         outputstr += 'StringChecks: []OpenClose{},},' + '\n'
+#     break
+# outputstr += '}'
 
 
-UTF8Writer = codecs.getwriter('utf8')
-sys.stdout = UTF8Writer(sys.stdout)
-print
-print unicode(outputstr)
+# UTF8Writer = codecs.getwriter('utf8')
+# sys.stdout = UTF8Writer(sys.stdout)
+# print
+# print unicode(outputstr)

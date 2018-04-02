@@ -5,55 +5,6 @@ import (
 	"sync"
 )
 
-// var LanguageFeatures = map[string]LanguageFeature{
-// 	"Go": LanguageFeature{
-// ComplexityChecks: [][]byte{
-// 	[]byte("for "),
-// 	[]byte("for("),
-// 	[]byte("if "),
-// 	[]byte("if("),
-// 	[]byte("switch "),
-// 	[]byte("while "),
-// 	[]byte("else "),
-// 	[]byte("|| "),
-// 	[]byte("&& "),
-// 	[]byte("!= "),
-// 	[]byte("== "),
-// },
-// ComplexityBytes: []byte{
-// 	'f',
-// 	'i',
-// 	's',
-// 	'w',
-// 	'e',
-// 	'|',
-// 	'&',
-// 	'!',
-// 	'=',
-// },
-// 		SingleLineComment: [][]byte{
-// 			[]byte("#"),
-// 			[]byte("//"),
-// 		},
-// 		MultiLineComment: []OpenClose{
-// 			OpenClose{
-// 				Open:  []byte("/*"),
-// 				Close: []byte("*/"),
-// 			},
-// 		},
-// 		StringChecks: []OpenClose{
-// 			OpenClose{
-// 				Open:  []byte(`"`),
-// 				Close: []byte(`"`),
-// 			},
-// 			OpenClose{
-// 				Open:  []byte("`"),
-// 				Close: []byte("`"),
-// 			},
-// 		},
-// 	},
-// }
-
 type LanguageFeature struct {
 	CountCode         bool
 	CheckComplexity   bool

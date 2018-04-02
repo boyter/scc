@@ -30,7 +30,7 @@ func main() {
 	out.Write([]byte("package processor \n\nconst (\n"))
 
 	for _, f := range files {
-		if strings.HasSuffix(f.Name(), ".json") {
+		if strings.HasPrefix(f.Name(), "languages") && strings.HasSuffix(f.Name(), ".json") {
 			// The constant variable name
 			out.Write([]byte(strings.TrimSuffix(f.Name(), ".json") + " = `"))
 
