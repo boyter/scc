@@ -192,7 +192,10 @@ func countStats(fileJob *FileJob) {
 	offsetJump := 0
 
 	// For determining duplicates we need the below. The reason for creating
-	// the byte array here is to avoid GC pressure
+	// the byte array here is to avoid GC pressure. MD5 is in the standard library
+	// and is fast enough to not warrent murmur3 hashing. No need to be
+	// crypto secure here either so no need to eat the performance cost of a better
+	// hash method
 	digest := md5.New()
 	digestable := []byte{' '}
 
