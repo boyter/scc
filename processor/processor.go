@@ -33,6 +33,8 @@ var DirFilePaths = []string{}
 var ExtensionToLanguage = map[string]string{}
 var LanguageFeatures = map[string]LanguageFeature{}
 
+// Responsible for setting up the language features based on the JSON file that is stored in constants
+// Needs to be called at least once in order for anything to actually happen
 func processConstants() {
 	var database map[string]Language
 	startTime := makeTimestampMilli()

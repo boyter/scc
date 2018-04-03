@@ -118,17 +118,7 @@ func checkComplexity(currentByte byte, index int, endPoint int, matches [][]byte
 
 	// Because the number of complexity checks is usually quite high this check speeds
 	// up the processing quite a lot and is worth implementing
-	complexityBytes := []byte{
-		'f',
-		'i',
-		's',
-		'w',
-		'e',
-		'|',
-		'&',
-		'!',
-		'=',
-	}
+	complexityBytes := LanguageFeatures[fileJob.Language].ComplexityBytes
 
 	hasMatch := false
 	for i := 0; i < len(complexityBytes); i++ {
@@ -188,46 +178,10 @@ func countStats(fileJob *FileJob) {
 		return
 	}
 
-	// WIP should be in the list of languages
-	complexityChecks := [][]byte{
-		[]byte("for "),
-		[]byte("for("),
-		[]byte("if "),
-		[]byte("if("),
-		[]byte("switch "),
-		[]byte("while "),
-		[]byte("else "),
-		[]byte("|| "),
-		[]byte("&& "),
-		[]byte("!= "),
-		[]byte("== "),
-	}
-
-	// WIP should be in the list of lanugages
-	singleLineCommentChecks := [][]byte{
-		[]byte("#"),
-		[]byte("//"),
-	}
-
-	// WIP should be in the list of languages
-	multiLineCommentChecks := []OpenClose{
-		OpenClose{
-			Open:  []byte("/*"),
-			Close: []byte("*/"),
-		},
-	}
-
-	// WIP should be in the list of languages
-	stringChecks := []OpenClose{
-		OpenClose{
-			Open:  []byte(`"`),
-			Close: []byte(`"`),
-		},
-		OpenClose{
-			Open:  []byte("`"),
-			Close: []byte("`"),
-		},
-	}
+	complexityChecks := LanguageFeatures[fileJob.Language].ComplexityChecks
+	singleLineCommentChecks := LanguageFeatures[fileJob.Language].SingleLineComment
+	multiLineCommentChecks := LanguageFeatures[fileJob.Language].MultiLineComment
+	stringChecks := LanguageFeatures[fileJob.Language].StringChecks
 
 	endPoint := int(fileJob.Bytes - 1)
 	currentState := S_BLANK
