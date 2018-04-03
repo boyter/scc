@@ -5,9 +5,15 @@ import (
 	"sync"
 )
 
+type Language struct {
+	LineComment      []string   `json:"line_comment"`
+	ComplexityChecks []string   `json:"complexitychecks"`
+	Extensions       []string   `json:"extensions"`
+	MultiLine        [][]string `json:"multi_line"`
+	Quotes           [][]string `json:"quotes"`
+}
+
 type LanguageFeature struct {
-	CountCode         bool
-	CheckComplexity   bool
 	ComplexityChecks  [][]byte
 	ComplexityBytes   []byte
 	SingleLineComment [][]byte

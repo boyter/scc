@@ -15,19 +15,72 @@ with open('database_languages.json') as json_data:
 with open('database_languages2.json') as json_data:
     database2 = json.load(json_data)
 
-
 output = {}
 
-# Build the master list based on theirs
-# Need to pull the bases from https://github.com/Aaronepower/tokei/blob/fe4b8b3b378692455bb5144ebbeb450a75f92d0d/src/language/language.rs#L45
+# Bases pulled from https://github.com/Aaronepower/tokei/blob/fe4b8b3b378692455bb5144ebbeb450a75f92d0d/src/language/language.rs#L45
+inherits = {
+    'c': {
+        'line_comment': [
+            '//',
+        ],
+        'multi_line': [
+            ['/*', '*/'],
+        ],
+        'quotes': [
+            ['"', '"'],
+        ],
+    },
+    'func': {
+        'multi_line': [
+            ['(*', '*)'],
+        ],
+        'quotes': [
+            ['"', '"'],
+        ],
+    },
+    'html': {
+        'multi_line': [
+            ['<!--', '-->'],
+        ],
+        'quotes': [
+            ['"', '"'],
+        ]
+    },
+    'hash': {
+        'line_comment': [
+            '#',
+        ]
+    },
+    'haskell': {
+        'line_comment': [
+            '--',
+        ],
+        'multi_line': [
+            ['{-', '-}'],
+        ]
+    },
+    'pro': {
+        'line_comment': [
+            '%',
+        ],
+        'multi_line': [
+            ['/*', '*/'],
+        ],
+        'quotes': [
+            ['"', '"'],
+        ]
+    },
+    'blank': {},
+}
+
 for key, value in database2['languages'].iteritems():
-    
     extensions = []
     line_comment = []
     multi_line = []
     quotes = []
     name = key
     base = ''
+    complexitychecks = []
 
     if 'name' in value:
         name = value['name']
@@ -35,26 +88,33 @@ for key, value in database2['languages'].iteritems():
         extensions = value['extensions']
     if 'line_comment' in value:
         line_comment = value['line_comment']
+        complexitychecks = ["for ", "for(", "if ", "if(", "switch ", "while ", "else ", "|| ", "&& ", "!= ", "== "]
     if 'multi_line' in value:
         multi_line = value['multi_line']
+        complexitychecks = ["for ", "for(", "if ", "if(", "switch ", "while ", "else ", "|| ", "&& ", "!= ", "== "]
     if 'quotes' in value:
         quotes = value['quotes']
+        complexitychecks = ["for ", "for(", "if ", "if(", "switch ", "while ", "else ", "|| ", "&& ", "!= ", "== "]
     if 'base' in value:
         base = value['base']
 
-        if base == 'c':
-            if len(line_comment) == 0:
-                line_comment = ['//']
-            if len(multi_line) == 0:
-                multi_line = [['/*', '*/']]
-            if len(quotes) == 0:
-                quotes = [['"','"']]
+        if 'line_comment' in inherits[base]:
+            line_comment = inherits[base]['line_comment']
+            complexitychecks = ["for ", "for(", "if ", "if(", "switch ", "while ", "else ", "|| ", "&& ", "!= ", "== "]
+        if 'multi_line' in inherits[base]:
+            multi_line = inherits[base]['multi_line']
+            complexitychecks = ["for ", "for(", "if ", "if(", "switch ", "while ", "else ", "|| ", "&& ", "!= ", "== "]
+        if 'quotes' in inherits[base]:
+            quotes = inherits[base]['quotes']
+            complexitychecks = ["for ", "for(", "if ", "if(", "switch ", "while ", "else ", "|| ", "&& ", "!= ", "== "]
+
 
     output[name] = {
         'extensions': extensions,
         'line_comment': line_comment,
         'multi_line': multi_line,
         'quotes': quotes,
+        'complexitychecks': complexitychecks
     }
 
 
@@ -67,17 +127,10 @@ for language in database1:
 
     for key, value in output.iteritems():
         if language_name.lower() == key.lower():
-            # print 'Found', language_name 
-            # print '1', language_extensions
-            # print '2', value['extensions']
-    
             found = True
-    
             for extension in value['extensions']:
                 if extension not in language_extensions:
                     language_extensions.append(extension)
-
-            # print '3', language_extensions
 
     if not found:
         # Check if the extension is somewhere if so ignore

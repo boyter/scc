@@ -307,7 +307,8 @@ func countStats(fileJob *FileJob) {
 				break state
 			}
 		case currentState == S_STRING:
-			// TODO should be using the close state and checking of the character is escaped
+			// Its not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
+			// without checking if it is out of bounds first
 			if fileJob.Content[index-1] != '\\' && checkForMatchSingle(fileJob.Content[index], index, endPoint, endString, fileJob) {
 				currentState = S_CODE
 			}
