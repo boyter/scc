@@ -77,7 +77,6 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 			shouldSkip := false
 			for _, black := range blackList {
 				if strings.HasPrefix(filepath.Join(root, f.Name()), black) {
-					fmt.Println(filepath.Join(root, f.Name()))
 					shouldSkip = true
 					printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", filepath.Join(root, f.Name())))
 					break
