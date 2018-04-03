@@ -155,6 +155,7 @@ func TestCountStatsCode(t *testing.T) {
 }
 
 func TestCountStatsCommentTricks(t *testing.T) {
+	processConstants()
 	fileJob := FileJob{}
 
 	fileJob.Code = 0
@@ -192,6 +193,7 @@ func TestCountStatsCommentTricks(t *testing.T) {
 
 	fileJob.Code = 0
 	fileJob.Comment = 0
+	fileJob.Language = "Java"
 	fileJob.Content = []byte("/* i++ comment */")
 	countStats(&fileJob)
 	if fileJob.Code != 0 {
@@ -461,6 +463,7 @@ func TestCountStatsBlankLines(t *testing.T) {
 }
 
 func TestCountStatsComplexityCount(t *testing.T) {
+	processConstants()
 	fileJob := FileJob{}
 
 	checks := []string{
@@ -476,6 +479,7 @@ func TestCountStatsComplexityCount(t *testing.T) {
 	for _, check := range checks {
 		fileJob.Complexity = 0
 		fileJob.Content = []byte(check)
+		fileJob.Language = "Java"
 		countStats(&fileJob)
 		if fileJob.Complexity != 1 {
 			t.Errorf("Expected complexity of 1 got %d for %s", fileJob.Complexity, check)
@@ -484,6 +488,7 @@ func TestCountStatsComplexityCount(t *testing.T) {
 }
 
 func TestCountStatsComplexityCountFalse(t *testing.T) {
+	processConstants()
 	fileJob := FileJob{}
 
 	checks := []string{
@@ -495,6 +500,7 @@ func TestCountStatsComplexityCountFalse(t *testing.T) {
 	for _, check := range checks {
 		fileJob.Complexity = 0
 		fileJob.Content = []byte(check)
+		fileJob.Language = "Java"
 		countStats(&fileJob)
 		if fileJob.Complexity != 0 {
 			t.Errorf("Expected complexity of 0 got %d for %s", fileJob.Complexity, check)
