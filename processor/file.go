@@ -10,6 +10,8 @@ import (
 	"sync"
 )
 
+// Used as quick lookup for files with the same name to avoid some processing
+// needs to be sync.Map as it potentially could be called by many GoRoutines
 var extensionCache sync.Map
 
 // A custom version of extracting extensions for a file
@@ -70,63 +72,64 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 		// Godirwalk despite being faster than the default walk is still too slow to feed the
 		// CPU's and so we need to walk in parallel to keep up as much as possible
 		if f.IsDir() {
-			// shouldBreak := false
-			// for _, black := range blackList {
-			// 	if strings.HasPrefix(filepath.Join(root, f.Name()), black) {
-			// 		shouldBreak = true
-			// 		printWarn(fmt.Sprintf("1skipping directory due to being in blacklist: %s", filepath.Join(root, f.Name())))
-			// 	}
-			// }
 
-			// if shouldBreak {
-			// 	break
-			// }
+			// Need to check if the directory is in the blacklist and if so don't bother adding a goroutine to process it
+			shouldSkip := false
+			for _, black := range blackList {
+				if strings.HasPrefix(filepath.Join(root, f.Name()), black) {
+					fmt.Println(filepath.Join(root, f.Name()))
+					shouldSkip = true
+					printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", filepath.Join(root, f.Name())))
+					break
+				}
+			}
 
-			wg.Add(1)
-			go func(toWalk string) {
-				godirwalk.Walk(toWalk, &godirwalk.Options{
-					// Unsorted is meant to make the walk faster and we need to sort after processing
-					Unsorted: true,
-					Callback: func(root string, info *godirwalk.Dirent) error {
-						// TODO this should be configurable via command line
-						if info.IsDir() {
-							if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
-								for _, black := range blackList {
-									if strings.HasPrefix(root, black+"/") {
-										if Verbose {
-											printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", root))
+			if !shouldSkip {
+				wg.Add(1)
+				go func(toWalk string) {
+					godirwalk.Walk(toWalk, &godirwalk.Options{
+						// Unsorted is meant to make the walk faster and we need to sort after processing anywa
+						Unsorted: true,
+						Callback: func(root string, info *godirwalk.Dirent) error {
+							if info.IsDir() {
+								if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
+									for _, black := range blackList {
+										if strings.HasPrefix(root, black+"/") || strings.HasPrefix(root, black) {
+											if Verbose {
+												printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", root))
+											}
+											return filepath.SkipDir
 										}
-										return filepath.SkipDir
 									}
 								}
 							}
-						}
 
-						if !info.IsDir() {
-							if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
+							if !info.IsDir() {
+								if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
 
-								extension := getExtension(info.Name())
-								language, ok := extensionLookup[extension]
+									extension := getExtension(info.Name())
+									language, ok := extensionLookup[extension]
 
-								if ok {
-									*output <- &FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language}
-								} else if Verbose {
-									printWarn(fmt.Sprintf("skipping file unknown extension: %s", info.Name()))
+									if ok {
+										*output <- &FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language}
+									} else if Verbose {
+										printWarn(fmt.Sprintf("skipping file unknown extension: %s", info.Name()))
+									}
 								}
 							}
-						}
 
-						return nil
-					},
-					ErrorCallback: func(osPathname string, err error) godirwalk.ErrorAction {
-						if Verbose {
-							printWarn(fmt.Sprintf("error walking: %s %s", osPathname, err))
-						}
-						return godirwalk.SkipNode
-					},
-				})
-				wg.Done()
-			}(filepath.Join(root, f.Name()))
+							return nil
+						},
+						ErrorCallback: func(osPathname string, err error) godirwalk.ErrorAction {
+							if Verbose {
+								printWarn(fmt.Sprintf("error walking: %s %s", osPathname, err))
+							}
+							return godirwalk.SkipNode
+						},
+					})
+					wg.Done()
+				}(filepath.Join(root, f.Name()))
+			}
 		} else {
 			if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, f.Name()), false) {
 				extension := getExtension(f.Name())

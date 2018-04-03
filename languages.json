@@ -3633,10 +3633,10 @@
       "switch ",
       "while ",
       "else ",
-      "|| ",
-      "&& ",
-      "!= ",
-      "== "
+      "and ",
+      "or ",
+      "not ",
+      "in "
     ],
     "extensions": [
       "py"
