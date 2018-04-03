@@ -118,6 +118,7 @@ func checkComplexity(currentByte byte, index int, endPoint int, matches [][]byte
 
 	// Because the number of complexity checks is usually quite high this check speeds
 	// up the processing quite a lot and is worth implementing
+	// NB this allocation is much cheaper than refering to things directly
 	complexityBytes := LanguageFeatures[fileJob.Language].ComplexityBytes
 
 	hasMatch := false
