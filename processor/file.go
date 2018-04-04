@@ -66,6 +66,7 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 
 	var wg sync.WaitGroup
 	all, _ := ioutil.ReadDir(root)
+	// TODO the gitignore should check for futher gitignores deeper in the tree
 	gitignore, gitignoreerror := gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
 
 	for _, f := range all {
@@ -91,6 +92,7 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 						Unsorted: true,
 						Callback: func(root string, info *godirwalk.Dirent) error {
 							if info.IsDir() {
+								// TODO the gitignore should check for futher gitignores deeper in the tree
 								if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
 									for _, black := range blackList {
 										if strings.HasPrefix(root, black+"/") || strings.HasPrefix(root, black) {

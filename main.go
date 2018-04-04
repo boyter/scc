@@ -17,7 +17,7 @@ func main() {
 	app := cli.NewApp()
 	app.EnableBashCompletion = true
 	app.Name = "scc"
-	app.Version = "0.0.1"
+	app.Version = "1.0.0"
 	app.Usage = "Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation."
 	app.UsageText = "scc DIRECTORY"
 
