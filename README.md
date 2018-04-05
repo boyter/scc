@@ -5,6 +5,8 @@ A tool similar to cloc, sloccount and tokei. For counting physical the lines of 
 
 Goal is to be the fastest code counter possible, but also perform COCOMO calculation like sloccount and to estimate code complexity similar to cyclomatic complexity calculators. In short one tool to rule them all and the one I wish I had before I wrote it.
 
+Also it has a much shorter name than tokei, and shorter than cloc.
+
 [![Build Status](https://travis-ci.org/boyter/scc.svg?branch=master)](https://travis-ci.org/boyter/scc)
 
 Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
