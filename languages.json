@@ -1736,19 +1736,6 @@
   },
   "HTML": {
     "line_comment": [],
-    "complexitychecks": [
-      "for ",
-      "for(",
-      "if ",
-      "if(",
-      "switch ",
-      "while ",
-      "else ",
-      "|| ",
-      "&& ",
-      "!= ",
-      "== "
-    ],
     "extensions": [
       "html",
       "htm"
@@ -2836,19 +2823,6 @@
   },
   "XML": {
     "line_comment": [],
-    "complexitychecks": [
-      "for ",
-      "for(",
-      "if ",
-      "if(",
-      "switch ",
-      "while ",
-      "else ",
-      "|| ",
-      "&& ",
-      "!= ",
-      "== "
-    ],
     "extensions": [
       "xml"
     ],
