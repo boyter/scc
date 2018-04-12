@@ -14,6 +14,7 @@ var Verbose = false
 var Debug = false
 var Trace = false
 var Duplicates = false
+var Complexity = false
 var More = false
 var Cocomo = false
 var SortBy = ""
@@ -101,8 +102,30 @@ func processConstants() {
 	}
 }
 
+func processFlags() {
+	// If wide/more mode is enabled we want the complexity calculation
+	// to happen regardless as thats the only purpose of the flag
+	if More && Complexity {
+		Complexity = false
+	}
+
+	if Debug {
+		printDebug(fmt.Sprintf("Path Black List: %s", PathBlacklist))
+		printDebug(fmt.Sprintf("Sort By: %s", SortBy))
+		printDebug(fmt.Sprintf("White List: %s", WhiteListExtensions))
+		printDebug(fmt.Sprintf("Files Output: %t", Files))
+		printDebug(fmt.Sprintf("Verbose: %t", Verbose))
+		printDebug(fmt.Sprintf("Duplicates Detection: %t", Duplicates))
+		printDebug(fmt.Sprintf("Complexity Calculation: %t", !Complexity))
+		printDebug(fmt.Sprintf("Wide: %t", More))
+		printDebug(fmt.Sprintf("Average Wage: %d", AverageWage))
+		printDebug(fmt.Sprintf("Cocomo: %t", !Cocomo))
+	}
+}
+
 func Process() {
 	processConstants()
+	processFlags()
 
 	// Clean up and invlid arguments before setting everything up
 	if len(DirFilePaths) == 0 {

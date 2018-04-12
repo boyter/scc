@@ -15,6 +15,11 @@ var tabularShortFormatBody = "%-20s %9d %9d %8d %9d %8d %10d\n"
 var tabularShortFormatFile = "%-30s %9d %8d %9d %8d %10d\n"
 var shortFormatFileTrucate = 29
 
+var tabularShortFormatHeadNoComplexity = "%-22s %11s %11s %9s %11s %10s\n"
+var tabularShortFormatBodyNoComplexity = "%-22s %11d %11d %9d %11d %10d\n"
+var tabularShortFormatFileNoComplexity = "%-34s %11d %9d %11d %10d\n"
+var shortFormatFileTrucateNoComplexity = 33
+
 var tabularWideBreak = "-------------------------------------------------------------------------------------------------------------\n"
 var tabularWideFormatHead = "%-33s %9s %9s %8s %9s %8s %10s %16s\n"
 var tabularWideFormatBody = "%-33s %9d %9d %8d %9d %8d %10d %16.2f\n"
@@ -221,7 +226,12 @@ func fileSummerizeShort(input *chan *FileJob) string {
 	var str strings.Builder
 
 	str.WriteString(tabularShortBreak)
-	str.WriteString(fmt.Sprintf(tabularShortFormatHead, "Language", "Files", "Lines", "Code", "Comments", "Blanks", "Complexity"))
+	if !Complexity {
+		str.WriteString(fmt.Sprintf(tabularShortFormatHead, "Language", "Files", "Lines", "Code", "Comments", "Blanks", "Complexity"))
+	} else {
+		str.WriteString(fmt.Sprintf(tabularShortFormatHeadNoComplexity, "Language", "Files", "Lines", "Code", "Comments", "Blanks"))
+
+	}
 
 	if !Files {
 		str.WriteString(tabularShortBreak)
@@ -315,7 +325,11 @@ func fileSummerizeShort(input *chan *FileJob) string {
 			str.WriteString(tabularShortBreak)
 		}
 
-		str.WriteString(fmt.Sprintf(tabularShortFormatBody, summary.Name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity))
+		if !Complexity {
+			str.WriteString(fmt.Sprintf(tabularShortFormatBody, summary.Name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity))
+		} else {
+			str.WriteString(fmt.Sprintf(tabularShortFormatBodyNoComplexity, summary.Name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank))
+		}
 
 		if Files {
 			sortSummaryFiles(&summary)
@@ -329,7 +343,11 @@ func fileSummerizeShort(input *chan *FileJob) string {
 					tmp = "~" + tmp[totrim:]
 				}
 
-				str.WriteString(fmt.Sprintf(tabularShortFormatFile, tmp, res.Lines, res.Code, res.Comment, res.Blank, res.Complexity))
+				if !Complexity {
+					str.WriteString(fmt.Sprintf(tabularShortFormatFile, tmp, res.Lines, res.Code, res.Comment, res.Blank, res.Complexity))
+				} else {
+					str.WriteString(fmt.Sprintf(tabularShortFormatFileNoComplexity, tmp, res.Lines, res.Code, res.Comment, res.Blank))
+				}
 			}
 		}
 	}
@@ -339,7 +357,11 @@ func fileSummerizeShort(input *chan *FileJob) string {
 	}
 
 	str.WriteString(tabularShortBreak)
-	str.WriteString(fmt.Sprintf(tabularShortFormatBody, "Total", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity))
+	if !Complexity {
+		str.WriteString(fmt.Sprintf(tabularShortFormatBody, "Total", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity))
+	} else {
+		str.WriteString(fmt.Sprintf(tabularShortFormatBodyNoComplexity, "Total", sumFiles, sumLines, sumCode, sumComment, sumBlank))
+	}
 	str.WriteString(tabularShortBreak)
 
 	if !Cocomo {

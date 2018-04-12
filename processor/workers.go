@@ -239,9 +239,11 @@ func countStats(fileJob *FileJob) {
 			if !isWhitespace(fileJob.Content[index]) {
 				currentState = S_CODE
 
-				offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, fileJob)
-				if offsetJump != 0 {
-					fileJob.Complexity++
+				if !Complexity {
+					offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, fileJob)
+					if offsetJump != 0 {
+						fileJob.Complexity++
+					}
 				}
 				break state
 			}
@@ -258,9 +260,11 @@ func countStats(fileJob *FileJob) {
 				currentState = S_STRING
 				break state
 			} else {
-				offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, fileJob)
-				if offsetJump != 0 {
-					fileJob.Complexity++
+				if !Complexity {
+					offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, fileJob)
+					if offsetJump != 0 {
+						fileJob.Complexity++
+					}
 				}
 				break state
 			}

@@ -56,12 +56,17 @@ func main() {
 			Destination: &processor.Duplicates,
 		},
 		cli.BoolFlag{
+			Name:        "complexity, c",
+			Usage:       "Set to skip complexity calculations note will be overridden if wide is set",
+			Destination: &processor.Complexity,
+		},
+		cli.BoolFlag{
 			Name:        "wide, w",
-			Usage:       "Set to check produce more output such as code vs complexity ranking",
+			Usage:       "Set to check produce more output such as complexity and code vs complexity ranking",
 			Destination: &processor.More,
 		},
 		cli.Int64Flag{
-			Name:        "averageage, aw",
+			Name:        "averagewage, aw",
 			Usage:       "Set as integer to set the average wage used for basic COCOMO calculation",
 			Destination: &processor.AverageWage,
 			Value:       56286,
