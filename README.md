@@ -11,6 +11,8 @@ Also it has a much shorter name than tokei, and shorter than cloc.
 
 Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
 
+Read all about how it came to be https://boyter.org/posts/sloc-cloc-code/
+
 Other similar projects,
 
  - https://github.com/Aaronepower/tokei
@@ -106,8 +108,8 @@ Run go build for windows and linux then the following in linux, keep in mind nee
 ```
 zip -r9 lc-1.0.0-x86_64-pc-windows.zip lc.exe && zip -r9 lc-1.0.0-x86_64-unknown-linux.zip lc
 
-GOOS=darwin GOARCH=amd64 go build && zip -r9 lc-1.0.0-x86_64-apple-darwin.zip lc
-GOOS=windows GOARCH=amd64 go build && zip -r9 lc-1.0.0-x86_64-pc-windows.zip lc.exe
-GOOS=linux GOARCH=amd64 go build && zip -r9 lc-1.0.0-x86_64-unknown-linux.zip lc
+GOOS=darwin GOARCH=amd64 go build && zip -r9 scc-1.0.0-x86_64-apple-darwin.zip scc
+GOOS=windows GOARCH=amd64 go build && zip -r9 scc-1.0.0-x86_64-pc-windows.zip scc.exe
+GOOS=linux GOARCH=amd64 go build && zip -r9 scc-1.0.0-x86_64-unknown-linux.zip scc
 ```
 
