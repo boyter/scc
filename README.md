@@ -113,3 +113,11 @@ GOOS=windows GOARCH=amd64 go build && zip -r9 scc-1.0.0-x86_64-pc-windows.zip sc
 GOOS=linux GOARCH=amd64 go build && zip -r9 scc-1.0.0-x86_64-unknown-linux.zip scc
 ```
 
+
+### Releases
+
+1.0.1
+ - Add ability to disable the parallel file walker through command line option https://github.com/boyter/scc/issues/1
+
+1.0.0 
+ - First release
