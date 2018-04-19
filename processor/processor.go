@@ -26,6 +26,7 @@ var FileProcessJobQueueSize = runtime.NumCPU()
 var FileSummaryJobQueueSize = runtime.NumCPU()
 var WhiteListExtensions = ""
 var AverageWage int64 = 56286
+var NoParallelWalker = false
 
 // Not set via flags but by arguments following the the flags
 var DirFilePaths = []string{}
@@ -144,7 +145,14 @@ func Process() {
 	fileReadContentJobQueue := make(chan *FileJob, FileReadContentJobQueueSize) // Files ready to be processed
 	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)         // Files ready to be summerised
 
-	go walkDirectoryParallel(DirFilePaths[0], &fileListQueue)
+	// macOS/OSX appears to have issues walking the file tree in parallel
+	// may need to add it as a default option || runtime.GOOS == "darwin"
+	if NoParallelWalker {
+		go walkDirectory(DirFilePaths[0], &fileListQueue)
+	} else {
+		go walkDirectoryParallel(DirFilePaths[0], &fileListQueue)
+	}
+
 	go fileReaderWorker(&fileListQueue, &fileReadContentJobQueue)
 	go fileProcessorWorker(&fileReadContentJobQueue, &fileSummaryJobQueue)
 

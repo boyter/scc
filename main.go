@@ -86,6 +86,11 @@ func main() {
 			Usage:       "Set to enable trace output, not reccomended for multiple files",
 			Destination: &processor.Trace,
 		},
+		cli.BoolFlag{
+			Name:        "npw",
+			Usage:       "Set to enable disable the parallel file tree walker",
+			Destination: &processor.NoParallelWalker,
+		},
 	}
 
 	// Override the default version flag because we want v for verbose

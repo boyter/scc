@@ -37,6 +37,80 @@ func getExtension(name string) string {
 	return extension.(string)
 }
 
+// A non-parallel version of walk directory
+func walkDirectory(root string, output *chan *FileJob) {
+	startTime := makeTimestampMilli()
+	blackList := strings.Split(PathBlacklist, ",")
+	whiteList := strings.Split(WhiteListExtensions, ",")
+	extensionLookup := ExtensionToLanguage
+
+	// If input has a supplied white list of extensions then loop through them
+	// and modify the lookup we use to cut down on extra checks
+	if len(WhiteListExtensions) != 0 {
+		wlExtensionLookup := map[string]string{}
+
+		for _, white := range whiteList {
+			language, ok := extensionLookup[white]
+
+			if ok {
+				wlExtensionLookup[white] = language
+			}
+		}
+
+		extensionLookup = wlExtensionLookup
+	}
+
+	// TODO the gitignore should check for futher gitignores deeper in the tree
+	gitignore, gitignoreerror := gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
+
+	godirwalk.Walk(root, &godirwalk.Options{
+		// Unsorted is meant to make the walk faster and we need to sort after processing anywa
+		Unsorted: true,
+		Callback: func(root string, info *godirwalk.Dirent) error {
+			if info.IsDir() {
+				// TODO the gitignore should check for futher gitignores deeper in the tree
+				if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
+					for _, black := range blackList {
+						if strings.HasPrefix(root, black+"/") || strings.HasPrefix(root, black) {
+							if Verbose {
+								printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", root))
+							}
+							return filepath.SkipDir
+						}
+					}
+				}
+			}
+
+			if !info.IsDir() {
+				if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
+
+					extension := getExtension(info.Name())
+					language, ok := extensionLookup[extension]
+
+					if ok {
+						*output <- &FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language}
+					} else if Verbose {
+						printWarn(fmt.Sprintf("skipping file unknown extension: %s", info.Name()))
+					}
+				}
+			}
+
+			return nil
+		},
+		ErrorCallback: func(osPathname string, err error) godirwalk.ErrorAction {
+			if Verbose {
+				printWarn(fmt.Sprintf("error walking: %s %s", osPathname, err))
+			}
+			return godirwalk.SkipNode
+		},
+	})
+
+	close(*output)
+	if Debug {
+		printDebug(fmt.Sprintf("milliseconds to walk directory: %d", makeTimestampMilli()-startTime))
+	}
+}
+
 // Iterate over the supplied directory in parallel and each file that is not
 // excluded by the .gitignore and we know the extension of add to the supplied
 // channel. This attempts to span out in parallel based on the number of directories
