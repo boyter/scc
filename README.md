@@ -29,7 +29,6 @@ Interesting reading about about code counting
 Futher reading about processing files on the disk performance
  - https://blog.burntsushi.net/ripgrep/
 
-
 ### Usage
 
 Command line usage of `scc` is designed to be as simple as possible.
@@ -96,6 +95,18 @@ Estimated Schedule Effort 27.382310 months
 Estimated People Required 19.867141
 -------------------------------------------------------------------------------
 ```
+
+### Issues
+
+Its possible that you may see the counts vary between runs. This usually means one of two things. Either something is changing or locking the files under scc, or that you are hitting ulimit restrictions. To change the ulimit see the following links.
+
+ - https://superuser.com/questions/261023/how-to-change-default-ulimit-values-in-mac-os-x-10-6#306555
+ - https://unix.stackexchange.com/questions/108174/how-to-persistently-control-maximum-system-resource-consumption-on-mac/221988#221988
+ - https://access.redhat.com/solutions/61334
+ - https://serverfault.com/questions/356962/where-are-the-default-ulimit-values-set-linux-centos
+ - https://www.tecmint.com/increase-set-open-file-limits-in-linux/
+
+To help identify this issue run scc like so `scc -v .` and look for the message `too many open files` in the output. If it is there you can rectify it by setting your ulimit to a higher value.
 
 ### Tests
 
