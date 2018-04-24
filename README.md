@@ -98,7 +98,7 @@ Estimated People Required 19.867141
 
 ### Performance
 
-Generally `scc` will be very close to the runtime of `tokei` or faster than any other code counter out there. However if you want greater performance and you have RAM to spare you can disable the garbage collector like the following on linux `GOGC=-1 scc .` which should speed things up considerably. See the below for example runtimes on a 16 CPU Linux machine running against the linux kernal source.
+Generally `scc` will be very close to the runtime of `tokei` or faster than any other code counter out there. However if you want greater performance and you have RAM to spare you can disable the garbage collector like the following on linux `GOGC=-1 scc .` which should speed things up considerably. See the below for example runtimes on a 16 CPU Linux machine running against the linux kernel source.
 
 ```
 scc                        1.489 s ± 0.055 s
