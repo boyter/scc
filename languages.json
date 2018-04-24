@@ -3410,7 +3410,8 @@
       "== "
     ],
     "extensions": [
-      "js"
+      "js",
+      "mjs"
     ],
     "multi_line": [
       [
