@@ -7,7 +7,7 @@ Goal is to be the fastest code counter possible, but also perform COCOMO calcula
 
 Also it has a much shorter name than tokei, and shorter than cloc.
 
-It is indeed faster than loc/sloccount/cloc/gocloc for everything with more accuracy and marginally slower than tokei (on linux) but with duplicate detection and complexity count. If you disable garbage collection `GOGC=-1 scc .` it is indeed faster than everything else by a huge margin.
+It is faster than loc/sloccount/cloc/gocloc with more accuracy. It is however marginally slower than tokei (on linux) but with duplicate detection and complexity count. If you disable garbage collection `GOGC=-1 scc .` it is indeed faster than everything including tokei by a huge margin.
 
 [![Build Status](https://travis-ci.org/boyter/scc.svg?branch=master)](https://travis-ci.org/boyter/scc)
 
