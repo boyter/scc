@@ -113,7 +113,8 @@
   {
     "language": "Javascript",
     "extensions": [
-      "js"
+      "js",
+      "mjs"
     ]
   },
   {
