@@ -7,11 +7,13 @@ Goal is to be the fastest code counter possible, but also perform COCOMO calcula
 
 Also it has a much shorter name than tokei, and shorter than cloc.
 
+It is indeed faster than loc/sloccount/cloc/gocloc for everything with more accuracy and marginally slower than tokei (on linux) but with duplicate detection and complexity count. If you disable garbage collection `GOGC=-1 scc .` it is indeed faster than everything else by a huge margin.
+
 [![Build Status](https://travis-ci.org/boyter/scc.svg?branch=master)](https://travis-ci.org/boyter/scc)
 
 Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
 
-Read all about how it came to be https://boyter.org/posts/sloc-cloc-code/
+Read all about how it came to be along with performance benchmarks https://boyter.org/posts/sloc-cloc-code/
 
 Other similar projects,
 
@@ -22,11 +24,13 @@ Other similar projects,
  - https://github.com/hhatto/gocloc/
  - http://www.locmetrics.com/alternatives.html
 
-Interesting reading about about code counting
+Interesting reading about about code counting about tokei and loc
+
  - https://www.reddit.com/r/rust/comments/59bm3t/a_fast_cloc_replacement_in_rust/
  - https://www.reddit.com/r/rust/comments/82k9iy/loc_count_lines_of_code_quickly/
 
 Futher reading about processing files on the disk performance
+
  - https://blog.burntsushi.net/ripgrep/
 
 ### Usage
