@@ -87,6 +87,7 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 			if !shouldSkip {
 				wg.Add(1)
 				go func(toWalk string) {
+					extension := ""
 					godirwalk.Walk(toWalk, &godirwalk.Options{
 						// Unsorted is meant to make the walk faster and we need to sort after processing anywa
 						Unsorted: true,
@@ -108,7 +109,7 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 							if !info.IsDir() {
 								if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
 
-									extension := getExtension(info.Name())
+									extension = getExtension(info.Name())
 									language, ok := extensionLookup[extension]
 
 									if ok {
