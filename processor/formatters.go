@@ -230,7 +230,6 @@ func fileSummerizeShort(input *chan *FileJob) string {
 		str.WriteString(fmt.Sprintf(tabularShortFormatHead, "Language", "Files", "Lines", "Code", "Comments", "Blanks", "Complexity"))
 	} else {
 		str.WriteString(fmt.Sprintf(tabularShortFormatHeadNoComplexity, "Language", "Files", "Lines", "Code", "Comments", "Blanks"))
-
 	}
 
 	if !Files {
