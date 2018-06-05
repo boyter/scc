@@ -39,8 +39,14 @@ var LanguageFeatures = map[string]LanguageFeature{}
 func processConstants() {
 	var database map[string]Language
 	startTime := makeTimestampMilli()
-	data, _ := base64.StdEncoding.DecodeString(languages)
-	json.Unmarshal(data, &database)
+	data, err := base64.StdEncoding.DecodeString(languages)
+	if err != nil {
+		panic(fmt.Sprintf("failed to base64 decode languages: %v", err))
+	}
+
+	if err := json.Unmarshal(data, &database); err != nil {
+		panic(fmt.Sprintf("languages json invalid: %v", err))
+	}
 
 	if Trace {
 		printTrace(fmt.Sprintf("milliseconds unmarshal: %d", makeTimestampMilli()-startTime))
