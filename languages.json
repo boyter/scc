@@ -946,6 +946,32 @@
     "multi_line": [],
     "quotes": []
   },
+  "Thrift": {
+    "line_comment": [
+      "//",
+      "#"
+    ],
+    "complexitychecks": [],
+    "extensions": [
+      "thrift"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ],
+      [
+        "'",
+        "'"
+      ]
+    ]
+  },
   "SQL": {
     "line_comment": [
       "--"
