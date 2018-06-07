@@ -51,7 +51,7 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 	// If input has a supplied white list of extensions then loop through them
 	// and modify the lookup we use to cut down on extra checks
 	if len(WhiteListExtensions) != 0 {
-		wlExtensionLookup := map[string]string{}
+			wlExtensionLookup := map[string]string{}
 
 		for _, white := range whiteList {
 			language, ok := extensionLookup[white]
@@ -89,7 +89,7 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 				go func(toWalk string) {
 					extension := ""
 					godirwalk.Walk(toWalk, &godirwalk.Options{
-						// Unsorted is meant to make the walk faster and we need to sort after processing anywa
+						// Unsorted is meant to make the walk faster and we need to sort after processing anyway
 						Unsorted: true,
 						Callback: func(root string, info *godirwalk.Dirent) error {
 							if info.IsDir() {
@@ -110,7 +110,13 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 								if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
 
 									extension = getExtension(info.Name())
-									language, ok := extensionLookup[extension]
+
+									// If unknown lookup in case the full name matches
+									language, ok := extensionLookup[strings.ToLower(info.Name())]
+
+									if !ok {
+										language, ok = extensionLookup[extension]
+									}
 
 									if ok {
 										*output <- &FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language}

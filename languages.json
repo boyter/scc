@@ -2278,7 +2278,8 @@
       "== "
     ],
     "extensions": [
-      "cmake"
+      "cmake",
+      "cmakelists.txt"
     ],
     "multi_line": [],
     "quotes": [
