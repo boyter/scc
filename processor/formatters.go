@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"encoding/json"
 )
 
 var tabularShortBreak = "-------------------------------------------------------------------------------\n"
@@ -59,6 +60,68 @@ func sortSummaryFiles(summary *LanguageSummary) {
 	}
 }
 
+func toJson(input *chan *FileJob) string {
+	languages := map[string]LanguageSummary{}
+	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
+
+	for res := range *input {
+		sumFiles++
+		sumLines += res.Lines
+		sumCode += res.Code
+		sumComment += res.Comment
+		sumBlank += res.Blank
+		sumComplexity += res.Complexity
+
+		_, ok := languages[res.Language]
+
+		if !ok {
+			files := []*FileJob{}
+			files = append(files, res)
+
+			languages[res.Language] = LanguageSummary{
+				Name:       res.Language,
+				Lines:      res.Lines,
+				Code:       res.Code,
+				Comment:    res.Comment,
+				Blank:      res.Blank,
+				Complexity: res.Complexity,
+				Count:      1,
+				Files:      files,
+			}
+		} else {
+			tmp := languages[res.Language]
+			files := append(tmp.Files, res)
+
+			languages[res.Language] = LanguageSummary{
+				Name:       res.Language,
+				Lines:      tmp.Lines + res.Lines,
+				Code:       tmp.Code + res.Code,
+				Comment:    tmp.Comment + res.Comment,
+				Blank:      tmp.Blank + res.Blank,
+				Complexity: tmp.Complexity + res.Complexity,
+				Count:      tmp.Count + 1,
+				Files:      files,
+			}
+		}
+	}
+
+	language := []LanguageSummary{}
+	for _, summary := range languages {
+		language = append(language, summary)
+	}
+
+
+	startTime := makeTimestampMilli()
+	jsonString, _ := json.Marshal(language)
+
+
+	if Debug {
+		printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
+	}
+
+	return string(jsonString)
+}
+
 func fileSummerize(input *chan *FileJob) string {
 	switch {
 	case More:
@@ -66,6 +129,8 @@ func fileSummerize(input *chan *FileJob) string {
 	case !More:
 		return fileSummerizeShort(input)
 	}
+
+	// if JSON result := toJson(&fileSummaryJobQueue)
 
 	return ""
 }
