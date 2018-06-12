@@ -4,13 +4,10 @@ import (
 	"github.com/boyter/scc/processor"
 	"github.com/urfave/cli"
 	"os"
-	// "runtime/pprof"
-	// "github.com/pkg/profile"
 )
 
 //go:generate go run scripts/include.go
 func main() {
-
 	// f, _ := os.Create("scc.pprof")
 	// pprof.StartCPUProfile(f)
 	// defer pprof.StopCPUProfile()
@@ -20,11 +17,22 @@ func main() {
 	app := cli.NewApp()
 	app.EnableBashCompletion = true
 	app.Name = "scc"
-	app.Version = "1.1.0"
+	app.Version = "1.2.0"
 	app.Usage = "Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation."
 	app.UsageText = "scc DIRECTORY"
 
 	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:        "format, f",
+			Usage:       "Set output format [possible values: tabular, wide, json]",
+			Destination: &processor.Format,
+			Value:       "tabular",
+		},
+		cli.StringFlag{
+			Name:        "output, o",
+			Usage:       "Set output file if not set will print to stdout `FILE`",
+			Destination: &processor.FileOutput,
+		},
 		cli.StringFlag{
 			Name:        "pathblacklist, pbl",
 			Usage:       "Which directories should be ignored as comma seperated list",
@@ -65,7 +73,7 @@ func main() {
 		},
 		cli.BoolFlag{
 			Name:        "wide, w",
-			Usage:       "Set to check produce more output such as complexity and code vs complexity ranking",
+			Usage:       "Set to check produce more output such as complexity and code vs complexity ranking. Same as setting format to wide",
 			Destination: &processor.More,
 		},
 		cli.Int64Flag{

@@ -1,13 +1,13 @@
 package processor
 
 import (
+	"encoding/json"
 	"fmt"
 	glang "golang.org/x/text/language"
 	gmessage "golang.org/x/text/message"
 	"sort"
 	"strings"
 	"time"
-	"encoding/json"
 )
 
 var tabularShortBreak = "-------------------------------------------------------------------------------\n"
@@ -110,10 +110,8 @@ func toJson(input *chan *FileJob) string {
 		language = append(language, summary)
 	}
 
-
 	startTime := makeTimestampMilli()
 	jsonString, _ := json.Marshal(language)
-
 
 	if Debug {
 		printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
@@ -124,15 +122,13 @@ func toJson(input *chan *FileJob) string {
 
 func fileSummerize(input *chan *FileJob) string {
 	switch {
-	case More:
+	case More || strings.ToLower(Format) == "wide":
 		return fileSummerizeLong(input)
-	case !More:
-		return fileSummerizeShort(input)
+	case strings.ToLower(Format) == "json":
+		return toJson(input)
 	}
 
-	// if JSON result := toJson(&fileSummaryJobQueue)
-
-	return ""
+	return fileSummerizeShort(input)
 }
 
 func fileSummerizeLong(input *chan *FileJob) string {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
+	"io/ioutil"
 )
 
 // Flags set via the CLI which control how the output is displayed
@@ -18,6 +19,8 @@ var Complexity = false
 var More = false
 var Cocomo = false
 var SortBy = ""
+var Format = ""
+var FileOutput = ""
 var PathBlacklist = ""
 var FileListQueueSize = runtime.NumCPU()
 var FileReadJobQueueSize = runtime.NumCPU()
@@ -155,5 +158,11 @@ func Process() {
 	go fileProcessorWorker(&fileReadContentJobQueue, &fileSummaryJobQueue)
 
 	result := fileSummerize(&fileSummaryJobQueue)
-	fmt.Println(result)
+
+	if FileOutput == "" {
+		fmt.Println(result)
+	} else {
+		ioutil.WriteFile(FileOutput, []byte(result), 0600)
+		fmt.Println("results written to " + FileOutput)
+	}
 }

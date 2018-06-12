@@ -51,7 +51,7 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 	// If input has a supplied white list of extensions then loop through them
 	// and modify the lookup we use to cut down on extra checks
 	if len(WhiteListExtensions) != 0 {
-			wlExtensionLookup := map[string]string{}
+		wlExtensionLookup := map[string]string{}
 
 		for _, white := range whiteList {
 			language, ok := extensionLookup[white]
