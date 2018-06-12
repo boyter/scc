@@ -13,7 +13,7 @@ It is faster than loc/sloccount/cloc/gocloc with more accuracy. It is however ma
 
 Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
 
-Read all about how it came to be along with performance benchmarks https://boyter.org/posts/sloc-cloc-code/
+Read all about how it came to be along with performance benchmarks https://boyter.org/posts/sloc-cloc-code/ or why use a code counting tool https://boyter.org/posts/why-count-lines-of-code/
 
 Other similar projects,
 
