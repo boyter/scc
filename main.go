@@ -24,7 +24,7 @@ func main() {
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:        "format, f",
-			Usage:       "Set output format [possible values: tabular, wide, json]",
+			Usage:       "Set output format [possible values: tabular, wide, json, csv]",
 			Destination: &processor.Format,
 			Value:       "tabular",
 		},
