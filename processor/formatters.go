@@ -8,6 +8,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"encoding/csv"
+	"bytes"
 )
 
 var tabularShortBreak = "-------------------------------------------------------------------------------\n"
@@ -120,12 +122,49 @@ func toJson(input *chan *FileJob) string {
 	return string(jsonString)
 }
 
+func toCSV(input *chan *FileJob) string {
+	records := [][]string{{
+		"Language",
+		"Location",
+		"Filename",
+		"Lines",
+		"Code",
+		"Comments",
+		"Blanks",
+		"Complexity"},
+	}
+
+	for result := range *input {
+		records = append(records, []string{
+			result.Language,
+			result.Location,
+			result.Filename,
+			fmt.Sprint(result.Lines),
+			fmt.Sprint(result.Code),
+			fmt.Sprint(result.Comment),
+			fmt.Sprint(result.Blank),
+			fmt.Sprint(result.Complexity)})
+	}
+
+
+	b := &bytes.Buffer{}
+	w := csv.NewWriter(b)
+	w.WriteAll(records)
+	w.Flush()
+
+	return b.String()
+}
+
+
+
 func fileSummerize(input *chan *FileJob) string {
 	switch {
 	case More || strings.ToLower(Format) == "wide":
 		return fileSummerizeLong(input)
 	case strings.ToLower(Format) == "json":
 		return toJson(input)
+	case strings.ToLower(Format) == "csv":
+		return toCSV(input)
 	}
 
 	return fileSummerizeShort(input)
