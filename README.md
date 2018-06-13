@@ -29,7 +29,7 @@ Interesting reading about about code counting about tokei and loc
  - https://www.reddit.com/r/rust/comments/59bm3t/a_fast_cloc_replacement_in_rust/
  - https://www.reddit.com/r/rust/comments/82k9iy/loc_count_lines_of_code_quickly/
 
-Futher reading about processing files on the disk performance
+Further reading about processing files on the disk performance
 
  - https://blog.burntsushi.net/ripgrep/
 
@@ -47,20 +47,23 @@ USAGE:
    scc DIRECTORY
 
 VERSION:
-   1.0.0
+   1.2.0
 
 COMMANDS:
      help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
+   --format value, -f value            Set output format [possible values: tabular, wide, json, csv] (default: "tabular")
+   --output FILE, -o FILE              Set output file if not set will print to stdout FILE
    --pathblacklist value, --pbl value  Which directories should be ignored as comma seperated list (default: ".git,.hg,.svn")
    --sort value, -s value              Sort languages / files based on column [possible values: files, name, lines, blanks, code, comments, complexity] (default: "files")
    --whitelist value, --wl value       Restrict file extensions to just those provided as a comma seperated list E.G. go,java,js
    --files                             Set to specify you want to see the output for every file
    --verbose, -v                       Set to enable verbose output
    --duplicates, -d                    Set to check for and remove duplicate files from stats and output
-   --wide, -w                          Set to check produce more output such as code vs complexity ranking
-   --averageage value, --aw value      Set as integer to set the average wage used for basic COCOMO calculation (default: 56286)
+   --complexity, -c                    Set to skip complexity calculations note will be overridden if wide is set
+   --wide, -w                          Set to check produce more output such as complexity and code vs complexity ranking. Same as setting format to wide
+   --averagewage value, --aw value     Set as integer to set the average wage used for basic COCOMO calculation (default: 56286)
    --cocomo, --co                      Set to check remove cocomo calculation output
    --debug                             Set to enable debug output
    --trace                             Set to enable trace output, not reccomended for multiple files
