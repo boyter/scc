@@ -4431,5 +4431,14 @@
     ],
     "multi_line": [],
     "quotes": []
+  },
+  "Extensible Stylesheet Language Transformations": {
+    "line_comment": [],
+    "complexitychecks": [],
+    "extensions": [
+      "xslt"
+    ],
+    "multi_line": [],
+    "quotes": []
   }
 }
