@@ -4404,5 +4404,14 @@
         "\""
       ]
     ]
+  },
+  "XML Schema": {
+    "line_comment": [],
+    "complexitychecks": [],
+    "extensions": [
+      "xsd"
+    ],
+    "multi_line": [],
+    "quotes": []
   }
 }
