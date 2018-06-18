@@ -4422,5 +4422,14 @@
     ],
     "multi_line": [],
     "quotes": []
+  },
+  "Macromedia eXtensible Markup Language": {
+    "line_comment": [],
+    "complexitychecks": [],
+    "extensions": [
+      "mxml"
+    ],
+    "multi_line": [],
+    "quotes": []
   }
 }
