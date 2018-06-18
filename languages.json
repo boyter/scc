@@ -4413,5 +4413,14 @@
     ],
     "multi_line": [],
     "quotes": []
+  },
+  "Document Type Definition": {
+    "line_comment": [],
+    "complexitychecks": [],
+    "extensions": [
+      "dtd"
+    ],
+    "multi_line": [],
+    "quotes": []
   }
 }
