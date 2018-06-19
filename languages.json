@@ -4513,5 +4513,19 @@
         "'''"
       ]
     ]
+  },
+  "LEX": {
+    "line_comment": [],
+    "complexitychecks": [],
+    "extensions": [
+      "l"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": []
   }
 }
