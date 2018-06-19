@@ -4562,7 +4562,7 @@
     "multi_line": [],
     "quotes": []
   },
-  "Smarty": {
+  "Smarty Template": {
     "line_comment": [],
     "complexitychecks": [
       "for ",
