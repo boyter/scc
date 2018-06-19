@@ -4620,5 +4620,38 @@
         "'"
       ]
     ]
+  },
+  "JavaServer Pages": {
+    "line_comment": [
+      "//"
+    ],
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "jsp"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
   }
 }
