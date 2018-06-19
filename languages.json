@@ -4555,19 +4555,7 @@
     "line_comment": [
       "#"
     ],
-    "complexitychecks": [
-      "for ",
-      "for(",
-      "if ",
-      "if(",
-      "switch ",
-      "while ",
-      "else ",
-      "and ",
-      "or ",
-      "not ",
-      "in "
-    ],
+    "complexitychecks": [],
     "extensions": [
       "m4"
     ],
