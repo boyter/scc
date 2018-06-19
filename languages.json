@@ -4550,5 +4550,28 @@
     ],
     "multi_line": [],
     "quotes": []
+  },
+  "m4": {
+    "line_comment": [
+      "#"
+    ],
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "and ",
+      "or ",
+      "not ",
+      "in "
+    ],
+    "extensions": [
+      "m4"
+    ],
+    "multi_line": [],
+    "quotes": []
   }
 }
