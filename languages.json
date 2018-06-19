@@ -4588,5 +4588,37 @@
       ]
     ],
     "quotes": []
+  },
+  "Expect": {
+    "line_comment": [
+      "#"
+    ],
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "exp"
+    ],
+    "multi_line": [],
+    "quotes": [
+      [
+        "\\\"",
+        "\\\""
+      ],
+      [
+        "'",
+        "'"
+      ]
+    ]
   }
 }
