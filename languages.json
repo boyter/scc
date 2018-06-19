@@ -4561,5 +4561,32 @@
     ],
     "multi_line": [],
     "quotes": []
+  },
+  "Smarty": {
+    "line_comment": [],
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== ",
+      "include "
+    ],
+    "extensions": [
+      "tpl"
+    ],
+    "multi_line": [
+      [
+        "{*",
+        "*}"
+      ]
+    ],
+    "quotes": []
   }
 }
