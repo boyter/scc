@@ -4730,5 +4730,37 @@
         "\""
       ]
     ]
+  },
+  "Korn Shell": {
+    "line_comment": [
+      "#"
+    ],
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "ksh"
+    ],
+    "multi_line": [],
+    "quotes": [
+      [
+        "\\\"",
+        "\\\""
+      ],
+      [
+        "'",
+        "'"
+      ]
+    ]
   }
 }
