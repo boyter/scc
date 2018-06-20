@@ -114,19 +114,7 @@
     "line_comment": [
       "//"
     ],
-    "complexitychecks": [
-      "for ",
-      "for(",
-      "if ",
-      "if(",
-      "switch ",
-      "while ",
-      "else ",
-      "|| ",
-      "&& ",
-      "!= ",
-      "== "
-    ],
+    "complexitychecks": [],
     "extensions": [
       "less"
     ],
@@ -4937,5 +4925,25 @@
       ]
     ],
     "quotes": []
+  },
+  "Gradle": {
+    "line_comment": [
+      "//"
+    ],
+    "complexitychecks": [],
+    "extensions": [
+      "gradle"
+    ],
+    "multi_line": [],
+    "quotes": [
+      [
+        "'",
+        "'"
+      ],
+      [
+        "\"",
+        "\""
+      ]
+    ]
   }
 }
