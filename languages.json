@@ -4836,5 +4836,16 @@
         "\\\""
       ]
     ]
+  },
+  "gitignore": {
+    "line_comment": [
+      "#"
+    ],
+    "complexitychecks": [],
+    "extensions": [
+      ".gitignore"
+    ],
+    "multi_line": [],
+    "quotes": []
   }
 }
