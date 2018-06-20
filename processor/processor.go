@@ -7,10 +7,12 @@ import (
 	"runtime"
 	"strings"
 	"io/ioutil"
+	"sort"
 )
 
 // Flags set via the CLI which control how the output is displayed
 var Files = false
+var Languages = false
 var Verbose = false
 var Debug = false
 var Trace = false
@@ -40,22 +42,9 @@ var LanguageFeatures = map[string]LanguageFeature{}
 // Responsible for setting up the language features based on the JSON file that is stored in constants
 // Needs to be called at least once in order for anything to actually happen
 func processConstants() {
-	var database map[string]Language
-	startTime := makeTimestampMilli()
-	data, err := base64.StdEncoding.DecodeString(languages)
-	if err != nil {
-		panic(fmt.Sprintf("failed to base64 decode languages: %v", err))
-	}
+	var database = loadDatabase()
 
-	if err := json.Unmarshal(data, &database); err != nil {
-		panic(fmt.Sprintf("languages json invalid: %v", err))
-	}
-
-	if Trace {
-		printTrace(fmt.Sprintf("milliseconds unmarshal: %d", makeTimestampMilli()-startTime))
-	}
-
-	startTime = makeTimestampNano()
+	startTime := makeTimestampNano()
 	for name, value := range database {
 		for _, ext := range value.Extensions {
 			ExtensionToLanguage[ext] = name
@@ -132,11 +121,54 @@ func processFlags() {
 	}
 }
 
+
+func loadDatabase() map[string]Language {
+	var database map[string]Language
+	startTime := makeTimestampMilli()
+
+	data, err := base64.StdEncoding.DecodeString(languages)
+	if err != nil {
+		panic(fmt.Sprintf("failed to base64 decode languages: %v", err))
+	}
+
+	if err := json.Unmarshal(data, &database); err != nil {
+		panic(fmt.Sprintf("languages json invalid: %v", err))
+	}
+
+	if Trace {
+		printTrace(fmt.Sprintf("milliseconds unmarshal: %d", makeTimestampMilli()-startTime))
+	}
+
+	return database
+}
+
+func printLanguages() {
+	database := loadDatabase()
+	var names []string
+
+	for key := range database {
+		names = append(names, key)
+	}
+
+	sort.Slice(names, func(i, j int) bool {
+		return strings.Compare(strings.ToLower(names[i]), strings.ToLower(names[j])) < 0
+	})
+
+	for _, name := range names {
+		fmt.Println(fmt.Sprintf("%s (%s)", name, strings.Join(database[name].Extensions, ",")))
+	}
+}
+
 func Process() {
+	if Languages {
+		printLanguages()
+		return
+	}
+
 	processConstants()
 	processFlags()
 
-	// Clean up and invlid arguments before setting everything up
+	// Clean up any invalid arguments before setting everything up
 	if len(DirFilePaths) == 0 {
 		DirFilePaths = append(DirFilePaths, ".")
 	}

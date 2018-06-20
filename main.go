@@ -22,6 +22,11 @@ func main() {
 	app.UsageText = "scc DIRECTORY"
 
 	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			Name:        "languages",
+			Usage:       "Print out supported languages and their extensions",
+			Destination: &processor.Languages,
+		},
 		cli.StringFlag{
 			Name:        "format, f",
 			Usage:       "Set output format [possible values: tabular, wide, json, csv]",
