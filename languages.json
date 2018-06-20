@@ -4881,5 +4881,34 @@
     ],
     "multi_line": [],
     "quotes": []
+  },
+  "Basic": {
+    "line_comment": [
+      "'"
+    ],
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "elseif ",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "bas"
+    ],
+    "multi_line": [],
+    "quotes": [
+      [
+        "\\\"",
+        "\\\""
+      ]
+    ]
   }
 }
