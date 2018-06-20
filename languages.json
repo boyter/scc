@@ -4686,5 +4686,21 @@
         "\""
       ]
     ]
+  },
+  "AWK": {
+    "line_comment": [
+      "#"
+    ],
+    "complexitychecks": [],
+    "extensions": [
+      "awk"
+    ],
+    "multi_line": [],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
   }
 }
