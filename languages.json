@@ -4910,5 +4910,32 @@
         "\\\""
       ]
     ]
+  },
+  "Freemarker Template": {
+    "line_comment": [],
+    "complexitychecks": [
+      "<#list ",
+      "<#assign ",
+      "<#if ",
+      "<#elseif ",
+      "<#else>",
+      "<#else> ",
+      "<#switch  ",
+      "<#case ",
+      "<#default>",
+      "<#default> ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "ftl"
+    ],
+    "multi_line": [
+      [
+        "<#--",
+        "-->"
+      ]
+    ],
+    "quotes": []
   }
 }
