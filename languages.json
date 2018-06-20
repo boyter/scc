@@ -4798,5 +4798,36 @@
         "\""
       ]
     ]
+  },
+  "LOLCODE": {
+    "line_comment": [
+      "BTW"
+    ],
+    "complexitychecks": [
+      "AWSUM THX ",
+      "O NOES ",
+      "PLZ OPEN FILE ",
+      "IM IN YR ",
+      "O RLY?",
+      "O RLY? ",
+      "WTF?",
+      "WTF? "
+    ],
+    "extensions": [
+      "lol",
+      "lols"
+    ],
+    "multi_line": [
+      [
+        "OBTW",
+        "TLDR"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
   }
 }
