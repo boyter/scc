@@ -5057,5 +5057,16 @@
     ],
     "multi_line": [],
     "quotes": []
+  },
+  "Properties File": {
+    "line_comment": [
+      "#"
+    ],
+    "complexitychecks": [],
+    "extensions": [
+      "properties"
+    ],
+    "multi_line": [],
+    "quotes": []
   }
 }
