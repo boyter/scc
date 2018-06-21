@@ -4974,5 +4974,47 @@
     ],
     "multi_line": [],
     "quotes": []
+  },
+  "Boo": {
+    "line_comment": [
+      "//"
+    ],
+    "complexitychecks": [
+      "for ",
+      "if ",
+      "elif ",
+      "unless ",
+      " and ",
+      "for ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "tex"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ],
+      [
+        "'",
+        "'"
+      ],
+      [
+        "\"\"\"",
+        "\"\"\""
+      ]
+    ]
   }
 }
