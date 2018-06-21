@@ -4945,5 +4945,23 @@
         "\""
       ]
     ]
+  },
+  "Brainfuck": {
+    "line_comment": [],
+    "complexitychecks": [
+      "[",
+      "]",
+      "<",
+      ">",
+      "+",
+      "-",
+      ".",
+      ","
+    ],
+    "extensions": [
+      "bf"
+    ],
+    "multi_line": [],
+    "quotes": []
   }
 }
