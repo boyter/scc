@@ -5114,5 +5114,14 @@
     ],
     "multi_line": [],
     "quotes": []
+  },
+  "Varnish Configuration": {
+    "line_comment": [],
+    "complexitychecks": [],
+    "extensions": [
+      "vcl"
+    ],
+    "multi_line": [],
+    "quotes": []
   }
 }
