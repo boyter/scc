@@ -5016,5 +5016,26 @@
         "\"\"\""
       ]
     ]
+  },
+  "Jenkins Buildfile": {
+    "line_comment": [],
+    "complexitychecks": [],
+    "extensions": [
+      "jenkinsfile"
+    ],
+    "multi_line": [],
+    "quotes": []
+  },
+  "License": {
+    "line_comment": [],
+    "complexitychecks": [],
+    "extensions": [
+      "license",
+      "licence",
+      "copying",
+      "copying3"
+    ],
+    "multi_line": [],
+    "quotes": []
   }
 }
