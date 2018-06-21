@@ -5039,5 +5039,14 @@
     ],
     "multi_line": [],
     "quotes": []
+  },
+  "Robot Framework": {
+    "line_comment": [],
+    "complexitychecks": [],
+    "extensions": [
+      "robot"
+    ],
+    "multi_line": [],
+    "quotes": []
   }
 }
