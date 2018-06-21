@@ -4963,5 +4963,16 @@
     ],
     "multi_line": [],
     "quotes": []
+  },
+  "LaTeX": {
+    "line_comment": [
+      "%"
+    ],
+    "complexitychecks": [],
+    "extensions": [
+      "tex"
+    ],
+    "multi_line": [],
+    "quotes": []
   }
 }
