@@ -5105,5 +5105,14 @@
         "'"
       ]
     ]
+  },
+  "CSV": {
+    "line_comment": [],
+    "complexitychecks": [],
+    "extensions": [
+      "csv"
+    ],
+    "multi_line": [],
+    "quotes": []
   }
 }
