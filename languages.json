@@ -5033,7 +5033,9 @@
       "license",
       "licence",
       "copying",
-      "copying3"
+      "copying3",
+      "unlicense",
+      "unlicence"
     ],
     "multi_line": [],
     "quotes": []
