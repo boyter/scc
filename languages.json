@@ -5048,5 +5048,14 @@
     ],
     "multi_line": [],
     "quotes": []
+  },
+  "Patch": {
+    "line_comment": [],
+    "complexitychecks": [],
+    "extensions": [
+      "patch"
+    ],
+    "multi_line": [],
+    "quotes": []
   }
 }
