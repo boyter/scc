@@ -5068,5 +5068,42 @@
     ],
     "multi_line": [],
     "quotes": []
+  },
+  "Puppet": {
+    "line_comment": [
+      "#"
+    ],
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "pp"
+    ],
+    "multi_line": [
+      [
+        "=begin",
+        "=end"
+      ]
+    ],
+    "quotes": [
+      [
+        "\\\"",
+        "\\\""
+      ],
+      [
+        "'",
+        "'"
+      ]
+    ]
   }
 }
