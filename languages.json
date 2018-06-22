@@ -5116,10 +5116,27 @@
     "quotes": []
   },
   "Varnish Configuration": {
-    "line_comment": [],
+    "line_comment": [
+      "#",
+      "//"
+    ],
     "complexitychecks": [],
     "extensions": [
       "vcl"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": []
+  },
+  "PKGBUILD": {
+    "line_comment": [],
+    "complexitychecks": [],
+    "extensions": [
+      "pkgbuild"
     ],
     "multi_line": [],
     "quotes": []
