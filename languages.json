@@ -5140,5 +5140,21 @@
     ],
     "multi_line": [],
     "quotes": []
+  },
+  "Gherkin Specification": {
+    "line_comment": [
+      "#"
+    ],
+    "complexitychecks": [
+      "given",
+      "when",
+      "then",
+      "and"
+    ],
+    "extensions": [
+      "feature"
+    ],
+    "multi_line": [],
+    "quotes": []
   }
 }
