@@ -17,11 +17,13 @@ var tabularShortFormatHead = "%-20s %9s %9s %8s %9s %8s %10s\n"
 var tabularShortFormatBody = "%-20s %9d %9d %8d %9d %8d %10d\n"
 var tabularShortFormatFile = "%-30s %9d %8d %9d %8d %10d\n"
 var shortFormatFileTrucate = 29
+var shortNameTruncate = 20
 
 var tabularShortFormatHeadNoComplexity = "%-22s %11s %11s %9s %11s %10s\n"
 var tabularShortFormatBodyNoComplexity = "%-22s %11d %11d %9d %11d %10d\n"
 var tabularShortFormatFileNoComplexity = "%-34s %11d %9d %11d %10d\n"
 var shortFormatFileTrucateNoComplexity = 33
+var longNameTruncate = 22
 
 var tabularWideBreak = "-------------------------------------------------------------------------------------------------------------\n"
 var tabularWideFormatHead = "%-33s %9s %9s %8s %9s %8s %10s %16s\n"
@@ -278,7 +280,12 @@ func fileSummerizeLong(input *chan *FileJob) string {
 			str.WriteString(tabularWideBreak)
 		}
 
-		str.WriteString(fmt.Sprintf(tabularWideFormatBody, summary.Name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity, summary.WeightedComplexity))
+		trimmedName := summary.Name
+		if len(summary.Name) > longNameTruncate {
+			trimmedName = summary.Name[:longNameTruncate-1] + "…"
+		}
+
+		str.WriteString(fmt.Sprintf(tabularWideFormatBody, trimmedName, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity, summary.WeightedComplexity))
 
 		if Files {
 			sortSummaryFiles(&summary)
@@ -424,10 +431,15 @@ func fileSummerizeShort(input *chan *FileJob) string {
 			str.WriteString(tabularShortBreak)
 		}
 
+		trimmedName := summary.Name
+		if len(summary.Name) > shortNameTruncate {
+			trimmedName = summary.Name[:shortNameTruncate-1] + "…"
+		}
+
 		if !Complexity {
-			str.WriteString(fmt.Sprintf(tabularShortFormatBody, summary.Name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity))
+			str.WriteString(fmt.Sprintf(tabularShortFormatBody, trimmedName, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity))
 		} else {
-			str.WriteString(fmt.Sprintf(tabularShortFormatBodyNoComplexity, summary.Name, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank))
+			str.WriteString(fmt.Sprintf(tabularShortFormatBodyNoComplexity, trimmedName, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank))
 		}
 
 		if Files {
