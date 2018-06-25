@@ -5189,5 +5189,23 @@
         "\""
       ]
     ]
+  },
+  "Report Definition Language": {
+    "line_comment": [],
+    "extensions": [
+      "rdl"
+    ],
+    "multi_line": [
+      [
+        "<!--",
+        "-->"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
   }
 }
