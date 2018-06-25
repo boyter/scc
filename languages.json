@@ -5192,6 +5192,7 @@
   },
   "Report Definition Language": {
     "line_comment": [],
+    "complexitychecks": [],
     "extensions": [
       "rdl"
     ],
@@ -5207,5 +5208,29 @@
         "\""
       ]
     ]
+  },
+  "Jade": {
+    "line_comment": [
+      "//-"
+    ],
+    "complexitychecks": [
+      "if ",
+      "else if ",
+      "unless "
+    ],
+    "extensions": [
+      "jade"
+    ],
+    "multi_line": [],
+    "quotes": []
+  },
+  "SPDX": {
+    "line_comment": [],
+    "complexitychecks": [],
+    "extensions": [
+      "spdx"
+    ],
+    "multi_line": [],
+    "quotes": []
   }
 }
