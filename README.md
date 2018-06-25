@@ -47,12 +47,13 @@ USAGE:
    scc DIRECTORY
 
 VERSION:
-   1.2.0
+   1.3.0
 
 COMMANDS:
      help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
+   --languages                         Print out supported languages and their extensions
    --format value, -f value            Set output format [possible values: tabular, wide, json, csv] (default: "tabular")
    --output FILE, -o FILE              Set output file if not set will print to stdout FILE
    --pathblacklist value, --pbl value  Which directories should be ignored as comma seperated list (default: ".git,.hg,.svn")
