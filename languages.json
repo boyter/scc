@@ -5232,5 +5232,32 @@
     ],
     "multi_line": [],
     "quotes": []
+  },
+  "Go Template": {
+    "line_comment": [],
+    "complexitychecks": [
+      "{{if ",
+      "{{ if ",
+      "{{else",
+      "{{ else",
+      "{{range ",
+      "{{ range ",
+      "{{with",
+      "{{ with"
+    ],
+    "extensions": [
+      "tmpl"
+    ],
+    "multi_line": [
+      [
+        "{{/*",
+        "*/}}"
+      ]
+    ],
+    "quotes": [
+      [
+        "\""
+      ]
+    ]
   }
 }
