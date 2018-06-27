@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"sync"
+	"runtime/debug"
 )
 
 const (
@@ -337,11 +338,21 @@ func countStats(fileJob *FileJob) {
 
 // Reads entire file into memory and then pushes it onto the next queue
 func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
+
+	previousGc := debug.SetGCPercent(-1)
+	fileCount := 0
+
 	startTime := makeTimestampMilli()
 	var wg sync.WaitGroup
 	for res := range *input {
 		wg.Add(1)
 		go func(res *FileJob) {
+			fileCount++
+
+			if fileCount >= 1000 {
+				debug.SetGCPercent(previousGc)
+			}
+
 			fileStartTime := makeTimestampNano()
 			content, err := ioutil.ReadFile(res.Location)
 
