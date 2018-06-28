@@ -18,6 +18,14 @@ const (
 	S_STRING             int64 = 8
 )
 
+type LineType int32
+
+const (
+	LINE_BLANK LineType = iota
+	LINE_CODE
+	LINE_COMMENT
+)
+
 func checkForMatch(currentByte byte, index int, endPoint int, matches [][]byte, fileJob *FileJob) bool {
 	potentialMatch := true
 	for i := 0; i < len(matches); i++ {
@@ -166,11 +174,12 @@ func isWhitespace(currentByte byte) bool {
 	return true
 }
 
+// CountStats will process the fileJob
 // If the file contains anything even just a newline its line count should be >= 1.
 // If the file has a size of 0 its line count should be 0.
 // Newlines belong to the line they started on so a file of \n means only 1 line
 // This is the 'hot' path for the application and needs to be as fast as possible
-func countStats(fileJob *FileJob) {
+func CountStats(fileJob *FileJob) {
 
 	// If the file has a length of 0 it is is empty then we say it has no lines
 	fileJob.Bytes = int64(len(fileJob.Content))
@@ -304,11 +313,32 @@ func countStats(fileJob *FileJob) {
 
 			switch {
 			case currentState == S_BLANK:
-				fileJob.Blank++
+				{
+					if fileJob.Callback != nil {
+						if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_BLANK) {
+							return
+						}
+					}
+					fileJob.Blank++
+				}
 			case currentState == S_CODE || currentState == S_STRING || currentState == S_COMMENT_CODE || currentState == S_MULTICOMMENT_CODE:
-				fileJob.Code++
+				{
+					if fileJob.Callback != nil {
+						if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_CODE) {
+							return
+						}
+					}
+					fileJob.Code++
+				}
 			case currentState == S_COMMENT || currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_BLANK:
-				fileJob.Comment++
+				{
+					if fileJob.Callback != nil {
+						if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
+							return
+						}
+					}
+					fileJob.Comment++
+				}
 			}
 
 			// If we are in a multiline comment that started after some code then we need
@@ -384,7 +414,7 @@ func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
 		wg.Add(1)
 		go func(res *FileJob) {
 			fileStartTime := makeTimestampNano()
-			countStats(res)
+			CountStats(res)
 
 			if Duplicates {
 				if duplicates.Check(res.Bytes, res.Hash) {
