@@ -155,7 +155,7 @@ func TestCountStatsCode(t *testing.T) {
 }
 
 func TestCountStatsCommentTricks(t *testing.T) {
-	processConstants()
+	ProcessConstants()
 	fileJob := FileJob{}
 
 	fileJob.Code = 0
@@ -463,7 +463,7 @@ func TestCountStatsBlankLines(t *testing.T) {
 }
 
 func TestCountStatsComplexityCount(t *testing.T) {
-	processConstants()
+	ProcessConstants()
 	fileJob := FileJob{}
 
 	checks := []string{
@@ -488,7 +488,7 @@ func TestCountStatsComplexityCount(t *testing.T) {
 }
 
 func TestCountStatsComplexityCountFalse(t *testing.T) {
-	processConstants()
+	ProcessConstants()
 	fileJob := FileJob{}
 
 	checks := []string{
@@ -531,7 +531,7 @@ func (l *linecounter) ProcessLine(job *FileJob, currentLine int64, lineType Line
 }
 
 func TestCountStatsCallback(t *testing.T) {
-	processConstants()
+	ProcessConstants()
 	fileJob := FileJob{}
 
 	fileJob.Content = []byte(`package foo
@@ -560,7 +560,7 @@ class A {
 }
 
 func TestCountStatsCallbackInterrupt(t *testing.T) {
-	processConstants()
+	ProcessConstants()
 	fileJob := FileJob{}
 
 	fileJob.Content = []byte(`package foo
