@@ -4,10 +4,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"runtime"
-	"strings"
 	"io/ioutil"
+	"runtime"
 	"sort"
+	"strings"
 )
 
 // Flags set via the CLI which control how the output is displayed
@@ -39,9 +39,9 @@ var DirFilePaths = []string{}
 var ExtensionToLanguage = map[string]string{}
 var LanguageFeatures = map[string]LanguageFeature{}
 
-// Responsible for setting up the language features based on the JSON file that is stored in constants
+// ProcessConstants is responsible for setting up the language features based on the JSON file that is stored in constants
 // Needs to be called at least once in order for anything to actually happen
-func processConstants() {
+func ProcessConstants() {
 	var database = loadDatabase()
 
 	startTime := makeTimestampNano()
@@ -121,7 +121,6 @@ func processFlags() {
 	}
 }
 
-
 func loadDatabase() map[string]Language {
 	var database map[string]Language
 	startTime := makeTimestampMilli()
@@ -165,7 +164,7 @@ func Process() {
 		return
 	}
 
-	processConstants()
+	ProcessConstants()
 	processFlags()
 
 	// Clean up any invalid arguments before setting everything up

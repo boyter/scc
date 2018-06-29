@@ -5,7 +5,7 @@ import (
 )
 
 func TestProcessConstants(t *testing.T) {
-	processConstants()
+	ProcessConstants()
 
 	if len(ExtensionToLanguage) == 0 {
 		t.Error("Should not be 0")

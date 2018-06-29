@@ -21,6 +21,12 @@ type LanguageFeature struct {
 	StringChecks      []OpenClose
 }
 
+// FileJobCallback is an interface that FileJobs can implement to get a per line callback with the line type
+type FileJobCallback interface {
+	// ProcessLine should return true to continue processing or false to stop further processing and return
+	ProcessLine(job *FileJob, currentLine int64, lineType LineType) bool
+}
+
 type FileJob struct {
 	Language           string
 	Filename           string
@@ -35,6 +41,7 @@ type FileJob struct {
 	Complexity         int64
 	WeightedComplexity float64
 	Hash               []byte
+	Callback           FileJobCallback
 }
 
 type LanguageSummary struct {
