@@ -115,6 +115,10 @@ scc (duplicates detection) 2.122 s ± 0.054 s
 scc (no GC no complexity)  0.744 s ± 0.167 s
 ```
 
+### API Support
+
+The core part of `scc` which is the counting engine is exposed publicly to be integrated into other Go applications. See https://github.com/pinpt/ripsrc for an example of how to do this.
+
 ### Adding/Modifying Languages
 
 To add or modify a language you will need to eddit the `languages.json` file in the root of the project, and then run `go generate` to build it into the application. You can then `go install` or `go build` as normal to produce the binary with your modifications.
