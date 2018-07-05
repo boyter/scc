@@ -1,6 +1,8 @@
 package processor
 
 import (
+	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	glang "golang.org/x/text/language"
@@ -8,8 +10,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-	"encoding/csv"
-	"bytes"
 )
 
 var tabularShortBreak = "-------------------------------------------------------------------------------\n"
@@ -148,7 +148,6 @@ func toCSV(input *chan *FileJob) string {
 			fmt.Sprint(result.Complexity)})
 	}
 
-
 	b := &bytes.Buffer{}
 	w := csv.NewWriter(b)
 	w.WriteAll(records)
@@ -156,8 +155,6 @@ func toCSV(input *chan *FileJob) string {
 
 	return b.String()
 }
-
-
 
 func fileSummerize(input *chan *FileJob) string {
 	switch {
