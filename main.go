@@ -40,7 +40,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:        "pathblacklist, pbl",
-			Usage:       "Which directories should be ignored as comma seperated list",
+			Usage:       "Which directories should be ignored as comma separated list",
 			Value:       ".git,.hg,.svn",
 			Destination: &processor.PathBlacklist,
 		},
@@ -52,7 +52,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:        "whitelist, wl",
-			Usage:       "Restrict file extensions to just those provided as a comma seperated list E.G. go,java,js",
+			Usage:       "Restrict file extensions to just those provided as a comma separated list E.G. go,java,js",
 			Value:       "",
 			Destination: &processor.WhiteListExtensions,
 		},
@@ -89,7 +89,7 @@ func main() {
 		},
 		cli.BoolFlag{
 			Name:        "cocomo, co",
-			Usage:       "Set to check remove cocomo calculation output",
+			Usage:       "Set to check remove COCOMO calculation output",
 			Destination: &processor.Cocomo,
 		},
 		cli.BoolFlag{
@@ -99,7 +99,7 @@ func main() {
 		},
 		cli.BoolFlag{
 			Name:        "trace",
-			Usage:       "Set to enable trace output, not reccomended for multiple files",
+			Usage:       "Set to enable trace output, not recommended for multiple files",
 			Destination: &processor.Trace,
 		},
 	}

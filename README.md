@@ -57,9 +57,9 @@ GLOBAL OPTIONS:
    --languages                         Print out supported languages and their extensions
    --format value, -f value            Set output format [possible values: tabular, wide, json, csv] (default: "tabular")
    --output FILE, -o FILE              Set output file if not set will print to stdout FILE
-   --pathblacklist value, --pbl value  Which directories should be ignored as comma seperated list (default: ".git,.hg,.svn")
+   --pathblacklist value, --pbl value  Which directories should be ignored as comma separated list (default: ".git,.hg,.svn")
    --sort value, -s value              Sort languages / files based on column [possible values: files, name, lines, blanks, code, comments, complexity] (default: "files")
-   --whitelist value, --wl value       Restrict file extensions to just those provided as a comma seperated list E.G. go,java,js
+   --whitelist value, --wl value       Restrict file extensions to just those provided as a comma separated list E.G. go,java,js
    --files                             Set to specify you want to see the output for every file
    --verbose, -v                       Set to enable verbose output
    --duplicates, -d                    Set to check for and remove duplicate files from stats and output
@@ -68,7 +68,7 @@ GLOBAL OPTIONS:
    --averagewage value, --aw value     Set as integer to set the average wage used for basic COCOMO calculation (default: 56286)
    --cocomo, --co                      Set to check remove cocomo calculation output
    --debug                             Set to enable debug output
-   --trace                             Set to enable trace output, not reccomended for multiple files
+   --trace                             Set to enable trace output, not recommended for multiple files
    --help, -h                          show help
    --version, --ver                    Print the version
 ```
