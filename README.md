@@ -10,6 +10,7 @@ Also it has a much shorter name than tokei, and shorter than cloc.
 It is faster than loc/sloccount/cloc/gocloc with more accuracy. It is however marginally slower than tokei (on linux) but with duplicate detection and complexity count. If you disable garbage collection `GOGC=-1 scc .` it is indeed faster than everything including tokei by a huge margin.
 
 [![Build Status](https://travis-ci.org/boyter/scc.svg?branch=master)](https://travis-ci.org/boyter/scc)
+[![Go Report Card](https://goreportcard.com/badge/github.com/boyter/scc)](https://goreportcard.com/report/github.com/boyter/scc)
 
 Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
 
