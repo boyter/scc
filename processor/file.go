@@ -25,12 +25,15 @@ func getExtension(name string) string {
 		return extension.(string)
 	}
 
-	loc := strings.LastIndex(name, ".")
+	locs := strings.Split(name, ".")
 
-	if loc == -1 || loc == 0 {
+	switch {
+	case len(locs) == 0 || len(locs) == 1 || strings.LastIndex(name, ".") == 0:
 		extension = name
-	} else {
-		extension = name[loc+1:]
+	case len(locs) == 2:
+		extension = locs[len(locs)-1]
+	default:
+		extension = locs[len(locs)-2] + "." + locs[len(locs)-1]
 	}
 
 	extensionCache.Store(name, extension)
@@ -109,13 +112,18 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 							if !info.IsDir() {
 								if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
 
-									extension = getExtension(info.Name())
-
-									// If unknown lookup in case the full name matches
+									// Lookup in case the full name matches
 									language, ok := extensionLookup[strings.ToLower(info.Name())]
 
+									// If no match check if we have a matching extension
 									if !ok {
+										extension = getExtension(info.Name())
 										language, ok = extensionLookup[extension]
+									}
+
+									// Convert from d.ts to ts and check that in case of multiple extensions
+									if !ok {
+										language, ok = extensionLookup[getExtension(extension)]
 									}
 
 									if ok {

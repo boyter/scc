@@ -81,6 +81,57 @@
       ]
     ]
   },
+  "TypeScript Typings": {
+    "line_comment": [
+      "//"
+    ],
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "| ",
+      "|| ",
+      "& ",
+      "&& ",
+      "!= ",
+      "!== ",
+      "== ",
+      "=== ",
+      "foreach(",
+      "case ",
+      "case(",
+      "casex ",
+      "casex(",
+      "casez ",
+      "casez(",
+      "casexz ",
+      "casexz(",
+      "fork",
+      "?",
+      ":",
+      "inside",
+      "with"
+    ],
+    "extensions": [
+      "d.ts"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
+  },
   "Lisp": {
     "line_comment": [
       ";"
