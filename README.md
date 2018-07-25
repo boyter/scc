@@ -48,7 +48,7 @@ USAGE:
    scc DIRECTORY
 
 VERSION:
-   1.4.0
+   1.5.0
 
 COMMANDS:
      help, h  Shows a list of commands or help for one command
