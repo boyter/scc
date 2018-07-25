@@ -5255,5 +5255,16 @@
       ]
     ],
     "quotes": []
+  },
+  "XCode Config": {
+    "line_comment": [
+      "//"
+    ],
+    "complexitychecks": [],
+    "extensions": [
+      "xcconfig"
+    ],
+    "multi_line": [],
+    "quotes": []
   }
 }
