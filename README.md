@@ -24,6 +24,7 @@ Other similar projects,
  - https://github.com/cgag/loc
  - https://github.com/hhatto/gocloc/
  - http://www.locmetrics.com/alternatives.html
+ - https://github.com/vmchale/polyglot
 
 Interesting reading about about code counting about tokei and loc
 
