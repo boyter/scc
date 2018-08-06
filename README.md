@@ -374,5 +374,4 @@ XML Schema (xsd)
 Xtend (xtend)
 YAML (yaml,yml)
 Zsh (zsh)
-
 ```
