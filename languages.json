@@ -3133,7 +3133,11 @@
       "!= ",
       "== "
     ],
-    "extensions": [],
+    "extensions": [
+      "csig",
+      "sconstruct",
+      "sconscript"
+    ],
     "multi_line": [],
     "quotes": [
       [
