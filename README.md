@@ -5,7 +5,7 @@ A tool similar to cloc, sloccount and tokei. For counting physical the lines of 
 
 Goal is to be the fastest code counter possible, but also perform COCOMO calculation like sloccount and to estimate code complexity similar to cyclomatic complexity calculators. In short one tool to rule them all and the one I wish I had before I wrote it.
 
-Also it has a much shorter name than tokei, and shorter than cloc.
+Also it has a very short name which is easy to type `scc`.
 
 It is faster than loc/sloccount/cloc/gocloc with more accuracy. It is however marginally slower than tokei (on linux) but with duplicate detection and complexity count. If you disable garbage collection `GOGC=-1 scc .` it is indeed faster than everything with the exception of tokei (if compiled with 1.27+) by a huge margin.
 
