@@ -6,6 +6,7 @@ import (
 	"github.com/monochromegane/go-gitignore"
 	"io/ioutil"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"sync"
 )
@@ -67,6 +68,9 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 		extensionLookup = wlExtensionLookup
 	}
 
+	var mutex = &sync.Mutex{}
+	totalCount := 0
+
 	var wg sync.WaitGroup
 	all, _ := ioutil.ReadDir(root)
 	// TODO the gitignore should check for futher gitignores deeper in the tree
@@ -127,7 +131,15 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 									}
 
 									if ok {
+										mutex.Lock()
+										totalCount++
+										mutex.Unlock()
 										*output <- &FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language}
+
+										// Turn GC back to what it was before if we have parsed enough files
+										if totalCount >= GcFileCount {
+											debug.SetGCPercent(gcPercent)
+										}
 									} else if Verbose {
 										printWarn(fmt.Sprintf("skipping file unknown extension: %s", info.Name()))
 									}
@@ -152,6 +164,9 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 				language, ok := extensionLookup[extension]
 
 				if ok {
+					mutex.Lock()
+					totalCount++
+					mutex.Unlock()
 					*output <- &FileJob{Location: filepath.Join(root, f.Name()), Filename: f.Name(), Extension: extension, Language: language}
 				} else if Verbose {
 					printWarn(fmt.Sprintf("skipping file unknown extension: %s", f.Name()))

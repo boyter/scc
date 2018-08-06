@@ -48,7 +48,7 @@ USAGE:
    scc DIRECTORY
 
 VERSION:
-   1.5.0
+   1.6.0
 
 COMMANDS:
      help, h  Shows a list of commands or help for one command
@@ -66,7 +66,8 @@ GLOBAL OPTIONS:
    --complexity, -c                    Set to skip complexity calculations note will be overridden if wide is set
    --wide, -w                          Set to check produce more output such as complexity and code vs complexity ranking. Same as setting format to wide
    --averagewage value, --aw value     Set as integer to set the average wage used for basic COCOMO calculation (default: 56286)
-   --cocomo, --co                      Set to check remove cocomo calculation output
+   --cocomo, --co                      Set to check remove COCOMO calculation output
+   --filegccount value, --fgc value    How many files to parse before turning the GC on (default: 10000)
    --debug                             Set to enable debug output
    --trace                             Set to enable trace output, not recommended for multiple files
    --help, -h                          show help
@@ -107,7 +108,11 @@ Estimated People Required 19.867141
 
 ### Performance
 
-Generally `scc` will be very close to the runtime of `tokei` or faster than any other code counter out there. However if you want greater performance and you have RAM to spare you can disable the garbage collector like the following on linux `GOGC=-1 scc .` which should speed things up considerably. See the below for example runtimes on a 16 CPU Linux machine running against the linux kernel source.
+Generally `scc` will be very close to the runtime of `tokei` or faster than any other code counter out there. It is designed to scale to as many CPU's cores as you can provide.
+
+However if you want greater performance and you have RAM to spare you can disable the garbage collector like the following on linux `GOGC=-1 scc .` which should speed things up considerably.
+
+See the below for example runtimes on a 16 CPU Linux machine running against the linux kernel source.
 
 ```
 scc                        1.489 s ± 0.055 s
@@ -135,6 +140,12 @@ Its possible that you may see the counts vary between runs. This usually means o
  - https://www.tecmint.com/increase-set-open-file-limits-in-linux/
 
 To help identify this issue run scc like so `scc -v .` and look for the message `too many open files` in the output. If it is there you can rectify it by setting your ulimit to a higher value.
+
+### Low Memory
+
+If you are running `scc` in a low memory envrionment < 512 MB of RAM you may need to set `--filegccount` or `--fgc` to a lower value such as `0` to force the garbage collector to be on at all times.
+
+A sign that this is required will be `scc` crashing with panic errors.
 
 ### Tests
 

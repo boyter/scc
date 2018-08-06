@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"runtime"
+	"runtime/debug"
 	"sort"
 	"strings"
 )
@@ -31,6 +32,8 @@ var FileProcessJobQueueSize = runtime.NumCPU()
 var FileSummaryJobQueueSize = runtime.NumCPU()
 var WhiteListExtensions = ""
 var AverageWage int64 = 56286
+var GcFileCount = 10000
+var gcPercent = -1
 
 // Not set via flags but by arguments following the the flags
 var DirFilePaths = []string{}
@@ -43,6 +46,7 @@ var LanguageFeatures = map[string]LanguageFeature{}
 // Needs to be called at least once in order for anything to actually happen
 func ProcessConstants() {
 	var database = loadDatabase()
+	gcPercent = debug.SetGCPercent(gcPercent)
 
 	startTime := makeTimestampNano()
 	for name, value := range database {

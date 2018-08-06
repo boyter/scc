@@ -17,7 +17,7 @@ func main() {
 	app := cli.NewApp()
 	app.EnableBashCompletion = true
 	app.Name = "scc"
-	app.Version = "1.5.0"
+	app.Version = "1.6.0"
 	app.Usage = "Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation."
 	app.UsageText = "scc DIRECTORY"
 
@@ -91,6 +91,12 @@ func main() {
 			Name:        "cocomo, co",
 			Usage:       "Set to check remove COCOMO calculation output",
 			Destination: &processor.Cocomo,
+		},
+		cli.IntFlag{
+			Name:        "filegccount, fgc",
+			Usage:       "How many files to parse before turning the GC on",
+			Destination: &processor.GcFileCount,
+			Value:       10000,
 		},
 		cli.BoolFlag{
 			Name:        "debug",
