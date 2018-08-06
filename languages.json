@@ -5317,5 +5317,64 @@
     ],
     "multi_line": [],
     "quotes": []
+  },
+  "ATS": {
+    "line_comment": [
+      "//"
+    ],
+    "complexitychecks": [
+      "if ",
+      "if(",
+      " then ",
+      " else ",
+      "case+ ",
+      "ifcase",
+      "let ",
+      "and "
+    ],
+    "extensions": [
+      "dats"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ],
+      [
+        "(*",
+        "*)"
+      ],
+      [
+        "////",
+        "THISSHOULDNEVERAPPEARWEHOPE"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
+  },
+  "Dhall": {
+    "line_comment": [
+      "--"
+    ],
+    "complexitychecks": [],
+    "extensions": [
+      "dhall"
+    ],
+    "multi_line": [
+      [
+        "{-",
+        "-}"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
   }
 }
