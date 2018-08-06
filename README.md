@@ -106,6 +106,19 @@ Estimated People Required 19.867141
 -------------------------------------------------------------------------------
 ```
 
+### Features
+
+`scc` uses a small state machine in order to determine what state the code is when it reaches a newline `\n`. As such it is aware of and able to count
+
+ - Single Line Comments
+ - Multi Line Comments
+ - Strings
+ - Multi Line Strings
+ - Blank lines
+
+Because of this it is able to accurately determine if a comment is in a string or is actually a comment.
+
+It also attempts to count the complexity of code. This is done by checking for branching operations in the code. For example, each of the following `for if switch while else || && != ==` if encountered in Java would increment that files complexity by one.
 ### Performance
 
 Generally `scc` will be very close to the runtime of `tokei` or faster than any other code counter out there. It is designed to scale to as many CPU's cores as you can provide.
