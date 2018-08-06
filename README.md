@@ -25,10 +25,11 @@ Other similar projects,
  - https://github.com/hhatto/gocloc/
  - https://github.com/vmchale/polyglot
 
-Interesting reading about about code counting about tokei and loc
+Interesting reading about about code counting about tokei, loc and polyglot
 
  - https://www.reddit.com/r/rust/comments/59bm3t/a_fast_cloc_replacement_in_rust/
  - https://www.reddit.com/r/rust/comments/82k9iy/loc_count_lines_of_code_quickly/
+ - http://blog.vmchale.com/article/polyglot-comparisons
 
 Further reading about processing files on the disk performance
 
@@ -119,6 +120,7 @@ Estimated People Required 19.867141
 Because of this it is able to accurately determine if a comment is in a string or is actually a comment.
 
 It also attempts to count the complexity of code. This is done by checking for branching operations in the code. For example, each of the following `for if switch while else || && != ==` if encountered in Java would increment that files complexity by one.
+
 ### Performance
 
 Generally `scc` will be very close to the runtime of `tokei` or faster than any other code counter out there. It is designed to scale to as many CPU's cores as you can provide.
@@ -128,11 +130,13 @@ However if you want greater performance and you have RAM to spare you can disabl
 See the below for example runtimes on a 16 CPU Linux machine running against the linux kernel source.
 
 ```
-scc                        1.489 s ± 0.055 s
-scc (no complexity)        1.713 s ± 0.157 s
-scc (duplicates detection) 2.122 s ± 0.054 s
-scc (no GC no complexity)  0.744 s ± 0.167 s
+scc                        1.489 s ± 0.055 s -> scc .
+scc (no complexity)        1.713 s ± 0.157 s -> scc -c .
+scc (duplicates detection) 2.122 s ± 0.054 s -> scc -d .
+scc (no GC no complexity)  0.744 s ± 0.167 s -> GOGC=-1 scc -c .
 ```
+
+To run scc as quickly as possible use the command `GOGC=-1 scc -c -co .` which should run in a time comparable to tokei.
 
 ### API Support
 
