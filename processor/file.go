@@ -6,8 +6,7 @@ import (
 	"github.com/monochromegane/go-gitignore"
 	"io/ioutil"
 	"path/filepath"
-	"runtime/debug"
-	"strings"
+		"strings"
 	"sync"
 )
 
@@ -94,67 +93,7 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 			if !shouldSkip {
 				wg.Add(1)
 				go func(toWalk string) {
-					extension := ""
-					godirwalk.Walk(toWalk, &godirwalk.Options{
-						// Unsorted is meant to make the walk faster and we need to sort after processing anyway
-						Unsorted: true,
-						Callback: func(root string, info *godirwalk.Dirent) error {
-							if info.IsDir() {
-								// TODO the gitignore should check for futher gitignores deeper in the tree
-								if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
-									for _, black := range blackList {
-										if strings.HasPrefix(root, black+"/") || strings.HasPrefix(root, black) {
-											if Verbose {
-												printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", root))
-											}
-											return filepath.SkipDir
-										}
-									}
-								}
-							}
-
-							if !info.IsDir() {
-								if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
-
-									// Lookup in case the full name matches
-									language, ok := extensionLookup[strings.ToLower(info.Name())]
-
-									// If no match check if we have a matching extension
-									if !ok {
-										extension = getExtension(info.Name())
-										language, ok = extensionLookup[extension]
-									}
-
-									// Convert from d.ts to ts and check that in case of multiple extensions
-									if !ok {
-										language, ok = extensionLookup[getExtension(extension)]
-									}
-
-									if ok {
-										mutex.Lock()
-										totalCount++
-										mutex.Unlock()
-										*output <- &FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language}
-
-										// Turn GC back to what it was before if we have parsed enough files
-										if totalCount >= GcFileCount {
-											debug.SetGCPercent(gcPercent)
-										}
-									} else if Verbose {
-										printWarn(fmt.Sprintf("skipping file unknown extension: %s", info.Name()))
-									}
-								}
-							}
-
-							return nil
-						},
-						ErrorCallback: func(osPathname string, err error) godirwalk.ErrorAction {
-							if Verbose {
-								printWarn(fmt.Sprintf("error walking: %s %s", osPathname, err))
-							}
-							return godirwalk.SkipNode
-						},
-					})
+					walkDirectory(toWalk, blackList, extensionLookup, output)
 					wg.Done()
 				}(filepath.Join(root, f.Name()))
 			}
@@ -181,4 +120,60 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 	if Debug {
 		printDebug(fmt.Sprintf("milliseconds to walk directory: %d", makeTimestampMilli()-startTime))
 	}
+}
+
+func walkDirectory(toWalk string, blackList []string, extensionLookup map[string]string, output *chan *FileJob) {
+	extension := ""
+	godirwalk.Walk(toWalk, &godirwalk.Options{
+		// Unsorted is meant to make the walk faster and we need to sort after processing anyway
+		Unsorted: true,
+		Callback: func(root string, info *godirwalk.Dirent) error {
+			if info.IsDir() {
+
+				for _, black := range blackList {
+					if strings.HasPrefix(root, black+"/") || strings.HasPrefix(root, black) {
+						if Verbose {
+							printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", root))
+						}
+						return filepath.SkipDir
+					}
+				}
+			}
+
+			if !info.IsDir() {
+				// Lookup in case the full name matches
+				language, ok := extensionLookup[strings.ToLower(info.Name())]
+
+				// If no match check if we have a matching extension
+				if !ok {
+					extension = getExtension(info.Name())
+					language, ok = extensionLookup[extension]
+				}
+
+				// Convert from d.ts to ts and check that in case of multiple extensions
+				if !ok {
+					language, ok = extensionLookup[getExtension(extension)]
+				}
+
+				if ok {
+					*output <- &FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language}
+
+					//// Turn GC back to what it was before if we have parsed enough files
+					//if totalCount >= GcFileCount {
+					//	debug.SetGCPercent(gcPercent)
+					//}
+				} else if Verbose {
+					printWarn(fmt.Sprintf("skipping file unknown extension: %s", info.Name()))
+				}
+			}
+
+			return nil
+		},
+		ErrorCallback: func(osPathname string, err error) godirwalk.ErrorAction {
+			if Verbose {
+				printWarn(fmt.Sprintf("error walking: %s %s", osPathname, err))
+			}
+			return godirwalk.SkipNode
+		},
+	})
 }
