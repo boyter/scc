@@ -3,7 +3,6 @@ package processor
 import (
 	"fmt"
 	"github.com/karrick/godirwalk"
-	"github.com/monochromegane/go-gitignore"
 	"io/ioutil"
 	"path/filepath"
 	"runtime/debug"
@@ -73,8 +72,6 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 
 	var wg sync.WaitGroup
 	all, _ := ioutil.ReadDir(root)
-	// TODO the gitignore should check for futher gitignores deeper in the tree
-	gitignore, gitignoreerror := gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
 
 	for _, f := range all {
 		// Godirwalk despite being faster than the default walk is still too slow to feed the
@@ -94,83 +91,30 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 			if !shouldSkip {
 				wg.Add(1)
 				go func(toWalk string) {
-					extension := ""
-					godirwalk.Walk(toWalk, &godirwalk.Options{
-						// Unsorted is meant to make the walk faster and we need to sort after processing anyway
-						Unsorted: true,
-						Callback: func(root string, info *godirwalk.Dirent) error {
-							if info.IsDir() {
-								// TODO the gitignore should check for futher gitignores deeper in the tree
-								if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
-									for _, black := range blackList {
-										if strings.HasPrefix(root, black+"/") || strings.HasPrefix(root, black) {
-											if Verbose {
-												printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", root))
-											}
-											return filepath.SkipDir
-										}
-									}
-								}
-							}
+					fileCount := walkDirectory(toWalk, extensionLookup, blackList, output)
+					mutex.Lock()
+					totalCount += fileCount
+					mutex.Unlock()
 
-							if !info.IsDir() {
-								if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, info.Name()), false) {
+					// Turn GC back to what it was before if we have parsed enough files
+					if totalCount >= GcFileCount {
+						debug.SetGCPercent(gcPercent)
+					}
 
-									// Lookup in case the full name matches
-									language, ok := extensionLookup[strings.ToLower(info.Name())]
-
-									// If no match check if we have a matching extension
-									if !ok {
-										extension = getExtension(info.Name())
-										language, ok = extensionLookup[extension]
-									}
-
-									// Convert from d.ts to ts and check that in case of multiple extensions
-									if !ok {
-										language, ok = extensionLookup[getExtension(extension)]
-									}
-
-									if ok {
-										mutex.Lock()
-										totalCount++
-										mutex.Unlock()
-										*output <- &FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language}
-
-										// Turn GC back to what it was before if we have parsed enough files
-										if totalCount >= GcFileCount {
-											debug.SetGCPercent(gcPercent)
-										}
-									} else if Verbose {
-										printWarn(fmt.Sprintf("skipping file unknown extension: %s", info.Name()))
-									}
-								}
-							}
-
-							return nil
-						},
-						ErrorCallback: func(osPathname string, err error) godirwalk.ErrorAction {
-							if Verbose {
-								printWarn(fmt.Sprintf("error walking: %s %s", osPathname, err))
-							}
-							return godirwalk.SkipNode
-						},
-					})
 					wg.Done()
 				}(filepath.Join(root, f.Name()))
 			}
 		} else {
-			if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, f.Name()), false) {
-				extension := getExtension(f.Name())
-				language, ok := extensionLookup[extension]
+			extension := getExtension(f.Name())
+			language, ok := extensionLookup[extension]
 
-				if ok {
-					mutex.Lock()
-					totalCount++
-					mutex.Unlock()
-					*output <- &FileJob{Location: filepath.Join(root, f.Name()), Filename: f.Name(), Extension: extension, Language: language}
-				} else if Verbose {
-					printWarn(fmt.Sprintf("skipping file unknown extension: %s", f.Name()))
-				}
+			if ok {
+				mutex.Lock()
+				totalCount++
+				mutex.Unlock()
+				*output <- &FileJob{Location: filepath.Join(root, f.Name()), Filename: f.Name(), Extension: extension, Language: language}
+			} else if Verbose {
+				printWarn(fmt.Sprintf("skipping file unknown extension: %s", f.Name()))
 			}
 		}
 	}
@@ -181,4 +125,60 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 	if Debug {
 		printDebug(fmt.Sprintf("milliseconds to walk directory: %d", makeTimestampMilli()-startTime))
 	}
+}
+
+func walkDirectory(toWalk string, extensionLookup map[string]string, blackList []string, output *chan *FileJob) int {
+	var wg sync.WaitGroup
+	fileCount := 0
+	extension := ""
+	godirwalk.Walk(toWalk, &godirwalk.Options{
+		// Unsorted is meant to make the walk faster and we need to sort after processing anyway
+		Unsorted: true,
+		Callback: func(root string, info *godirwalk.Dirent) error {
+			if info.IsDir() {
+				for _, black := range blackList {
+					if strings.HasPrefix(root, black+"/") || strings.HasPrefix(root, black) {
+						if Verbose {
+							printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", root))
+						}
+						return filepath.SkipDir
+					}
+				}
+			}
+
+			if !info.IsDir() {
+				// Lookup in case the full name matches
+				language, ok := extensionLookup[strings.ToLower(info.Name())]
+
+				// If no match check if we have a matching extension
+				if !ok {
+					extension = getExtension(info.Name())
+					language, ok = extensionLookup[extension]
+				}
+
+				// Convert from d.ts to ts and check that in case of multiple extensions
+				if !ok {
+					language, ok = extensionLookup[getExtension(extension)]
+				}
+
+				if ok {
+					fileCount++
+					*output <- &FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language}
+				} else if Verbose {
+					printWarn(fmt.Sprintf("skipping file unknown extension: %s", info.Name()))
+				}
+			}
+
+			return nil
+		},
+		ErrorCallback: func(osPathname string, err error) godirwalk.ErrorAction {
+			if Verbose {
+				printWarn(fmt.Sprintf("error walking: %s %s", osPathname, err))
+			}
+			return godirwalk.SkipNode
+		},
+	})
+
+	wg.Wait()
+	return fileCount
 }
