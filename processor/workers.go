@@ -395,11 +395,11 @@ func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 	go func() {
 		wg.Wait()
 		close(*output)
-	}()
 
-	if Debug {
-		printDebug(fmt.Sprintf("milliseconds reading files into memory: %d", makeTimestampMilli()-startTime))
-	}
+		if Debug {
+			printDebug(fmt.Sprintf("milliseconds reading files into memory: %d", makeTimestampMilli()-startTime))
+		}
+	}()
 }
 
 var duplicates = CheckDuplicates{
