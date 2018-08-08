@@ -6,8 +6,9 @@ import (
 	"github.com/monochromegane/go-gitignore"
 	"io/ioutil"
 	"path/filepath"
-		"strings"
+	"strings"
 	"sync"
+	"runtime/debug"
 )
 
 // Used as quick lookup for files with the same name to avoid some processing
@@ -79,7 +80,6 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 		// Godirwalk despite being faster than the default walk is still too slow to feed the
 		// CPU's and so we need to walk in parallel to keep up as much as possible
 		if f.IsDir() {
-
 			// Need to check if the directory is in the blacklist and if so don't bother adding a goroutine to process it
 			shouldSkip := false
 			for _, black := range blackList {
@@ -93,7 +93,18 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 			if !shouldSkip {
 				wg.Add(1)
 				go func(toWalk string) {
-					walkDirectory(toWalk, blackList, extensionLookup, output)
+					filejobs := walkDirectory(toWalk, blackList, extensionLookup)
+					for i := 0; i < len(filejobs); i++ {
+						*output <- &filejobs[i]
+						mutex.Lock()
+						totalCount++
+						mutex.Unlock()
+					}
+					
+					// Turn GC back to what it was before if we have parsed enough files
+					if totalCount >= GcFileCount {
+						debug.SetGCPercent(gcPercent)
+					}
 					wg.Done()
 				}(filepath.Join(root, f.Name()))
 			}
@@ -103,10 +114,10 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 				language, ok := extensionLookup[extension]
 
 				if ok {
+					*output <- &FileJob{Location: filepath.Join(root, f.Name()), Filename: f.Name(), Extension: extension, Language: language}
 					mutex.Lock()
 					totalCount++
 					mutex.Unlock()
-					*output <- &FileJob{Location: filepath.Join(root, f.Name()), Filename: f.Name(), Extension: extension, Language: language}
 				} else if Verbose {
 					printWarn(fmt.Sprintf("skipping file unknown extension: %s", f.Name()))
 				}
@@ -115,15 +126,16 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 	}
 
 	wg.Wait()
-
 	close(*output)
 	if Debug {
 		printDebug(fmt.Sprintf("milliseconds to walk directory: %d", makeTimestampMilli()-startTime))
 	}
 }
 
-func walkDirectory(toWalk string, blackList []string, extensionLookup map[string]string, output *chan *FileJob) {
+func walkDirectory(toWalk string, blackList []string, extensionLookup map[string]string) []FileJob {
 	extension := ""
+	filejobs := []FileJob{}
+
 	godirwalk.Walk(toWalk, &godirwalk.Options{
 		// Unsorted is meant to make the walk faster and we need to sort after processing anyway
 		Unsorted: true,
@@ -156,12 +168,7 @@ func walkDirectory(toWalk string, blackList []string, extensionLookup map[string
 				}
 
 				if ok {
-					*output <- &FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language}
-
-					//// Turn GC back to what it was before if we have parsed enough files
-					//if totalCount >= GcFileCount {
-					//	debug.SetGCPercent(gcPercent)
-					//}
+					filejobs = append(filejobs, FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language})
 				} else if Verbose {
 					printWarn(fmt.Sprintf("skipping file unknown extension: %s", info.Name()))
 				}
@@ -176,4 +183,6 @@ func walkDirectory(toWalk string, blackList []string, extensionLookup map[string
 			return godirwalk.SkipNode
 		},
 	})
+
+	return filejobs
 }

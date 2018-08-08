@@ -367,9 +367,12 @@ func CountStats(fileJob *FileJob) {
 
 // Reads entire file into memory and then pushes it onto the next queue
 func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
-	startTime := makeTimestampMilli()
+	var startTime int64 = 0
 	var wg sync.WaitGroup
 	for res := range *input {
+		if startTime == 0 {
+			startTime = makeTimestampMilli()
+		}
 		wg.Add(1)
 		go func(res *FileJob) {
 			fileStartTime := makeTimestampNano()
@@ -408,9 +411,13 @@ var duplicates = CheckDuplicates{
 
 // Does the actual processing of stats and as such contains the hot path CPU call
 func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
-	startTime := makeTimestampMilli()
+	var startTime int64 = 0
 	var wg sync.WaitGroup
 	for res := range *input {
+		if startTime == 0 {
+			startTime = makeTimestampMilli()
+		}
+
 		wg.Add(1)
 		go func(res *FileJob) {
 			fileStartTime := makeTimestampNano()
