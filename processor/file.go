@@ -9,7 +9,6 @@ import (
 	"runtime/debug"
 	"strings"
 	"sync"
-	"github.com/itsmontoya/mailbox"
 )
 
 // Used as quick lookup for files with the same name to avoid some processing
@@ -48,7 +47,7 @@ func getExtension(name string) string {
 // in the supplied directory. Tests using a single process showed no lack of performance
 // even when hitting older spinning platter disks for this way
 //func walkDirectoryParallel(root string, output *RingBuffer) {
-func walkDirectoryParallel(root string, output *mailbox.Mailbox) {
+func walkDirectoryParallel(root string, output *chan *FileJob) {
 	startTime := makeTimestampMilli()
 	blackList := strings.Split(PathBlacklist, ",")
 	whiteList := strings.Split(WhiteListExtensions, ",")
@@ -97,9 +96,7 @@ func walkDirectoryParallel(root string, output *mailbox.Mailbox) {
 				go func(toWalk string) {
 					filejobs := walkDirectory(toWalk, blackList, extensionLookup)
 					for i := 0; i < len(filejobs); i++ {
-						//*output <- &filejobs[i]
-						//output.Put(&filejobs[i])
-						output.Send(&filejobs[i], true)
+						*output <- &filejobs[i]
 					}
 
 					mutex.Lock()
@@ -119,8 +116,7 @@ func walkDirectoryParallel(root string, output *mailbox.Mailbox) {
 				language, ok := extensionLookup[extension]
 
 				if ok {
-					//*output <- &FileJob{Location: filepath.Join(root, f.Name()), Filename: f.Name(), Extension: extension, Language: language}
-					output.Send(&FileJob{Location: filepath.Join(root, f.Name()), Filename: f.Name(), Extension: extension, Language: language}, true)
+					*output <- &FileJob{Location: filepath.Join(root, f.Name()), Filename: f.Name(), Extension: extension, Language: language}
 					mutex.Lock()
 					totalCount++
 					mutex.Unlock()
@@ -132,8 +128,7 @@ func walkDirectoryParallel(root string, output *mailbox.Mailbox) {
 	}
 
 	wg.Wait()
-	//close(*output)
-	output.Close()
+	close(*output)
 	if Debug {
 		printDebug(fmt.Sprintf("milliseconds to walk directory: %d", makeTimestampMilli()-startTime))
 	}

@@ -4,12 +4,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-		"runtime"
+	"io/ioutil"
+	"runtime"
 	"sort"
 	"strings"
-	"io/ioutil"
-	"github.com/itsmontoya/mailbox"
-	)
+)
 
 // Flags set via the CLI which control how the output is displayed
 var Files = false
@@ -184,21 +183,12 @@ func Process() {
 		printDebug(fmt.Sprintf("PathBlacklist: %s", PathBlacklist))
 	}
 
-	// https://github.com/itsmontoya/mailbox
-	// https://github.com/google/fchan-go
-	//ringBuffer := NewRingBuffer(100000)
-
-
-
-	mailbox := mailbox.New(100000)
-
-	//fileListQueue := make(chan *FileJob, FileListQueueSize)                     // Files ready to be read from disk
+	fileListQueue := make(chan *FileJob, FileListQueueSize)                     // Files ready to be read from disk
 	fileReadContentJobQueue := make(chan *FileJob, FileReadContentJobQueueSize) // Files ready to be processed
 	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)         // Files ready to be summerised
 
-
-	go walkDirectoryParallel(DirFilePaths[0], mailbox)
-	go fileReaderWorker(mailbox, &fileReadContentJobQueue)
+	go walkDirectoryParallel(DirFilePaths[0], &fileListQueue)
+	go fileReaderWorker(&fileListQueue, &fileReadContentJobQueue)
 	go fileProcessorWorker(&fileReadContentJobQueue, &fileSummaryJobQueue)
 
 	result := fileSummerize(&fileSummaryJobQueue)

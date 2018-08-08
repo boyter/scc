@@ -3,9 +3,6 @@ package processor
 import (
 	"math/rand"
 	"testing"
-	"github.com/joeshaw/gengen/generic"
-	"github.com/itsmontoya/mailbox"
-	"fmt"
 )
 
 func TestGetExtension(t *testing.T) {
@@ -99,20 +96,4 @@ func randStringBytes(n int) string {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 	return string(b)
-}
-
-func TestSomething(t *testing.T) {
-	mb := mailbox.New(32)
-
-	go func() {
-		for i := 0; i < 1000; i++ {
-			mb.Send(FileJob{Filename: "test"}, false)
-		}
-		mb.Close()
-	}()
-
-	mb.Listen(func(item generic.T) (end bool) {
-		fmt.Println(item.(FileJob).Filename)
-		return false
-	})
 }
