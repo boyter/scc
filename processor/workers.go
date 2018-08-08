@@ -3,8 +3,10 @@ package processor
 import (
 	"crypto/md5"
 	"fmt"
+		"sync"
+	"github.com/itsmontoya/mailbox"
 	"io/ioutil"
-	"sync"
+	"github.com/joeshaw/gengen/generic"
 )
 
 const (
@@ -366,13 +368,21 @@ func CountStats(fileJob *FileJob) {
 }
 
 // Reads entire file into memory and then pushes it onto the next queue
-func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
+func fileReaderWorker(input *mailbox.Mailbox, output *chan *FileJob) {
 	var startTime int64 = 0
 	var wg sync.WaitGroup
-	for res := range *input {
+
+	input.Listen(func(item generic.T) (end bool) {
+
+		res := item.(*FileJob)
+	//})
+
+	//for res := range *input {
 		if startTime == 0 {
 			startTime = makeTimestampMilli()
 		}
+
+
 		wg.Add(1)
 		go func(res *FileJob) {
 			fileStartTime := makeTimestampNano()
@@ -393,8 +403,10 @@ func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
 
 			wg.Done()
 		}(res)
-	}
 
+		return
+		//}
+	})
 	go func() {
 		wg.Wait()
 		close(*output)
