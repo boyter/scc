@@ -129,7 +129,16 @@ However if you want greater performance and you have RAM to spare you can disabl
 
 Benchmarks run on fresh 32 CPU Optimised Digital Ocean Virtual Machine 2018/08/12 all done using [hyperfine](https://github.com/sharkdp/hyperfine) with 3 warm-up runs and 10 times runs.
 
-#### Redis commit 39c70e728b5af0c50989ffbc05e568099f3e081b
+```
+scc v1.6.0
+tokei v7.0.3 (compiled with Rust 1.27)
+loc v0.4.1 (compiled with Rust 1.27)
+polyglot v0.4.60
+sloccount v2.26
+cloc v1.6.0
+```
+
+#### Redis commit 39c70e728b5af0c50989ffbc05e568099f3e081b https://github.com/antirez/redis/
 
 | Tool | Command | Time |
 | ---- | ------- | ---- |
@@ -141,7 +150,7 @@ Benchmarks run on fresh 32 CPU Optimised Digital Ocean Virtual Machine 2018/08/1
 | sloccount | `sloccount redis` | 1.002 s ± 0.012 s |
 | cloc | `cloc redis` | 1.883 s ± 0.022 s |
 
-#### Django commit d3449faaa915a08c275b35de01e66a7ef6bdb2dc
+#### Django commit d3449faaa915a08c275b35de01e66a7ef6bdb2dc https://github.com/django/django
 
 | Tool | Command | Time |
 | ---- | ------- | ---- |
@@ -153,7 +162,7 @@ Benchmarks run on fresh 32 CPU Optimised Digital Ocean Virtual Machine 2018/08/1
 | sloccount | `sloccount django` | 2.644 s ± 0.026 s |
 | cloc | `cloc django` | 14.711 s ± 0.228 s |
 
-#### Linux Kernel commit ec0c96714e7ddeda4eccaa077f5646a0fd6e371f
+#### Linux Kernel commit ec0c96714e7ddeda4eccaa077f5646a0fd6e371f https://github.com/torvalds/linux
 
 | Tool | Command | Time |
 | ---- | ------- | ---- |
