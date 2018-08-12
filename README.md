@@ -127,16 +127,46 @@ Generally `scc` will be very close to the runtime of `tokei` or faster than any 
 
 However if you want greater performance and you have RAM to spare you can disable the garbage collector like the following on linux `GOGC=-1 scc .` which should speed things up considerably.
 
-See the below for example runtimes on a 16 CPU Linux machine running against the linux kernel source.
+Benchmarks run on fresh 32 CPU Optimised Digital Ocean Virtual Machine 2018/08/12 all done using [hyperfine](https://github.com/sharkdp/hyperfine) with 3 warm-up runs and 10 times runs.
 
-```
-scc                        1.489 s ± 0.055 s -> scc .
-scc (no complexity)        1.713 s ± 0.157 s -> scc -c .
-scc (duplicates detection) 2.122 s ± 0.054 s -> scc -d .
-scc (no GC no complexity)  0.744 s ± 0.167 s -> GOGC=-1 scc -c .
-```
+#### Redis commit 39c70e728b5af0c50989ffbc05e568099f3e081b
 
-To run scc as quickly as possible use the command `GOGC=-1 scc -c -co .` which should run in a time comparable to tokei.
+| Tool | Command | Time |
+| ---- | ------- | ---- |
+| scc (default) | `scc redis` | 20.1 ms ± 3.0 ms |
+| scc (performance mode) | `GOGC=-1 scc -c -co redis` | 17.3 ms ± 2.2 ms |
+| tokei | `tokei redis` | 20.9 ms ± 3.6 ms |
+| loc | `loc redis` | 70.9 ms ± 31.7 ms |
+| polyglot | `polyglot redis` | 24.5 ms  ± 3.6 ms |
+| sloccount | `sloccount redis` | 1.002 s ± 0.012 s |
+| cloc | `cloc redis` | 1.883 s ± 0.022 s |
+
+#### Django commit d3449faaa915a08c275b35de01e66a7ef6bdb2dc
+
+| Tool | Command | Time |
+| ---- | ------- | ---- |
+| scc (default) | `scc django` | 53.5 ms ± 3.2 ms |
+| scc (performance mode) | `GOGC=-1 scc -c -co django` | 49.5 ms ± 3.3 ms |
+| tokei | `tokei django` | 73.5 ms ± 5.0 ms |
+| loc | `loc django` | 328.2 ms ± 64.0 ms |
+| polyglot | `polyglot django` | 90.4 ms ±  3.1 ms |
+| sloccount | `sloccount django` | 2.644 s ± 0.026 s |
+| cloc | `cloc django` | 14.711 s ± 0.228 s |
+
+#### Linux Kernel commit ec0c96714e7ddeda4eccaa077f5646a0fd6e371f
+
+| Tool | Command | Time |
+| ---- | ------- | ---- |
+| scc (default) | `scc linux` | 1.212 s ± 0.055 s |
+| scc (performance mode) | `GOGC=-1 scc -c -co linux` | 658.0 ms ±  30.3 ms |
+| tokei | `tokei linux` | 559.7 ms ±  27.7 ms |
+| loc | `loc linux` | 1.649 s ±  0.184 s |
+| polyglot | `polyglot linux` | 1.034 s ±  0.031 s |
+| sloccount | `sloccount linux` | 61.602 s ±  5.231 s |
+| cloc | `cloc linux` | 178.112 s ±  12.129 s |
+
+
+To run scc as quickly as possible use the command `GOGC=-1 scc -c -co .` which should run in a time comparable to tokei for most repositories. If you enable duplicate detection expect performance to fall by about 50%
 
 ### API Support
 
