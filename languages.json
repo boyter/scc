@@ -5380,5 +5380,14 @@
         "\""
       ]
     ]
+  },
+  "AsciiDoc": {
+    "line_comment": [],
+    "complexitychecks": [],
+    "extensions": [
+      "adoc"
+    ],
+    "multi_line": [],
+    "quotes": []
   }
 }
