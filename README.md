@@ -143,7 +143,7 @@ Generally `scc` will be very close to the runtime of `tokei` or faster than any 
 
 However if you want greater performance and you have RAM to spare you can disable the garbage collector like the following on linux `GOGC=-1 scc .` which should speed things up considerably.
 
-Benchmarks run on fresh 32 CPU Optimised Digital Ocean Virtual Machine 2018/08/12 all done using [hyperfine](https://github.com/sharkdp/hyperfine) with 3 warm-up runs and 10 times runs.
+Benchmarks run on fresh 32 CPU Optimised Digital Ocean Virtual Machine 2018/08/12 all done using [hyperfine](https://github.com/sharkdp/hyperfine) with 3 warm-up runs and 10 timed runs.
 
 ```
 scc v1.6.0
