@@ -35,6 +35,22 @@ Further reading about processing files on the disk performance
 
  - https://blog.burntsushi.net/ripgrep/
 
+### Pitch
+
+Why use `scc`?
+
+ - It is very fast and gets faster the more CPU you throw at it
+ - Accurate
+ - Works very well across multiple platforms without slowdown
+ - Large language support
+ - Can ignore duplicate files
+ - Has complexity estimations
+
+Why not use `scc`?
+
+ - Unable to tell the difference between Coq and Verilog (currently, if enough people raise a bug it will be resolved)
+ - You don't like Go for some reason
+
 ### Usage
 
 Command line usage of `scc` is designed to be as simple as possible.
