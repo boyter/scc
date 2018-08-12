@@ -7,14 +7,14 @@ Goal is to be the fastest code counter possible, but also perform COCOMO calcula
 
 Also it has a very short name which is easy to type `scc`.
 
-It is faster than loc/sloccount/cloc/gocloc with more accuracy. It is however marginally slower than tokei (on linux) but with duplicate detection and complexity count. If you disable garbage collection `GOGC=-1 scc .` it is indeed faster than everything with the exception of tokei (if compiled with 1.27+) by a huge margin.
-
 [![Build Status](https://travis-ci.org/boyter/scc.svg?branch=master)](https://travis-ci.org/boyter/scc)
 [![Go Report Card](https://goreportcard.com/badge/github.com/boyter/scc)](https://goreportcard.com/report/github.com/boyter/scc)
 
 Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
 
 Read all about how it came to be along with performance benchmarks https://boyter.org/posts/sloc-cloc-code/ or why use a code counting tool https://boyter.org/posts/why-count-lines-of-code/
+
+For performance see the (Performance)[https://github.com/boyter/scc#performance] section
 
 Other similar projects,
 
