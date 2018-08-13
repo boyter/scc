@@ -9,6 +9,7 @@ type Language struct {
 	LineComment      []string   `json:"line_comment"`
 	ComplexityChecks []string   `json:"complexitychecks"`
 	Extensions       []string   `json:"extensions"`
+	ExtensionFile    bool       `json:"extensionFile"`
 	MultiLine        [][]string `json:"multi_line"`
 	Quotes           [][]string `json:"quotes"`
 }

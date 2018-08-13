@@ -115,6 +115,20 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 				extension := getExtension(f.Name())
 				language, ok := extensionLookup[extension]
 
+				// Lookup in case the full name matches
+				language, ok = extensionLookup[strings.ToLower(f.Name())]
+
+				// If no match check if we have a matching extension
+				if !ok {
+					extension = getExtension(f.Name())
+					language, ok = extensionLookup[extension]
+				}
+
+				// Convert from d.ts to ts and check that in case of multiple extensions
+				if !ok {
+					language, ok = extensionLookup[getExtension(extension)]
+				}
+
 				if ok {
 					*output <- &FileJob{Location: filepath.Join(root, f.Name()), Filename: f.Name(), Extension: extension, Language: language}
 					mutex.Lock()

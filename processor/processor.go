@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"runtime"
+	"runtime/debug"
 	"sort"
 	"strings"
 )
@@ -20,6 +21,7 @@ var Duplicates = false
 var Complexity = false
 var More = false
 var Cocomo = false
+var DisableCheckBinary = false
 var SortBy = ""
 var Format = ""
 var FileOutput = ""
@@ -45,7 +47,7 @@ var LanguageFeatures = map[string]LanguageFeature{}
 // Needs to be called at least once in order for anything to actually happen
 func ProcessConstants() {
 	var database = loadDatabase()
-	//gcPercent = debug.SetGCPercent(gcPercent)
+	gcPercent = debug.SetGCPercent(gcPercent)
 
 	startTime := makeTimestampNano()
 	for name, value := range database {

@@ -99,6 +99,11 @@ func main() {
 			Value:       10000,
 		},
 		cli.BoolFlag{
+			Name:        "binary",
+			Usage:       "Set to disable binary file detection",
+			Destination: &processor.DisableCheckBinary,
+		},
+		cli.BoolFlag{
 			Name:        "debug",
 			Usage:       "Set to enable debug output",
 			Destination: &processor.Debug,

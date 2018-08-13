@@ -207,7 +207,7 @@ func CountStats(fileJob *FileJob) {
 	// crypto secure here either so no need to eat the performance cost of a better
 	// hash method
 	digest := md5.New()
-	digestable := []byte{' '}
+	digestible := []byte{' '}
 
 	for index := 0; index < len(fileJob.Content); index++ {
 		offsetJump = 0
@@ -216,12 +216,13 @@ func CountStats(fileJob *FileJob) {
 			// Technically this is wrong because we skip bytes so this is not a true
 			// hash of the file contents, but for duplicate files it shouldn't matter
 			// as both will skip the same way
-			digestable[0] = fileJob.Content[index]
-			digest.Write(digestable)
+			digestible[0] = fileJob.Content[index]
+			digest.Write(digestible)
 		}
 
 		// Check if this file is binary by checking for nul byte and if so bail out
-		if fileJob.Content[index] == 0 {
+		// this is how GNU Grep, git and ripgrep check for binary files
+		if !DisableCheckBinary && fileJob.Content[index] == 0 {
 			fileJob.Binary = true
 			return
 		}
