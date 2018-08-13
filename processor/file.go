@@ -112,11 +112,9 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 			}
 		} else {
 			if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, f.Name()), false) {
-				extension := getExtension(f.Name())
-				language, ok := extensionLookup[extension]
-
+				extension := ""
 				// Lookup in case the full name matches
-				language, ok = extensionLookup[strings.ToLower(f.Name())]
+				language, ok := extensionLookup[strings.ToLower(f.Name())]
 
 				// If no match check if we have a matching extension
 				if !ok {
