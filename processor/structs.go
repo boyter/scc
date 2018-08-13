@@ -42,6 +42,7 @@ type FileJob struct {
 	WeightedComplexity float64
 	Hash               []byte
 	Callback           FileJobCallback
+	Binary             bool
 }
 
 type LanguageSummary struct {

@@ -220,6 +220,12 @@ func CountStats(fileJob *FileJob) {
 			digest.Write(digestable)
 		}
 
+		// Check if this file is binary by checking for nul byte and if so bail out
+		if fileJob.Content[index] == 0 {
+			fileJob.Binary = true
+			return
+		}
+
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
 		// changing anything in here and profile/measure afterwards!
@@ -441,7 +447,14 @@ func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
 				printTrace(fmt.Sprintf("nanoseconds process: %s: %d", res.Location, makeTimestampNano()-fileStartTime))
 			}
 
-			*output <- res
+			if !res.Binary {
+				*output <- res
+			} else {
+				if Verbose {
+					printWarn(fmt.Sprintf("skipping file identified as binary: %s", res.Location))
+				}
+			}
+
 			wg.Done()
 		}(res)
 	}
