@@ -65,7 +65,7 @@ USAGE:
    scc DIRECTORY
 
 VERSION:
-   1.6.0
+   1.7.0
 
 COMMANDS:
      help, h  Shows a list of commands or help for one command
@@ -85,6 +85,7 @@ GLOBAL OPTIONS:
    --averagewage value, --aw value     Set as integer to set the average wage used for basic COCOMO calculation (default: 56286)
    --cocomo, --co                      Set to check remove COCOMO calculation output
    --filegccount value, --fgc value    How many files to parse before turning the GC on (default: 10000)
+   --binary                            Set to disable binary file detection
    --debug                             Set to enable debug output
    --trace                             Set to enable trace output, not recommended for multiple files
    --help, -h                          show help

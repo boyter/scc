@@ -76,6 +76,7 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 	all, _ := ioutil.ReadDir(root)
 	// TODO the gitignore should check for futher gitignores deeper in the tree
 	gitignore, gitignoreerror := gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
+	resetGc := false
 
 	for _, f := range all {
 		// Godirwalk despite being faster than the default walk is still too slow to feed the
@@ -104,8 +105,9 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 					mutex.Unlock()
 
 					// Turn GC back to what it was before if we have parsed enough files
-					if totalCount >= GcFileCount {
+					if !resetGc && totalCount >= GcFileCount {
 						debug.SetGCPercent(gcPercent)
+						resetGc = true
 					}
 					wg.Done()
 				}(filepath.Join(root, f.Name()))
