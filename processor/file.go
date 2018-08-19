@@ -157,7 +157,6 @@ func walkDirectory(toWalk string, blackList []string, extensionLookup map[string
 		Unsorted: true,
 		Callback: func(root string, info *godirwalk.Dirent) error {
 			if info.IsDir() {
-
 				for _, black := range blackList {
 					if strings.HasPrefix(root, black+"/") || strings.HasPrefix(root, black) {
 						if Verbose {

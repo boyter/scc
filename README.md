@@ -41,7 +41,7 @@ Why use `scc`?
 
  - It is very fast and gets faster the more CPU you throw at it
  - Accurate
- - Works very well across multiple platforms without slowdown
+ - Works very well across multiple platforms without slowdown (Windows, Linux, macOS)
  - Large language support
  - Can ignore duplicate files
  - Has complexity estimations
