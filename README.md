@@ -50,6 +50,7 @@ Why not use `scc`?
 
  - Unable to tell the difference between Coq and Verilog (currently, if enough people raise a bug it will be resolved)
  - You don't like Go for some reason
+ - You are working on a Linux system with less than 4 CPU cores and really need the fastest counter possible (use loc or polyglot)
 
 ### Usage
 
