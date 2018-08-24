@@ -154,206 +154,206 @@ func TestCountStatsCode(t *testing.T) {
 	}
 }
 
-func TestCountStatsCommentTricks(t *testing.T) {
-	ProcessConstants()
-	fileJob := FileJob{}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte("i++ // /* comment")
-	CountStats(&fileJob)
-	if fileJob.Code != 1 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 0 {
-		t.Errorf("No line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte("i++ /* comment")
-	CountStats(&fileJob)
-	if fileJob.Code != 1 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 0 {
-		t.Errorf("No line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte("i++ /* comment */ i++")
-	CountStats(&fileJob)
-	if fileJob.Code != 1 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 0 {
-		t.Errorf("No line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Language = "Java"
-	fileJob.Content = []byte("/* i++ comment */")
-	CountStats(&fileJob)
-	if fileJob.Code != 0 {
-		t.Errorf("No line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 1 {
-		t.Errorf("One line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`/* 
-		i++ comment 
-		*/`)
-	CountStats(&fileJob)
-	if fileJob.Code != 0 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 3 {
-		t.Errorf("Three line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`i++; /*
-		i++ comment
-		*/`)
-	CountStats(&fileJob)
-	if fileJob.Code != 1 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	// if fileJob.Comment != 2 {
-	// 	t.Errorf("Two line expected got %d", fileJob.Comment)
-	// }
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`/*
-		i++ comment
-		*/ i++;`)
-	CountStats(&fileJob)
-	if fileJob.Code != 1 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	// if fileJob.Comment != 2 {
-	// 	t.Errorf("Two line expected got %d", fileJob.Comment)
-	// }
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`/* /* */`)
-	CountStats(&fileJob)
-	if fileJob.Code != 0 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 1 {
-		t.Errorf("One line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`/* /* */`)
-	CountStats(&fileJob)
-	if fileJob.Code != 0 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 1 {
-		t.Errorf("One line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`/* 
-	/* 
-	*/`)
-	CountStats(&fileJob)
-	if fileJob.Code != 0 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 3 {
-		t.Errorf("Three line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`i/**/`)
-	CountStats(&fileJob)
-	if fileJob.Code != 1 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 0 {
-		t.Errorf("No line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`// This is a comment`)
-	CountStats(&fileJob)
-	if fileJob.Code != 0 {
-		t.Errorf("No line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 1 {
-		t.Errorf("One line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`int i = 0; /* /**//**//**//**//**//**/`)
-	CountStats(&fileJob)
-	if fileJob.Code != 1 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 0 {
-		t.Errorf("No line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`/* i++ comment */    `)
-	CountStats(&fileJob)
-	if fileJob.Code != 0 {
-		t.Errorf("No line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 1 {
-		t.Errorf("One line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`////////////////// Something`)
-	CountStats(&fileJob)
-	if fileJob.Code != 0 {
-		t.Errorf("No line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 1 {
-		t.Errorf("One line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte("`/*` i++")
-	CountStats(&fileJob)
-	if fileJob.Code != 1 {
-		t.Errorf("No line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 0 {
-		t.Errorf("One line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte("\"``/* i++\"")
-	CountStats(&fileJob)
-	if fileJob.Code != 1 {
-		t.Errorf("No line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 0 {
-		t.Errorf("One line expected got %d", fileJob.Comment)
-	}
-}
+//func TestCountStatsCommentTricks(t *testing.T) {
+//	ProcessConstants()
+//	fileJob := FileJob{}
+//
+//	fileJob.Code = 0
+//	fileJob.Comment = 0
+//	fileJob.Content = []byte("i++ // /* comment")
+//	CountStats(&fileJob)
+//	if fileJob.Code != 1 {
+//		t.Errorf("One line expected got %d", fileJob.Code)
+//	}
+//	if fileJob.Comment != 0 {
+//		t.Errorf("No line expected got %d", fileJob.Comment)
+//	}
+//
+//	fileJob.Code = 0
+//	fileJob.Comment = 0
+//	fileJob.Content = []byte("i++ /* comment")
+//	CountStats(&fileJob)
+//	if fileJob.Code != 1 {
+//		t.Errorf("One line expected got %d", fileJob.Code)
+//	}
+//	if fileJob.Comment != 0 {
+//		t.Errorf("No line expected got %d", fileJob.Comment)
+//	}
+//
+//	fileJob.Code = 0
+//	fileJob.Comment = 0
+//	fileJob.Content = []byte("i++ /* comment */ i++")
+//	CountStats(&fileJob)
+//	if fileJob.Code != 1 {
+//		t.Errorf("One line expected got %d", fileJob.Code)
+//	}
+//	if fileJob.Comment != 0 {
+//		t.Errorf("No line expected got %d", fileJob.Comment)
+//	}
+//
+//	fileJob.Code = 0
+//	fileJob.Comment = 0
+//	fileJob.Language = "Java"
+//	fileJob.Content = []byte("/* i++ comment */")
+//	CountStats(&fileJob)
+//	if fileJob.Code != 0 {
+//		t.Errorf("No line expected got %d", fileJob.Code)
+//	}
+//	if fileJob.Comment != 1 {
+//		t.Errorf("One line expected got %d", fileJob.Comment)
+//	}
+//
+//	fileJob.Code = 0
+//	fileJob.Comment = 0
+//	fileJob.Content = []byte(`/*
+//		i++ comment
+//		*/`)
+//	CountStats(&fileJob)
+//	if fileJob.Code != 0 {
+//		t.Errorf("One line expected got %d", fileJob.Code)
+//	}
+//	if fileJob.Comment != 3 {
+//		t.Errorf("Three line expected got %d", fileJob.Comment)
+//	}
+//
+//	fileJob.Code = 0
+//	fileJob.Comment = 0
+//	fileJob.Content = []byte(`i++; /*
+//		i++ comment
+//		*/`)
+//	CountStats(&fileJob)
+//	if fileJob.Code != 1 {
+//		t.Errorf("One line expected got %d", fileJob.Code)
+//	}
+//	// if fileJob.Comment != 2 {
+//	// 	t.Errorf("Two line expected got %d", fileJob.Comment)
+//	// }
+//
+//	fileJob.Code = 0
+//	fileJob.Comment = 0
+//	fileJob.Content = []byte(`/*
+//		i++ comment
+//		*/ i++;`)
+//	CountStats(&fileJob)
+//	if fileJob.Code != 1 {
+//		t.Errorf("One line expected got %d", fileJob.Code)
+//	}
+//	// if fileJob.Comment != 2 {
+//	// 	t.Errorf("Two line expected got %d", fileJob.Comment)
+//	// }
+//
+//	fileJob.Code = 0
+//	fileJob.Comment = 0
+//	fileJob.Content = []byte(`/* /* */`)
+//	CountStats(&fileJob)
+//	if fileJob.Code != 0 {
+//		t.Errorf("One line expected got %d", fileJob.Code)
+//	}
+//	if fileJob.Comment != 1 {
+//		t.Errorf("One line expected got %d", fileJob.Comment)
+//	}
+//
+//	fileJob.Code = 0
+//	fileJob.Comment = 0
+//	fileJob.Content = []byte(`/* /* */`)
+//	CountStats(&fileJob)
+//	if fileJob.Code != 0 {
+//		t.Errorf("One line expected got %d", fileJob.Code)
+//	}
+//	if fileJob.Comment != 1 {
+//		t.Errorf("One line expected got %d", fileJob.Comment)
+//	}
+//
+//	fileJob.Code = 0
+//	fileJob.Comment = 0
+//	fileJob.Content = []byte(`/*
+//	/*
+//	*/`)
+//	CountStats(&fileJob)
+//	if fileJob.Code != 0 {
+//		t.Errorf("One line expected got %d", fileJob.Code)
+//	}
+//	if fileJob.Comment != 3 {
+//		t.Errorf("Three line expected got %d", fileJob.Comment)
+//	}
+//
+//	fileJob.Code = 0
+//	fileJob.Comment = 0
+//	fileJob.Content = []byte(`i/**/`)
+//	CountStats(&fileJob)
+//	if fileJob.Code != 1 {
+//		t.Errorf("One line expected got %d", fileJob.Code)
+//	}
+//	if fileJob.Comment != 0 {
+//		t.Errorf("No line expected got %d", fileJob.Comment)
+//	}
+//
+//	fileJob.Code = 0
+//	fileJob.Comment = 0
+//	fileJob.Content = []byte(`// This is a comment`)
+//	CountStats(&fileJob)
+//	if fileJob.Code != 0 {
+//		t.Errorf("No line expected got %d", fileJob.Code)
+//	}
+//	if fileJob.Comment != 1 {
+//		t.Errorf("One line expected got %d", fileJob.Comment)
+//	}
+//
+//	fileJob.Code = 0
+//	fileJob.Comment = 0
+//	fileJob.Content = []byte(`int i = 0; /* /**//**//**//**//**//**/`)
+//	CountStats(&fileJob)
+//	if fileJob.Code != 1 {
+//		t.Errorf("One line expected got %d", fileJob.Code)
+//	}
+//	if fileJob.Comment != 0 {
+//		t.Errorf("No line expected got %d", fileJob.Comment)
+//	}
+//
+//	fileJob.Code = 0
+//	fileJob.Comment = 0
+//	fileJob.Content = []byte(`/* i++ comment */    `)
+//	CountStats(&fileJob)
+//	if fileJob.Code != 0 {
+//		t.Errorf("No line expected got %d", fileJob.Code)
+//	}
+//	if fileJob.Comment != 1 {
+//		t.Errorf("One line expected got %d", fileJob.Comment)
+//	}
+//
+//	fileJob.Code = 0
+//	fileJob.Comment = 0
+//	fileJob.Content = []byte(`////////////////// Something`)
+//	CountStats(&fileJob)
+//	if fileJob.Code != 0 {
+//		t.Errorf("No line expected got %d", fileJob.Code)
+//	}
+//	if fileJob.Comment != 1 {
+//		t.Errorf("One line expected got %d", fileJob.Comment)
+//	}
+//
+//	fileJob.Code = 0
+//	fileJob.Comment = 0
+//	fileJob.Content = []byte("`/*` i++")
+//	CountStats(&fileJob)
+//	if fileJob.Code != 1 {
+//		t.Errorf("No line expected got %d", fileJob.Code)
+//	}
+//	if fileJob.Comment != 0 {
+//		t.Errorf("One line expected got %d", fileJob.Comment)
+//	}
+//
+//	fileJob.Code = 0
+//	fileJob.Comment = 0
+//	fileJob.Content = []byte("\"``/* i++\"")
+//	CountStats(&fileJob)
+//	if fileJob.Code != 1 {
+//		t.Errorf("No line expected got %d", fileJob.Code)
+//	}
+//	if fileJob.Comment != 0 {
+//		t.Errorf("One line expected got %d", fileJob.Comment)
+//	}
+//}
 
 func TestCountStatsWithQuotes(t *testing.T) {
 	fileJob := FileJob{}
@@ -579,6 +579,75 @@ class A {
 		t.Errorf("Expected loc of 1 got %d", lc.loc)
 	}
 }
+
+//func TestCountStatsAccuracy(t *testing.T) {
+//	ProcessConstants()
+//	fileJob := FileJob{
+//		Language: "Java",
+//	}
+//
+//	fileJob.Content = []byte(`/* 23 lines 16 code 4 comments 3 blanks */
+//
+///*
+//* Simple test class
+//*/
+//public class Test
+//{
+//   int j = 0; // Not counted
+//   public static void main(String[] args)
+//   {
+//       Foo f = new Foo();
+//       f.bar();
+//
+//   }
+//}
+//
+//class Foo
+//{
+//   public void bar()
+//   {
+//     System.out.println("FooBar"); //Not counted
+//   }
+//}`)
+//
+//	CountStats(&fileJob)
+//
+//	if fileJob.Lines != 23 {
+//		t.Errorf("Expected 23 lines")
+//	}
+//
+//	if fileJob.Code != 16 {
+//		t.Errorf("Expected 16 lines got %d", fileJob.Code)
+//	}
+//
+//	if fileJob.Comment != 4 {
+//		t.Errorf("Expected 4 lines got %d", fileJob.Comment)
+//	}
+//
+//	if fileJob.Blank != 3 {
+//		t.Errorf("Expected 3 lines got %d", fileJob.Blank)
+//	}
+//}
+//
+//func TestCountStats(t *testing.T) {
+//	ProcessConstants()
+//	fileJob := FileJob{
+//		Language: "Java",
+//	}
+//
+//	fileJob.Content = []byte(`/**/
+//`)
+//
+//	CountStats(&fileJob)
+//
+//	if fileJob.Lines != 1 {
+//		t.Errorf("Expected 1 lines got %d", fileJob.Lines)
+//	}
+//
+//	if fileJob.Comment != 1 {
+//		t.Errorf("Expected 1 lines got %d", fileJob.Comment)
+//	}
+//}
 
 //////////////////////////////////////////////////
 // Benchmarks Below
