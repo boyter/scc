@@ -580,54 +580,54 @@ class A {
 	}
 }
 
-//func TestCountStatsAccuracy(t *testing.T) {
-//	ProcessConstants()
-//	fileJob := FileJob{
-//		Language: "Java",
-//	}
-//
-//	fileJob.Content = []byte(`/* 23 lines 16 code 4 comments 3 blanks */
-//
-///*
-//* Simple test class
-//*/
-//public class Test
-//{
-//  int j = 0; // Not counted
-//  public static void main(String[] args)
-//  {
-//      Foo f = new Foo();
-//      f.bar();
-//
-//  }
-//}
-//
-//class Foo
-//{
-//  public void bar()
-//  {
-//    System.out.println("FooBar"); //Not counted
-//  }
-//}`)
-//
-//	CountStats(&fileJob)
-//
-//	if fileJob.Lines != 23 {
-//		t.Errorf("Expected 23 lines")
-//	}
-//
-//	if fileJob.Code != 16 {
-//		t.Errorf("Expected 16 lines got %d", fileJob.Code)
-//	}
-//
-//	if fileJob.Comment != 4 {
-//		t.Errorf("Expected 4 lines got %d", fileJob.Comment)
-//	}
-//
-//	if fileJob.Blank != 3 {
-//		t.Errorf("Expected 3 lines got %d", fileJob.Blank)
-//	}
-//}
+func TestCountStatsAccuracy(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Java",
+	}
+
+	fileJob.Content = []byte(`/* 23 lines 16 code 4 comments 3 blanks */
+
+/*
+* Simple test class
+*/
+public class Test
+{
+ int j = 0; // Not counted
+ public static void main(String[] args)
+ {
+     Foo f = new Foo();
+     f.bar();
+
+ }
+}
+
+class Foo
+{
+ public void bar()
+ {
+   System.out.println("FooBar"); //Not counted
+ }
+}`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 23 {
+		t.Errorf("Expected 23 lines")
+	}
+
+	if fileJob.Code != 16 {
+		t.Errorf("Expected 16 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 4 {
+		t.Errorf("Expected 4 lines got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 3 {
+		t.Errorf("Expected 3 lines got %d", fileJob.Blank)
+	}
+}
 
 func TestCountStats(t *testing.T) {
 	ProcessConstants()
@@ -646,6 +646,36 @@ func TestCountStats(t *testing.T) {
 
 	if fileJob.Comment != 1 {
 		t.Errorf("Expected 1 lines got %d", fileJob.Comment)
+	}
+}
+
+func TestCountStatsTwo(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "C++",
+	}
+
+	fileJob.Content = []byte(`/* 15 lines 7 code 4 comments 4 blanks */
+
+#include <iostream>
+
+
+using namespace std;
+
+/*
+ * Simple test
+ */
+int main()
+{
+    cout<<"Hello world"<<endl;
+    return 0;
+}
+`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 15 {
+		t.Errorf("Expected 15 lines got %d", fileJob.Lines)
 	}
 }
 

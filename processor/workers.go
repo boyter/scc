@@ -311,7 +311,7 @@ func CountStats(fileJob *FileJob) {
 					}
 				}
 
-				index += offsetJump + 1
+				index += offsetJump
 			}
 		}
 
