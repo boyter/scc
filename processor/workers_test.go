@@ -593,21 +593,21 @@ class A {
 //*/
 //public class Test
 //{
-//   int j = 0; // Not counted
-//   public static void main(String[] args)
-//   {
-//       Foo f = new Foo();
-//       f.bar();
+//  int j = 0; // Not counted
+//  public static void main(String[] args)
+//  {
+//      Foo f = new Foo();
+//      f.bar();
 //
-//   }
+//  }
 //}
 //
 //class Foo
 //{
-//   public void bar()
-//   {
-//     System.out.println("FooBar"); //Not counted
-//   }
+//  public void bar()
+//  {
+//    System.out.println("FooBar"); //Not counted
+//  }
 //}`)
 //
 //	CountStats(&fileJob)
@@ -628,26 +628,26 @@ class A {
 //		t.Errorf("Expected 3 lines got %d", fileJob.Blank)
 //	}
 //}
-//
-//func TestCountStats(t *testing.T) {
-//	ProcessConstants()
-//	fileJob := FileJob{
-//		Language: "Java",
-//	}
-//
-//	fileJob.Content = []byte(`/**/
-//`)
-//
-//	CountStats(&fileJob)
-//
-//	if fileJob.Lines != 1 {
-//		t.Errorf("Expected 1 lines got %d", fileJob.Lines)
-//	}
-//
-//	if fileJob.Comment != 1 {
-//		t.Errorf("Expected 1 lines got %d", fileJob.Comment)
-//	}
-//}
+
+func TestCountStats(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Java",
+	}
+
+	fileJob.Content = []byte(`/**/
+`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Comment)
+	}
+}
 
 //////////////////////////////////////////////////
 // Benchmarks Below

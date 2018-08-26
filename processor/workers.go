@@ -16,7 +16,6 @@ const (
 	S_MULTICOMMENT_CODE  int64 = 6 // Indicates multi comment after code
 	S_MULTICOMMENT_BLANK int64 = 7 // Indicates multi comment ended with blank afterwards
 	S_STRING             int64 = 8
-	S_MULTICOMMENT_END   int64 = 9
 )
 
 type LineType int32
@@ -233,7 +232,9 @@ func CountStats(fileJob *FileJob) {
 		// changing anything in here and profile/measure afterwards!
 	state:
 		switch {
-		case currentState == S_BLANK || currentState == S_MULTICOMMENT_BLANK || currentState == S_MULTICOMMENT_END:
+		case isWhitespace(fileJob.Content[index]):
+			break state
+		case currentState == S_BLANK || currentState == S_MULTICOMMENT_BLANK:
 			// From blank we can move into comment, move into a multiline comment
 			// or move into code but we can only do one.
 			if checkForMatch(fileJob.Content[index], index, endPoint, singleLineCommentChecks, fileJob) {
@@ -296,6 +297,7 @@ func CountStats(fileJob *FileJob) {
 			offsetJump = checkForMatchMultiClose(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
 
 			if offsetJump != 0 {
+
 				//If we started as multiline code switch back to code so we count correctly
 				if currentState == S_MULTICOMMENT_CODE {
 					currentState = S_CODE
@@ -308,12 +310,14 @@ func CountStats(fileJob *FileJob) {
 						currentState = S_MULTICOMMENT_CODE
 					}
 				}
+
+				index += offsetJump + 1
 			}
 		}
 
 		// This means the end of processing the line so calculate the stats according to what state
 		// we are currently in
-		if fileJob.Content[index] == '\n' || index == endPoint || index+offsetJump > endPoint {
+		if index >= endPoint || fileJob.Content[index] == '\n' {
 			fileJob.Lines++
 
 			if Trace {
@@ -339,7 +343,7 @@ func CountStats(fileJob *FileJob) {
 						}
 					}
 				}
-			case currentState == S_COMMENT || currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_BLANK || currentState == S_MULTICOMMENT_END:
+			case currentState == S_COMMENT || currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_BLANK:
 				{
 					fileJob.Comment++
 					if fileJob.Callback != nil {
@@ -359,11 +363,6 @@ func CountStats(fileJob *FileJob) {
 				currentState = S_MULTICOMMENT
 			}
 		}
-
-		// If we checked ahead on bytes we are able to jump ahead and save some time reprocessing
-		// the same values again
-		// TODO there is a bug here, if we looked over a \n then we jump past that and screw up calc
-		//index += offsetJump
 	}
 
 	if Duplicates {
