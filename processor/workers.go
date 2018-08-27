@@ -119,7 +119,8 @@ func checkComplexity(currentByte byte, index int, endPoint int, matches [][]byte
 	// then we need to check that there was a whitespace before it
 	if index != 0 {
 		// If the byte before our current postion is not a whitespace then return false
-		if fileJob.Content[index-1] != ' ' && fileJob.Content[index-1] != '\t' && fileJob.Content[index-1] != '\n' && fileJob.Content[index-1] != '\r' {
+
+		if !isWhitespace(fileJob.Content[index-1]) {
 			return 0
 		}
 	}
