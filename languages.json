@@ -2134,7 +2134,8 @@
       "== "
     ],
     "extensions": [
-      "rake"
+      "rake",
+      "rakefile"
     ],
     "multi_line": [
       [
@@ -5389,5 +5390,27 @@
     ],
     "multi_line": [],
     "quotes": []
+  },
+  "Meson":{
+    "line_comment":[
+      "#"
+    ],
+    "complexitychecks": [
+      "foreach ",
+      "if ",
+      "elif ",
+      "unless ",
+      "and ",
+      "or ",
+      "else "
+    ],
+    "quotes":[
+      ["'", "'"],
+      ["'''", "'''"]
+    ],
+    "extensions":[
+      "meson.build",
+      "meson_options.txt"
+    ]
   }
 }
