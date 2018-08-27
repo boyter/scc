@@ -114,7 +114,7 @@ func checkForMatchMultiClose(currentByte byte, index int, endPoint int, matches 
 // What I want to know is given a list of strings and a current position are any
 // of them there starting from where we check, and if yes say so
 
-func checkComplexity(currentByte byte, index int, endPoint int, matches [][]byte, fileJob *FileJob) int {
+func checkComplexity(currentByte byte, index int, endPoint int, matches [][]byte, complexityBytes []byte, fileJob *FileJob) int {
 	// Special case if the thing we are matching is not the first thing in the file
 	// then we need to check that there was a whitespace before it
 	if index != 0 {
@@ -123,11 +123,6 @@ func checkComplexity(currentByte byte, index int, endPoint int, matches [][]byte
 			return 0
 		}
 	}
-
-	// Because the number of complexity checks is usually quite high this check speeds
-	// up the processing quite a lot and is worth implementing
-	// NB this allocation is much cheaper than refering to things directly
-	complexityBytes := LanguageFeatures[fileJob.Language].ComplexityBytes
 
 	hasMatch := false
 	for i := 0; i < len(complexityBytes); i++ {
@@ -189,6 +184,7 @@ func CountStats(fileJob *FileJob) {
 	}
 
 	complexityChecks := LanguageFeatures[fileJob.Language].ComplexityChecks
+	complexityBytes := LanguageFeatures[fileJob.Language].ComplexityBytes
 	singleLineCommentChecks := LanguageFeatures[fileJob.Language].SingleLineComment
 	multiLineCommentChecks := LanguageFeatures[fileJob.Language].MultiLineComment
 	stringChecks := LanguageFeatures[fileJob.Language].StringChecks
@@ -258,7 +254,7 @@ func CountStats(fileJob *FileJob) {
 				currentState = S_CODE
 
 				if !Complexity {
-					offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, fileJob)
+					offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, complexityBytes, fileJob)
 					if offsetJump != 0 {
 						fileJob.Complexity++
 					}
@@ -279,7 +275,7 @@ func CountStats(fileJob *FileJob) {
 				break state
 			} else {
 				if !Complexity {
-					offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, fileJob)
+					offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, complexityBytes, fileJob)
 					if offsetJump != 0 {
 						fileJob.Complexity++
 					}
