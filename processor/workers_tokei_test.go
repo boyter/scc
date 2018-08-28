@@ -90,6 +90,10 @@ int main()
 	if fileJob.Comment != 4 {
 		t.Errorf("Expected 4 lines got %d", fileJob.Comment)
 	}
+
+	if fileJob.Blank != 4 {
+		t.Errorf("Expected 4 lines got %d", fileJob.Blank)
+	}
 }
 
 func TestCountStatsAccuracyRakefile(t *testing.T) {
@@ -123,6 +127,10 @@ end
 	if fileJob.Comment != 2 {
 		t.Errorf("Expected 2 lines got %d", fileJob.Comment)
 	}
+
+	if fileJob.Blank != 4 {
+		t.Errorf("Expected 4 lines got %d", fileJob.Comment)
+	}
 }
 
 // TODO improve logic so the below works
@@ -136,39 +144,39 @@ end
 //
 ///* /**/ */
 //fn main() {
-//    let start = "/*";
-//    loop {
-//        if x.len() >= 2 && x[0] == '*' && x[1] == '/' { // found the */
-//            break;
-//        }
-//    }
+//   let start = "/*";
+//   loop {
+//       if x.len() >= 2 && x[0] == '*' && x[1] == '/' { // found the */
+//           break;
+//       }
+//   }
 //}
 //
 //fn foo() {
-//    let this_ends = "a \"test/*.";
-//    call1();
-//    call2();
-//    let this_does_not = /* a /* nested */ comment " */
-//        "*/another /*test
-//            call3();
-//            */";
+//   let this_ends = "a \"test/*.";
+//   call1();
+//   call2();
+//   let this_does_not = /* a /* nested */ comment " */
+//       "*/another /*test
+//           call3();
+//           */";
 //}
 //
 //fn foobar() {
-//    let does_not_start = // "
-//        "until here,
-//        test/*
-//        test"; // a quote: "
-//    let also_doesnt_start = /* " */
-//        "until here,
-//        test,*/
-//        test"; // another quote: "
+//   let does_not_start = // "
+//       "until here,
+//       test/*
+//       test"; // a quote: "
+//   let also_doesnt_start = /* " */
+//       "until here,
+//       test,*/
+//       test"; // another quote: "
 //}
 //
 //fn foo() {
-//    let a = 4; // /*
-//    let b = 5;
-//    let c = 6; // */
+//   let a = 4; // /*
+//   let b = 5;
+//   let c = 6; // */
 //}
 //
 //`)
