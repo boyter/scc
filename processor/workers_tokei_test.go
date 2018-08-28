@@ -54,7 +54,7 @@ class Foo
 }
 
 
-func TestCountStatsAccuracyTwo(t *testing.T) {
+func TestCountStatsAccuracyCPlusPlus(t *testing.T) {
 	ProcessConstants()
 	fileJob := FileJob{
 		Language: "C++",
@@ -89,6 +89,39 @@ int main()
 
 	if fileJob.Comment != 4 {
 		t.Errorf("Expected 4 lines got %d", fileJob.Comment)
+	}
+}
+
+func TestCountStatsAccuracyRakefile(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Rakefile",
+	}
+
+	fileJob.Content = []byte(`# 10 lines 4 code 2 comments 4 blanks
+
+# this is a rakefile
+
+task default: %w[test]
+
+task :test do # not counted
+  ruby "test/unittest.rb"
+end
+
+`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 10 {
+		t.Errorf("Expected 10 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 4 {
+		t.Errorf("Expected 4 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 2 {
+		t.Errorf("Expected 2 lines got %d", fileJob.Comment)
 	}
 }
 
