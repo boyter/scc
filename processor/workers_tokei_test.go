@@ -129,11 +129,14 @@ end
 	}
 
 	if fileJob.Blank != 4 {
-		t.Errorf("Expected 4 lines got %d", fileJob.Comment)
+		t.Errorf("Expected 4 lines got %d", fileJob.Blank)
 	}
 }
 
 // TODO improve logic so the below works
+// The reason it does not is due to the nested /* which is not supported in Java
+// hence I never implemented the logic to support it. Turns out languages such
+// as rust do support this... so off we go.
 //func TestCountStatsAccuracyTokeiTest(t *testing.T) {
 //	ProcessConstants()
 //	fileJob := FileJob{
@@ -194,5 +197,9 @@ end
 //
 //	if fileJob.Comment != 2 {
 //		t.Errorf("Expected 2 lines got %d", fileJob.Comment)
+//	}
+//
+//	if fileJob.Blank != 2 {
+//		t.Errorf("Expected 5 lines got %d", fileJob.Blank)
 //	}
 //}

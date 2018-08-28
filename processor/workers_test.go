@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"reflect"
 	"testing"
+	"strings"
 )
 
 func TestIsWhitespace(t *testing.T) {
@@ -733,4 +734,48 @@ func BenchmarkCheckMapCheck(b *testing.B) {
 	}
 
 	b.Log(found)
+}
+
+func BenchmarkStringLoop(b *testing.B) {
+	b.StopTimer()
+
+	var str strings.Builder
+	for i := 0; i < 10000; i++ {
+		str.WriteString("1")
+	}
+	search := str.String()
+	count := 0
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < len(search); j++ {
+			if search[j] != '\n' {
+				count++
+			}
+
+		}
+	}
+	b.Log(count)
+}
+
+func BenchmarkByteLoop(b *testing.B) {
+	b.StopTimer()
+
+	var str strings.Builder
+	for i := 0; i < 10000; i++ {
+		str.WriteString("1")
+	}
+	search := []byte(str.String())
+	count := 0
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < len(search); j++ {
+			if search[j] != '\n' {
+				count++
+			}
+
+		}
+	}
+	b.Log(count)
 }
