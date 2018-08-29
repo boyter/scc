@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"reflect"
 	"testing"
+	"strings"
 )
 
 func TestIsWhitespace(t *testing.T) {
@@ -151,207 +152,6 @@ func TestCountStatsCode(t *testing.T) {
 		if fileJob.Code != int64(i+1) {
 			t.Errorf("Expected %d got %d", i+1, fileJob.Code)
 		}
-	}
-}
-
-func TestCountStatsCommentTricks(t *testing.T) {
-	ProcessConstants()
-	fileJob := FileJob{}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte("i++ // /* comment")
-	CountStats(&fileJob)
-	if fileJob.Code != 1 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 0 {
-		t.Errorf("No line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte("i++ /* comment")
-	CountStats(&fileJob)
-	if fileJob.Code != 1 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 0 {
-		t.Errorf("No line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte("i++ /* comment */ i++")
-	CountStats(&fileJob)
-	if fileJob.Code != 1 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 0 {
-		t.Errorf("No line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Language = "Java"
-	fileJob.Content = []byte("/* i++ comment */")
-	CountStats(&fileJob)
-	if fileJob.Code != 0 {
-		t.Errorf("No line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 1 {
-		t.Errorf("One line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`/* 
-		i++ comment 
-		*/`)
-	CountStats(&fileJob)
-	if fileJob.Code != 0 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 3 {
-		t.Errorf("Three line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`i++; /*
-		i++ comment
-		*/`)
-	CountStats(&fileJob)
-	if fileJob.Code != 1 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	// if fileJob.Comment != 2 {
-	// 	t.Errorf("Two line expected got %d", fileJob.Comment)
-	// }
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`/*
-		i++ comment
-		*/ i++;`)
-	CountStats(&fileJob)
-	if fileJob.Code != 1 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	// if fileJob.Comment != 2 {
-	// 	t.Errorf("Two line expected got %d", fileJob.Comment)
-	// }
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`/* /* */`)
-	CountStats(&fileJob)
-	if fileJob.Code != 0 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 1 {
-		t.Errorf("One line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`/* /* */`)
-	CountStats(&fileJob)
-	if fileJob.Code != 0 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 1 {
-		t.Errorf("One line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`/* 
-	/* 
-	*/`)
-	CountStats(&fileJob)
-	if fileJob.Code != 0 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 3 {
-		t.Errorf("Three line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`i/**/`)
-	CountStats(&fileJob)
-	if fileJob.Code != 1 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 0 {
-		t.Errorf("No line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`// This is a comment`)
-	CountStats(&fileJob)
-	if fileJob.Code != 0 {
-		t.Errorf("No line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 1 {
-		t.Errorf("One line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`int i = 0; /* /**//**//**//**//**//**/`)
-	CountStats(&fileJob)
-	if fileJob.Code != 1 {
-		t.Errorf("One line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 0 {
-		t.Errorf("No line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`/* i++ comment */    `)
-	CountStats(&fileJob)
-	if fileJob.Code != 0 {
-		t.Errorf("No line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 1 {
-		t.Errorf("One line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte(`////////////////// Something`)
-	CountStats(&fileJob)
-	if fileJob.Code != 0 {
-		t.Errorf("No line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 1 {
-		t.Errorf("One line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte("`/*` i++")
-	CountStats(&fileJob)
-	if fileJob.Code != 1 {
-		t.Errorf("No line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 0 {
-		t.Errorf("One line expected got %d", fileJob.Comment)
-	}
-
-	fileJob.Code = 0
-	fileJob.Comment = 0
-	fileJob.Content = []byte("\"``/* i++\"")
-	CountStats(&fileJob)
-	if fileJob.Code != 1 {
-		t.Errorf("No line expected got %d", fileJob.Code)
-	}
-	if fileJob.Comment != 0 {
-		t.Errorf("One line expected got %d", fileJob.Comment)
 	}
 }
 
@@ -579,6 +379,29 @@ class A {
 		t.Errorf("Expected loc of 1 got %d", lc.loc)
 	}
 }
+
+// Edge case condition where if ending with comment it would be counted
+// as code due to how internal state work.
+func TestCountStatsEdgeCase1(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Java",
+	}
+
+	fileJob.Content = []byte(`/**/
+`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Comment)
+	}
+}
+
 
 //////////////////////////////////////////////////
 // Benchmarks Below
@@ -911,4 +734,48 @@ func BenchmarkCheckMapCheck(b *testing.B) {
 	}
 
 	b.Log(found)
+}
+
+func BenchmarkStringLoop(b *testing.B) {
+	b.StopTimer()
+
+	var str strings.Builder
+	for i := 0; i < 10000; i++ {
+		str.WriteString("1")
+	}
+	search := str.String()
+	count := 0
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < len(search); j++ {
+			if search[j] != '\n' {
+				count++
+			}
+
+		}
+	}
+	b.Log(count)
+}
+
+func BenchmarkByteLoop(b *testing.B) {
+	b.StopTimer()
+
+	var str strings.Builder
+	for i := 0; i < 10000; i++ {
+		str.WriteString("1")
+	}
+	search := []byte(str.String())
+	count := 0
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < len(search); j++ {
+			if search[j] != '\n' {
+				count++
+			}
+
+		}
+	}
+	b.Log(count)
 }

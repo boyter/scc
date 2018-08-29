@@ -41,7 +41,7 @@ Why use `scc`?
 
  - It is very fast and gets faster the more CPU you throw at it
  - Accurate
- - Works very well across multiple platforms without slowdown
+ - Works very well across multiple platforms without slowdown (Windows, Linux, macOS)
  - Large language support
  - Can ignore duplicate files
  - Has complexity estimations
@@ -50,6 +50,7 @@ Why not use `scc`?
 
  - Unable to tell the difference between Coq and Verilog (currently, if enough people raise a bug it will be resolved)
  - You don't like Go for some reason
+ - You are working on a Linux system with less than 4 CPU cores and really need the fastest counter possible (use loc or polyglot)
 
 ### Usage
 
@@ -65,7 +66,7 @@ USAGE:
    scc DIRECTORY
 
 VERSION:
-   1.6.0
+   1.8.0
 
 COMMANDS:
      help, h  Shows a list of commands or help for one command
@@ -85,6 +86,7 @@ GLOBAL OPTIONS:
    --averagewage value, --aw value     Set as integer to set the average wage used for basic COCOMO calculation (default: 56286)
    --cocomo, --co                      Set to check remove COCOMO calculation output
    --filegccount value, --fgc value    How many files to parse before turning the GC on (default: 10000)
+   --binary                            Set to disable binary file detection
    --debug                             Set to enable debug output
    --trace                             Set to enable trace output, not recommended for multiple files
    --help, -h                          show help
@@ -98,28 +100,33 @@ $ scc .
 -------------------------------------------------------------------------------
 Language                 Files     Lines     Code  Comments   Blanks Complexity
 -------------------------------------------------------------------------------
-C                          215    114488    85341     15175    13972      21921
-C Header                   144     20042    13308      4091     2643       1073
-TCL                         93     15702    12933       922     1847       1482
-Lua                         20       524      384        71       69         66
-Autoconf                    18     10713     8164      1476     1073        986
-Shell                       18       810      513       196      101        102
-Makefile                     9      1021      716       100      205         50
-Ruby                         8      2416     1798       376      242        365
-HTML                         6     11472     8288         5     3179        548
-Markdown                     6      1312      964         0      348          0
+C                          248    142725   102395     23995    16335      25979
+C Header                   199     27451    17887      6206     3358       1533
+TCL                         97     16356    13467       965     1924       1541
+Shell                       36      1103      709       253      141        135
+Lua                         20       525      385        71       69         66
+Autoconf                    18     10817     8467      1325     1025        967
+gitignore                   11       151      135         0       16          0
+Makefile                     9      1031      722       100      209         50
+Ruby                         8      2423     1805       376      242        373
+Markdown                     8      1886     1363         0      523          0
+HTML                         5      9658     6718        12     2928          0
+C++                          5       311      244        16       51         31
+YAML                         4       273      254         0       19          0
+License                      3        66       55         0       11          0
+Python                       2       219      160        19       40         67
 CSS                          2       107       91         0       16          0
-YAML                         2        75       60         4       11          4
 C++ Header                   1         9        5         3        1          0
-C++                          1        46       30         0       16          5
+m4                           1       562      393        53      116          0
+Plain Text                   1        23       16         0        7          0
 Batch                        1        28       26         0        2          3
-Plain Text                   1       499      499         0        0          0
+Smarty Template              1        44       43         0        1          5
 -------------------------------------------------------------------------------
-Total                      545    179264   133120     22419    23725      26605
+Total                      680    215768   155340     33394    27034      30750
 -------------------------------------------------------------------------------
-Estimated Cost to Develop $4,592,517
-Estimated Schedule Effort 27.382310 months
-Estimated People Required 19.867141
+Estimated Cost to Develop $5,400,609
+Estimated Schedule Effort 29.121855 months
+Estimated People Required 21.967387
 -------------------------------------------------------------------------------
 ```
 
@@ -199,7 +206,7 @@ The core part of `scc` which is the counting engine is exposed publicly to be in
 
 ### Adding/Modifying Languages
 
-To add or modify a language you will need to eddit the `languages.json` file in the root of the project, and then run `go generate` to build it into the application. You can then `go install` or `go build` as normal to produce the binary with your modifications.
+To add or modify a language you will need to edit the `languages.json` file in the root of the project, and then run `go generate` to build it into the application. You can then `go install` or `go build` as normal to produce the binary with your modifications.
 
 ### Issues
 
@@ -215,7 +222,7 @@ To help identify this issue run scc like so `scc -v .` and look for the message 
 
 ### Low Memory
 
-If you are running `scc` in a low memory envrionment < 512 MB of RAM you may need to set `--filegccount` or `--fgc` to a lower value such as `0` to force the garbage collector to be on at all times.
+If you are running `scc` in a low memory environment < 512 MB of RAM you may need to set `--filegccount` or `--fgc` to a lower value such as `0` to force the garbage collector to be on at all times.
 
 A sign that this is required will be `scc` crashing with panic errors.
 
