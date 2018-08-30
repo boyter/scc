@@ -192,6 +192,7 @@ func CountStats(fileJob *FileJob) {
 
 	endPoint := int(fileJob.Bytes - 1)
 	currentState := S_BLANK
+	endComments := [][]byte{}
 	endString := []byte{}
 
 	// If we have checked bytes ahead of where we are we can jump ahead and save time
@@ -241,16 +242,20 @@ func CountStats(fileJob *FileJob) {
 
 			offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
 			if offsetJump != 0 {
+				endComments = append(endComments, endString)
 				currentState = S_MULTICOMMENT
+				index += offsetJump - 1
 				break state
 			}
 
+			// TODO test if moving this line up above comment checks improves performance
 			offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, stringChecks, fileJob)
 			if offsetJump != 0 {
 				currentState = S_STRING
 				break state
 			}
 
+			// TODO we don't need this whitespace check anymore so remove it
 			if !isWhitespace(fileJob.Content[index]) {
 				currentState = S_CODE
 
@@ -266,7 +271,14 @@ func CountStats(fileJob *FileJob) {
 			// From code we can move into a multiline comment or string
 			offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
 			if offsetJump != 0 {
+				endComments = append(endComments, endString)
 				currentState = S_MULTICOMMENT_CODE
+				index += offsetJump - 1
+				break state
+			}
+
+			if checkForMatch(fileJob.Content[index], index, endPoint, singleLineCommentChecks, fileJob) {
+				currentState = S_COMMENT_CODE
 				break state
 			}
 
@@ -291,24 +303,32 @@ func CountStats(fileJob *FileJob) {
 			}
 			break state
 		case currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE:
-			offsetJump = checkForMatchMultiClose(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
 
+			// Check if we are entering another multiline comment
+			offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
 			if offsetJump != 0 {
+				endComments = append(endComments, endString)
+				index += offsetJump - 1
+				break state
+			}
 
-				//If we started as multiline code switch back to code so we count correctly
-				if currentState == S_MULTICOMMENT_CODE {
-					currentState = S_CODE
-				} else {
-					// If we are the end of the file OR next byte is whitespace move to comment blank
+			if checkForMatchSingle(fileJob.Content[index], index, endPoint, endComments[len(endComments)-1], fileJob) {
+				// set offset jump here
+				offsetJump = len(endComments[len(endComments)-1])
+				endComments = endComments[:len(endComments)-1]
 
-					if index+offsetJump >= endPoint || isWhitespace(fileJob.Content[index+offsetJump]) {
-						currentState = S_MULTICOMMENT_BLANK
+				if len(endComments) == 0 {
+					// If we started as multiline code switch back to code so we count correctly
+					// IE i := 1 /* for the lols */
+					// TODO is that required? Might still be required to count correctly
+					if currentState == S_MULTICOMMENT_CODE {
+						currentState = S_CODE // TODO pointless to change here, just set S_MULTICOMMENT_BLANK
 					} else {
-						currentState = S_MULTICOMMENT_CODE
+						currentState = S_MULTICOMMENT_BLANK
 					}
 				}
 
-				index += offsetJump
+				index += offsetJump - 1
 			}
 		}
 
@@ -354,10 +374,19 @@ func CountStats(fileJob *FileJob) {
 			// If we are in a multiline comment that started after some code then we need
 			// to move to a multiline comment if a multiline comment then stay there
 			// otherwise we reset back into a blank state
-			if currentState != S_MULTICOMMENT && currentState != S_MULTICOMMENT_CODE {
-				currentState = S_BLANK
-			} else {
+			// TODO the same should apply for string, we enter it and stay there
+			//if currentState != S_MULTICOMMENT && currentState != S_MULTICOMMENT_CODE {
+			//	currentState = S_BLANK
+			//} else {
+			//	currentState = S_MULTICOMMENT
+			//}
+
+			if currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE {
 				currentState = S_MULTICOMMENT
+			} else if currentState == S_STRING {
+
+			} else {
+				currentState = S_BLANK
 			}
 		}
 	}

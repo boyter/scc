@@ -137,69 +137,69 @@ end
 // The reason it does not is due to the nested /* which is not supported in Java
 // hence I never implemented the logic to support it. Turns out languages such
 // as rust do support this... so off we go.
-//func TestCountStatsAccuracyTokeiTest(t *testing.T) {
-//	ProcessConstants()
-//	fileJob := FileJob{
-//		Language: "Rust",
-//	}
-//
-//	fileJob.Content = []byte(`// 39 lines 32 code 2 comments 5 blanks
-//
-///* /**/ */
-//fn main() {
-//   let start = "/*";
-//   loop {
-//       if x.len() >= 2 && x[0] == '*' && x[1] == '/' { // found the */
-//           break;
-//       }
-//   }
-//}
-//
-//fn foo() {
-//   let this_ends = "a \"test/*.";
-//   call1();
-//   call2();
-//   let this_does_not = /* a /* nested */ comment " */
-//       "*/another /*test
-//           call3();
-//           */";
-//}
-//
-//fn foobar() {
-//   let does_not_start = // "
-//       "until here,
-//       test/*
-//       test"; // a quote: "
-//   let also_doesnt_start = /* " */
-//       "until here,
-//       test,*/
-//       test"; // another quote: "
-//}
-//
-//fn foo() {
-//   let a = 4; // /*
-//   let b = 5;
-//   let c = 6; // */
-//}
-//
-//`)
-//
-//	CountStats(&fileJob)
-//
-//	// 39 lines 32 code 2 comments 5 blanks
-//	if fileJob.Lines != 39 {
-//		t.Errorf("Expected 39 lines got %d", fileJob.Lines)
-//	}
-//
-//	if fileJob.Code != 32 {
-//		t.Errorf("Expected 32 lines got %d", fileJob.Code)
-//	}
-//
-//	if fileJob.Comment != 2 {
-//		t.Errorf("Expected 2 lines got %d", fileJob.Comment)
-//	}
-//
-//	if fileJob.Blank != 2 {
-//		t.Errorf("Expected 5 lines got %d", fileJob.Blank)
-//	}
-//}
+func TestCountStatsAccuracyTokeiTest(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Rust",
+	}
+
+	fileJob.Content = []byte(`// 39 lines 32 code 2 comments 5 blanks
+
+/* /**/ */
+fn main() {
+  let start = "/*";
+  loop {
+      if x.len() >= 2 && x[0] == '*' && x[1] == '/' { // found the */
+          break;
+      }
+  }
+}
+
+fn foo() {
+  let this_ends = "a \"test/*.";
+  call1();
+  call2();
+  let this_does_not = /* a /* nested */ comment " */
+      "*/another /*test
+          call3();
+          */";
+}
+
+fn foobar() {
+  let does_not_start = // "
+      "until here,
+      test/*
+      test"; // a quote: "
+  let also_doesnt_start = /* " */
+      "until here,
+      test,*/
+      test"; // another quote: "
+}
+
+fn foo() {
+  let a = 4; // /*
+  let b = 5;
+  let c = 6; // */
+}
+
+`)
+
+	CountStats(&fileJob)
+
+	// 39 lines 32 code 2 comments 5 blanks
+	if fileJob.Lines != 39 {
+		t.Errorf("Expected 39 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 32 {
+		t.Errorf("Expected 32 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 2 {
+		t.Errorf("Expected 2 lines got %d", fileJob.Comment)
+	}
+
+	//if fileJob.Blank != 2 {
+	//	t.Errorf("Expected 5 lines got %d", fileJob.Blank)
+	//}
+}

@@ -402,6 +402,120 @@ func TestCountStatsEdgeCase1(t *testing.T) {
 	}
 }
 
+// Turns out that some languages such as Rust support
+// nested comments. Check that it works here
+func TestCountStatsNestedComments(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Rust",
+	}
+
+	fileJob.Content = []byte(`/*/**/*/`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Blank)
+	}
+}
+
+func TestCountStatsNestedCommentsRegression(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Rust",
+	}
+
+	fileJob.Content = []byte(`t/*/**/*/`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Blank)
+	}
+}
+
+func TestCountStatsSingleCommentRegression(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Rust",
+	}
+
+	fileJob.Content = []byte(`t = "
+/*
+";`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 3 {
+		t.Errorf("Expected 3 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 3 {
+		t.Errorf("Expected 3 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Blank)
+	}
+}
+
+func TestCountStatsStringCheck(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Rust",
+	}
+
+	fileJob.Content = []byte(`let does_not_start = // "
+"until here,
+test/*
+test"; // a quote: "`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 4 {
+		t.Errorf("Expected 4 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 4 {
+		t.Errorf("Expected 4 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Blank)
+	}
+}
 
 //////////////////////////////////////////////////
 // Benchmarks Below
