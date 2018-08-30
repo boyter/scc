@@ -88,32 +88,6 @@ func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, matches [
 	return 0, nil
 }
 
-func checkForMatchMultiClose(currentByte byte, index int, endPoint int, matches []OpenClose, fileJob *FileJob) int {
-
-	potentialMatch := true
-	for i := 0; i < len(matches); i++ {
-		if currentByte == matches[i].Close[0] {
-			potentialMatch = true
-
-			for j := 1; j < len(matches[i].Close); j++ {
-				if index+j > endPoint || matches[i].Close[j] != fileJob.Content[index+j] {
-					potentialMatch = false
-					break
-				}
-			}
-
-			if potentialMatch {
-				return len(matches[i].Close)
-			}
-		}
-	}
-
-	return 0
-}
-
-// What I want to know is given a list of strings and a current position are any
-// of them there starting from where we check, and if yes say so
-
 func checkComplexity(currentByte byte, index int, endPoint int, matches [][]byte, complexityBytes []byte, fileJob *FileJob) int {
 	// Special case if the thing we are matching is not the first thing in the file
 	// then we need to check that there was a whitespace before it
