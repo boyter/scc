@@ -199,7 +199,7 @@ fn foo() {
 		t.Errorf("Expected 2 lines got %d", fileJob.Comment)
 	}
 
-	//if fileJob.Blank != 2 {
-	//	t.Errorf("Expected 5 lines got %d", fileJob.Blank)
-	//}
+	if fileJob.Blank != 5 {
+		t.Errorf("Expected 5 lines got %d", fileJob.Blank)
+	}
 }
