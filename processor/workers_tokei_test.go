@@ -53,7 +53,6 @@ class Foo
 	}
 }
 
-
 func TestCountStatsAccuracyCPlusPlus(t *testing.T) {
 	ProcessConstants()
 	fileJob := FileJob{

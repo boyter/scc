@@ -3,8 +3,8 @@ package processor
 import (
 	"bytes"
 	"reflect"
-	"testing"
 	"strings"
+	"testing"
 )
 
 func TestIsWhitespace(t *testing.T) {
@@ -424,6 +424,34 @@ func TestCountStatsNestedComments(t *testing.T) {
 
 	if fileJob.Comment != 1 {
 		t.Errorf("Expected 1 lines got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Blank)
+	}
+}
+
+// Java does not support nested multiline comments
+func TestCountStatsNestedCommentsJava(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Java",
+	}
+
+	fileJob.Content = []byte(`/*/**/*/`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Comment)
 	}
 
 	if fileJob.Blank != 0 {

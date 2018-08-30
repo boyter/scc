@@ -12,6 +12,7 @@ type Language struct {
 	ExtensionFile    bool       `json:"extensionFile"`
 	MultiLine        [][]string `json:"multi_line"`
 	Quotes           [][]string `json:"quotes"`
+	NestedMultiLine  bool       `json:"nestedmultiline"`
 }
 
 type LanguageFeature struct {
@@ -20,6 +21,7 @@ type LanguageFeature struct {
 	SingleLineComment [][]byte
 	MultiLineComment  []OpenClose
 	StringChecks      []OpenClose
+	Nested            bool
 }
 
 // FileJobCallback is an interface that FileJobs can implement to get a per line callback with the line type

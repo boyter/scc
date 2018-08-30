@@ -159,7 +159,8 @@
         "|#"
       ]
     ],
-    "quotes": []
+    "quotes": [],
+    "nestedmultiline": true
   },
   "LESS": {
     "line_comment": [
@@ -209,7 +210,8 @@
         "-/"
       ]
     ],
-    "quotes": []
+    "quotes": [],
+    "nestedmultiline": true
   },
   "Ceylon": {
     "line_comment": [
@@ -564,7 +566,8 @@
         "\"",
         "\""
       ]
-    ]
+    ],
+    "nestedmultiline": true
   },
   "ColdFusion CFScript": {
     "line_comment": [
@@ -779,7 +782,8 @@
         "\"",
         "\""
       ]
-    ]
+    ],
+    "nestedmultiline": true
   },
   "Zsh": {
     "line_comment": [
@@ -1896,7 +1900,8 @@
         "\\\"\\\"\\\"",
         "\\\"\\\"\\\""
       ]
-    ]
+    ],
+    "nestedmultiline": true
   },
   "Ur/Web": {
     "line_comment": [],
@@ -2283,7 +2288,8 @@
         "\"",
         "\""
       ]
-    ]
+    ],
+    "nestedmultiline": true
   },
   "Prolog": {
     "line_comment": [
@@ -3601,7 +3607,8 @@
         "|#"
       ]
     ],
-    "quotes": []
+    "quotes": [],
+    "nestedmultiline": true
   },
   "AutoHotKey": {
     "line_comment": [
@@ -4055,7 +4062,8 @@
         "\"",
         "\""
       ]
-    ]
+    ],
+    "nestedmultiline": true
   },
   "Autoconf": {
     "line_comment": [
@@ -4207,7 +4215,8 @@
         "\\\"\\\"\\\"",
         "\\\"\\\"\\\""
       ]
-    ]
+    ],
+    "nestedmultiline": true
   },
   "Haskell": {
     "line_comment": [

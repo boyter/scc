@@ -97,6 +97,7 @@ func ProcessConstants() {
 			MultiLineComment:  multiLineComment,
 			SingleLineComment: singleLineComment,
 			StringChecks:      stringChecks,
+			Nested:            value.NestedMultiLine,
 		}
 	}
 
