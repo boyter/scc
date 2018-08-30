@@ -5412,5 +5412,83 @@
       "meson.build",
       "meson_options.txt"
     ]
+  },
+  "SAS": {
+    "line_comment": [
+      "*"
+    ],
+    "complexitychecks": [
+      "do",
+      "%do",
+      "if",
+      "%if",
+      "else",
+      "%else",
+      "case",
+      "or",
+      "and",
+      "^=",
+      "¬=",
+      "~=",
+      "ne",
+      "eq"
+    ],
+    "extensions": [
+      "sas"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ],
+      [
+        "'",
+        "'"
+      ]
+    ]
+  },
+  "Stata": {
+    "line_comment": [
+      "//",
+      "*"
+    ],
+    "complexitychecks": [
+      "foreach",
+      "forvalues",
+      "if",
+      "else",
+      "while",
+      "switch",
+      "|",
+      "&",
+      "!=",
+      "=="
+    ],
+    "extensions": [
+      "do",
+      "ado"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ],
+      [
+        "`\"",
+        "\"'"
+      ]
+    ]
   }
 }
