@@ -79,7 +79,7 @@ func bufferRead(file string, buffersize int) []byte {
 // 			buffer := make([]byte, chunk.bufsize)
 // 			bytesread, err := file.ReadAt(buffer, chunk.offset)
 
-// 			// As noted above, ReadAt differs slighly compared to Read when the
+// 			// As noted above, ReadAt differs slightly compared to Read when the
 // 			// output buffer provided is larger than the data that's available
 // 			// for reading. So, let's return early only if the error is
 // 			// something other than an EOF. Returning early will run the

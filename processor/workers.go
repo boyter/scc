@@ -92,7 +92,7 @@ func checkComplexity(currentByte byte, index int, endPoint int, matches [][]byte
 	// Special case if the thing we are matching is not the first thing in the file
 	// then we need to check that there was a whitespace before it
 	if index != 0 {
-		// If the byte before our current postion is not a whitespace then return false
+		// If the byte before our current position is not a whitespace then return false
 
 		if !isWhitespace(fileJob.Content[index-1]) {
 			return 0
@@ -176,7 +176,7 @@ func CountStats(fileJob *FileJob) {
 
 	// For determining duplicates we need the below. The reason for creating
 	// the byte array here is to avoid GC pressure. MD5 is in the standard library
-	// and is fast enough to not warrent murmur3 hashing. No need to be
+	// and is fast enough to not warrant murmur3 hashing. No need to be
 	// crypto secure here either so no need to eat the performance cost of a better
 	// hash method
 	digest := md5.New()
@@ -312,7 +312,7 @@ func CountStats(fileJob *FileJob) {
 
 		// This means the end of processing the line so calculate the stats according to what state
 		// we are currently in
-		if index >= endPoint || fileJob.Content[index] == '\n' {
+		if fileJob.Content[index] == '\n' || index >= endPoint {
 			fileJob.Lines++
 
 			if Trace {
