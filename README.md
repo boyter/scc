@@ -66,7 +66,7 @@ USAGE:
    scc DIRECTORY
 
 VERSION:
-   1.8.0
+   1.9.0
 
 COMMANDS:
      help, h  Shows a list of commands or help for one command
@@ -100,33 +100,33 @@ $ scc .
 -------------------------------------------------------------------------------
 Language                 Files     Lines     Code  Comments   Blanks Complexity
 -------------------------------------------------------------------------------
-C                          248    142725   102395     23995    16335      25979
-C Header                   199     27451    17887      6206     3358       1533
-TCL                         97     16356    13467       965     1924       1541
-Shell                       36      1103      709       253      141        135
-Lua                         20       525      385        71       69         66
-Autoconf                    18     10817     8467      1325     1025        967
+C                          248    142725   102653     23885    16187      25729
+C Header                   199     27451    18485      5746     3220       1554
+TCL                         97     16356    13713       893     1750       1313
+Shell                       36      1103      772       215      116         86
+Lua                         20       525      387        70       68         65
+Autoconf                    18     10817     8467      1325     1025        950
 gitignore                   11       151      135         0       16          0
 Makefile                     9      1031      722       100      209         50
-Ruby                         8      2423     1805       376      242        373
 Markdown                     8      1886     1363         0      523          0
-HTML                         5      9658     6718        12     2928          0
+Ruby                         8      2423     1905       323      195        292
+HTML                         5      9658     8791        12      855          0
 C++                          5       311      244        16       51         31
 YAML                         4       273      254         0       19          0
 License                      3        66       55         0       11          0
-Python                       2       219      160        19       40         67
 CSS                          2       107       91         0       16          0
-C++ Header                   1         9        5         3        1          0
-m4                           1       562      393        53      116          0
-Plain Text                   1        23       16         0        7          0
+Python                       2       219      160        19       40         67
 Batch                        1        28       26         0        2          3
+m4                           1       562      393        53      116          0
+C++ Header                   1         9        5         3        1          0
 Smarty Template              1        44       43         0        1          5
+Plain Text                   1        23       16         0        7          0
 -------------------------------------------------------------------------------
-Total                      680    215768   155340     33394    27034      30750
+Total                      680    215768   158680     32660    24428      30145
 -------------------------------------------------------------------------------
-Estimated Cost to Develop $5,400,609
-Estimated Schedule Effort 29.121855 months
-Estimated People Required 21.967387
+Estimated Cost to Develop $5,522,600
+Estimated Schedule Effort 29.370095 months
+Estimated People Required 22.273729
 -------------------------------------------------------------------------------
 ```
 
@@ -198,7 +198,7 @@ cloc v1.6.0
 | cloc | `cloc linux` | 178.112 s ±  12.129 s |
 
 
-To run scc as quickly as possible use the command `GOGC=-1 scc -c -co .` which should run in a time comparable to tokei for most repositories. If you enable duplicate detection expect performance to fall by about 50%
+To run scc as quickly as possible use the command `GOGC=-1 scc .` which should run in a time comparable to tokei for most repositories. If you enable duplicate detection expect performance to fall by about 50%
 
 ### API Support
 
@@ -351,7 +351,7 @@ Macromedia eXtensible Markup Language (mxml)
 Madlang (mad)
 Makefile (makefile,mak,mk)
 Markdown (md,markdown)
-Meson ()
+Meson (meson.build,meson_options.txt)
 Modula3 (m3,mg,ig,i3)
 Module-Definition (def)
 MQL Header (mqh)
@@ -386,7 +386,7 @@ Python (py)
 QCL (qcl)
 QML (qml)
 R (r)
-Rakefile (rake)
+Rakefile (rake,rakefile)
 Razor (cshtml)
 Report Definition Language (rdl)
 ReStructuredText (rst)
@@ -394,6 +394,7 @@ Robot Framework (robot)
 Ruby (rb)
 Ruby HTML (rhtml)
 Rust (rs)
+SAS (sas)
 Sass (sass,scss)
 Scala (sc,scala)
 Scheme (scm,ss)
@@ -409,6 +410,7 @@ Spice Netlist (ckt)
 SQL (sql)
 SRecode Template (srt)
 Standard ML (SML) (sml)
+Stata (do,ado)
 SVG (svg)
 Swift (swift)
 SystemVerilog (sv,svh)
@@ -436,5 +438,6 @@ XML (xml)
 XML Schema (xsd)
 Xtend (xtend)
 YAML (yaml,yml)
+Zig (zig)
 Zsh (zsh)
 ```

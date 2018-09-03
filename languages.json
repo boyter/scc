@@ -5499,5 +5499,29 @@
         "\"'"
       ]
     ]
+  },
+  "Zig":{
+    "line_comment":[
+      "//"
+    ],
+    "complexitychecks": [
+      "while ",
+      "for ",
+      "if ",
+      "else ",
+      "defer ",
+      "switch",
+      "||",
+      "&&",
+      "!=",
+      "=="
+    ],
+    "quotes":[
+      ["\\\"", "\\\""],
+      ["\\\\", "\n"]
+    ],
+    "extensions":[
+      "zig"
+    ]
   }
 }
