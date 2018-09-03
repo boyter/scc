@@ -236,8 +236,7 @@ func CountStats(fileJob *FileJob) {
 
 		// Check if this file is binary by checking for nul byte and if so bail out
 		// this is how GNU Grep, git and ripgrep check for binary files
-		// TODO limit this to the first 10000 chars
-		if isBinary(fileJob.Content[index]) {
+		if index < 10000 && isBinary(fileJob.Content[index]) {
 			fileJob.Binary = true
 			return
 		}
@@ -248,41 +247,7 @@ func CountStats(fileJob *FileJob) {
 		if !isWhitespace(fileJob.Content[index]) {
 		state:
 			switch {
-			case currentState == S_BLANK || currentState == S_MULTICOMMENT_BLANK:
-				// From blank we can move into comment, move into a multiline comment
-				// or move into code but we can only do one.
-				if checkForMatch(fileJob.Content[index], index, endPoint, singleLineCommentChecks, fileJob) {
-					currentState = S_COMMENT
-					break state
-				}
-
-				if nested || len(endComments) == 0 {
-					offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
-					if offsetJump != 0 {
-						endComments = append(endComments, endString)
-						currentState = S_MULTICOMMENT
-						index += offsetJump - 1
-						break state
-					}
-				}
-
-				// TODO test if moving this line up above comment checks improves performance
-				offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, stringChecks, fileJob)
-				if offsetJump != 0 {
-					currentState = S_STRING
-					break state
-				}
-
-
-				currentState = S_CODE
-				if !Complexity {
-					offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, complexityBytes, fileJob)
-					if offsetJump != 0 {
-						fileJob.Complexity++
-					}
-				}
 			case currentState == S_CODE:
-				// From code we can move into a multiline comment or string
 				if nested || len(endComments) == 0 {
 					offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
 					if offsetJump != 0 {
@@ -347,6 +312,39 @@ func CountStats(fileJob *FileJob) {
 					}
 
 					index += offsetJump - 1
+				}
+			case currentState == S_BLANK || currentState == S_MULTICOMMENT_BLANK:
+				// From blank we can move into comment, move into a multiline comment
+				// or move into code but we can only do one.
+				if checkForMatch(fileJob.Content[index], index, endPoint, singleLineCommentChecks, fileJob) {
+					currentState = S_COMMENT
+					break state
+				}
+
+				if nested || len(endComments) == 0 {
+					offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
+					if offsetJump != 0 {
+						endComments = append(endComments, endString)
+						currentState = S_MULTICOMMENT
+						index += offsetJump - 1
+						break state
+					}
+				}
+
+				// TODO test if moving this line up above comment checks improves performance
+				offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, stringChecks, fileJob)
+				if offsetJump != 0 {
+					currentState = S_STRING
+					break state
+				}
+
+
+				currentState = S_CODE
+				if !Complexity {
+					offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, complexityBytes, fileJob)
+					if offsetJump != 0 {
+						fileJob.Complexity++
+					}
 				}
 			}
 		}
