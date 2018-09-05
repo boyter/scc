@@ -921,3 +921,67 @@ func BenchmarkByteLoop(b *testing.B) {
 	}
 	b.Log(count)
 }
+
+
+func BenchmarkLoopInLoop(b *testing.B) {
+	search := []byte("this is a long from for string which we will search")
+	matches := [][]byte{
+		[]byte("if"),
+		[]byte("if("),
+		[]byte("else"),
+		[]byte("while"),
+		[]byte("while("),
+		[]byte("for"),
+		[]byte("foreach"),
+	}
+	endPoint := len(search)
+	b.ResetTimer()
+
+	potentialMatch := true
+	for i := 0; i < b.N; i++ {
+
+		potentialMatch = true
+		for index := 0; index < len(search); index++ {
+
+			for k := 0; k < len(matches); k++ {
+
+				for j := 0; j < len(matches[k]); j++ {
+					if index+j >= endPoint || matches[k][j] != search[index+j] {
+						potentialMatch = false
+					}
+				}
+			}
+
+		}
+
+	}
+	b.Log(potentialMatch)
+}
+
+func BenchmarkFlattenedLoop(b *testing.B) {
+	index := 0
+	search := []byte("this is a long from for string which we will search")
+	matches := []byte("if if( else while while( for foreach")
+
+	b.ResetTimer()
+
+	potentialMatch := true
+	count := 0
+	for i := 0; i < b.N; i++ {
+
+		potentialMatch = true
+		for j := 0; j < len(matches); j++ {
+			if matches[j] == ' ' {
+				count = 0
+			} else {
+				if matches[j] != search[index+count] {
+					potentialMatch = false
+				}
+
+			}
+		}
+
+	}
+
+	b.Log(potentialMatch)
+}
