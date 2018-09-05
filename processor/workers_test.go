@@ -545,6 +545,47 @@ test"; // a quote: "`)
 	}
 }
 
+func TestCheckForMatchNoMatch(t *testing.T) {
+	ProcessConstants()
+
+	fileJob := FileJob{
+		Language: "Rust",
+		Content: []byte("one does not simply walk into mordor"),
+	}
+
+	matches := [][]byte{
+		[]byte("//"),
+		[]byte("--"),
+	}
+
+	match := checkForMatch(' ', 0, 100, matches, &fileJob)
+
+	if match != false {
+		t.Errorf("Expected no match")
+	}
+}
+
+func TestCheckForMatchHasMatch(t *testing.T) {
+	ProcessConstants()
+
+	fileJob := FileJob{
+		Language: "Rust",
+		Content: []byte("// one does not simply walk into mordor"),
+	}
+
+	matches := [][]byte{
+		[]byte("//"),
+		[]byte("--"),
+	}
+
+	match := checkForMatch('/', 0, 100, matches, &fileJob)
+
+	if match != true {
+		t.Errorf("Expected match")
+	}
+}
+
+
 //////////////////////////////////////////////////
 // Benchmarks Below
 //////////////////////////////////////////////////
