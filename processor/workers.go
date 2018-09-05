@@ -152,39 +152,6 @@ func isBinary(currentByte byte) bool {
 	return false
 }
 
-//blankState(&index, endPoint, nested, singleLineCommentChecks, multiLineCommentChecks, stringChecks, complexityChecks, complexityBytes, &endComments, fileJob)
-
-func blankState(index *int, endPoint int, nested bool, singleLineCommentChecks [][]byte, multiLineCommentChecks []OpenClose, stringChecks []OpenClose, complexityChecks [][]byte, complexityBytes []byte, endComments [][]byte, fileJob *FileJob) (int64, [][]byte) {
-	// From blank we can move into comment, move into a multiline comment
-	// or move into code but we can only do one.
-	if checkForMatch(fileJob.Content[*index], *index, endPoint, singleLineCommentChecks, fileJob) {
-		return S_COMMENT, endComments
-	}
-
-	if nested || len(endComments) == 0 {
-		offsetJump, endString := checkForMatchMultiOpen(fileJob.Content[*index], *index, endPoint, multiLineCommentChecks, fileJob)
-		if offsetJump != 0 {
-			endComments = append(endComments, endString)
-			return S_MULTICOMMENT, endComments
-		}
-	}
-
-	// TODO test if moving this line up above comment checks improves performance
-	offsetJump, _ := checkForMatchMultiOpen(fileJob.Content[*index], *index, endPoint, stringChecks, fileJob)
-	if offsetJump != 0 {
-		return S_STRING, endComments
-	}
-
-	if !Complexity {
-		offsetJump = checkComplexity(fileJob.Content[*index], *index, endPoint, complexityChecks, complexityBytes, fileJob)
-		if offsetJump != 0 {
-			fileJob.Complexity++
-		}
-	}
-
-	return S_CODE, endComments
-}
-
 // CountStats will process the fileJob
 // If the file contains anything even just a newline its line count should be >= 1.
 // If the file has a size of 0 its line count should be 0.
