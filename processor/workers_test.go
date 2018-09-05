@@ -585,6 +585,40 @@ func TestCheckForMatchHasMatch(t *testing.T) {
 	}
 }
 
+func TestCheckForMatchSingleNoMatch(t *testing.T) {
+	ProcessConstants()
+
+	fileJob := FileJob{
+		Language: "Rust",
+		Content: []byte("// one does not simply walk into mordor"),
+	}
+
+	matches := []byte("*/")
+
+	match := checkForMatchSingle('/', 0, 100, matches, &fileJob)
+
+	if match != false {
+		t.Errorf("Expected no match")
+	}
+}
+
+func TestCheckForMatchSingleMatch(t *testing.T) {
+	ProcessConstants()
+
+	fileJob := FileJob{
+		Language: "Rust",
+		Content: []byte("*/ one does not simply walk into mordor"),
+	}
+
+	matches := []byte("*/")
+
+	match := checkForMatchSingle('*', 0, 100, matches, &fileJob)
+
+	if match != true {
+		t.Errorf("Expected match")
+	}
+}
+
 
 //////////////////////////////////////////////////
 // Benchmarks Below
