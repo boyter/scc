@@ -68,10 +68,19 @@ func ProcessConstants() {
 		multiLineComment := []OpenClose{}
 		stringChecks := []OpenClose{}
 
+		// Experimental
+		complexityStr := ""
+		complexity := []byte{}
+
 		for _, v := range value.ComplexityChecks {
 			complexityBytes = append(complexityBytes, v[0])
 			complexityChecks = append(complexityChecks, []byte(v))
+
+			// Experimental
+			complexityStr += v + string(byte(0))
 		}
+		// Experimental
+		complexity = []byte(complexityStr)
 
 		for _, v := range value.LineComment {
 			singleLineComment = append(singleLineComment, []byte(v))
@@ -98,6 +107,7 @@ func ProcessConstants() {
 			SingleLineComment: singleLineComment,
 			StringChecks:      stringChecks,
 			Nested:            value.NestedMultiLine,
+			Complexity: complexity,
 		}
 	}
 

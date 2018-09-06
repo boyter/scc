@@ -136,6 +136,53 @@ func checkComplexity(currentByte byte, index int, endPoint int, matches [][]byte
 	return 0
 }
 
+func checkComplexityNew(currentByte byte, index int, endPoint int, complexity []byte, complexityBytes []byte, fileJob *FileJob) int {
+	// Special case if the thing we are matching is not the first thing in the file
+	// then we need to check that there was a whitespace before it
+	if index != 0 {
+		// If the byte before our current position is not a whitespace then return false
+
+		if !isWhitespace(fileJob.Content[index-1]) {
+			return 0
+		}
+	}
+
+	hasMatch := false
+	for i := 0; i < len(complexityBytes); i++ {
+		if complexityBytes[i] == currentByte {
+			hasMatch = true
+			break
+		}
+	}
+
+	if !hasMatch {
+		return 0
+	}
+
+	potentialMatch := true
+	count := 0
+
+	for i := 0; i < len(complexity); i++ {
+		if complexity[i] == 0 {
+			if potentialMatch {
+				return count - 1
+			}
+
+			// reset stats
+			count = 0
+			potentialMatch = true
+		}
+
+		if index+i > endPoint || complexity[i] != fileJob.Content[index+i] {
+			potentialMatch = false
+		}
+
+		count++
+	}
+
+	return 0
+}
+
 func isWhitespace(currentByte byte) bool {
 	if currentByte != ' ' && currentByte != '\t' && currentByte != '\n' && currentByte != '\r' {
 		return false

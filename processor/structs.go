@@ -22,6 +22,9 @@ type LanguageFeature struct {
 	MultiLineComment  []OpenClose
 	StringChecks      []OpenClose
 	Nested            bool
+
+	// Experimental performance checks
+	Complexity []byte
 }
 
 // FileJobCallback is an interface that FileJobs can implement to get a per line callback with the line type
