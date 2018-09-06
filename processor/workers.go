@@ -350,6 +350,7 @@ func CountStats(fileJob *FileJob) {
 			case currentState == S_CODE || currentState == S_STRING || currentState == S_COMMENT_CODE || currentState == S_MULTICOMMENT_CODE:
 				{
 					fileJob.Code++
+					currentState = resetState(currentState)
 					if fileJob.Callback != nil {
 						if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_CODE) {
 							return
@@ -359,6 +360,7 @@ func CountStats(fileJob *FileJob) {
 			case currentState == S_COMMENT || currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_BLANK:
 				{
 					fileJob.Comment++
+					currentState = resetState(currentState)
 					if fileJob.Callback != nil {
 						if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
 							return
@@ -366,8 +368,6 @@ func CountStats(fileJob *FileJob) {
 					}
 				}
 			}
-
-			currentState = resetState(currentState)
 		}
 	}
 
