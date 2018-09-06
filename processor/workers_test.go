@@ -663,43 +663,6 @@ func TestCheckComplexityNoMatch(t *testing.T) {
 	}
 }
 
-func TestCheckComplexityNewMatch(t *testing.T) {
-	ProcessConstants()
-
-	fileJob := FileJob{
-		Language: "Java",
-		Content: []byte("for (int i=0; i<100; i++) {"),
-	}
-
-	complexity := []byte("for " + string(byte(0)) + "for(" + string(byte(0)))
-	complexityBytes := []byte("f")
-
-	match := checkComplexityNew('f', 0, 20, complexity, complexityBytes, &fileJob)
-
-	if match != 3 {
-		t.Errorf("Expected match")
-	}
-}
-
-func TestCheckComplexityNewNoMatch(t *testing.T) {
-	ProcessConstants()
-
-	fileJob := FileJob{
-		Language: "Java",
-		Content: []byte("foor (int i=0; i<100; i++) {"),
-	}
-
-	complexity := []byte("for " + string(byte(0)) + "for(" + string(byte(0)))
-	complexityBytes := []byte("f")
-
-	match := checkComplexityNew('f', 0, 20, complexity, complexityBytes, &fileJob)
-
-	if match != 0 {
-		t.Errorf("Expected no match")
-	}
-}
-
-
 //////////////////////////////////////////////////
 // Benchmarks Below
 //////////////////////////////////////////////////
@@ -1165,42 +1128,10 @@ func BenchmarkCheckComplexity(b *testing.B) {
 
 	complexityBytes := []byte("fiswe|&!=")
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		checkComplexity('f', 0, 20, matches, complexityBytes, &fileJob)
-	}
-}
-
-func BenchmarkCheckComplexityNew(b *testing.B) {
-	ProcessConstants()
-
-	fileJob := FileJob{
-		Language: "Java",
-		Content: []byte("A little while ago, I passed my first year mark of working for Google. This also marked the "),
-	}
-
-	matches := [][]byte{
-		[]byte("for "),
-		[]byte("for("),
-		[]byte("if "),
-		[]byte("if("),
-		[]byte("switch "),
-		[]byte("while "),
-		[]byte("else "),
-		[]byte("|| "),
-		[]byte("&& "),
-		[]byte("!= "),
-		[]byte("== "),
-	}
-
-	c := ""
-	for _, m := range matches {
-		c += string(m) + string(byte(0))
-	}
-
-	complexity := []byte(c)
-	complexityBytes := []byte("fiswe|&!=")
-
-	for i := 0; i < b.N; i++ {
-		checkComplexityNew('f', 0, 20, complexity, complexityBytes, &fileJob)
+		for j := 0; j < len(fileJob.Content); j++ {
+			checkComplexity(fileJob.Content[j], j, len(fileJob.Content), matches, complexityBytes, &fileJob)
+		}
 	}
 }
