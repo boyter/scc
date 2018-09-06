@@ -152,6 +152,18 @@ func isBinary(currentByte byte) bool {
 	return false
 }
 
+func resetState(currentState int64) int64 {
+	if currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE {
+		currentState = S_MULTICOMMENT
+	} else if currentState == S_STRING {
+		currentState = S_STRING
+	} else {
+		currentState = S_BLANK
+	}
+
+	return currentState
+}
+
 // CountStats will process the fileJob
 // If the file contains anything even just a newline its line count should be >= 1.
 // If the file has a size of 0 its line count should be 0.
@@ -355,13 +367,7 @@ func CountStats(fileJob *FileJob) {
 				}
 			}
 
-			if currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE {
-				currentState = S_MULTICOMMENT
-			} else if currentState == S_STRING {
-				currentState = S_STRING
-			} else {
-				currentState = S_BLANK
-			}
+			currentState = resetState(currentState)
 		}
 	}
 
