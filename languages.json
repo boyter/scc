@@ -5532,5 +5532,48 @@
     "extensions":[
       "zig"
     ]
+  },
+  "Powershell":{
+    "line_comment":[
+      "#"
+    ],
+    "multi_line": [
+      [
+        "<#",
+        "#>"
+      ]
+    ],
+    "complexitychecks": [
+      "while ",
+      "while(",
+      "until ",
+      "until(",
+      "for ",
+      "for(",
+      "foreach ",
+      "foreach(",
+      "if ",
+      "elseif ",
+      "else ",
+      "switch",
+      "switch(",
+      "-gt",
+      "-lt",
+      "-eq",
+      "-ne",
+      "-ge",
+      "-le",
+      "-in",
+      "-notin",
+      "-contains",
+      "-notcontains"
+    ],
+    "quotes":[
+      ["\"", "\""]
+    ],
+    "extensions":[
+      "ps1",
+      "psm1"
+    ]
   }
 }
