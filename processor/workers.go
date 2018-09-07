@@ -66,13 +66,13 @@ func checkForMatchSingle(currentByte byte, index int, endPoint int, matches []by
 }
 
 func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, matches []OpenClose, fileJob *FileJob) (int, []byte) {
-
 	potentialMatch := true
 	for i := 0; i < len(matches); i++ {
+		// This check saves a lot of needless processing and speeds up the loop
 		if currentByte == matches[i].Open[0] {
 			potentialMatch = true
 
-			for j := 1; j < len(matches[i].Open); j++ {
+			for j := 0; j < len(matches[i].Open); j++ {
 				if index+j > endPoint || matches[i].Open[j] != fileJob.Content[index+j] {
 					potentialMatch = false
 					break
@@ -227,7 +227,7 @@ func CountStats(fileJob *FileJob) {
 		state:
 			switch {
 			case currentState == S_CODE:
-				if nested || len(endComments) == 0 {
+				if len(endComments) == 0 || nested {
 					offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
 					if offsetJump != 0 {
 						endComments = append(endComments, endString)
@@ -245,7 +245,6 @@ func CountStats(fileJob *FileJob) {
 				offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, stringChecks, fileJob)
 				if offsetJump != 0 {
 					currentState = S_STRING
-					break state
 				} else {
 					if !Complexity {
 						offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, complexityBytes, fileJob)
@@ -253,7 +252,6 @@ func CountStats(fileJob *FileJob) {
 							fileJob.Complexity++
 						}
 					}
-					break state
 				}
 			case currentState == S_STRING:
 				// Its not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
@@ -263,7 +261,6 @@ func CountStats(fileJob *FileJob) {
 				}
 				break state
 			case currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE:
-
 				// Check if we are entering another multiline comment
 				if nested || len(endComments) == 0 {
 					offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
@@ -338,15 +335,6 @@ func CountStats(fileJob *FileJob) {
 			}
 
 			switch {
-			case currentState == S_BLANK:
-				{
-					fileJob.Blank++
-					if fileJob.Callback != nil {
-						if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_BLANK) {
-							return
-						}
-					}
-				}
 			case currentState == S_CODE || currentState == S_STRING || currentState == S_COMMENT_CODE || currentState == S_MULTICOMMENT_CODE:
 				{
 					fileJob.Code++
@@ -363,6 +351,15 @@ func CountStats(fileJob *FileJob) {
 					currentState = resetState(currentState)
 					if fileJob.Callback != nil {
 						if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
+							return
+						}
+					}
+				}
+			case currentState == S_BLANK:
+				{
+					fileJob.Blank++
+					if fileJob.Callback != nil {
+						if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_BLANK) {
 							return
 						}
 					}

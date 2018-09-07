@@ -1135,3 +1135,54 @@ func BenchmarkCheckComplexity(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkCheckLen(b *testing.B) {
+	matches := [][]byte{
+		[]byte("for "),
+		[]byte("for("),
+		[]byte("if "),
+		[]byte("if("),
+		[]byte("switch "),
+		[]byte("while "),
+		[]byte("else "),
+		[]byte("|| "),
+		[]byte("&& "),
+		[]byte("!= "),
+		[]byte("== "),
+	}
+
+	count := 0
+	for i := 0; i < b.N; i++ {
+		for j:=0;j<len(matches);j++ {
+			count++
+		}
+	}
+
+	b.Log(count)
+}
+
+func BenchmarkCheckLenPrecalc(b *testing.B) {
+	matches := [][]byte{
+		[]byte("for "),
+		[]byte("for("),
+		[]byte("if "),
+		[]byte("if("),
+		[]byte("switch "),
+		[]byte("while "),
+		[]byte("else "),
+		[]byte("|| "),
+		[]byte("&& "),
+		[]byte("!= "),
+		[]byte("== "),
+	}
+
+	count := 0
+	for i := 0; i < b.N; i++ {
+		len := len(matches)
+		for j:=0;j<len;j++ {
+			count++
+		}
+	}
+
+	b.Log(count)
+}
