@@ -164,6 +164,17 @@ func resetState(currentState int64) int64 {
 	return currentState
 }
 
+func shouldProcess(currentByte byte, processBytes []byte) bool {
+	// Determine if we should process the state at all based on what states we know about
+	for i:=0; i<len(processBytes); i++ {
+		if currentByte == processBytes[i] {
+			return true
+		}
+	}
+
+	return false
+}
+
 // CountStats will process the fileJob
 // If the file contains anything even just a newline its line count should be >= 1.
 // If the file has a size of 0 its line count should be 0.
@@ -184,6 +195,7 @@ func CountStats(fileJob *FileJob) {
 	multiLineCommentChecks := LanguageFeatures[fileJob.Language].MultiLineComment
 	stringChecks := LanguageFeatures[fileJob.Language].StringChecks
 	nested := LanguageFeatures[fileJob.Language].Nested
+	processBytes := LanguageFeatures[fileJob.Language].ProcessBytes
 
 	endPoint := int(fileJob.Bytes - 1)
 	currentState := S_BLANK
@@ -223,10 +235,15 @@ func CountStats(fileJob *FileJob) {
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
 		// changing anything in here and profile/measure afterwards!
+		// NB that the order of the if statements matters and has been set to what in benchmarks is most efficient
 		if !isWhitespace(fileJob.Content[index]) {
 		state:
 			switch {
 			case currentState == S_CODE:
+				if !shouldProcess(fileJob.Content[index], processBytes) {
+					break state
+				}
+
 				offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, stringChecks, fileJob)
 				if offsetJump != 0 {
 					currentState = S_STRING

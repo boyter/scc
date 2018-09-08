@@ -67,14 +67,17 @@ func ProcessConstants() {
 		singleLineComment := [][]byte{}
 		multiLineComment := []OpenClose{}
 		stringChecks := []OpenClose{}
+		processBytes := []byte{}
 
 		for _, v := range value.ComplexityChecks {
 			complexityBytes = append(complexityBytes, v[0])
 			complexityChecks = append(complexityChecks, []byte(v))
+			processBytes = append(processBytes, v[0])
 		}
 
 		for _, v := range value.LineComment {
 			singleLineComment = append(singleLineComment, []byte(v))
+			processBytes = append(processBytes, v[0])
 		}
 
 		for _, v := range value.MultiLine {
@@ -82,6 +85,7 @@ func ProcessConstants() {
 				Open:  []byte(v[0]),
 				Close: []byte(v[1]),
 			})
+			processBytes = append(processBytes, v[0][0])
 		}
 
 		for _, v := range value.Quotes {
@@ -89,21 +93,35 @@ func ProcessConstants() {
 				Open:  []byte(v[0]),
 				Close: []byte(v[1]),
 			})
+			processBytes = append(processBytes, v[0][0])
 		}
 
 		LanguageFeatures[name] = LanguageFeature{
-			ComplexityBytes:   complexityBytes,
+			ComplexityBytes:   unique(complexityBytes),
 			ComplexityChecks:  complexityChecks,
 			MultiLineComment:  multiLineComment,
 			SingleLineComment: singleLineComment,
 			StringChecks:      stringChecks,
 			Nested:            value.NestedMultiLine,
+			ProcessBytes:	   unique(processBytes),
 		}
 	}
 
 	if Trace {
 		printTrace(fmt.Sprintf("milliseconds build language features: %d", makeTimestampMilli()-startTime))
 	}
+}
+
+func unique(slice []byte) []byte {
+	keys := make(map[byte]bool)
+	list := []byte{}
+	for _, entry := range slice {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	return list
 }
 
 func processFlags() {
