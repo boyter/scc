@@ -97,31 +97,19 @@ func ProcessConstants() {
 		}
 
 		LanguageFeatures[name] = LanguageFeature{
-			ComplexityBytes:   unique(complexityBytes),
+			ComplexityBytes:   uniqueByte(complexityBytes),
 			ComplexityChecks:  complexityChecks,
 			MultiLineComment:  multiLineComment,
 			SingleLineComment: singleLineComment,
 			StringChecks:      stringChecks,
 			Nested:            value.NestedMultiLine,
-			ProcessBytes:	   unique(processBytes),
+			ProcessBytes:	   uniqueByte(processBytes),
 		}
 	}
 
 	if Trace {
 		printTrace(fmt.Sprintf("milliseconds build language features: %d", makeTimestampMilli()-startTime))
 	}
-}
-
-func unique(slice []byte) []byte {
-	keys := make(map[byte]bool)
-	list := []byte{}
-	for _, entry := range slice {
-		if _, value := keys[entry]; !value {
-			keys[entry] = true
-			list = append(list, entry)
-		}
-	}
-	return list
 }
 
 func processFlags() {
