@@ -227,6 +227,17 @@ func CountStats(fileJob *FileJob) {
 		state:
 			switch {
 			case currentState == S_CODE:
+				offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, stringChecks, fileJob)
+				if offsetJump != 0 {
+					currentState = S_STRING
+					break state
+				}
+
+				if checkForMatch(fileJob.Content[index], index, endPoint, singleLineCommentChecks, fileJob) {
+					currentState = S_COMMENT_CODE
+					break state
+				}
+
 				if len(endComments) == 0 || nested {
 					offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
 					if offsetJump != 0 {
@@ -237,20 +248,10 @@ func CountStats(fileJob *FileJob) {
 					}
 				}
 
-				if checkForMatch(fileJob.Content[index], index, endPoint, singleLineCommentChecks, fileJob) {
-					currentState = S_COMMENT_CODE
-					break state
-				}
-
-				offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, stringChecks, fileJob)
-				if offsetJump != 0 {
-					currentState = S_STRING
-				} else {
-					if !Complexity {
-						offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, complexityBytes, fileJob)
-						if offsetJump != 0 {
-							fileJob.Complexity++
-						}
+				if !Complexity {
+					offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, complexityBytes, fileJob)
+					if offsetJump != 0 {
+						fileJob.Complexity++
 					}
 				}
 			case currentState == S_STRING:
@@ -261,16 +262,6 @@ func CountStats(fileJob *FileJob) {
 				}
 				break state
 			case currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE:
-				// Check if we are entering another multiline comment
-				if nested || len(endComments) == 0 {
-					offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
-					if offsetJump != 0 {
-						endComments = append(endComments, endString)
-						index += offsetJump - 1
-						break state
-					}
-				}
-
 				if checkForMatchSingle(fileJob.Content[index], index, endPoint, endComments[len(endComments)-1], fileJob) {
 					// set offset jump here
 					offsetJump = len(endComments[len(endComments)-1])
@@ -288,15 +279,22 @@ func CountStats(fileJob *FileJob) {
 					}
 
 					index += offsetJump - 1
+					break state
+				}
+
+				// Check if we are entering another multiline comment
+				// This should come below check for match single as it speeds up processing
+				if nested || len(endComments) == 0 {
+					offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
+					if offsetJump != 0 {
+						endComments = append(endComments, endString)
+						index += offsetJump - 1
+						break state
+					}
 				}
 			case currentState == S_BLANK || currentState == S_MULTICOMMENT_BLANK:
 				// From blank we can move into comment, move into a multiline comment
 				// or move into code but we can only do one.
-				if checkForMatch(fileJob.Content[index], index, endPoint, singleLineCommentChecks, fileJob) {
-					currentState = S_COMMENT
-					break state
-				}
-
 				if nested || len(endComments) == 0 {
 					offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
 					if offsetJump != 0 {
@@ -307,13 +305,18 @@ func CountStats(fileJob *FileJob) {
 					}
 				}
 
-				// TODO test if moving this line up above comment checks improves performance
+				// Moving this above nested comments slows performance to leave it below
+				if checkForMatch(fileJob.Content[index], index, endPoint, singleLineCommentChecks, fileJob) {
+					currentState = S_COMMENT
+					break state
+				}
+
+				// Moving this above nested comments or single line comment checks slows performance so leave it below
 				offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, stringChecks, fileJob)
 				if offsetJump != 0 {
 					currentState = S_STRING
 					break state
 				}
-
 
 				currentState = S_CODE
 				if !Complexity {

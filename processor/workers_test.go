@@ -550,7 +550,7 @@ func TestCheckForMatchNoMatch(t *testing.T) {
 
 	fileJob := FileJob{
 		Language: "Rust",
-		Content: []byte("one does not simply walk into mordor"),
+		Content:  []byte("one does not simply walk into mordor"),
 	}
 
 	matches := [][]byte{
@@ -570,7 +570,7 @@ func TestCheckForMatchHasMatch(t *testing.T) {
 
 	fileJob := FileJob{
 		Language: "Rust",
-		Content: []byte("// one does not simply walk into mordor"),
+		Content:  []byte("// one does not simply walk into mordor"),
 	}
 
 	matches := [][]byte{
@@ -590,7 +590,7 @@ func TestCheckForMatchSingleNoMatch(t *testing.T) {
 
 	fileJob := FileJob{
 		Language: "Rust",
-		Content: []byte("// one does not simply walk into mordor"),
+		Content:  []byte("// one does not simply walk into mordor"),
 	}
 
 	matches := []byte("*/")
@@ -607,7 +607,7 @@ func TestCheckForMatchSingleMatch(t *testing.T) {
 
 	fileJob := FileJob{
 		Language: "Rust",
-		Content: []byte("*/ one does not simply walk into mordor"),
+		Content:  []byte("*/ one does not simply walk into mordor"),
 	}
 
 	matches := []byte("*/")
@@ -624,7 +624,7 @@ func TestCheckComplexityMatch(t *testing.T) {
 
 	fileJob := FileJob{
 		Language: "Java",
-		Content: []byte("for (int i=0; i<100; i++) {"),
+		Content:  []byte("for (int i=0; i<100; i++) {"),
 	}
 
 	matches := [][]byte{
@@ -646,7 +646,7 @@ func TestCheckComplexityNoMatch(t *testing.T) {
 
 	fileJob := FileJob{
 		Language: "Java",
-		Content: []byte("far (int i=0; i<100; i++) {"),
+		Content:  []byte("far (int i=0; i<100; i++) {"),
 	}
 
 	matches := [][]byte{
@@ -1040,7 +1040,6 @@ func BenchmarkByteLoop(b *testing.B) {
 	b.Log(count)
 }
 
-
 func BenchmarkLoopInLoop(b *testing.B) {
 	search := []byte("this is a long from for string which we will search")
 	matches := [][]byte{
@@ -1109,7 +1108,7 @@ func BenchmarkCheckComplexity(b *testing.B) {
 
 	fileJob := FileJob{
 		Language: "Java",
-		Content: []byte("A little while ago, I passed my first year mark of working for Google. This also marked the "),
+		Content:  []byte("A little while ago, I passed my first year mark of working for Google. This also marked the "),
 	}
 
 	matches := [][]byte{
@@ -1153,7 +1152,7 @@ func BenchmarkCheckLen(b *testing.B) {
 
 	count := 0
 	for i := 0; i < b.N; i++ {
-		for j:=0;j<len(matches);j++ {
+		for j := 0; j < len(matches); j++ {
 			count++
 		}
 	}
@@ -1179,7 +1178,7 @@ func BenchmarkCheckLenPrecalc(b *testing.B) {
 	count := 0
 	for i := 0; i < b.N; i++ {
 		len := len(matches)
-		for j:=0;j<len;j++ {
+		for j := 0; j < len; j++ {
 			count++
 		}
 	}
