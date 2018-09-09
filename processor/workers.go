@@ -192,6 +192,39 @@ func stringState(fileJob *FileJob, index *int, endPoint int, endString []byte, c
 	return currentState
 }
 
+func codeState(fileJob *FileJob, index int, processBytes []byte, offsetJump int, endString []byte, endPoint int, stringChecks []OpenClose, currentState int64, singleLineCommentChecks [][]byte, endComments [][]byte, nested bool, multiLineCommentChecks []OpenClose, complexityChecks [][]byte, complexityBytes []byte) (int, int, []byte, int64, [][]byte) {
+	if !shouldProcess(fileJob.Content[index], processBytes) {
+		return index, offsetJump, endString, currentState, endComments
+	}
+
+	offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, stringChecks, fileJob)
+	if offsetJump != 0 {
+		currentState = S_STRING
+		return index, offsetJump, endString, currentState, endComments
+	}
+
+	if checkForMatch(fileJob.Content[index], index, endPoint, singleLineCommentChecks, fileJob) {
+		currentState = S_COMMENT_CODE
+		return index, offsetJump, endString, currentState, endComments
+	}
+	if len(endComments) == 0 || nested {
+		offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
+		if offsetJump != 0 {
+			endComments = append(endComments, endString)
+			currentState = S_MULTICOMMENT_CODE
+			index += offsetJump - 1
+			return index, offsetJump, endString, currentState, endComments
+		}
+	}
+	if !Complexity {
+		offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, complexityBytes, fileJob)
+		if offsetJump != 0 {
+			fileJob.Complexity++
+		}
+	}
+	return index, offsetJump, endString, currentState, endComments
+}
+
 // CountStats will process the fileJob
 // If the file contains anything even just a newline its line count should be >= 1.
 // If the file has a size of 0 its line count should be 0.
@@ -257,37 +290,7 @@ func CountStats(fileJob *FileJob) {
 		state:
 			switch {
 			case currentState == S_CODE:
-				if !shouldProcess(fileJob.Content[index], processBytes) {
-					break state
-				}
-
-				offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, stringChecks, fileJob)
-				if offsetJump != 0 {
-					currentState = S_STRING
-					break state
-				}
-
-				if checkForMatch(fileJob.Content[index], index, endPoint, singleLineCommentChecks, fileJob) {
-					currentState = S_COMMENT_CODE
-					break state
-				}
-
-				if len(endComments) == 0 || nested {
-					offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
-					if offsetJump != 0 {
-						endComments = append(endComments, endString)
-						currentState = S_MULTICOMMENT_CODE
-						index += offsetJump - 1
-						break state
-					}
-				}
-
-				if !Complexity {
-					offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, complexityBytes, fileJob)
-					if offsetJump != 0 {
-						fileJob.Complexity++
-					}
-				}
+				index, offsetJump, endString, currentState, endComments = codeState(fileJob, index, processBytes, offsetJump, endString, endPoint, stringChecks, currentState, singleLineCommentChecks, endComments, nested, multiLineCommentChecks, complexityChecks, complexityBytes)
 			case currentState == S_STRING:
 				currentState = stringState(fileJob, &index, endPoint, endString, currentState)
 			case currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE:
