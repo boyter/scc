@@ -193,35 +193,44 @@ func stringState(fileJob *FileJob, index *int, endPoint int, endString []byte, c
 }
 
 func codeState(fileJob *FileJob, index int, processBytes []byte, offsetJump int, endString []byte, endPoint int, stringChecks []OpenClose, currentState int64, singleLineCommentChecks [][]byte, endComments [][]byte, nested bool, multiLineCommentChecks []OpenClose, complexityChecks [][]byte, complexityBytes []byte) (int, int, []byte, int64, [][]byte) {
-	if !shouldProcess(fileJob.Content[index], processBytes) {
-		return index, offsetJump, endString, currentState, endComments
-	}
 
-	offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, stringChecks, fileJob)
-	if offsetJump != 0 {
-		currentState = S_STRING
-		return index, offsetJump, endString, currentState, endComments
-	}
+	for i := index; i < endPoint; i++ {
+		index = i
 
-	if checkForMatch(fileJob.Content[index], index, endPoint, singleLineCommentChecks, fileJob) {
-		currentState = S_COMMENT_CODE
-		return index, offsetJump, endString, currentState, endComments
-	}
-	if len(endComments) == 0 || nested {
-		offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
-		if offsetJump != 0 {
-			endComments = append(endComments, endString)
-			currentState = S_MULTICOMMENT_CODE
-			index += offsetJump - 1
+		if fileJob.Content[i] == '\n' {
 			return index, offsetJump, endString, currentState, endComments
 		}
-	}
-	if !Complexity {
-		offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, complexityBytes, fileJob)
-		if offsetJump != 0 {
-			fileJob.Complexity++
+		
+
+		if shouldProcess(fileJob.Content[i], processBytes) {
+			offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[i], i, endPoint, stringChecks, fileJob)
+			if offsetJump != 0 {
+				currentState = S_STRING
+				return i, offsetJump, endString, currentState, endComments
+			}
+
+			if checkForMatch(fileJob.Content[i], i, endPoint, singleLineCommentChecks, fileJob) {
+				currentState = S_COMMENT_CODE
+				return i, offsetJump, endString, currentState, endComments
+			}
+			if len(endComments) == 0 || nested {
+				offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[i], i, endPoint, multiLineCommentChecks, fileJob)
+				if offsetJump != 0 {
+					endComments = append(endComments, endString)
+					currentState = S_MULTICOMMENT_CODE
+					i += offsetJump - 1
+					return i, offsetJump, endString, currentState, endComments
+				}
+			}
+			if !Complexity {
+				offsetJump = checkComplexity(fileJob.Content[i], i, endPoint, complexityChecks, complexityBytes, fileJob)
+				if offsetJump != 0 {
+					fileJob.Complexity++
+				}
+			}
 		}
 	}
+
 	return index, offsetJump, endString, currentState, endComments
 }
 
