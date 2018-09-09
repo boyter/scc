@@ -175,6 +175,23 @@ func shouldProcess(currentByte byte, processBytes []byte) bool {
 	return false
 }
 
+func stringState(fileJob *FileJob, index *int, endPoint int, endString []byte, currentState int64) int64 {
+	// Its not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
+	// without checking if it is out of bounds first
+	for i:= *index; i < endPoint; i++ {
+		*index = i
+		if fileJob.Content[i] == '\n' {
+			return currentState
+		}
+
+		if fileJob.Content[i-1] != '\\' && checkForMatchSingle(fileJob.Content[i], i, endPoint, endString, fileJob) {
+			return S_CODE
+		}
+	}
+
+	return currentState
+}
+
 // CountStats will process the fileJob
 // If the file contains anything even just a newline its line count should be >= 1.
 // If the file has a size of 0 its line count should be 0.
@@ -272,12 +289,7 @@ func CountStats(fileJob *FileJob) {
 					}
 				}
 			case currentState == S_STRING:
-				// Its not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
-				// without checking if it is out of bounds first
-				if fileJob.Content[index-1] != '\\' && checkForMatchSingle(fileJob.Content[index], index, endPoint, endString, fileJob) {
-					currentState = S_CODE
-				}
-				break state
+				currentState = stringState(fileJob, &index, endPoint, endString, currentState)
 			case currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE:
 				if checkForMatchSingle(fileJob.Content[index], index, endPoint, endComments[len(endComments)-1], fileJob) {
 					// set offset jump here
