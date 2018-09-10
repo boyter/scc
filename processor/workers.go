@@ -234,6 +234,80 @@ func codeState(fileJob *FileJob, index int, processBytes []byte, offsetJump int,
 	return index, offsetJump, endString, currentState, endComments
 }
 
+func commentState(fileJob *FileJob, index int, endPoint int, endComments [][]byte, offsetJump int, currentState int64, nested bool, endString []byte, multiLineCommentChecks []OpenClose) (int, [][]byte, int, int64, []byte) {
+	for i := index; i < endPoint; i++ {
+		index = i
+
+		if fileJob.Content[i] == '\n' {
+			return index, endComments, offsetJump, currentState, endString
+		}
+
+		if checkForMatchSingle(fileJob.Content[index], index, endPoint, endComments[len(endComments)-1], fileJob) {
+			// set offset jump here
+			offsetJump = len(endComments[len(endComments)-1])
+			endComments = endComments[:len(endComments)-1]
+
+			if len(endComments) == 0 {
+				// If we started as multiline code switch back to code so we count correctly
+				// IE i := 1 /* for the lols */
+				// TODO is that required? Might still be required to count correctly
+				if currentState == S_MULTICOMMENT_CODE {
+					currentState = S_CODE // TODO pointless to change here, just set S_MULTICOMMENT_BLANK
+				} else {
+					currentState = S_MULTICOMMENT_BLANK
+				}
+			}
+
+			index += offsetJump - 1
+			return index, endComments, offsetJump, currentState, endString
+		}
+		// Check if we are entering another multiline comment
+		// This should come below check for match single as it speeds up processing
+		if nested || len(endComments) == 0 {
+			offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
+			if offsetJump != 0 {
+				endComments = append(endComments, endString)
+				index += offsetJump - 1
+				return index, endComments, offsetJump, currentState, endString
+			}
+		}
+	}
+
+	return index, endComments, offsetJump, currentState, endString
+}
+
+func blankState(nested bool, endComments [][]byte, offsetJump int, endString []byte, fileJob *FileJob, index int, endPoint int, multiLineCommentChecks []OpenClose, currentState int64, singleLineCommentChecks [][]byte, stringChecks []OpenClose, complexityChecks [][]byte, complexityBytes []byte) (int, int64, []byte, [][]byte) {
+	if nested || len(endComments) == 0 {
+		offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
+		if offsetJump != 0 {
+			endComments = append(endComments, endString)
+			currentState = S_MULTICOMMENT
+			index += offsetJump - 1
+			return index, currentState, endString, endComments
+		}
+	}
+	// Moving this above nested comments slows performance to leave it below
+	if checkForMatch(fileJob.Content[index], index, endPoint, singleLineCommentChecks, fileJob) {
+		currentState = S_COMMENT
+		return index, currentState, endString, endComments
+	}
+	// Moving this above nested comments or single line comment checks slows performance so leave it below
+	offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, stringChecks, fileJob)
+	if offsetJump != 0 {
+		currentState = S_STRING
+		return index, currentState, endString, endComments
+	}
+	currentState = S_CODE
+	if !Complexity {
+		offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, complexityBytes, fileJob)
+		if offsetJump != 0 {
+			fileJob.Complexity++
+		}
+	}
+
+	return index, currentState, endString, endComments
+}
+
 // CountStats will process the fileJob
 // If the file contains anything even just a newline its line count should be >= 1.
 // If the file has a size of 0 its line count should be 0.
@@ -296,76 +370,17 @@ func CountStats(fileJob *FileJob) {
 		// changing anything in here and profile/measure afterwards!
 		// NB that the order of the if statements matters and has been set to what in benchmarks is most efficient
 		if !isWhitespace(fileJob.Content[index]) {
-		state:
 			switch {
 			case currentState == S_CODE:
 				index, offsetJump, endString, currentState, endComments = codeState(fileJob, index, processBytes, offsetJump, endString, endPoint, stringChecks, currentState, singleLineCommentChecks, endComments, nested, multiLineCommentChecks, complexityChecks, complexityBytes)
 			case currentState == S_STRING:
 				currentState = stringState(fileJob, &index, endPoint, endString, currentState)
 			case currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE:
-				if checkForMatchSingle(fileJob.Content[index], index, endPoint, endComments[len(endComments)-1], fileJob) {
-					// set offset jump here
-					offsetJump = len(endComments[len(endComments)-1])
-					endComments = endComments[:len(endComments)-1]
-
-					if len(endComments) == 0 {
-						// If we started as multiline code switch back to code so we count correctly
-						// IE i := 1 /* for the lols */
-						// TODO is that required? Might still be required to count correctly
-						if currentState == S_MULTICOMMENT_CODE {
-							currentState = S_CODE // TODO pointless to change here, just set S_MULTICOMMENT_BLANK
-						} else {
-							currentState = S_MULTICOMMENT_BLANK
-						}
-					}
-
-					index += offsetJump - 1
-					break state
-				}
-
-				// Check if we are entering another multiline comment
-				// This should come below check for match single as it speeds up processing
-				if nested || len(endComments) == 0 {
-					offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
-					if offsetJump != 0 {
-						endComments = append(endComments, endString)
-						index += offsetJump - 1
-						break state
-					}
-				}
+				index, endComments, offsetJump, currentState, endString = commentState(fileJob, index, endPoint, endComments, offsetJump, currentState, nested, endString, multiLineCommentChecks)
 			case currentState == S_BLANK || currentState == S_MULTICOMMENT_BLANK:
 				// From blank we can move into comment, move into a multiline comment
 				// or move into code but we can only do one.
-				if nested || len(endComments) == 0 {
-					offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
-					if offsetJump != 0 {
-						endComments = append(endComments, endString)
-						currentState = S_MULTICOMMENT
-						index += offsetJump - 1
-						break state
-					}
-				}
-
-				// Moving this above nested comments slows performance to leave it below
-				if checkForMatch(fileJob.Content[index], index, endPoint, singleLineCommentChecks, fileJob) {
-					currentState = S_COMMENT
-					break state
-				}
-
-				// Moving this above nested comments or single line comment checks slows performance so leave it below
-				offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, stringChecks, fileJob)
-				if offsetJump != 0 {
-					currentState = S_STRING
-					break state
-				}
-
-				currentState = S_CODE
-				if !Complexity {
-					offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, complexityBytes, fileJob)
-					if offsetJump != 0 {
-						fileJob.Complexity++
-					}
-				}
+				index, currentState, endString, endComments = blankState(nested, endComments, offsetJump, endString, fileJob, index, endPoint, multiLineCommentChecks, currentState, singleLineCommentChecks, stringChecks, complexityChecks, complexityBytes)
 			}
 		}
 
