@@ -193,21 +193,21 @@ func shouldProcess(currentByte, processBytesMask byte, processBytes []byte) bool
 	return false
 }
 
-func stringState(fileJob *FileJob, index *int, endPoint int, stringMask byte, endString []byte, currentState int64) int64 {
+func stringState(fileJob *FileJob, index int, endPoint int, stringMask byte, endString []byte, currentState int64) (int, int64) {
 	// Its not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
 	// without checking if it is out of bounds first
-	for i:= *index; i < endPoint; i++ {
-		*index = i
+	for i:=index; i < endPoint; i++ {
+		index = i
 		if fileJob.Content[i] == '\n' {
-			return currentState
+			return index, currentState
 		}
 
 		if fileJob.Content[i-1] != '\\' && checkForMatchSingle(fileJob.Content[i], i, endPoint, stringMask, endString, fileJob) {
-			return S_CODE
+			return index, S_CODE
 		}
 	}
 
-	return currentState
+	return index, currentState
 }
 
 func codeState(
@@ -456,7 +456,7 @@ func CountStats(fileJob *FileJob) {
 					complexityBytes,
 				)
 			case S_STRING:
-				currentState = stringState(fileJob, &index, endPoint, stringMask, endString, currentState)
+				index, currentState = stringState(fileJob, index, endPoint, stringMask, endString, currentState)
 			case S_MULTICOMMENT, S_MULTICOMMENT_CODE:
 				index, endComments, offsetJump, currentState, endString = commentState(
 					fileJob,
