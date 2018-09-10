@@ -88,6 +88,29 @@ func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, matches [
 	return 0, nil
 }
 
+func checkForMatchMultiClose(currentByte byte, index int, endPoint int, matches []OpenClose, fileJob *FileJob) int {
+
+	potentialMatch := true
+	for i := 0; i < len(matches); i++ {
+		if currentByte == matches[i].Close[0] {
+			potentialMatch = true
+
+			for j := 1; j < len(matches[i].Close); j++ {
+				if index+j > endPoint || matches[i].Close[j] != fileJob.Content[index+j] {
+					potentialMatch = false
+					break
+				}
+			}
+
+			if potentialMatch {
+				return len(matches[i].Close)
+			}
+		}
+	}
+
+	return 0
+}
+
 func checkComplexity(currentByte byte, index int, endPoint int, matches [][]byte, complexityBytes []byte, fileJob *FileJob) int {
 	// Special case if the thing we are matching is not the first thing in the file
 	// then we need to check that there was a whitespace before it
@@ -164,17 +187,6 @@ func resetState(currentState int64) int64 {
 	return currentState
 }
 
-func shouldProcess(currentByte byte, processBytes []byte) bool {
-	// Determine if we should process the state at all based on what states we know about
-	for i:=0; i<len(processBytes); i++ {
-		if currentByte == processBytes[i] {
-			return true
-		}
-	}
-
-	return false
-}
-
 // CountStats will process the fileJob
 // If the file contains anything even just a newline its line count should be >= 1.
 // If the file has a size of 0 its line count should be 0.
@@ -194,12 +206,9 @@ func CountStats(fileJob *FileJob) {
 	singleLineCommentChecks := LanguageFeatures[fileJob.Language].SingleLineComment
 	multiLineCommentChecks := LanguageFeatures[fileJob.Language].MultiLineComment
 	stringChecks := LanguageFeatures[fileJob.Language].StringChecks
-	nested := LanguageFeatures[fileJob.Language].Nested
-	processBytes := LanguageFeatures[fileJob.Language].ProcessBytes
 
 	endPoint := int(fileJob.Bytes - 1)
 	currentState := S_BLANK
-	endComments := [][]byte{}
 	endString := []byte{}
 
 	// If we have checked bytes ahead of where we are we can jump ahead and save time
@@ -214,14 +223,35 @@ func CountStats(fileJob *FileJob) {
 	digest := md5.New()
 	digestible := []byte{' '}
 
+	// Build bitmasks for prefiltering. These behave more or less like bloom
+	// filters in that they provide a quick way to filter most cases, but may
+	// allow some false positives. A more expensive check is still required to
+	// finalise the match, but it beats having to do the full check all the
+	// time.
+	var slCommentMask byte
+	for _, commentCheck := range singleLineCommentChecks {
+		slCommentMask |= commentCheck[0]
+	}
+
+	var mlCommentMask byte
+	for _, commentCheck := range multiLineCommentChecks {
+		mlCommentMask |= commentCheck.Open[0]
+	}
+
+	var stringMask byte
+	for _, stringCheck := range stringChecks {
+		stringMask |= stringCheck.Open[0]
+	}
+
 	for index := 0; index < len(fileJob.Content); index++ {
+		currentByte := fileJob.Content[index]
 		offsetJump = 0
 
 		if Duplicates {
 			// Technically this is wrong because we skip bytes so this is not a true
 			// hash of the file contents, but for duplicate files it shouldn't matter
 			// as both will skip the same way
-			digestible[0] = fileJob.Content[index]
+			digestible[0] = currentByte
 			digest.Write(digestible)
 		}
 
@@ -235,104 +265,93 @@ func CountStats(fileJob *FileJob) {
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
 		// changing anything in here and profile/measure afterwards!
-		// NB that the order of the if statements matters and has been set to what in benchmarks is most efficient
-		if !isWhitespace(fileJob.Content[index]) {
-		state:
-			switch {
-			case currentState == S_CODE:
-				if !shouldProcess(fileJob.Content[index], processBytes) {
-					break state
-				}
-
-				offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, stringChecks, fileJob)
-				if offsetJump != 0 {
-					currentState = S_STRING
-					break state
-				}
-
-				if checkForMatch(fileJob.Content[index], index, endPoint, singleLineCommentChecks, fileJob) {
-					currentState = S_COMMENT_CODE
-					break state
-				}
-
-				if len(endComments) == 0 || nested {
-					offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
-					if offsetJump != 0 {
-						endComments = append(endComments, endString)
-						currentState = S_MULTICOMMENT_CODE
-						index += offsetJump - 1
-						break state
+		if !isWhitespace(currentByte) {
+			switch currentState {
+			case S_BLANK, S_MULTICOMMENT_BLANK:
+				// From blank we can move into comment, move into a multiline comment
+				// or move into code but we can only do one.
+				if currentByte&slCommentMask == currentByte {
+					if checkForMatch(currentByte, index, endPoint, singleLineCommentChecks, fileJob) {
+						currentState = S_COMMENT
+						break
 					}
 				}
 
+				if currentByte&mlCommentMask == currentByte {
+					offsetJump, endString = checkForMatchMultiOpen(currentByte, index, endPoint, multiLineCommentChecks, fileJob)
+					if offsetJump != 0 {
+						currentState = S_MULTICOMMENT
+						break
+					}
+				}
+
+				if currentByte&stringMask == currentByte {
+					offsetJump, endString = checkForMatchMultiOpen(currentByte, index, endPoint, stringChecks, fileJob)
+					if offsetJump != 0 {
+						currentState = S_STRING
+						break
+					}
+				}
+
+				// Note: We'll only reach here for non-whitespace bytes, which
+				// would be caught by the first switch case.
+				currentState = S_CODE
+
 				if !Complexity {
-					offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityChecks, complexityBytes, fileJob)
+					offsetJump = checkComplexity(currentByte, index, endPoint, complexityChecks, complexityBytes, fileJob)
 					if offsetJump != 0 {
 						fileJob.Complexity++
 					}
 				}
-			case currentState == S_STRING:
-				// Its not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
-				// without checking if it is out of bounds first
-				if fileJob.Content[index-1] != '\\' && checkForMatchSingle(fileJob.Content[index], index, endPoint, endString, fileJob) {
-					currentState = S_CODE
+				break
+			case S_CODE:
+				if currentByte&mlCommentMask == currentByte {
+					// From code we can move into a multiline comment or string
+					offsetJump, endString = checkForMatchMultiOpen(currentByte, index, endPoint, multiLineCommentChecks, fileJob)
+					if offsetJump != 0 {
+						currentState = S_MULTICOMMENT_CODE
+						break
+					}
 				}
-				break state
-			case currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE:
-				if checkForMatchSingle(fileJob.Content[index], index, endPoint, endComments[len(endComments)-1], fileJob) {
-					// set offset jump here
-					offsetJump = len(endComments[len(endComments)-1])
-					endComments = endComments[:len(endComments)-1]
 
-					if len(endComments) == 0 {
-						// If we started as multiline code switch back to code so we count correctly
-						// IE i := 1 /* for the lols */
-						// TODO is that required? Might still be required to count correctly
-						if currentState == S_MULTICOMMENT_CODE {
-							currentState = S_CODE // TODO pointless to change here, just set S_MULTICOMMENT_BLANK
-						} else {
-							currentState = S_MULTICOMMENT_BLANK
+				if currentByte&stringMask == currentByte {
+					offsetJump, endString = checkForMatchMultiOpen(currentByte, index, endPoint, stringChecks, fileJob)
+					if offsetJump != 0 {
+						currentState = S_STRING
+						break
+					} else {
+						if !Complexity {
+							offsetJump = checkComplexity(currentByte, index, endPoint, complexityChecks, complexityBytes, fileJob)
+							if offsetJump != 0 {
+								fileJob.Complexity++
+							}
 						}
-					}
-
-					index += offsetJump - 1
-					break state
-				}
-
-				// Check if we are entering another multiline comment
-				// This should come below check for match single as it speeds up processing
-				if nested || len(endComments) == 0 {
-					offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
-					if offsetJump != 0 {
-						endComments = append(endComments, endString)
-						index += offsetJump - 1
-						break state
+						break
 					}
 				}
-			case currentState == S_BLANK || currentState == S_MULTICOMMENT_BLANK:
-				// From blank we can move into comment, move into a multiline comment
-				// or move into code but we can only do one.
-				if nested || len(endComments) == 0 {
-					offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, multiLineCommentChecks, fileJob)
-					if offsetJump != 0 {
-						endComments = append(endComments, endString)
-						currentState = S_MULTICOMMENT
-						index += offsetJump - 1
-						break state
+			case S_STRING:
+				if currentByte&stringMask == currentByte {
+					// Its not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
+					// without checking if it is out of bounds first
+					if fileJob.Content[index-1] != '\\' && checkForMatchSingle(currentByte, index, endPoint, endString, fileJob) {
+						currentState = S_CODE
 					}
+					break
 				}
+			case S_MULTICOMMENT, S_MULTICOMMENT_CODE:
+				offsetJump = checkForMatchMultiClose(currentByte, index, endPoint, multiLineCommentChecks, fileJob)
 
 				// Moving this above nested comments slows performance to leave it below
 				if checkForMatch(fileJob.Content[index], index, endPoint, singleLineCommentChecks, fileJob) {
 					currentState = S_COMMENT
-					break state
+					break
 				}
 
 				// Moving this above nested comments or single line comment checks slows performance so leave it below
 				offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, stringChecks, fileJob)
 				if offsetJump != 0 {
 					currentState = S_STRING
-					break state
+					break
 				}
 
 				currentState = S_CODE
@@ -347,41 +366,35 @@ func CountStats(fileJob *FileJob) {
 
 		// This means the end of processing the line so calculate the stats according to what state
 		// we are currently in
-		if fileJob.Content[index] == '\n' || index >= endPoint {
+		if currentByte == '\n' || index >= endPoint {
 			fileJob.Lines++
 
 			if Trace {
 				printTrace(fmt.Sprintf("%s line %d ended with state: %d", fileJob.Location, fileJob.Lines, currentState))
 			}
 
-			switch {
-			case currentState == S_CODE || currentState == S_STRING || currentState == S_COMMENT_CODE || currentState == S_MULTICOMMENT_CODE:
-				{
-					fileJob.Code++
-					currentState = resetState(currentState)
-					if fileJob.Callback != nil {
-						if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_CODE) {
-							return
-						}
+			switch currentState {
+			case S_CODE, S_STRING, S_COMMENT_CODE, S_MULTICOMMENT_CODE:
+				fileJob.Code++
+				currentState = resetState(currentState)
+				if fileJob.Callback != nil {
+					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_CODE) {
+						return
 					}
 				}
-			case currentState == S_COMMENT || currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_BLANK:
-				{
-					fileJob.Comment++
-					currentState = resetState(currentState)
-					if fileJob.Callback != nil {
-						if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
-							return
-						}
+			case S_COMMENT, S_MULTICOMMENT, S_MULTICOMMENT_BLANK:
+				fileJob.Comment++
+				currentState = resetState(currentState)
+				if fileJob.Callback != nil {
+					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
+						return
 					}
 				}
-			case currentState == S_BLANK:
-				{
-					fileJob.Blank++
-					if fileJob.Callback != nil {
-						if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_BLANK) {
-							return
-						}
+			case S_BLANK:
+				fileJob.Blank++
+				if fileJob.Callback != nil {
+					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_BLANK) {
+						return
 					}
 				}
 			}
