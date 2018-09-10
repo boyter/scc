@@ -64,21 +64,30 @@ func ProcessConstants() {
 	for name, value := range database {
 		complexityBytes := []byte{}
 		complexityChecks := [][]byte{}
+		complexityMask := byte(0)
 		singleLineComment := [][]byte{}
+		singleLineCommentMask := byte(0)
 		multiLineComment := []OpenClose{}
+		multiLineCommentMask := byte(0)
 		stringChecks := []OpenClose{}
+		stringMask := byte(0)
 		processBytes := []byte{}
+		processMask := byte(0)
 
 		for _, v := range value.ComplexityChecks {
 			complexityBytes = append(complexityBytes, v[0])
 			complexityChecks = append(complexityChecks, []byte(v))
 			processBytes = append(processBytes, v[0])
+			complexityMask |= v[0]
 		}
+		processMask |= complexityMask
 
 		for _, v := range value.LineComment {
 			singleLineComment = append(singleLineComment, []byte(v))
 			processBytes = append(processBytes, v[0])
+			singleLineCommentMask |= v[0]
 		}
+		processMask |= singleLineCommentMask
 
 		for _, v := range value.MultiLine {
 			multiLineComment = append(multiLineComment, OpenClose{
@@ -86,7 +95,9 @@ func ProcessConstants() {
 				Close: []byte(v[1]),
 			})
 			processBytes = append(processBytes, v[0][0])
+			multiLineCommentMask |= v[0][0]
 		}
+		processMask |= multiLineCommentMask
 
 		for _, v := range value.Quotes {
 			stringChecks = append(stringChecks, OpenClose{
@@ -94,16 +105,23 @@ func ProcessConstants() {
 				Close: []byte(v[1]),
 			})
 			processBytes = append(processBytes, v[0][0])
+			stringMask |= v[0][0]
 		}
+		processMask |= stringMask
 
 		LanguageFeatures[name] = LanguageFeature{
 			ComplexityBytes:   uniqueByte(complexityBytes),
 			ComplexityChecks:  complexityChecks,
+			ComplexityCheckMask: complexityMask,
 			MultiLineComment:  multiLineComment,
+			MultiLineCommentMask: multiLineCommentMask,
 			SingleLineComment: singleLineComment,
+			SingleLineCommentMask: singleLineCommentMask,
 			StringChecks:      stringChecks,
+			StringCheckMask: stringMask,
 			Nested:            value.NestedMultiLine,
 			ProcessBytes:	   uniqueByte(processBytes),
+			ProcessMask:       processMask,
 		}
 	}
 
