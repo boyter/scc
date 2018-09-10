@@ -110,18 +110,18 @@ func ProcessConstants() {
 		processMask |= stringMask
 
 		LanguageFeatures[name] = LanguageFeature{
-			ComplexityBytes:   uniqueByte(complexityBytes),
-			ComplexityChecks:  complexityChecks,
-			ComplexityCheckMask: complexityMask,
-			MultiLineComment:  multiLineComment,
-			MultiLineCommentMask: multiLineCommentMask,
-			SingleLineComment: singleLineComment,
+			ComplexityBytes:       uniqueByte(complexityBytes),
+			ComplexityChecks:      complexityChecks,
+			ComplexityCheckMask:   complexityMask,
+			MultiLineComment:      multiLineComment,
+			MultiLineCommentMask:  multiLineCommentMask,
+			SingleLineComment:     singleLineComment,
 			SingleLineCommentMask: singleLineCommentMask,
-			StringChecks:      stringChecks,
-			StringCheckMask: stringMask,
-			Nested:            value.NestedMultiLine,
-			ProcessBytes:	   uniqueByte(processBytes),
-			ProcessMask:       processMask,
+			StringChecks:          stringChecks,
+			StringCheckMask:       stringMask,
+			Nested:                value.NestedMultiLine,
+			ProcessBytes:          uniqueByte(processBytes),
+			ProcessMask:           processMask,
 		}
 	}
 

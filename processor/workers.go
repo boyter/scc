@@ -27,7 +27,7 @@ const (
 )
 
 func checkForMatch(currentByte byte, index int, endPoint int, mask byte, matches [][]byte, fileJob *FileJob) bool {
-	if currentByte & mask != currentByte {
+	if currentByte&mask != currentByte {
 		return false
 	}
 
@@ -51,7 +51,7 @@ func checkForMatch(currentByte byte, index int, endPoint int, mask byte, matches
 }
 
 func checkForMatchSingle(currentByte byte, index int, endPoint int, mask byte, matches []byte, fileJob *FileJob) bool {
-	if currentByte & mask != currentByte {
+	if currentByte&mask != currentByte {
 		return false
 	}
 
@@ -73,7 +73,7 @@ func checkForMatchSingle(currentByte byte, index int, endPoint int, mask byte, m
 }
 
 func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, mask byte, matches []OpenClose, fileJob *FileJob) (int, []byte) {
-	if currentByte & mask != currentByte {
+	if currentByte&mask != currentByte {
 		return 0, nil
 	}
 
@@ -110,7 +110,7 @@ func checkComplexity(currentByte byte, index int, endPoint int, mask byte, match
 		}
 	}
 
-	if currentByte & mask != currentByte {
+	if currentByte&mask != currentByte {
 		return 0
 	}
 
@@ -180,11 +180,12 @@ func resetState(currentState int64) int64 {
 }
 
 func shouldProcess(currentByte, processBytesMask byte, processBytes []byte) bool {
-	if currentByte & processBytesMask != currentByte {
+	if currentByte&processBytesMask != currentByte {
 		return false
 	}
+
 	// Determine if we should process the state at all based on what states we know about
-	for i:=0; i<len(processBytes); i++ {
+	for i := 0; i < len(processBytes); i++ {
 		if currentByte == processBytes[i] {
 			return true
 		}
@@ -196,7 +197,7 @@ func shouldProcess(currentByte, processBytesMask byte, processBytes []byte) bool
 func stringState(fileJob *FileJob, index int, endPoint int, stringMask byte, endString []byte, currentState int64) (int, int64) {
 	// Its not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
 	// without checking if it is out of bounds first
-	for i:=index; i < endPoint; i++ {
+	for i := index; i < endPoint; i++ {
 		index = i
 		if fileJob.Content[i] == '\n' {
 			return index, currentState

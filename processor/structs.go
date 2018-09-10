@@ -16,18 +16,18 @@ type Language struct {
 }
 
 type LanguageFeature struct {
-	ComplexityChecks  [][]byte
-	ComplexityCheckMask byte
-	ComplexityBytes   []byte
-	SingleLineComment [][]byte
+	ComplexityChecks      [][]byte
+	ComplexityCheckMask   byte
+	ComplexityBytes       []byte
+	SingleLineComment     [][]byte
 	SingleLineCommentMask byte
-	MultiLineComment  []OpenClose
-	MultiLineCommentMask byte
-	StringChecks      []OpenClose
-	StringCheckMask byte
-	Nested            bool
-	ProcessBytes      []byte
-	ProcessMask       byte
+	MultiLineComment      []OpenClose
+	MultiLineCommentMask  byte
+	StringChecks          []OpenClose
+	StringCheckMask       byte
+	Nested                bool
+	ProcessBytes          []byte
+	ProcessMask           byte
 }
 
 // FileJobCallback is an interface that FileJobs can implement to get a per line callback with the line type
