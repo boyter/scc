@@ -74,7 +74,7 @@ func checkForMatchSingle(currentByte byte, index int, endPoint int, mask byte, m
 
 func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, mask byte, matches []OpenClose, fileJob *FileJob) (int, []byte) {
 	if currentByte & mask != currentByte {
-		return 0, []byte{}
+		return 0, nil
 	}
 
 	potentialMatch := true
