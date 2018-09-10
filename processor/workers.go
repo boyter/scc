@@ -280,7 +280,7 @@ func commentState(fileJob *FileJob, index int, endPoint int, slCommentMask byte,
 			return index, endComments, offsetJump, currentState, endString
 		}
 
-		if checkForMatchSingle(fileJob.Content[index], index, endPoint, slCommentMask, endComments[len(endComments)-1], fileJob) {
+		if checkForMatchSingle(fileJob.Content[index], index, endPoint, byte(0xFF), endComments[len(endComments)-1], fileJob) {
 			// set offset jump here
 			offsetJump = len(endComments[len(endComments)-1])
 			endComments = endComments[:len(endComments)-1]

@@ -686,15 +686,15 @@ t`)
 	}
 
 	if fileJob.Code != 1 {
-		t.Errorf("Expected 1 lines got %d", fileJob.Code)
+		t.Errorf("Expected 1 code lines got %d", fileJob.Code)
 	}
 
 	if fileJob.Comment != 2 {
-		t.Errorf("Expected 2 lines got %d", fileJob.Comment)
+		t.Errorf("Expected 2 comment lines got %d", fileJob.Comment)
 	}
 
 	if fileJob.Blank != 0 {
-		t.Errorf("Expected 0 lines got %d", fileJob.Blank)
+		t.Errorf("Expected 0 blank lines got %d", fileJob.Blank)
 	}
 }
 
