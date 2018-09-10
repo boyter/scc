@@ -132,10 +132,53 @@ end
 	}
 }
 
-// TODO improve logic so the below works
-// The reason it does not is due to the nested /* which is not supported in Java
-// hence I never implemented the logic to support it. Turns out languages such
-// as rust do support this... so off we go.
+func TestCountStatsAccuracyRuby(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Ruby",
+	}
+
+	fileJob.Content = []byte(`# 20 lines 9 code 8 comments 3 blanks
+x = 3
+if x < 2
+  p = "Smaller"
+else
+  p = "Bigger"
+end
+
+=begin
+  Comments
+  Comments
+  Comments
+  Comments
+=end
+
+# testing.
+while x > 2 and x < 10
+  x += 1
+end
+
+`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 20 {
+		t.Errorf("Expected 20 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 9 {
+		t.Errorf("Expected 9 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 8 {
+		t.Errorf("Expected 8 lines got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 3 {
+		t.Errorf("Expected 3 lines got %d", fileJob.Blank)
+	}
+}
+
 func TestCountStatsAccuracyTokeiTest(t *testing.T) {
 	ProcessConstants()
 	fileJob := FileJob{

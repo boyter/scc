@@ -669,6 +669,35 @@ func TestCheckComplexityNoMatch(t *testing.T) {
 	}
 }
 
+func TestCountStatsRubyRegression(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Ruby",
+	}
+
+	fileJob.Content = []byte(`=begin
+=end
+t`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 3 {
+		t.Errorf("Expected 3 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 2 {
+		t.Errorf("Expected 2 lines got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Blank)
+	}
+}
+
 //////////////////////////////////////////////////
 // Benchmarks Below
 //////////////////////////////////////////////////
