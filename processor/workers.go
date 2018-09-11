@@ -353,18 +353,6 @@ func CountStats(fileJob *FileJob) {
 
 	langFeatures := LanguageFeatures[fileJob.Language]
 
-	//complexityMask := langFeatures.ComplexityCheckMask
-	//complexityChecks := langFeatures.ComplexityChecks
-	//complexityBytes := langFeatures.ComplexityBytes
-	//slCommentMask := langFeatures.SingleLineCommentMask
-	//singleLineCommentChecks := langFeatures.SingleLineComment
-	//mlCommentMask := langFeatures.MultiLineCommentMask
-	//multiLineCommentChecks := langFeatures.MultiLineComment
-	//stringMask := langFeatures.StringCheckMask
-	//stringChecks := langFeatures.StringChecks
-	//nested := langFeatures.Nested
-	//processMask := langFeatures.ProcessMask
-
 	endPoint := int(fileJob.Bytes - 1)
 	currentState := S_BLANK
 	endComments := [][]byte{}
