@@ -195,9 +195,9 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringMask byte, end
 func codeState(
 	fileJob *FileJob,
 	index int,
-	endString []byte,
 	endPoint int,
 	currentState int64,
+	endString []byte,
 	endComments [][]byte,
 	langFeatures LanguageFeature,
 ) (int, int64, []byte, [][]byte) {
@@ -241,7 +241,7 @@ func codeState(
 	return index, currentState, endString, endComments
 }
 
-func commentState(fileJob *FileJob, index int, endPoint int, endComments [][]byte, currentState int64, endString []byte, langFeatures LanguageFeature) (int, int64, []byte, [][]byte) {
+func commentState(fileJob *FileJob, index int, endPoint int, currentState int64, endComments [][]byte, endString []byte, langFeatures LanguageFeature) (int, int64, []byte, [][]byte) {
 	for i := index; i < endPoint; i++ {
 		index = i
 		if fileJob.Content[i] == '\n' {
@@ -285,10 +285,10 @@ func commentState(fileJob *FileJob, index int, endPoint int, endComments [][]byt
 func blankState(
 	fileJob *FileJob,
 	index int,
-	endComments [][]byte,
-	endString []byte,
 	endPoint int,
 	currentState int64,
+	endComments [][]byte,
+	endString []byte,
 	langFeatures LanguageFeature,
 ) (int, int64, []byte, [][]byte) {
 	if langFeatures.Nested || len(endComments) == 0 {
@@ -378,9 +378,9 @@ func CountStats(fileJob *FileJob) {
 				index, currentState, endString, endComments = codeState(
 					fileJob,
 					index,
-					endString,
 					endPoint,
 					currentState,
+					endString,
 					endComments,
 					langFeatures,
 				)
@@ -391,8 +391,8 @@ func CountStats(fileJob *FileJob) {
 					fileJob,
 					index,
 					endPoint,
-					endComments,
 					currentState,
+					endComments,
 					endString,
 					langFeatures,
 				)
@@ -402,10 +402,10 @@ func CountStats(fileJob *FileJob) {
 				index, currentState, endString, endComments = blankState(
 					fileJob,
 					index,
-					endComments,
-					endString,
 					endPoint,
 					currentState,
+					endComments,
+					endString,
 					langFeatures,
 				)
 			}
