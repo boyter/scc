@@ -99,7 +99,7 @@ func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, mask byte
 	return 0, nil
 }
 
-func checkComplexity(currentByte byte, index int, endPoint int, mask byte, matches [][]byte, complexityBytes []byte, fileJob *FileJob) int {
+func checkComplexity(currentByte byte, index int, endPoint int, mask byte, matches [][]byte, fileJob *FileJob) int {
 	// Special case if the thing we are matching is not the first thing in the file
 	// then we need to check that there was a whitespace before it
 	if index != 0 {
@@ -111,18 +111,6 @@ func checkComplexity(currentByte byte, index int, endPoint int, mask byte, match
 	}
 
 	if currentByte&mask != currentByte {
-		return 0
-	}
-
-	hasMatch := false
-	for i := 0; i < len(complexityBytes); i++ {
-		if complexityBytes[i] == currentByte {
-			hasMatch = true
-			break
-		}
-	}
-
-	if !hasMatch {
 		return 0
 	}
 
@@ -243,7 +231,7 @@ func codeState(
 				}
 			}
 			if !Complexity {
-				offsetJump = checkComplexity(fileJob.Content[i], i, endPoint, langFeatures.ComplexityCheckMask, langFeatures.ComplexityChecks, langFeatures.ComplexityBytes, fileJob)
+				offsetJump = checkComplexity(fileJob.Content[i], i, endPoint, langFeatures.ComplexityCheckMask, langFeatures.ComplexityChecks, fileJob)
 				if offsetJump != 0 {
 					fileJob.Complexity++
 				}
@@ -328,7 +316,7 @@ func blankState(
 	}
 	currentState = S_CODE
 	if !Complexity {
-		offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, langFeatures.ComplexityCheckMask, langFeatures.ComplexityChecks, langFeatures.ComplexityBytes, fileJob)
+		offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, langFeatures.ComplexityCheckMask, langFeatures.ComplexityChecks, fileJob)
 		if offsetJump != 0 {
 			fileJob.Complexity++
 		}

@@ -64,7 +64,6 @@ func ProcessConstants() {
 
 	startTime = makeTimestampMilli()
 	for name, value := range database {
-		complexityBytes := []byte{}
 		complexityChecks := [][]byte{}
 		complexityMask := byte(0)
 		singleLineComment := [][]byte{}
@@ -76,7 +75,6 @@ func ProcessConstants() {
 		processMask := byte(0)
 
 		for _, v := range value.ComplexityChecks {
-			complexityBytes = append(complexityBytes, v[0])
 			complexityChecks = append(complexityChecks, []byte(v))
 			complexityMask |= v[0]
 		}
@@ -107,7 +105,6 @@ func ProcessConstants() {
 		processMask |= stringMask
 
 		LanguageFeatures[name] = LanguageFeature{
-			ComplexityBytes:       uniqueByte(complexityBytes),
 			ComplexityChecks:      complexityChecks,
 			ComplexityCheckMask:   complexityMask,
 			MultiLineComment:      multiLineComment,

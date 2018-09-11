@@ -636,10 +636,9 @@ func TestCheckComplexityMatch(t *testing.T) {
 		[]byte("for("),
 	}
 
-	complexityBytes := []byte("f")
 	mask := byte('f')
 
-	match := checkComplexity('f', 0, 20, mask, matches, complexityBytes, &fileJob)
+	match := checkComplexity('f', 0, 20, mask, matches, &fileJob)
 
 	if match != 4 {
 		t.Errorf("Expected match")
@@ -659,10 +658,9 @@ func TestCheckComplexityNoMatch(t *testing.T) {
 		[]byte("for("),
 	}
 
-	complexityBytes := []byte("f")
 	mask := byte('f')
 
-	match := checkComplexity('f', 0, 20, mask, matches, complexityBytes, &fileJob)
+	match := checkComplexity('f', 0, 20, mask, matches, &fileJob)
 
 	if match != 0 {
 		t.Errorf("Expected no match")
@@ -1169,7 +1167,7 @@ func BenchmarkCheckComplexity(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < len(fileJob.Content); j++ {
-			checkComplexity(fileJob.Content[j], j, len(fileJob.Content), mask, matches, complexityBytes, &fileJob)
+			checkComplexity(fileJob.Content[j], j, len(fileJob.Content), mask, matches, &fileJob)
 		}
 	}
 }

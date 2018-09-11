@@ -18,7 +18,6 @@ type Language struct {
 type LanguageFeature struct {
 	ComplexityChecks      [][]byte
 	ComplexityCheckMask   byte
-	ComplexityBytes       []byte
 	SingleLineComment     [][]byte
 	SingleLineCommentMask byte
 	MultiLineComment      []OpenClose
