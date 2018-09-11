@@ -195,7 +195,6 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringMask byte, end
 func codeState(
 	fileJob *FileJob,
 	index int,
-	offsetJump int,
 	endString []byte,
 	endPoint int,
 	currentState int64,
@@ -207,11 +206,11 @@ func codeState(
 		index = i
 
 		if fileJob.Content[i] == '\n' {
-			return index, offsetJump, endString, currentState, endComments
+			return index, 0, endString, currentState, endComments
 		}
 
 		if shouldProcess(fileJob.Content[i], langFeatures.ProcessMask) {
-			offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[i], i, endPoint, langFeatures.StringCheckMask, langFeatures.StringChecks, fileJob)
+			offsetJump, endString := checkForMatchMultiOpen(fileJob.Content[i], i, endPoint, langFeatures.StringCheckMask, langFeatures.StringChecks, fileJob)
 			if offsetJump != 0 {
 				currentState = S_STRING
 				return i, offsetJump, endString, currentState, endComments
@@ -239,20 +238,21 @@ func codeState(
 		}
 	}
 
-	return index, offsetJump, endString, currentState, endComments
+	return index, 0, endString, currentState, endComments
 }
 
-func commentState(fileJob *FileJob, index int, endPoint int, endComments [][]byte, offsetJump int, currentState int64, endString []byte, langFeatures LanguageFeature) (int, [][]byte, int, int64, []byte) {
+func commentState(fileJob *FileJob, index int, endPoint int, endComments [][]byte, currentState int64, endString []byte, langFeatures LanguageFeature) (int, [][]byte, int, int64, []byte) {
+
 	for i := index; i < endPoint; i++ {
 		index = i
 
 		if fileJob.Content[i] == '\n' {
-			return index, endComments, offsetJump, currentState, endString
+			return index, endComments, 0, currentState, endString
 		}
 
 		if checkForMatchSingle(fileJob.Content[index], index, endPoint, byte(0xFF), endComments[len(endComments)-1], fileJob) {
 			// set offset jump here
-			offsetJump = len(endComments[len(endComments)-1])
+			offsetJump := len(endComments[len(endComments)-1])
 			endComments = endComments[:len(endComments)-1]
 
 			if len(endComments) == 0 {
@@ -272,7 +272,7 @@ func commentState(fileJob *FileJob, index int, endPoint int, endComments [][]byt
 		// Check if we are entering another multiline comment
 		// This should come below check for match single as it speeds up processing
 		if langFeatures.Nested || len(endComments) == 0 {
-			offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, langFeatures.SingleLineCommentMask, langFeatures.MultiLineComment, fileJob)
+			offsetJump, endString := checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, langFeatures.SingleLineCommentMask, langFeatures.MultiLineComment, fileJob)
 			if offsetJump != 0 {
 				endComments = append(endComments, endString)
 				index += offsetJump - 1
@@ -281,12 +281,11 @@ func commentState(fileJob *FileJob, index int, endPoint int, endComments [][]byt
 		}
 	}
 
-	return index, endComments, offsetJump, currentState, endString
+	return index, endComments, 0, currentState, endString
 }
 
 func blankState(
 	endComments [][]byte,
-	offsetJump int,
 	endString []byte,
 	fileJob *FileJob,
 	index int,
@@ -294,6 +293,8 @@ func blankState(
 	currentState int64,
 	langFeatures LanguageFeature,
 ) (int, int64, []byte, [][]byte) {
+	offsetJump := 0
+
 	if langFeatures.Nested || len(endComments) == 0 {
 		offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, langFeatures.MultiLineCommentMask, langFeatures.MultiLineComment, fileJob)
 		if offsetJump != 0 {
@@ -346,10 +347,6 @@ func CountStats(fileJob *FileJob) {
 	endComments := [][]byte{}
 	endString := []byte{}
 
-	// If we have checked bytes ahead of where we are we can jump ahead and save time
-	// this value stores that jump
-	offsetJump := 0
-
 	// For determining duplicates we need the below. The reason for creating
 	// the byte array here is to avoid GC pressure. MD5 is in the standard library
 	// and is fast enough to not warrant murmur3 hashing. No need to be
@@ -359,7 +356,6 @@ func CountStats(fileJob *FileJob) {
 	digestible := []byte{' '}
 
 	for index := 0; index < len(fileJob.Content); index++ {
-		offsetJump = 0
 
 		if Duplicates {
 			// Technically this is wrong because we skip bytes so this is not a true
@@ -383,10 +379,9 @@ func CountStats(fileJob *FileJob) {
 		if !isWhitespace(fileJob.Content[index]) {
 			switch currentState {
 			case S_CODE:
-				index, offsetJump, endString, currentState, endComments = codeState(
+				index, _, endString, currentState, endComments = codeState(
 					fileJob,
 					index,
-					offsetJump,
 					endString,
 					endPoint,
 					currentState,
@@ -396,12 +391,11 @@ func CountStats(fileJob *FileJob) {
 			case S_STRING:
 				index, currentState = stringState(fileJob, index, endPoint, langFeatures.StringCheckMask, endString, currentState)
 			case S_MULTICOMMENT, S_MULTICOMMENT_CODE:
-				index, endComments, offsetJump, currentState, endString = commentState(
+				index, endComments, _, currentState, endString = commentState(
 					fileJob,
 					index,
 					endPoint,
 					endComments,
-					offsetJump,
 					currentState,
 					endString,
 					langFeatures,
@@ -411,7 +405,6 @@ func CountStats(fileJob *FileJob) {
 				// or move into code but we can only do one.
 				index, currentState, endString, endComments = blankState(
 					endComments,
-					offsetJump,
 					endString,
 					fileJob,
 					index,
