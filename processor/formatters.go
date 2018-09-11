@@ -64,11 +64,11 @@ func sortSummaryFiles(summary *LanguageSummary) {
 	}
 }
 
-func toJson(input *chan *FileJob) string {
+func toJson(input chan *FileJob) string {
 	languages := map[string]LanguageSummary{}
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
 
-	for res := range *input {
+	for res := range input {
 		sumFiles++
 		sumLines += res.Lines
 		sumCode += res.Code
@@ -124,7 +124,7 @@ func toJson(input *chan *FileJob) string {
 	return string(jsonString)
 }
 
-func toCSV(input *chan *FileJob) string {
+func toCSV(input chan *FileJob) string {
 	records := [][]string{{
 		"Language",
 		"Location",
@@ -136,7 +136,7 @@ func toCSV(input *chan *FileJob) string {
 		"Complexity"},
 	}
 
-	for result := range *input {
+	for result := range input {
 		records = append(records, []string{
 			result.Language,
 			result.Location,
@@ -156,20 +156,20 @@ func toCSV(input *chan *FileJob) string {
 	return b.String()
 }
 
-func fileSummerize(input *chan *FileJob) string {
+func fileSummarize(input chan *FileJob) string {
 	switch {
 	case More || strings.ToLower(Format) == "wide":
-		return fileSummerizeLong(input)
+		return fileSummarizeLong(input)
 	case strings.ToLower(Format) == "json":
 		return toJson(input)
 	case strings.ToLower(Format) == "csv":
 		return toCSV(input)
 	}
 
-	return fileSummerizeShort(input)
+	return fileSummarizeShort(input)
 }
 
-func fileSummerizeLong(input *chan *FileJob) string {
+func fileSummarizeLong(input chan *FileJob) string {
 	var str strings.Builder
 
 	str.WriteString(tabularWideBreak)
@@ -183,7 +183,7 @@ func fileSummerizeLong(input *chan *FileJob) string {
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
 	var sumWeightedComplexity float64 = 0
 
-	for res := range *input {
+	for res := range input {
 		sumFiles++
 		sumLines += res.Lines
 		sumCode += res.Code
@@ -326,7 +326,7 @@ func fileSummerizeLong(input *chan *FileJob) string {
 	return str.String()
 }
 
-func fileSummerizeShort(input *chan *FileJob) string {
+func fileSummarizeShort(input chan *FileJob) string {
 	var str strings.Builder
 
 	str.WriteString(tabularShortBreak)
@@ -343,7 +343,7 @@ func fileSummerizeShort(input *chan *FileJob) string {
 	languages := map[string]LanguageSummary{}
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
 
-	for res := range *input {
+	for res := range input {
 		sumFiles++
 		sumLines += res.Lines
 		sumCode += res.Code
