@@ -179,12 +179,13 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringMask byte, end
 	// without checking if it is out of bounds first
 	for i := index; i < endPoint; i++ {
 		index = i
+
 		if fileJob.Content[i] == '\n' {
-			return index, currentState
+			return i, currentState
 		}
 
 		if fileJob.Content[i-1] != '\\' && checkForMatchSingle(fileJob.Content[i], i, endPoint, stringMask, endString, fileJob) {
-			return index, S_CODE
+			return i, S_CODE
 		}
 	}
 
@@ -205,7 +206,7 @@ func codeState(
 		index = i
 
 		if fileJob.Content[i] == '\n' {
-			return index, endString, currentState, endComments
+			return i, endString, currentState, endComments
 		}
 
 		if shouldProcess(fileJob.Content[i], langFeatures.ProcessMask) {
@@ -241,15 +242,13 @@ func codeState(
 }
 
 func commentState(fileJob *FileJob, index int, endPoint int, endComments [][]byte, currentState int64, endString []byte, langFeatures LanguageFeature) (int, [][]byte, int64, []byte) {
-
 	for i := index; i < endPoint; i++ {
 		index = i
-
 		if fileJob.Content[i] == '\n' {
-			return index, endComments, currentState, endString
+			return i, endComments, currentState, endString
 		}
 
-		if checkForMatchSingle(fileJob.Content[index], index, endPoint, byte(0xFF), endComments[len(endComments)-1], fileJob) {
+		if checkForMatchSingle(fileJob.Content[i], i, endPoint, byte(0xFF), endComments[len(endComments)-1], fileJob) {
 			// set offset jump here
 			offsetJump := len(endComments[len(endComments)-1])
 			endComments = endComments[:len(endComments)-1]
@@ -265,17 +264,17 @@ func commentState(fileJob *FileJob, index int, endPoint int, endComments [][]byt
 				}
 			}
 
-			index += offsetJump - 1
-			return index, endComments, currentState, endString
+			i += offsetJump - 1
+			return i, endComments, currentState, endString
 		}
 		// Check if we are entering another multiline comment
 		// This should come below check for match single as it speeds up processing
 		if langFeatures.Nested || len(endComments) == 0 {
-			offsetJump, endString := checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, langFeatures.SingleLineCommentMask, langFeatures.MultiLineComment, fileJob)
+			offsetJump, endString := checkForMatchMultiOpen(fileJob.Content[i], i, endPoint, langFeatures.SingleLineCommentMask, langFeatures.MultiLineComment, fileJob)
 			if offsetJump != 0 {
 				endComments = append(endComments, endString)
-				index += offsetJump - 1
-				return index, endComments, currentState, endString
+				i += offsetJump - 1
+				return i, endComments, currentState, endString
 			}
 		}
 	}
