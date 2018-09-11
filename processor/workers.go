@@ -26,34 +26,10 @@ const (
 	LINE_COMMENT
 )
 
-func checkForMatch(currentByte byte, index int, endPoint int, mask byte, matches [][]byte, fileJob *FileJob) bool {
-	if currentByte&mask != currentByte {
-		return false
-	}
-
-	potentialMatch := true
-	for i := 0; i < len(matches); i++ {
-		if currentByte == matches[i][0] {
-			for j := 0; j < len(matches[i]); j++ {
-				if index+j >= endPoint || matches[i][j] != fileJob.Content[index+j] {
-					potentialMatch = false
-					break
-				}
-			}
-
-			if potentialMatch {
-				return true
-			}
-		}
-	}
-
-	return false
-}
-
 func checkForMatchSingle(currentByte byte, index int, endPoint int, mask byte, matches []byte, fileJob *FileJob) bool {
-	if currentByte&mask != currentByte {
-		return false
-	}
+	// if currentByte&mask != currentByte {
+	// 	return false
+	// }
 
 	potentialMatch := true
 	if currentByte == matches[0] {
@@ -70,72 +46,6 @@ func checkForMatchSingle(currentByte byte, index int, endPoint int, mask byte, m
 	}
 
 	return false
-}
-
-func checkForMatchMultiOpen(currentByte byte, index int, endPoint int, mask byte, matches []OpenClose, fileJob *FileJob) (int, []byte) {
-	if currentByte&mask != currentByte {
-		return 0, nil
-	}
-
-	potentialMatch := true
-	for i := 0; i < len(matches); i++ {
-		// This check saves a lot of needless processing and speeds up the loop
-		if currentByte == matches[i].Open[0] {
-			potentialMatch = true
-
-			for j := 0; j < len(matches[i].Open); j++ {
-				if index+j > endPoint || matches[i].Open[j] != fileJob.Content[index+j] {
-					potentialMatch = false
-					break
-				}
-			}
-
-			if potentialMatch {
-				return len(matches[i].Open), matches[i].Close
-			}
-		}
-	}
-
-	return 0, nil
-}
-
-func checkComplexity(currentByte byte, index int, endPoint int, mask byte, matches [][]byte, fileJob *FileJob) int {
-	// Special case if the thing we are matching is not the first thing in the file
-	// then we need to check that there was a whitespace before it
-	if index != 0 {
-		// If the byte before our current position is not a whitespace then return false
-		if !isWhitespace(fileJob.Content[index-1]) {
-			return 0
-		}
-	}
-
-	if currentByte&mask != currentByte {
-		return 0
-	}
-
-	potentialMatch := true
-	for i := 0; i < len(matches); i++ { // Loop each match
-		if currentByte == matches[i][0] { // If the first byte of the match is not the current byte skip
-			potentialMatch = true
-
-			// Assume that we have a match and then see if we don't
-			// Start from 1 as we already checked the first byte for a match
-			for j := 1; j < len(matches[i]); j++ {
-				// Bounds check first and if that is ok check if the bytes match
-				if index+j > endPoint || matches[i][j] != fileJob.Content[index+j] {
-					potentialMatch = false
-					break
-				}
-			}
-
-			// Return the length of match and use that to step past the bytes we just checked
-			if potentialMatch {
-				return len(matches[i])
-			}
-		}
-	}
-
-	return 0
 }
 
 func isWhitespace(currentByte byte) bool {
@@ -168,15 +78,7 @@ func resetState(currentState int64) int64 {
 	return currentState
 }
 
-func shouldProcess(currentByte, processBytesMask byte) bool {
-	if currentByte&processBytesMask != currentByte {
-		return false
-	}
-
-	return true
-}
-
-func stringState(fileJob *FileJob, index int, endPoint int, stringMask byte, endString []byte, currentState int64) (int, int64) {
+func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, endString []byte, currentState int64) (int, int64) {
 	// Its not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
 	// without checking if it is out of bounds first
 	for i := index; i < endPoint; i++ {
@@ -186,8 +88,10 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringMask byte, end
 			return i, currentState
 		}
 
-		if fileJob.Content[i-1] != '\\' && checkForMatchSingle(fileJob.Content[i], i, endPoint, stringMask, endString, fileJob) {
-			return i, S_CODE
+		if fileJob.Content[i-1] != '\\' {
+			if ok, _, _ := stringTrie.Match(fileJob.Content[i:]); ok {
+				return i, S_CODE
+			}
 		}
 	}
 
@@ -205,40 +109,35 @@ func codeState(
 ) (int, int64, []byte, [][]byte) {
 
 	for i := index; i < endPoint; i++ {
+		curByte := fileJob.Content[i]
 		index = i
 
-		if fileJob.Content[i] == '\n' {
+		if curByte == '\n' {
 			return i, currentState, endString, endComments
 		}
 
-		if isBinary(i, fileJob.Content[i]) {
-			fileJob.Binary = true
+		if ok, _, endString := langFeatures.Strings.Match(fileJob.Content[i:]); ok {
+			currentState = S_STRING
 			return i, currentState, endString, endComments
 		}
 
-		if shouldProcess(fileJob.Content[i], langFeatures.ProcessMask) {
-			offsetJump, endString := checkForMatchMultiOpen(fileJob.Content[i], i, endPoint, langFeatures.StringCheckMask, langFeatures.StringChecks, fileJob)
-			if offsetJump != 0 {
-				currentState = S_STRING
-				return i, currentState, endString, endComments
-			}
+		if ok, _, _ := langFeatures.SingleLineComments.Match(fileJob.Content[i:]); ok {
+			currentState = S_COMMENT_CODE
+			return i, currentState, endString, endComments
+		}
 
-			if checkForMatch(fileJob.Content[i], i, endPoint, langFeatures.SingleLineCommentMask, langFeatures.SingleLineComment, fileJob) {
-				currentState = S_COMMENT_CODE
+		if langFeatures.Nested || len(endComments) == 0 {
+			if ok, offsetJump, endString := langFeatures.MultiLineComments.Match(fileJob.Content[i:]); ok {
+				endComments = append(endComments, endString)
+				currentState = S_MULTICOMMENT_CODE
+				i += offsetJump - 1
 				return i, currentState, endString, endComments
 			}
-			if len(endComments) == 0 || langFeatures.Nested {
-				offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[i], i, endPoint, langFeatures.MultiLineCommentMask, langFeatures.MultiLineComment, fileJob)
-				if offsetJump != 0 {
-					endComments = append(endComments, endString)
-					currentState = S_MULTICOMMENT_CODE
-					i += offsetJump - 1
-					return i, currentState, endString, endComments
-				}
-			}
-			if !Complexity {
-				offsetJump = checkComplexity(fileJob.Content[i], i, endPoint, langFeatures.ComplexityCheckMask, langFeatures.ComplexityChecks, fileJob)
-				if offsetJump != 0 {
+		}
+
+		if !Complexity {
+			if index == 0 || isWhitespace(fileJob.Content[index-1]) {
+				if ok, _, _ := langFeatures.Complexity.Match(fileJob.Content[i:]); ok {
 					fileJob.Complexity++
 				}
 			}
@@ -250,13 +149,14 @@ func codeState(
 
 func commentState(fileJob *FileJob, index int, endPoint int, currentState int64, endComments [][]byte, endString []byte, langFeatures LanguageFeature) (int, int64, []byte, [][]byte) {
 	for i := index; i < endPoint; i++ {
+		curByte := fileJob.Content[i]
 		index = i
 
-		if fileJob.Content[i] == '\n' {
+		if curByte == '\n' {
 			return i, currentState, endString, endComments
 		}
 
-		if checkForMatchSingle(fileJob.Content[i], i, endPoint, byte(0xFF), endComments[len(endComments)-1], fileJob) {
+		if checkForMatchSingle(curByte, index, endPoint, byte(0xFF), endComments[len(endComments)-1], fileJob) {
 			// set offset jump here
 			offsetJump := len(endComments[len(endComments)-1])
 			endComments = endComments[:len(endComments)-1]
@@ -278,8 +178,7 @@ func commentState(fileJob *FileJob, index int, endPoint int, currentState int64,
 		// Check if we are entering another multiline comment
 		// This should come below check for match single as it speeds up processing
 		if langFeatures.Nested || len(endComments) == 0 {
-			offsetJump, endString := checkForMatchMultiOpen(fileJob.Content[i], i, endPoint, langFeatures.SingleLineCommentMask, langFeatures.MultiLineComment, fileJob)
-			if offsetJump != 0 {
+			if ok, offsetJump, endString := langFeatures.MultiLineComments.Match(fileJob.Content[i:]); ok {
 				endComments = append(endComments, endString)
 				i += offsetJump - 1
 				return i, currentState, endString, endComments
@@ -301,30 +200,32 @@ func blankState(
 ) (int, int64, []byte, [][]byte) {
 
 	if langFeatures.Nested || len(endComments) == 0 {
-		offsetJump, endString := checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, langFeatures.MultiLineCommentMask, langFeatures.MultiLineComment, fileJob)
-		if offsetJump != 0 {
+		if ok, offsetJump, endString := langFeatures.MultiLineComments.Match(fileJob.Content[index:]); ok {
 			endComments = append(endComments, endString)
 			currentState = S_MULTICOMMENT
 			index += offsetJump - 1
 			return index, currentState, endString, endComments
 		}
 	}
+
 	// Moving this above nested comments slows performance to leave it below
-	if checkForMatch(fileJob.Content[index], index, endPoint, langFeatures.SingleLineCommentMask, langFeatures.SingleLineComment, fileJob) {
+	if ok, _, _ := langFeatures.SingleLineComments.Match(fileJob.Content[index:]); ok {
 		currentState = S_COMMENT
 		return index, currentState, endString, endComments
 	}
+
 	// Moving this above nested comments or single line comment checks slows performance so leave it below
-	offsetJump, endString := checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, langFeatures.StringCheckMask, langFeatures.StringChecks, fileJob)
-	if offsetJump != 0 {
+	if ok, _, _ := langFeatures.Strings.Match(fileJob.Content[index:]); ok {
 		currentState = S_STRING
 		return index, currentState, endString, endComments
 	}
+
 	currentState = S_CODE
 	if !Complexity {
-		offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, langFeatures.ComplexityCheckMask, langFeatures.ComplexityChecks, fileJob)
-		if offsetJump != 0 {
-			fileJob.Complexity++
+		if index == 0 || isWhitespace(fileJob.Content[index-1]) {
+			if ok, _, _ := langFeatures.Complexity.Match(fileJob.Content[index:]); ok {
+				fileJob.Complexity++
+			}
 		}
 	}
 
@@ -346,6 +247,19 @@ func CountStats(fileJob *FileJob) {
 	}
 
 	langFeatures := LanguageFeatures[fileJob.Language]
+
+	if langFeatures.Complexity == nil {
+		langFeatures.Complexity = &Trie{}
+	}
+	if langFeatures.SingleLineComments == nil {
+		langFeatures.SingleLineComments = &Trie{}
+	}
+	if langFeatures.MultiLineComments == nil {
+		langFeatures.MultiLineComments = &Trie{}
+	}
+	if langFeatures.Strings == nil {
+		langFeatures.Strings = &Trie{}
+	}
 
 	endPoint := int(fileJob.Bytes - 1)
 	currentState := S_BLANK
@@ -389,7 +303,7 @@ func CountStats(fileJob *FileJob) {
 					langFeatures,
 				)
 			case S_STRING:
-				index, currentState = stringState(fileJob, index, endPoint, langFeatures.StringCheckMask, endString, currentState)
+				index, currentState = stringState(fileJob, index, endPoint, langFeatures.Strings, endString, currentState)
 			case S_MULTICOMMENT, S_MULTICOMMENT_CODE:
 				index, currentState, endString, endComments = commentState(
 					fileJob,
@@ -428,34 +342,28 @@ func CountStats(fileJob *FileJob) {
 				printTrace(fmt.Sprintf("%s line %d ended with state: %d", fileJob.Location, fileJob.Lines, currentState))
 			}
 
-			switch {
-			case currentState == S_CODE || currentState == S_STRING || currentState == S_COMMENT_CODE || currentState == S_MULTICOMMENT_CODE:
-				{
-					fileJob.Code++
-					currentState = resetState(currentState)
-					if fileJob.Callback != nil {
-						if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_CODE) {
-							return
-						}
+			switch currentState {
+			case S_CODE, S_STRING, S_COMMENT_CODE, S_MULTICOMMENT_CODE:
+				fileJob.Code++
+				currentState = resetState(currentState)
+				if fileJob.Callback != nil {
+					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_CODE) {
+						return
 					}
 				}
-			case currentState == S_COMMENT || currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_BLANK:
-				{
-					fileJob.Comment++
-					currentState = resetState(currentState)
-					if fileJob.Callback != nil {
-						if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
-							return
-						}
+			case S_COMMENT, S_MULTICOMMENT, S_MULTICOMMENT_BLANK:
+				fileJob.Comment++
+				currentState = resetState(currentState)
+				if fileJob.Callback != nil {
+					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
+						return
 					}
 				}
-			case currentState == S_BLANK:
-				{
-					fileJob.Blank++
-					if fileJob.Callback != nil {
-						if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_BLANK) {
-							return
-						}
+			case S_BLANK:
+				fileJob.Blank++
+				if fileJob.Callback != nil {
+					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_BLANK) {
+						return
 					}
 				}
 			}

@@ -16,16 +16,11 @@ type Language struct {
 }
 
 type LanguageFeature struct {
-	ComplexityChecks      [][]byte
-	ComplexityCheckMask   byte
-	SingleLineComment     [][]byte
-	SingleLineCommentMask byte
-	MultiLineComment      []OpenClose
-	MultiLineCommentMask  byte
-	StringChecks          []OpenClose
-	StringCheckMask       byte
+	Complexity *Trie
+	MultiLineComments *Trie
+	SingleLineComments *Trie
+	Strings *Trie
 	Nested                bool
-	ProcessMask           byte
 }
 
 // FileJobCallback is an interface that FileJobs can implement to get a per line callback with the line type
@@ -101,4 +96,56 @@ func (c *CheckDuplicates) Check(key int64, hash []byte) bool {
 	}
 
 	return false
+}
+
+type Trie struct {
+	Exists bool
+	Close []byte
+	Table [256]*Trie
+}
+
+func (t *Trie) Insert(str []byte) {
+	var x, y *Trie
+
+	x = t
+	for _, c := range str {
+		y = x.Table[byte(c)]
+		if y == nil {
+			y = &Trie{}
+			x.Table[byte(c)] = y
+		}
+		x = y
+	}
+	x.Exists = true
+}
+
+func (t *Trie) InsertClose(str, suffix []byte) {
+	var x, y *Trie
+
+	x = t
+	for _, c := range str {
+		y = x.Table[byte(c)]
+		if y == nil {
+			y = &Trie{}
+			x.Table[byte(c)] = y
+		}
+		x = y
+	}
+	x.Exists = true
+	x.Close = suffix
+}
+
+func (t *Trie) Match(str []byte) (bool, int, []byte) {
+	var x *Trie
+	var depth int
+	var c byte
+
+	x = t
+	for depth, c = range str {
+		if x.Table[c] == nil {
+			return x.Exists, depth, x.Close
+		}
+		x = x.Table[c]
+	}
+	return x.Exists, depth, x.Close
 }
