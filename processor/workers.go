@@ -550,40 +550,42 @@ func CountStats(fileJob *FileJob) {
 }
 
 // Reads entire file into memory and then pushes it onto the next queue
-func fileReaderWorker(input *chan *FileJob, output *chan *FileJob) {
+func fileReaderWorker(input chan *FileJob, output chan *FileJob) {
 	var startTime int64 = 0
 	var wg sync.WaitGroup
 
-	for res := range *input {
-		if startTime == 0 {
-			startTime = makeTimestampMilli()
-		}
-
+	for i := 0; i < FileReadJobWorkers; i++ {
 		wg.Add(1)
-		go func(res *FileJob) {
-			fileStartTime := makeTimestampNano()
-			content, err := ioutil.ReadFile(res.Location)
+		go func() {
+			for res := range input {
+				if startTime == 0 {
+					startTime = makeTimestampMilli()
+				}
 
-			if Trace {
-				printTrace(fmt.Sprintf("nanoseconds read into memory: %s: %d", res.Location, makeTimestampNano()-fileStartTime))
-			}
+				fileStartTime := makeTimestampNano()
+				content, err := ioutil.ReadFile(res.Location)
 
-			if err == nil {
-				res.Content = content
-				*output <- res
-			} else {
-				if Verbose {
-					printWarn(fmt.Sprintf("error reading: %s %s", res.Location, err))
+				if Trace {
+					printTrace(fmt.Sprintf("nanoseconds read into memory: %s: %d", res.Location, makeTimestampNano()-fileStartTime))
+				}
+
+				if err == nil {
+					res.Content = content
+					output <- res
+				} else {
+					if Verbose {
+						printWarn(fmt.Sprintf("error reading: %s %s", res.Location, err))
+					}
 				}
 			}
 
 			wg.Done()
-		}(res)
+		}()
 	}
 
 	go func() {
 		wg.Wait()
-		close(*output)
+		close(output)
 
 		if Debug {
 			printDebug(fmt.Sprintf("milliseconds reading files into memory: %d", makeTimestampMilli()-startTime))
@@ -596,50 +598,52 @@ var duplicates = CheckDuplicates{
 }
 
 // Does the actual processing of stats and as such contains the hot path CPU call
-func fileProcessorWorker(input *chan *FileJob, output *chan *FileJob) {
+func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 	var startTime int64 = 0
 	var wg sync.WaitGroup
-	for res := range *input {
-		if startTime == 0 {
-			startTime = makeTimestampMilli()
-		}
-
+	for i := 0; i < FileProcessJobWorkers; i++ {
 		wg.Add(1)
-		go func(res *FileJob) {
-			fileStartTime := makeTimestampNano()
-			CountStats(res)
-
-			if Duplicates {
-				if duplicates.Check(res.Bytes, res.Hash) {
-					if Verbose {
-						printWarn(fmt.Sprintf("skipping duplicate file: %s", res.Location))
-					}
-					wg.Done()
-					return
-				} else {
-					duplicates.Add(res.Bytes, res.Hash)
+		go func() {
+			for res := range input {
+				if startTime == 0 {
+					startTime = makeTimestampMilli()
 				}
-			}
 
-			if Trace {
-				printTrace(fmt.Sprintf("nanoseconds process: %s: %d", res.Location, makeTimestampNano()-fileStartTime))
-			}
+				fileStartTime := makeTimestampNano()
+				CountStats(res)
 
-			if !res.Binary {
-				*output <- res
-			} else {
-				if Verbose {
-					printWarn(fmt.Sprintf("skipping file identified as binary: %s", res.Location))
+				if Duplicates {
+					if duplicates.Check(res.Bytes, res.Hash) {
+						if Verbose {
+							printWarn(fmt.Sprintf("skipping duplicate file: %s", res.Location))
+						}
+						wg.Done()
+						return
+					} else {
+						duplicates.Add(res.Bytes, res.Hash)
+					}
+				}
+
+				if Trace {
+					printTrace(fmt.Sprintf("nanoseconds process: %s: %d", res.Location, makeTimestampNano()-fileStartTime))
+				}
+
+				if !res.Binary {
+					output <- res
+				} else {
+					if Verbose {
+						printWarn(fmt.Sprintf("skipping file identified as binary: %s", res.Location))
+					}
 				}
 			}
 
 			wg.Done()
-		}(res)
+		}()
 	}
 
 	go func() {
 		wg.Wait()
-		close(*output)
+		close(output)
 	}()
 
 	if Debug {

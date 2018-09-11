@@ -28,8 +28,10 @@ var FileOutput = ""
 var PathBlacklist = ""
 var FileListQueueSize = runtime.NumCPU()
 var FileReadJobQueueSize = runtime.NumCPU()
+var FileReadJobWorkers = runtime.NumCPU() * 4
 var FileReadContentJobQueueSize = runtime.NumCPU()
 var FileProcessJobQueueSize = runtime.NumCPU()
+var FileProcessJobWorkers = runtime.NumCPU() * 4
 var FileSummaryJobQueueSize = runtime.NumCPU()
 var WhiteListExtensions = ""
 var AverageWage int64 = 56286
@@ -214,11 +216,11 @@ func Process() {
 	fileReadContentJobQueue := make(chan *FileJob, FileReadContentJobQueueSize) // Files ready to be processed
 	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)         // Files ready to be summerised
 
-	go walkDirectoryParallel(DirFilePaths[0], &fileListQueue)
-	go fileReaderWorker(&fileListQueue, &fileReadContentJobQueue)
-	go fileProcessorWorker(&fileReadContentJobQueue, &fileSummaryJobQueue)
+	go walkDirectoryParallel(DirFilePaths[0], fileListQueue)
+	go fileReaderWorker(fileListQueue, fileReadContentJobQueue)
+	go fileProcessorWorker(fileReadContentJobQueue, fileSummaryJobQueue)
 
-	result := fileSummerize(&fileSummaryJobQueue)
+	result := fileSummarize(fileSummaryJobQueue)
 
 	if FileOutput == "" {
 		fmt.Println(result)

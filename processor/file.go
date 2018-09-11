@@ -47,7 +47,7 @@ func getExtension(name string) string {
 // in the supplied directory. Tests using a single process showed no lack of performance
 // even when hitting older spinning platter disks for this way
 //func walkDirectoryParallel(root string, output *RingBuffer) {
-func walkDirectoryParallel(root string, output *chan *FileJob) {
+func walkDirectoryParallel(root string, output chan *FileJob) {
 	startTime := makeTimestampMilli()
 	blackList := strings.Split(PathBlacklist, ",")
 	whiteList := strings.Split(WhiteListExtensions, ",")
@@ -97,7 +97,7 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 				go func(toWalk string) {
 					filejobs := walkDirectory(toWalk, blackList, extensionLookup)
 					for i := 0; i < len(filejobs); i++ {
-						*output <- &filejobs[i]
+						output <- &filejobs[i]
 					}
 
 					mutex.Lock()
@@ -130,7 +130,7 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 				}
 
 				if ok {
-					*output <- &FileJob{Location: filepath.Join(root, f.Name()), Filename: f.Name(), Extension: extension, Language: language}
+					output <- &FileJob{Location: filepath.Join(root, f.Name()), Filename: f.Name(), Extension: extension, Language: language}
 					mutex.Lock()
 					totalCount++
 					mutex.Unlock()
@@ -142,7 +142,7 @@ func walkDirectoryParallel(root string, output *chan *FileJob) {
 	}
 
 	wg.Wait()
-	close(*output)
+	close(output)
 	if Debug {
 		printDebug(fmt.Sprintf("milliseconds to walk directory: %d", makeTimestampMilli()-startTime))
 	}

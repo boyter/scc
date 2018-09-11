@@ -23,6 +23,6 @@ func BenchmarkFileSummerize(b *testing.B) {
 		close(fileSummaryJobQueue)
 		b.StartTimer()
 
-		fileSummerize(&fileSummaryJobQueue)
+		fileSummarize(fileSummaryJobQueue)
 	}
 }
