@@ -73,20 +73,17 @@ func ProcessConstants() {
 		multiLineCommentMask := byte(0)
 		stringChecks := []OpenClose{}
 		stringMask := byte(0)
-		processBytes := []byte{}
 		processMask := byte(0)
 
 		for _, v := range value.ComplexityChecks {
 			complexityBytes = append(complexityBytes, v[0])
 			complexityChecks = append(complexityChecks, []byte(v))
-			processBytes = append(processBytes, v[0])
 			complexityMask |= v[0]
 		}
 		processMask |= complexityMask
 
 		for _, v := range value.LineComment {
 			singleLineComment = append(singleLineComment, []byte(v))
-			processBytes = append(processBytes, v[0])
 			singleLineCommentMask |= v[0]
 		}
 		processMask |= singleLineCommentMask
@@ -96,7 +93,6 @@ func ProcessConstants() {
 				Open:  []byte(v[0]),
 				Close: []byte(v[1]),
 			})
-			processBytes = append(processBytes, v[0][0])
 			multiLineCommentMask |= v[0][0]
 		}
 		processMask |= multiLineCommentMask
@@ -106,7 +102,6 @@ func ProcessConstants() {
 				Open:  []byte(v[0]),
 				Close: []byte(v[1]),
 			})
-			processBytes = append(processBytes, v[0][0])
 			stringMask |= v[0][0]
 		}
 		processMask |= stringMask
@@ -122,7 +117,6 @@ func ProcessConstants() {
 			StringChecks:          stringChecks,
 			StringCheckMask:       stringMask,
 			Nested:                value.NestedMultiLine,
-			ProcessBytes:          uniqueByte(processBytes),
 			ProcessMask:           processMask,
 		}
 	}

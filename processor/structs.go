@@ -26,7 +26,6 @@ type LanguageFeature struct {
 	StringChecks          []OpenClose
 	StringCheckMask       byte
 	Nested                bool
-	ProcessBytes          []byte
 	ProcessMask           byte
 }
 

@@ -179,19 +179,12 @@ func resetState(currentState int64) int64 {
 	return currentState
 }
 
-func shouldProcess(currentByte, processBytesMask byte, processBytes []byte) bool {
+func shouldProcess(currentByte, processBytesMask byte) bool {
 	if currentByte&processBytesMask != currentByte {
 		return false
 	}
 
-	// Determine if we should process the state at all based on what states we know about
-	for i := 0; i < len(processBytes); i++ {
-		if currentByte == processBytes[i] {
-			return true
-		}
-	}
-
-	return false
+	return true
 }
 
 func stringState(fileJob *FileJob, index int, endPoint int, stringMask byte, endString []byte, currentState int64) (int, int64) {
@@ -214,23 +207,12 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringMask byte, end
 func codeState(
 	fileJob *FileJob,
 	index int,
-	processMask byte,
-	processBytes []byte,
 	offsetJump int,
 	endString []byte,
 	endPoint int,
-	stringMask byte,
-	stringChecks []OpenClose,
 	currentState int64,
-	slCommentMask byte,
-	singleLineCommentChecks [][]byte,
 	endComments [][]byte,
-	nested bool,
-	mlCommentMask byte,
-	multiLineCommentChecks []OpenClose,
-	complexityMask byte,
-	complexityChecks [][]byte,
-	complexityBytes []byte,
+	langFeatures LanguageFeature,
 ) (int, int, []byte, int64, [][]byte) {
 
 	for i := index; i < endPoint; i++ {
@@ -240,19 +222,19 @@ func codeState(
 			return index, offsetJump, endString, currentState, endComments
 		}
 
-		if shouldProcess(fileJob.Content[i], processMask, processBytes) {
-			offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[i], i, endPoint, stringMask, stringChecks, fileJob)
+		if shouldProcess(fileJob.Content[i], langFeatures.ProcessMask) {
+			offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[i], i, endPoint, langFeatures.StringCheckMask, langFeatures.StringChecks, fileJob)
 			if offsetJump != 0 {
 				currentState = S_STRING
 				return i, offsetJump, endString, currentState, endComments
 			}
 
-			if checkForMatch(fileJob.Content[i], i, endPoint, slCommentMask, singleLineCommentChecks, fileJob) {
+			if checkForMatch(fileJob.Content[i], i, endPoint, langFeatures.SingleLineCommentMask, langFeatures.SingleLineComment, fileJob) {
 				currentState = S_COMMENT_CODE
 				return i, offsetJump, endString, currentState, endComments
 			}
-			if len(endComments) == 0 || nested {
-				offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[i], i, endPoint, mlCommentMask, multiLineCommentChecks, fileJob)
+			if len(endComments) == 0 || langFeatures.Nested {
+				offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[i], i, endPoint, langFeatures.MultiLineCommentMask, langFeatures.MultiLineComment, fileJob)
 				if offsetJump != 0 {
 					endComments = append(endComments, endString)
 					currentState = S_MULTICOMMENT_CODE
@@ -261,7 +243,7 @@ func codeState(
 				}
 			}
 			if !Complexity {
-				offsetJump = checkComplexity(fileJob.Content[i], i, endPoint, complexityMask, complexityChecks, complexityBytes, fileJob)
+				offsetJump = checkComplexity(fileJob.Content[i], i, endPoint, langFeatures.ComplexityCheckMask, langFeatures.ComplexityChecks, langFeatures.ComplexityBytes, fileJob)
 				if offsetJump != 0 {
 					fileJob.Complexity++
 				}
@@ -272,7 +254,7 @@ func codeState(
 	return index, offsetJump, endString, currentState, endComments
 }
 
-func commentState(fileJob *FileJob, index int, endPoint int, slCommentMask byte, endComments [][]byte, offsetJump int, currentState int64, nested bool, endString []byte, mlCommentMask byte, multiLineCommentChecks []OpenClose) (int, [][]byte, int, int64, []byte) {
+func commentState(fileJob *FileJob, index int, endPoint int, endComments [][]byte, offsetJump int, currentState int64, endString []byte, langFeatures LanguageFeature) (int, [][]byte, int, int64, []byte) {
 	for i := index; i < endPoint; i++ {
 		index = i
 
@@ -301,8 +283,8 @@ func commentState(fileJob *FileJob, index int, endPoint int, slCommentMask byte,
 		}
 		// Check if we are entering another multiline comment
 		// This should come below check for match single as it speeds up processing
-		if nested || len(endComments) == 0 {
-			offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, mlCommentMask, multiLineCommentChecks, fileJob)
+		if langFeatures.Nested || len(endComments) == 0 {
+			offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, langFeatures.SingleLineCommentMask, langFeatures.MultiLineComment, fileJob)
 			if offsetJump != 0 {
 				endComments = append(endComments, endString)
 				index += offsetJump - 1
@@ -315,26 +297,17 @@ func commentState(fileJob *FileJob, index int, endPoint int, slCommentMask byte,
 }
 
 func blankState(
-	nested bool,
 	endComments [][]byte,
 	offsetJump int,
 	endString []byte,
 	fileJob *FileJob,
 	index int,
 	endPoint int,
-	mlCommentMask byte,
-	multiLineCommentChecks []OpenClose,
 	currentState int64,
-	slCommentMask byte,
-	singleLineCommentChecks [][]byte,
-	stringMask byte,
-	stringChecks []OpenClose,
-	complexityMask byte,
-	complexityChecks [][]byte,
-	complexityBytes []byte,
+	langFeatures LanguageFeature,
 ) (int, int64, []byte, [][]byte) {
-	if nested || len(endComments) == 0 {
-		offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, mlCommentMask, multiLineCommentChecks, fileJob)
+	if langFeatures.Nested || len(endComments) == 0 {
+		offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, langFeatures.MultiLineCommentMask, langFeatures.MultiLineComment, fileJob)
 		if offsetJump != 0 {
 			endComments = append(endComments, endString)
 			currentState = S_MULTICOMMENT
@@ -343,19 +316,19 @@ func blankState(
 		}
 	}
 	// Moving this above nested comments slows performance to leave it below
-	if checkForMatch(fileJob.Content[index], index, endPoint, slCommentMask, singleLineCommentChecks, fileJob) {
+	if checkForMatch(fileJob.Content[index], index, endPoint, langFeatures.SingleLineCommentMask, langFeatures.SingleLineComment, fileJob) {
 		currentState = S_COMMENT
 		return index, currentState, endString, endComments
 	}
 	// Moving this above nested comments or single line comment checks slows performance so leave it below
-	offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, stringMask, stringChecks, fileJob)
+	offsetJump, endString = checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, langFeatures.StringCheckMask, langFeatures.StringChecks, fileJob)
 	if offsetJump != 0 {
 		currentState = S_STRING
 		return index, currentState, endString, endComments
 	}
 	currentState = S_CODE
 	if !Complexity {
-		offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, complexityMask, complexityChecks, complexityBytes, fileJob)
+		offsetJump = checkComplexity(fileJob.Content[index], index, endPoint, langFeatures.ComplexityCheckMask, langFeatures.ComplexityChecks, langFeatures.ComplexityBytes, fileJob)
 		if offsetJump != 0 {
 			fileJob.Complexity++
 		}
@@ -380,18 +353,17 @@ func CountStats(fileJob *FileJob) {
 
 	langFeatures := LanguageFeatures[fileJob.Language]
 
-	complexityMask := langFeatures.ComplexityCheckMask
-	complexityChecks := langFeatures.ComplexityChecks
-	complexityBytes := langFeatures.ComplexityBytes
-	slCommentMask := langFeatures.SingleLineCommentMask
-	singleLineCommentChecks := langFeatures.SingleLineComment
-	mlCommentMask := langFeatures.MultiLineCommentMask
-	multiLineCommentChecks := langFeatures.MultiLineComment
-	stringMask := langFeatures.StringCheckMask
-	stringChecks := langFeatures.StringChecks
-	nested := langFeatures.Nested
-	processMask := langFeatures.ProcessMask
-	processBytes := langFeatures.ProcessBytes
+	//complexityMask := langFeatures.ComplexityCheckMask
+	//complexityChecks := langFeatures.ComplexityChecks
+	//complexityBytes := langFeatures.ComplexityBytes
+	//slCommentMask := langFeatures.SingleLineCommentMask
+	//singleLineCommentChecks := langFeatures.SingleLineComment
+	//mlCommentMask := langFeatures.MultiLineCommentMask
+	//multiLineCommentChecks := langFeatures.MultiLineComment
+	//stringMask := langFeatures.StringCheckMask
+	//stringChecks := langFeatures.StringChecks
+	//nested := langFeatures.Nested
+	//processMask := langFeatures.ProcessMask
 
 	endPoint := int(fileJob.Bytes - 1)
 	currentState := S_BLANK
@@ -438,61 +410,38 @@ func CountStats(fileJob *FileJob) {
 				index, offsetJump, endString, currentState, endComments = codeState(
 					fileJob,
 					index,
-					processMask,
-					processBytes,
 					offsetJump,
 					endString,
 					endPoint,
-					stringMask,
-					stringChecks,
 					currentState,
-					slCommentMask,
-					singleLineCommentChecks,
 					endComments,
-					nested,
-					mlCommentMask,
-					multiLineCommentChecks,
-					complexityMask,
-					complexityChecks,
-					complexityBytes,
+					langFeatures,
 				)
 			case S_STRING:
-				index, currentState = stringState(fileJob, index, endPoint, stringMask, endString, currentState)
+				index, currentState = stringState(fileJob, index, endPoint, langFeatures.StringCheckMask, endString, currentState)
 			case S_MULTICOMMENT, S_MULTICOMMENT_CODE:
 				index, endComments, offsetJump, currentState, endString = commentState(
 					fileJob,
 					index,
 					endPoint,
-					slCommentMask,
 					endComments,
 					offsetJump,
 					currentState,
-					nested,
 					endString,
-					mlCommentMask,
-					multiLineCommentChecks,
+					langFeatures,
 				)
 			case S_BLANK, S_MULTICOMMENT_BLANK:
 				// From blank we can move into comment, move into a multiline comment
 				// or move into code but we can only do one.
 				index, currentState, endString, endComments = blankState(
-					nested,
 					endComments,
 					offsetJump,
 					endString,
 					fileJob,
 					index,
 					endPoint,
-					mlCommentMask,
-					multiLineCommentChecks,
 					currentState,
-					slCommentMask,
-					singleLineCommentChecks,
-					stringMask,
-					stringChecks,
-					complexityMask,
-					complexityChecks,
-					complexityBytes,
+					langFeatures,
 				)
 			}
 		}
