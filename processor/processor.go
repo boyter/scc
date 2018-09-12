@@ -45,11 +45,16 @@ var DirFilePaths = []string{}
 var ExtensionToLanguage = map[string]string{}
 var LanguageFeatures = map[string]LanguageFeature{}
 
+// This needs to be set outside of ProcessConstants because it should only be enabled in command line
+// mode https://github.com/boyter/scc/issues/32
+func ConfigureGc() {
+	gcPercent = debug.SetGCPercent(gcPercent)
+}
+
 // ProcessConstants is responsible for setting up the language features based on the JSON file that is stored in constants
 // Needs to be called at least once in order for anything to actually happen
 func ProcessConstants() {
 	var database = loadDatabase()
-	gcPercent = debug.SetGCPercent(gcPercent)
 
 	startTime := makeTimestampNano()
 	for name, value := range database {

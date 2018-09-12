@@ -123,6 +123,7 @@ func main() {
 
 	app.Action = func(c *cli.Context) error {
 		processor.DirFilePaths = c.Args()
+		processor.ConfigureGc()
 		processor.Process()
 		return nil
 	}
