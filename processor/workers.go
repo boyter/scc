@@ -146,8 +146,10 @@ func isWhitespace(currentByte byte) bool {
 	return true
 }
 
-func isBinary(currentByte byte) bool {
-	if !DisableCheckBinary && currentByte == 0 {
+// Check if this file is binary by checking for nul byte and if so bail out
+// this is how GNU Grep, git and ripgrep check for binary files
+func isBinary(index int, currentByte byte) bool {
+	if index < 10000 && !DisableCheckBinary && currentByte == 0 {
 		return true
 	}
 
@@ -209,6 +211,11 @@ func codeState(
 			return i, currentState, endString, endComments
 		}
 
+		if isBinary(i, fileJob.Content[i]) {
+			fileJob.Binary = true
+			return i, currentState, endString, endComments
+		}
+
 		if shouldProcess(fileJob.Content[i], langFeatures.ProcessMask) {
 			offsetJump, endString := checkForMatchMultiOpen(fileJob.Content[i], i, endPoint, langFeatures.StringCheckMask, langFeatures.StringChecks, fileJob)
 			if offsetJump != 0 {
@@ -244,6 +251,7 @@ func codeState(
 func commentState(fileJob *FileJob, index int, endPoint int, currentState int64, endComments [][]byte, endString []byte, langFeatures LanguageFeature) (int, int64, []byte, [][]byte) {
 	for i := index; i < endPoint; i++ {
 		index = i
+
 		if fileJob.Content[i] == '\n' {
 			return i, currentState, endString, endComments
 		}
@@ -291,6 +299,7 @@ func blankState(
 	endString []byte,
 	langFeatures LanguageFeature,
 ) (int, int64, []byte, [][]byte) {
+
 	if langFeatures.Nested || len(endComments) == 0 {
 		offsetJump, endString := checkForMatchMultiOpen(fileJob.Content[index], index, endPoint, langFeatures.MultiLineCommentMask, langFeatures.MultiLineComment, fileJob)
 		if offsetJump != 0 {
@@ -353,6 +362,7 @@ func CountStats(fileJob *FileJob) {
 
 	for index := 0; index < len(fileJob.Content); index++ {
 
+		// TODO move this into the code loop
 		if Duplicates {
 			// Technically this is wrong because we skip bytes so this is not a true
 			// hash of the file contents, but for duplicate files it shouldn't matter
@@ -361,18 +371,12 @@ func CountStats(fileJob *FileJob) {
 			digest.Write(digestible)
 		}
 
-		// Check if this file is binary by checking for nul byte and if so bail out
-		// this is how GNU Grep, git and ripgrep check for binary files
-		if index < 10000 && isBinary(fileJob.Content[index]) {
-			fileJob.Binary = true
-			return
-		}
-
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
 		// changing anything in here and profile/measure afterwards!
 		// NB that the order of the if statements matters and has been set to what in benchmarks is most efficient
 		if !isWhitespace(fileJob.Content[index]) {
+
 			switch currentState {
 			case S_CODE:
 				index, currentState, endString, endComments = codeState(
@@ -409,6 +413,10 @@ func CountStats(fileJob *FileJob) {
 					langFeatures,
 				)
 			}
+		}
+
+		if index < 10000 && fileJob.Binary {
+			return
 		}
 
 		// This means the end of processing the line so calculate the stats according to what state
