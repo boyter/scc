@@ -3,6 +3,7 @@ package processor
 import (
 	"crypto/md5"
 	"fmt"
+	"hash"
 	"io/ioutil"
 	"sync"
 )
@@ -106,8 +107,8 @@ func codeState(
 	endString []byte,
 	endComments [][]byte,
 	langFeatures LanguageFeature,
+	digest *hash.Hash,
 ) (int, int64, []byte, [][]byte) {
-
 	for i := index; i < endPoint; i++ {
 		curByte := fileJob.Content[i]
 		index = i
@@ -121,6 +122,14 @@ func codeState(
 			return i, currentState, endString, endComments
 		}
 
+		if Duplicates {
+			// Technically this is wrong because we skip bytes so this is not a true
+			// hash of the file contents, but for duplicate files it shouldn't matter
+			// as both will skip the same way
+			digestible := []byte{fileJob.Content[index]}
+			(*digest).Write(digestible)
+		}
+		
 		if ok, _, _ := langFeatures.SingleLineComments.Match(fileJob.Content[i:]); ok {
 			currentState = S_COMMENT_CODE
 			return i, currentState, endString, endComments
@@ -301,6 +310,7 @@ func CountStats(fileJob *FileJob) {
 					endString,
 					endComments,
 					langFeatures,
+					&digest,
 				)
 			case S_STRING:
 				index, currentState = stringState(fileJob, index, endPoint, langFeatures.Strings, endString, currentState)
