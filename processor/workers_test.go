@@ -533,15 +533,15 @@ test"; // a quote: "`)
 	}
 
 	if fileJob.Code != 4 {
-		t.Errorf("Expected 4 lines got %d", fileJob.Code)
+		t.Errorf("Expected 4 code lines got %d", fileJob.Code)
 	}
 
 	if fileJob.Comment != 0 {
-		t.Errorf("Expected 0 lines got %d", fileJob.Comment)
+		t.Errorf("Expected 0 comment lines got %d", fileJob.Comment)
 	}
 
 	if fileJob.Blank != 0 {
-		t.Errorf("Expected 0 lines got %d", fileJob.Blank)
+		t.Errorf("Expected 0 blank lines got %d", fileJob.Blank)
 	}
 }
 
@@ -553,13 +553,11 @@ func TestCheckForMatchNoMatch(t *testing.T) {
 		Content:  []byte("one does not simply walk into mordor"),
 	}
 
-	matches := [][]byte{
-		[]byte("//"),
-		[]byte("--"),
-	}
-	mask := byte('/') | byte('-')
+	matches := &Trie{}
+	matches.Insert([]byte("//"))
+	matches.Insert([]byte("--"))
 
-	match := checkForMatch(' ', 0, 100, mask, matches, &fileJob)
+	match, _, _ := matches.Match(fileJob.Content)
 
 	if match != false {
 		t.Errorf("Expected no match")
@@ -574,13 +572,11 @@ func TestCheckForMatchHasMatch(t *testing.T) {
 		Content:  []byte("// one does not simply walk into mordor"),
 	}
 
-	matches := [][]byte{
-		[]byte("//"),
-		[]byte("--"),
-	}
-	mask := byte('/') | byte('-')
+	matches := &Trie{}
+	matches.Insert([]byte("//"))
+	matches.Insert([]byte("--"))
 
-	match := checkForMatch('/', 0, 100, mask, matches, &fileJob)
+	match, _, _ := matches.Match(fileJob.Content)
 
 	if match != true {
 		t.Errorf("Expected match")
@@ -631,16 +627,13 @@ func TestCheckComplexityMatch(t *testing.T) {
 		Content:  []byte("for (int i=0; i<100; i++) {"),
 	}
 
-	matches := [][]byte{
-		[]byte("for "),
-		[]byte("for("),
-	}
+	matches := &Trie{}
+	matches.Insert([]byte("for "))
+	matches.Insert([]byte("for("))
 
-	mask := byte('f')
+	match, n, _ := matches.Match(fileJob.Content)
 
-	match := checkComplexity('f', 0, 20, mask, matches, &fileJob)
-
-	if match != 4 {
+	if !match || n != 4 {
 		t.Errorf("Expected match")
 	}
 }
@@ -653,16 +646,13 @@ func TestCheckComplexityNoMatch(t *testing.T) {
 		Content:  []byte("far (int i=0; i<100; i++) {"),
 	}
 
-	matches := [][]byte{
-		[]byte("for "),
-		[]byte("for("),
-	}
+	matches := &Trie{}
+	matches.Insert([]byte("for "))
+	matches.Insert([]byte("for("))
 
-	mask := byte('f')
+	match, _, _ := matches.Match(fileJob.Content)
 
-	match := checkComplexity('f', 0, 20, mask, matches, &fileJob)
-
-	if match != 0 {
+	if match {
 		t.Errorf("Expected no match")
 	}
 }
@@ -1144,30 +1134,23 @@ func BenchmarkCheckComplexity(b *testing.B) {
 		Content:  []byte("A little while ago, I passed my first year mark of working for Google. This also marked the "),
 	}
 
-	matches := [][]byte{
-		[]byte("for "),
-		[]byte("for("),
-		[]byte("if "),
-		[]byte("if("),
-		[]byte("switch "),
-		[]byte("while "),
-		[]byte("else "),
-		[]byte("|| "),
-		[]byte("&& "),
-		[]byte("!= "),
-		[]byte("== "),
-	}
-
-	complexityBytes := []byte("fiswe|&!=")
-	mask := byte(0)
-	for _, b := range complexityBytes {
-		mask |= b
-	}
+	matches := &Trie{}
+	matches.Insert([]byte("for "))
+	matches.Insert([]byte("for("))
+	matches.Insert([]byte("if "))
+	matches.Insert([]byte("if("))
+	matches.Insert([]byte("switch "))
+	matches.Insert([]byte("while "))
+	matches.Insert([]byte("else "))
+	matches.Insert([]byte("|| "))
+	matches.Insert([]byte("&& "))
+	matches.Insert([]byte("!= "))
+	matches.Insert([]byte("== "))
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < len(fileJob.Content); j++ {
-			checkComplexity(fileJob.Content[j], j, len(fileJob.Content), mask, matches, &fileJob)
+			matches.Match(fileJob.Content)
 		}
 	}
 }

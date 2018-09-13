@@ -69,57 +69,33 @@ func ProcessConstants() {
 
 	startTime = makeTimestampMilli()
 	for name, value := range database {
-		complexityChecks := [][]byte{}
-		complexityMask := byte(0)
-		singleLineComment := [][]byte{}
-		singleLineCommentMask := byte(0)
-		multiLineComment := []OpenClose{}
-		multiLineCommentMask := byte(0)
-		stringChecks := []OpenClose{}
-		stringMask := byte(0)
-		processMask := byte(0)
+		complexityTrie := &Trie{}
+		slCommentTrie := &Trie{}
+		mlCommentTrie := &Trie{}
+		stringTrie := &Trie{}
 
 		for _, v := range value.ComplexityChecks {
-			complexityChecks = append(complexityChecks, []byte(v))
-			complexityMask |= v[0]
+			complexityTrie.Insert([]byte(v))
 		}
-		processMask |= complexityMask
 
 		for _, v := range value.LineComment {
-			singleLineComment = append(singleLineComment, []byte(v))
-			singleLineCommentMask |= v[0]
+			slCommentTrie.Insert([]byte(v))
 		}
-		processMask |= singleLineCommentMask
 
 		for _, v := range value.MultiLine {
-			multiLineComment = append(multiLineComment, OpenClose{
-				Open:  []byte(v[0]),
-				Close: []byte(v[1]),
-			})
-			multiLineCommentMask |= v[0][0]
+			mlCommentTrie.InsertClose([]byte(v[0]), []byte(v[1]))
 		}
-		processMask |= multiLineCommentMask
 
 		for _, v := range value.Quotes {
-			stringChecks = append(stringChecks, OpenClose{
-				Open:  []byte(v[0]),
-				Close: []byte(v[1]),
-			})
-			stringMask |= v[0][0]
+			stringTrie.InsertClose([]byte(v[0]), []byte(v[1]))
 		}
-		processMask |= stringMask
 
 		LanguageFeatures[name] = LanguageFeature{
-			ComplexityChecks:      complexityChecks,
-			ComplexityCheckMask:   complexityMask,
-			MultiLineComment:      multiLineComment,
-			MultiLineCommentMask:  multiLineCommentMask,
-			SingleLineComment:     singleLineComment,
-			SingleLineCommentMask: singleLineCommentMask,
-			StringChecks:          stringChecks,
-			StringCheckMask:       stringMask,
+			Complexity: complexityTrie,
+			MultiLineComments: mlCommentTrie,
+			SingleLineComments: slCommentTrie,
+			Strings: stringTrie,
 			Nested:                value.NestedMultiLine,
-			ProcessMask:           processMask,
 		}
 	}
 
