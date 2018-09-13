@@ -129,7 +129,7 @@ func codeState(
 			digestible := []byte{fileJob.Content[index]}
 			(*digest).Write(digestible)
 		}
-		
+
 		if ok, _, _ := langFeatures.SingleLineComments.Match(fileJob.Content[i:]); ok {
 			currentState = S_COMMENT_CODE
 			return i, currentState, endString, endComments
@@ -281,19 +281,9 @@ func CountStats(fileJob *FileJob) {
 	// crypto secure here either so no need to eat the performance cost of a better
 	// hash method
 	digest := md5.New()
-	digestible := []byte{' '}
 
 	for index := 0; index < len(fileJob.Content); index++ {
-
-		// TODO move this into the code loop
-		if Duplicates {
-			// Technically this is wrong because we skip bytes so this is not a true
-			// hash of the file contents, but for duplicate files it shouldn't matter
-			// as both will skip the same way
-			digestible[0] = fileJob.Content[index]
-			digest.Write(digestible)
-		}
-
+		
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
 		// changing anything in here and profile/measure afterwards!
