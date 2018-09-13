@@ -67,6 +67,13 @@ func isBinary(index int, currentByte byte) bool {
 	return false
 }
 
+func shouldProcess(currentByte, processBytesMask byte) bool {
+	if currentByte&processBytesMask != currentByte {
+		return false
+	}
+	return true
+}
+
 func resetState(currentState int64) int64 {
 	if currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE {
 		currentState = S_MULTICOMMENT
@@ -117,37 +124,40 @@ func codeState(
 			return i, currentState, endString, endComments
 		}
 
-		if ok, _, endString := langFeatures.Strings.Match(fileJob.Content[i:]); ok {
-			currentState = S_STRING
-			return i, currentState, endString, endComments
-		}
+		if shouldProcess(curByte, langFeatures.ProcessMask) {
 
-		if Duplicates {
-			// Technically this is wrong because we skip bytes so this is not a true
-			// hash of the file contents, but for duplicate files it shouldn't matter
-			// as both will skip the same way
-			digestible := []byte{fileJob.Content[index]}
-			(*digest).Write(digestible)
-		}
-
-		if ok, _, _ := langFeatures.SingleLineComments.Match(fileJob.Content[i:]); ok {
-			currentState = S_COMMENT_CODE
-			return i, currentState, endString, endComments
-		}
-
-		if langFeatures.Nested || len(endComments) == 0 {
-			if ok, offsetJump, endString := langFeatures.MultiLineComments.Match(fileJob.Content[i:]); ok {
-				endComments = append(endComments, endString)
-				currentState = S_MULTICOMMENT_CODE
-				i += offsetJump - 1
+			if ok, _, endString := langFeatures.Strings.Match(fileJob.Content[i:]); ok {
+				currentState = S_STRING
 				return i, currentState, endString, endComments
 			}
-		}
 
-		if !Complexity {
-			if index == 0 || isWhitespace(fileJob.Content[index-1]) {
-				if ok, _, _ := langFeatures.Complexity.Match(fileJob.Content[i:]); ok {
-					fileJob.Complexity++
+			if Duplicates {
+				// Technically this is wrong because we skip bytes so this is not a true
+				// hash of the file contents, but for duplicate files it shouldn't matter
+				// as both will skip the same way
+				digestible := []byte{fileJob.Content[index]}
+				(*digest).Write(digestible)
+			}
+
+			if ok, _, _ := langFeatures.SingleLineComments.Match(fileJob.Content[i:]); ok {
+				currentState = S_COMMENT_CODE
+				return i, currentState, endString, endComments
+			}
+
+			if langFeatures.Nested || len(endComments) == 0 {
+				if ok, offsetJump, endString := langFeatures.MultiLineComments.Match(fileJob.Content[i:]); ok {
+					endComments = append(endComments, endString)
+					currentState = S_MULTICOMMENT_CODE
+					i += offsetJump - 1
+					return i, currentState, endString, endComments
+				}
+			}
+
+			if !Complexity {
+				if index == 0 || isWhitespace(fileJob.Content[index-1]) {
+					if ok, _, _ := langFeatures.Complexity.Match(fileJob.Content[i:]); ok {
+						fileJob.Complexity++
+					}
 				}
 			}
 		}
@@ -207,7 +217,6 @@ func blankState(
 	endString []byte,
 	langFeatures LanguageFeature,
 ) (int, int64, []byte, [][]byte) {
-
 	if langFeatures.Nested || len(endComments) == 0 {
 		if ok, offsetJump, endString := langFeatures.MultiLineComments.Match(fileJob.Content[index:]); ok {
 			endComments = append(endComments, endString)
@@ -283,7 +292,7 @@ func CountStats(fileJob *FileJob) {
 	digest := md5.New()
 
 	for index := 0; index < len(fileJob.Content); index++ {
-		
+
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
 		// changing anything in here and profile/measure afterwards!

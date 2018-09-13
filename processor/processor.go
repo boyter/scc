@@ -74,28 +74,47 @@ func ProcessConstants() {
 		mlCommentTrie := &Trie{}
 		stringTrie := &Trie{}
 
+		complexityMask := byte(0)
+		singleLineCommentMask := byte(0)
+		multiLineCommentMask := byte(0)
+		stringMask := byte(0)
+		processMask := byte(0)
+
 		for _, v := range value.ComplexityChecks {
+			complexityMask |= v[0]
 			complexityTrie.Insert([]byte(v))
 		}
+		processMask |= complexityMask
 
 		for _, v := range value.LineComment {
+			singleLineCommentMask |= v[0]
 			slCommentTrie.Insert([]byte(v))
 		}
+		processMask |= singleLineCommentMask
 
 		for _, v := range value.MultiLine {
+			multiLineCommentMask |= v[0][0]
 			mlCommentTrie.InsertClose([]byte(v[0]), []byte(v[1]))
 		}
+		processMask |= multiLineCommentMask
 
 		for _, v := range value.Quotes {
+			stringMask |= v[0][0]
 			stringTrie.InsertClose([]byte(v[0]), []byte(v[1]))
 		}
+		processMask |= stringMask
 
 		LanguageFeatures[name] = LanguageFeature{
-			Complexity: complexityTrie,
-			MultiLineComments: mlCommentTrie,
-			SingleLineComments: slCommentTrie,
-			Strings: stringTrie,
+			Complexity:            complexityTrie,
+			MultiLineComments:     mlCommentTrie,
+			SingleLineComments:    slCommentTrie,
+			Strings:               stringTrie,
 			Nested:                value.NestedMultiLine,
+			ComplexityCheckMask:   complexityMask,
+			MultiLineCommentMask:  multiLineCommentMask,
+			SingleLineCommentMask: singleLineCommentMask,
+			StringCheckMask:       stringMask,
+			ProcessMask:           processMask,
 		}
 	}
 

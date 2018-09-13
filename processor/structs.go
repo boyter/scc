@@ -16,11 +16,16 @@ type Language struct {
 }
 
 type LanguageFeature struct {
-	Complexity *Trie
-	MultiLineComments *Trie
-	SingleLineComments *Trie
-	Strings *Trie
+	Complexity            *Trie
+	MultiLineComments     *Trie
+	SingleLineComments    *Trie
+	Strings               *Trie
 	Nested                bool
+	ComplexityCheckMask   byte
+	SingleLineCommentMask byte
+	MultiLineCommentMask  byte
+	StringCheckMask       byte
+	ProcessMask           byte
 }
 
 // FileJobCallback is an interface that FileJobs can implement to get a per line callback with the line type
@@ -100,8 +105,8 @@ func (c *CheckDuplicates) Check(key int64, hash []byte) bool {
 
 type Trie struct {
 	Exists bool
-	Close []byte
-	Table [256]*Trie
+	Close  []byte
+	Table  [256]*Trie
 }
 
 func (t *Trie) Insert(str []byte) {
