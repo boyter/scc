@@ -592,9 +592,8 @@ func TestCheckForMatchSingleNoMatch(t *testing.T) {
 	}
 
 	matches := []byte("*/")
-	mask := byte('*')
 
-	match := checkForMatchSingle('/', 0, 100, mask, matches, &fileJob)
+	match := checkForMatchSingle('/', 0, 100, matches, &fileJob)
 
 	if match != false {
 		t.Errorf("Expected no match")
@@ -610,9 +609,8 @@ func TestCheckForMatchSingleMatch(t *testing.T) {
 	}
 
 	matches := []byte("*/")
-	mask := byte('*')
 
-	match := checkForMatchSingle('*', 0, 100, mask, matches, &fileJob)
+	match := checkForMatchSingle('*', 0, 100, matches, &fileJob)
 
 	if match != true {
 		t.Errorf("Expected match")

@@ -27,11 +27,7 @@ const (
 	LINE_COMMENT
 )
 
-func checkForMatchSingle(currentByte byte, index int, endPoint int, mask byte, matches []byte, fileJob *FileJob) bool {
-	// if currentByte&mask != currentByte {
-	// 	return false
-	// }
-
+func checkForMatchSingle(currentByte byte, index int, endPoint int, matches []byte, fileJob *FileJob) bool {
 	potentialMatch := true
 	if currentByte == matches[0] {
 		for j := 0; j < len(matches); j++ {
@@ -124,8 +120,12 @@ func codeState(
 			return i, currentState, endString, endComments
 		}
 
-		if shouldProcess(curByte, langFeatures.ProcessMask) {
+		if isBinary(i, curByte) {
+			fileJob.Binary = true
+			return i, currentState, endString, endComments
+		}
 
+		if shouldProcess(curByte, langFeatures.ProcessMask) {
 			if ok, _, endString := langFeatures.Strings.Match(fileJob.Content[i:]); ok {
 				currentState = S_STRING
 				return i, currentState, endString, endComments
@@ -175,7 +175,7 @@ func commentState(fileJob *FileJob, index int, endPoint int, currentState int64,
 			return i, currentState, endString, endComments
 		}
 
-		if checkForMatchSingle(curByte, index, endPoint, byte(0xFF), endComments[len(endComments)-1], fileJob) {
+		if checkForMatchSingle(curByte, index, endPoint, endComments[len(endComments)-1], fileJob) {
 			// set offset jump here
 			offsetJump := len(endComments[len(endComments)-1])
 			endComments = endComments[:len(endComments)-1]
