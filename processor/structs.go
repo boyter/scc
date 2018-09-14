@@ -5,6 +5,13 @@ import (
 	"sync"
 )
 
+const (
+	T_STRING int = iota + 1
+	T_SLCOMMENT
+	T_MLCOMMENT
+	T_COMPLEXITY
+)
+
 type Language struct {
 	LineComment      []string   `json:"line_comment"`
 	ComplexityChecks []string   `json:"complexitychecks"`
@@ -20,6 +27,7 @@ type LanguageFeature struct {
 	MultiLineComments     *Trie
 	SingleLineComments    *Trie
 	Strings               *Trie
+	Tokens                *Trie
 	Nested                bool
 	ComplexityCheckMask   byte
 	SingleLineCommentMask byte
@@ -104,53 +112,49 @@ func (c *CheckDuplicates) Check(key int64, hash []byte) bool {
 }
 
 type Trie struct {
-	Exists bool
-	Close  []byte
-	Table  [256]*Trie
+	Type  int
+	Close []byte
+	Table [256]*Trie
 }
 
-func (t *Trie) Insert(str []byte) {
-	var x, y *Trie
+func (root *Trie) Insert(tokenType int, token []byte) {
+	var node *Trie
 
-	x = t
-	for _, c := range str {
-		y = x.Table[byte(c)]
-		if y == nil {
-			y = &Trie{}
-			x.Table[byte(c)] = y
+	node = root
+	for _, c := range token {
+		if node.Table[c] == nil {
+			node.Table[c] = &Trie{}
 		}
-		x = y
+		node = node.Table[c]
 	}
-	x.Exists = true
+	node.Type = tokenType
 }
 
-func (t *Trie) InsertClose(str, suffix []byte) {
-	var x, y *Trie
+func (root *Trie) InsertClose(tokenType int, openToken, closeToken []byte) {
+	var node *Trie
 
-	x = t
-	for _, c := range str {
-		y = x.Table[byte(c)]
-		if y == nil {
-			y = &Trie{}
-			x.Table[byte(c)] = y
+	node = root
+	for _, c := range openToken {
+		if node.Table[c] == nil {
+			node.Table[c] = &Trie{}
 		}
-		x = y
+		node = node.Table[c]
 	}
-	x.Exists = true
-	x.Close = suffix
+	node.Type = tokenType
+	node.Close = closeToken
 }
 
-func (t *Trie) Match(str []byte) (bool, int, []byte) {
-	var x *Trie
+func (root *Trie) Match(token []byte) (int, int, []byte) {
+	var node *Trie
 	var depth int
 	var c byte
 
-	x = t
-	for depth, c = range str {
-		if x.Table[c] == nil {
-			return x.Exists, depth, x.Close
+	node = root
+	for depth, c = range token {
+		if node.Table[c] == nil {
+			return node.Type, depth, node.Close
 		}
-		x = x.Table[c]
+		node = node.Table[c]
 	}
-	return x.Exists, depth, x.Close
+	return node.Type, depth, node.Close
 }

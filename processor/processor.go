@@ -73,6 +73,7 @@ func ProcessConstants() {
 		slCommentTrie := &Trie{}
 		mlCommentTrie := &Trie{}
 		stringTrie := &Trie{}
+		tokenTrie := &Trie{}
 
 		complexityMask := byte(0)
 		singleLineCommentMask := byte(0)
@@ -82,25 +83,33 @@ func ProcessConstants() {
 
 		for _, v := range value.ComplexityChecks {
 			complexityMask |= v[0]
-			complexityTrie.Insert([]byte(v))
+			complexityTrie.Insert(T_COMPLEXITY, []byte(v))
+			if !Complexity {
+				tokenTrie.Insert(T_COMPLEXITY, []byte(v))
+			}
 		}
-		processMask |= complexityMask
+		if !Complexity {
+			processMask |= complexityMask
+		}
 
 		for _, v := range value.LineComment {
 			singleLineCommentMask |= v[0]
-			slCommentTrie.Insert([]byte(v))
+			slCommentTrie.Insert(T_SLCOMMENT, []byte(v))
+			tokenTrie.Insert(T_SLCOMMENT, []byte(v))
 		}
 		processMask |= singleLineCommentMask
 
 		for _, v := range value.MultiLine {
 			multiLineCommentMask |= v[0][0]
-			mlCommentTrie.InsertClose([]byte(v[0]), []byte(v[1]))
+			mlCommentTrie.InsertClose(T_MLCOMMENT, []byte(v[0]), []byte(v[1]))
+			tokenTrie.InsertClose(T_MLCOMMENT, []byte(v[0]), []byte(v[1]))
 		}
 		processMask |= multiLineCommentMask
 
 		for _, v := range value.Quotes {
 			stringMask |= v[0][0]
-			stringTrie.InsertClose([]byte(v[0]), []byte(v[1]))
+			stringTrie.InsertClose(T_STRING, []byte(v[0]), []byte(v[1]))
+			tokenTrie.InsertClose(T_STRING, []byte(v[0]), []byte(v[1]))
 		}
 		processMask |= stringMask
 
@@ -109,6 +118,7 @@ func ProcessConstants() {
 			MultiLineComments:     mlCommentTrie,
 			SingleLineComments:    slCommentTrie,
 			Strings:               stringTrie,
+			Tokens:                tokenTrie,
 			Nested:                value.NestedMultiLine,
 			ComplexityCheckMask:   complexityMask,
 			MultiLineCommentMask:  multiLineCommentMask,

@@ -93,7 +93,7 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, en
 		}
 
 		if fileJob.Content[i-1] != '\\' {
-			if ok, _, _ := stringTrie.Match(fileJob.Content[i:]); ok {
+			if ok, _, _ := stringTrie.Match(fileJob.Content[i:]); ok != 0 {
 				return i, S_CODE
 			}
 		}
@@ -126,11 +126,6 @@ func codeState(
 		}
 
 		if shouldProcess(curByte, langFeatures.ProcessMask) {
-			if ok, _, endString := langFeatures.Strings.Match(fileJob.Content[i:]); ok {
-				currentState = S_STRING
-				return i, currentState, endString, endComments
-			}
-
 			if Duplicates {
 				// Technically this is wrong because we skip bytes so this is not a true
 				// hash of the file contents, but for duplicate files it shouldn't matter
@@ -139,25 +134,26 @@ func codeState(
 				(*digest).Write(digestible)
 			}
 
-			if ok, _, _ := langFeatures.SingleLineComments.Match(fileJob.Content[i:]); ok {
+			switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[i:]); tokenType {
+			case T_STRING:
+				currentState = S_STRING
+				return i, currentState, endString, endComments
+
+			case T_SLCOMMENT:
 				currentState = S_COMMENT_CODE
 				return i, currentState, endString, endComments
-			}
 
-			if langFeatures.Nested || len(endComments) == 0 {
-				if ok, offsetJump, endString := langFeatures.MultiLineComments.Match(fileJob.Content[i:]); ok {
+			case T_MLCOMMENT:
+				if langFeatures.Nested || len(endComments) == 0 {
 					endComments = append(endComments, endString)
 					currentState = S_MULTICOMMENT_CODE
 					i += offsetJump - 1
 					return i, currentState, endString, endComments
 				}
-			}
 
-			if !Complexity {
+			case T_COMPLEXITY:
 				if index == 0 || isWhitespace(fileJob.Content[index-1]) {
-					if ok, _, _ := langFeatures.Complexity.Match(fileJob.Content[i:]); ok {
-						fileJob.Complexity++
-					}
+					fileJob.Complexity++
 				}
 			}
 		}
@@ -197,7 +193,7 @@ func commentState(fileJob *FileJob, index int, endPoint int, currentState int64,
 		// Check if we are entering another multiline comment
 		// This should come below check for match single as it speeds up processing
 		if langFeatures.Nested || len(endComments) == 0 {
-			if ok, offsetJump, endString := langFeatures.MultiLineComments.Match(fileJob.Content[i:]); ok {
+			if ok, offsetJump, endString := langFeatures.MultiLineComments.Match(fileJob.Content[i:]); ok != 0 {
 				endComments = append(endComments, endString)
 				i += offsetJump - 1
 				return i, currentState, endString, endComments
@@ -217,34 +213,31 @@ func blankState(
 	endString []byte,
 	langFeatures LanguageFeature,
 ) (int, int64, []byte, [][]byte) {
-	if langFeatures.Nested || len(endComments) == 0 {
-		if ok, offsetJump, endString := langFeatures.MultiLineComments.Match(fileJob.Content[index:]); ok {
+	switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[index:]); tokenType {
+	case T_MLCOMMENT:
+		if langFeatures.Nested || len(endComments) == 0 {
 			endComments = append(endComments, endString)
 			currentState = S_MULTICOMMENT
 			index += offsetJump - 1
 			return index, currentState, endString, endComments
 		}
-	}
 
-	// Moving this above nested comments slows performance to leave it below
-	if ok, _, _ := langFeatures.SingleLineComments.Match(fileJob.Content[index:]); ok {
+	case T_SLCOMMENT:
 		currentState = S_COMMENT
 		return index, currentState, endString, endComments
-	}
 
-	// Moving this above nested comments or single line comment checks slows performance so leave it below
-	if ok, _, _ := langFeatures.Strings.Match(fileJob.Content[index:]); ok {
+	case T_STRING:
 		currentState = S_STRING
 		return index, currentState, endString, endComments
-	}
 
-	currentState = S_CODE
-	if !Complexity {
+	case T_COMPLEXITY:
+		currentState = S_CODE
 		if index == 0 || isWhitespace(fileJob.Content[index-1]) {
-			if ok, _, _ := langFeatures.Complexity.Match(fileJob.Content[index:]); ok {
-				fileJob.Complexity++
-			}
+			fileJob.Complexity++
 		}
+
+	default:
+		currentState = S_CODE
 	}
 
 	return index, currentState, endString, endComments
@@ -277,6 +270,9 @@ func CountStats(fileJob *FileJob) {
 	}
 	if langFeatures.Strings == nil {
 		langFeatures.Strings = &Trie{}
+	}
+	if langFeatures.Tokens == nil {
+		langFeatures.Tokens = &Trie{}
 	}
 
 	endPoint := int(fileJob.Bytes - 1)
