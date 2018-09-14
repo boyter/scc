@@ -289,7 +289,10 @@ func CountStats(fileJob *FileJob) {
 	// and is fast enough to not warrant murmur3 hashing. No need to be
 	// crypto secure here either so no need to eat the performance cost of a better
 	// hash method
-	digest := md5.New()
+	var digest hash.Hash
+	if Duplicates {
+		digest = md5.New()
+	}
 
 	for index := 0; index < len(fileJob.Content); index++ {
 
@@ -380,12 +383,11 @@ func CountStats(fileJob *FileJob) {
 	}
 
 	if Duplicates {
-		hashed := make([]byte, 0)
-		fileJob.Hash = digest.Sum(hashed)
+		fileJob.Hash = digest.Sum(nil)
 	}
 
 	// Save memory by unsetting the content as we no longer require it
-	fileJob.Content = []byte{}
+	fileJob.Content = nil
 }
 
 // Reads entire file into memory and then pushes it onto the next queue
