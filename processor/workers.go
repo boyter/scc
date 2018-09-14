@@ -125,34 +125,36 @@ func codeState(
 			return i, currentState, endString, endComments
 		}
 
-		if Duplicates {
-			// Technically this is wrong because we skip bytes so this is not a true
-			// hash of the file contents, but for duplicate files it shouldn't matter
-			// as both will skip the same way
-			digestible := []byte{fileJob.Content[index]}
-			(*digest).Write(digestible)
-		}
-
-		switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[i:]); tokenType {
-		case T_STRING:
-			currentState = S_STRING
-			return i, currentState, endString, endComments
-
-		case T_SLCOMMENT:
-			currentState = S_COMMENT_CODE
-			return i, currentState, endString, endComments
-
-		case T_MLCOMMENT:
-			if langFeatures.Nested || len(endComments) == 0 {
-				endComments = append(endComments, endString)
-				currentState = S_MULTICOMMENT_CODE
-				i += offsetJump - 1
-				return i, currentState, endString, endComments
+		if shouldProcess(curByte, langFeatures.ProcessMask) {
+			if Duplicates {
+				// Technically this is wrong because we skip bytes so this is not a true
+				// hash of the file contents, but for duplicate files it shouldn't matter
+				// as both will skip the same way
+				digestible := []byte{fileJob.Content[index]}
+				(*digest).Write(digestible)
 			}
 
-		case T_COMPLEXITY:
-			if index == 0 || isWhitespace(fileJob.Content[index-1]) {
-				fileJob.Complexity++
+			switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[i:]); tokenType {
+			case T_STRING:
+				currentState = S_STRING
+				return i, currentState, endString, endComments
+
+			case T_SLCOMMENT:
+				currentState = S_COMMENT_CODE
+				return i, currentState, endString, endComments
+
+			case T_MLCOMMENT:
+				if langFeatures.Nested || len(endComments) == 0 {
+					endComments = append(endComments, endString)
+					currentState = S_MULTICOMMENT_CODE
+					i += offsetJump - 1
+					return i, currentState, endString, endComments
+				}
+
+			case T_COMPLEXITY:
+				if index == 0 || isWhitespace(fileJob.Content[index-1]) {
+					fileJob.Complexity++
+				}
 			}
 		}
 	}
