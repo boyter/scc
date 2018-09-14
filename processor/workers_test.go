@@ -554,12 +554,12 @@ func TestCheckForMatchNoMatch(t *testing.T) {
 	}
 
 	matches := &Trie{}
-	matches.Insert([]byte("//"))
-	matches.Insert([]byte("--"))
+	matches.Insert(T_SLCOMMENT, []byte("//"))
+	matches.Insert(T_SLCOMMENT, []byte("--"))
 
 	match, _, _ := matches.Match(fileJob.Content)
 
-	if match != false {
+	if match != 0 {
 		t.Errorf("Expected no match")
 	}
 }
@@ -573,12 +573,12 @@ func TestCheckForMatchHasMatch(t *testing.T) {
 	}
 
 	matches := &Trie{}
-	matches.Insert([]byte("//"))
-	matches.Insert([]byte("--"))
+	matches.Insert(T_SLCOMMENT, []byte("//"))
+	matches.Insert(T_SLCOMMENT, []byte("--"))
 
 	match, _, _ := matches.Match(fileJob.Content)
 
-	if match != true {
+	if match != T_SLCOMMENT {
 		t.Errorf("Expected match")
 	}
 }
@@ -626,12 +626,12 @@ func TestCheckComplexityMatch(t *testing.T) {
 	}
 
 	matches := &Trie{}
-	matches.Insert([]byte("for "))
-	matches.Insert([]byte("for("))
+	matches.Insert(T_COMPLEXITY, []byte("for "))
+	matches.Insert(T_COMPLEXITY, []byte("for("))
 
 	match, n, _ := matches.Match(fileJob.Content)
 
-	if !match || n != 4 {
+	if match != T_COMPLEXITY || n != 4 {
 		t.Errorf("Expected match")
 	}
 }
@@ -645,12 +645,12 @@ func TestCheckComplexityNoMatch(t *testing.T) {
 	}
 
 	matches := &Trie{}
-	matches.Insert([]byte("for "))
-	matches.Insert([]byte("for("))
+	matches.Insert(T_COMPLEXITY, []byte("for "))
+	matches.Insert(T_COMPLEXITY, []byte("for("))
 
 	match, _, _ := matches.Match(fileJob.Content)
 
-	if match {
+	if match != 0 {
 		t.Errorf("Expected no match")
 	}
 }
@@ -1133,17 +1133,17 @@ func BenchmarkCheckComplexity(b *testing.B) {
 	}
 
 	matches := &Trie{}
-	matches.Insert([]byte("for "))
-	matches.Insert([]byte("for("))
-	matches.Insert([]byte("if "))
-	matches.Insert([]byte("if("))
-	matches.Insert([]byte("switch "))
-	matches.Insert([]byte("while "))
-	matches.Insert([]byte("else "))
-	matches.Insert([]byte("|| "))
-	matches.Insert([]byte("&& "))
-	matches.Insert([]byte("!= "))
-	matches.Insert([]byte("== "))
+	matches.Insert(T_COMPLEXITY, []byte("for "))
+	matches.Insert(T_COMPLEXITY, []byte("for("))
+	matches.Insert(T_COMPLEXITY, []byte("if "))
+	matches.Insert(T_COMPLEXITY, []byte("if("))
+	matches.Insert(T_COMPLEXITY, []byte("switch "))
+	matches.Insert(T_COMPLEXITY, []byte("while "))
+	matches.Insert(T_COMPLEXITY, []byte("else "))
+	matches.Insert(T_COMPLEXITY, []byte("|| "))
+	matches.Insert(T_COMPLEXITY, []byte("&& "))
+	matches.Insert(T_COMPLEXITY, []byte("!= "))
+	matches.Insert(T_COMPLEXITY, []byte("== "))
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
