@@ -150,7 +150,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 
 func walkDirectory(toWalk string, blackList []string, extensionLookup map[string]string) []FileJob {
 	extension := ""
-	filejobs := []FileJob{}
+	var filejobs []FileJob
 
 	godirwalk.Walk(toWalk, &godirwalk.Options{
 		// Unsorted is meant to make the walk faster and we need to sort after processing anyway
