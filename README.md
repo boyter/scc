@@ -12,7 +12,7 @@ Also it has a very short name which is easy to type `scc`.
 
 Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
 
-Read all about how it came to be along with performance benchmarks https://boyter.org/posts/sloc-cloc-code/ or why use a code counting tool https://boyter.org/posts/why-count-lines-of-code/
+Read all about how it came to be along with performance benchmarks https://boyter.org/posts/sloc-cloc-code/ or why use a code counting tool https://boyter.org/posts/why-count-lines-of-code/ or about making it even faster https://boyter.org/posts/sloc-cloc-code-performance/
 
 For performance see the [Performance](https://github.com/boyter/scc#performance) section
 
@@ -150,7 +150,7 @@ Generally `scc` will be very close to the runtime of `tokei` or faster than any 
 
 However if you want greater performance and you have RAM to spare you can disable the garbage collector like the following on linux `GOGC=-1 scc .` which should speed things up considerably.
 
-Benchmarks run on fresh 32 CPU Optimised Digital Ocean Virtual Machine 2018/09/19 all done using [hyperfine](https://github.com/sharkdp/hyperfine) with 3 warm-up runs and 10 timed runs.
+Benchmarks are run on fresh 32 CPU Optimised Digital Ocean Virtual Machine 2018/09/19 all done using [hyperfine](https://github.com/sharkdp/hyperfine) with 3 warm-up runs and 10 timed runs.
 
 ```
 scc v1.10.0
