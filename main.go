@@ -11,8 +11,6 @@ func main() {
 	//f, _ := os.Create("scc.pprof")
 	//pprof.StartCPUProfile(f)
 	//defer pprof.StopCPUProfile()
-	// defer profile.Start(profile.CPUProfile).Stop()
-	// defer profile.Start(profile.MemProfile).Stop()
 
 	app := cli.NewApp()
 	app.EnableBashCompletion = true
