@@ -66,7 +66,7 @@ USAGE:
    scc DIRECTORY
 
 VERSION:
-   1.9.0
+   1.10.0
 
 COMMANDS:
      help, h  Shows a list of commands or help for one command
@@ -150,55 +150,50 @@ Generally `scc` will be very close to the runtime of `tokei` or faster than any 
 
 However if you want greater performance and you have RAM to spare you can disable the garbage collector like the following on linux `GOGC=-1 scc .` which should speed things up considerably.
 
-Benchmarks run on fresh 32 CPU Optimised Digital Ocean Virtual Machine 2018/08/12 all done using [hyperfine](https://github.com/sharkdp/hyperfine) with 3 warm-up runs and 10 timed runs.
+Benchmarks run on fresh 32 CPU Optimised Digital Ocean Virtual Machine 2018/09/19 all done using [hyperfine](https://github.com/sharkdp/hyperfine) with 3 warm-up runs and 10 timed runs.
 
 ```
-scc v1.6.0
-tokei v7.0.3 (compiled with Rust 1.27)
-loc v0.4.1 (compiled with Rust 1.27)
-polyglot v0.4.60
-sloccount v2.26
-cloc v1.6.0
+scc v1.10.0
+tokei v8.0.0 (compiled with Rust 1.29)
+loc v0.4.1 (compiled with Rust 1.29)
+polyglot v0.5.13
+gocloc commit b3aa5f37096bbbfa22803a532214a11dbefa0206
 ```
 
-#### Redis commit 39c70e728b5af0c50989ffbc05e568099f3e081b https://github.com/antirez/redis/
+#### Redis commit 7cdf272d46ad9b658ef8f5d8485af0eeb17cae6d https://github.com/antirez/redis/
 
-| Tool | Command | Time |
-| ---- | ------- | ---- |
-| scc (default) | `scc redis` | 20.1 ms ± 3.0 ms |
-| scc (performance mode) | `GOGC=-1 scc -c -co redis` | 17.3 ms ± 2.2 ms |
-| tokei | `tokei redis` | 20.9 ms ± 3.6 ms |
-| loc | `loc redis` | 70.9 ms ± 31.7 ms |
-| polyglot | `polyglot redis` | 24.5 ms  ± 3.6 ms |
-| sloccount | `sloccount redis` | 1.002 s ± 0.012 s |
-| cloc | `cloc redis` | 1.883 s ± 0.022 s |
+| Program | Runtime |
+|---|---|
+| scc | 38.1 ms ±   1.2 ms |
+| scc (no complexity) | 27.2 ms ±   1.7 ms |
+| tokei | 17.2 ms ±   3.0 ms |
+| loc | 31.5 ms ±  23.5 ms |
+| polyglot | 15.2 ms ±   1.3 ms |
+| gocloc | 129.3 ms ±   2.1 ms |
 
-#### Django commit d3449faaa915a08c275b35de01e66a7ef6bdb2dc https://github.com/django/django
+#### CPython commit 471503954a91d86cf04228c38134108c67a263b0
 
-| Tool | Command | Time |
-| ---- | ------- | ---- |
-| scc (default) | `scc django` | 53.5 ms ± 3.2 ms |
-| scc (performance mode) | `GOGC=-1 scc -c -co django` | 49.5 ms ± 3.3 ms |
-| tokei | `tokei django` | 73.5 ms ± 5.0 ms |
-| loc | `loc django` | 328.2 ms ± 64.0 ms |
-| polyglot | `polyglot django` | 90.4 ms ±  3.1 ms |
-| sloccount | `sloccount django` | 2.644 s ± 0.026 s |
-| cloc | `cloc django` | 14.711 s ± 0.228 s |
+| Program | Runtime |
+|---|---|
+| scc | 69.8 ms ±   2.7 ms |
+| scc (no complexity) | 55.9 ms ±   2.6 ms |
+| tokei | 65.9 ms ±   6.4 ms |
+| loc | 104.0 ms ±  58.4 ms |
+| polyglot | 84.3 ms ±   8.4 ms |
+| gocloc | 787.2 ms ±   7.1 ms |
 
-#### Linux Kernel commit ec0c96714e7ddeda4eccaa077f5646a0fd6e371f https://github.com/torvalds/linux
+#### Linux Kernel commit 7876320f88802b22d4e2daf7eb027dd14175a0f8 https://github.com/torvalds/linux
 
-| Tool | Command | Time |
-| ---- | ------- | ---- |
-| scc (default) | `scc linux` | 1.212 s ± 0.055 s |
-| scc (performance mode) | `GOGC=-1 scc -c -co linux` | 658.0 ms ±  30.3 ms |
-| tokei | `tokei linux` | 559.7 ms ±  27.7 ms |
-| loc | `loc linux` | 1.649 s ±  0.184 s |
-| polyglot | `polyglot linux` | 1.034 s ±  0.031 s |
-| sloccount | `sloccount linux` | 61.602 s ±  5.231 s |
-| cloc | `cloc linux` | 178.112 s ±  12.129 s |
+| Program | Runtime |
+|---|---|
+| scc | 623.5 ms ±  22.1 ms |
+| scc (no complexity) | 471.1 ms ±  18.0 ms |
+| tokei | 549.7 ms ±  30.8 ms |
+| loc | 556.7 ms ± 145.7 ms |
+| polyglot | 953.1 ms ±  31.0 ms |
+| gocloc | 12.083 s ±  0.030 s |
 
-
-To run scc as quickly as possible use the command `GOGC=-1 scc .` which should run in a time comparable to tokei for most repositories. If you enable duplicate detection expect performance to fall by about 50%
+If you enable duplicate detection expect performance to fall by about 50%
 
 ### API Support
 
@@ -375,6 +370,7 @@ PHP (php)
 PKGBUILD (pkgbuild)
 Plain Text (text,txt)
 Polly (polly)
+Powershell (ps1,psm1)
 Processing (pde)
 Prolog (p,pro)
 Properties File (properties)
