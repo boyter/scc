@@ -230,9 +230,9 @@ scc is pretty well tested with many unit, integration and benchmarks to ensure t
 Run go build for windows and linux then the following in linux, keep in mind need to update the version
 
 ```
-GOOS=darwin GOARCH=amd64 go build && zip -r9 scc-1.0.0-x86_64-apple-darwin.zip scc
-GOOS=windows GOARCH=amd64 go build && zip -r9 scc-1.0.0-x86_64-pc-windows.zip scc.exe
-GOOS=linux GOARCH=amd64 go build && zip -r9 scc-1.0.0-x86_64-unknown-linux.zip scc
+GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-1.0.0-x86_64-apple-darwin.zip scc
+GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-1.0.0-x86_64-pc-windows.zip scc.exe
+GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-1.0.0-x86_64-unknown-linux.zip scc
 ```
 
 ### Languages
