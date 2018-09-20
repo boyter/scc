@@ -4327,36 +4327,6 @@
       ]
     ]
   },
-  "Meson": {
-    "line_comment": [
-      "#"
-    ],
-    "complexitychecks": [
-      "for ",
-      "for(",
-      "if ",
-      "if(",
-      "switch ",
-      "while ",
-      "else ",
-      "|| ",
-      "&& ",
-      "!= ",
-      "== "
-    ],
-    "extensions": [],
-    "multi_line": [],
-    "quotes": [
-      [
-        "'",
-        "'"
-      ],
-      [
-        "'''",
-        "'''"
-      ]
-    ]
-  },
   "Spice Netlist": {
     "line_comment": [
       "*"
