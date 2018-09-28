@@ -50,7 +50,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:        "exclude, e",
-			Usage:       "Ignore files and directories matching regular expression",
+			Usage:       "Ignore files and directories matching supplied regular expression",
 			Value:       "",
 			Destination: &processor.Exclude,
 		},
