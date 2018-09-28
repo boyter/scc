@@ -66,30 +66,30 @@ USAGE:
    scc DIRECTORY
 
 VERSION:
-   1.10.0
+   1.11.0
 
 COMMANDS:
      help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --languages                         Print out supported languages and their extensions
+   --languages                         Print out supported languages and extensions
    --format value, -f value            Set output format [possible values: tabular, wide, json, csv] (default: "tabular")
-   --output FILE, -o FILE              Set output file if not set will print to stdout FILE
+   --output value, -o value            Save to file, defaults to stdout
    --pathblacklist value, --pbl value  Which directories should be ignored as comma separated list (default: ".git,.hg,.svn")
-   --sort value, -s value              Sort languages / files based on column [possible values: files, name, lines, blanks, code, comments, complexity] (default: "files")
-   --exclude value, -e value           Ignore files and directories matching regular expression
+   --sort value, -s value              Sort based on column [possible values: files, name, lines, blanks, code, comments, complexity] (default: "files")
+   --exclude value, -e value           Ignore files and directories matching supplied regular expression
    --whitelist value, --wl value       Restrict file extensions to just those provided as a comma separated list E.G. go,java,js
-   --files                             Set to specify you want to see the output for every file
-   --verbose, -v                       Set to enable verbose output
-   --duplicates, -d                    Set to check for and remove duplicate files from stats and output
-   --complexity, -c                    Set to skip complexity calculations note will be overridden if wide is set
-   --wide, -w                          Set to check produce more output such as complexity and code vs complexity ranking. Same as setting format to wide
-   --averagewage value, --aw value     Set as integer to set the average wage used for basic COCOMO calculation (default: 56286)
+   --files                             Display output for every file
+   --verbose, -v                       Enable verbose output
+   --duplicates, -d                    Check for and remove duplicate files from stats and output
+   --complexity, -c                    Skip complexity calculations, note this will be overridden if --wide -w is set
+   --wide, -w                          Wider output with additional statistics
+   --averagewage value, --aw value     Integer to override the average wage value used for basic COCOMO calculation (default: 56286)
    --cocomo, --co                      Set to check remove COCOMO calculation output
    --filegccount value, --fgc value    How many files to parse before turning the GC on (default: 10000)
-   --binary                            Set to disable binary file detection
-   --debug                             Set to enable debug output
-   --trace                             Set to enable trace output, not recommended for multiple files
+   --binary                            Disable binary file detection
+   --debug                             Enable debug output
+   --trace                             Enable trace output, not recommended when processing multiple files
    --help, -h                          show help
    --version, --ver                    Print the version
 ```
@@ -232,11 +232,11 @@ Run go build for windows and linux then the following in linux, keep in mind nee
 
 ```
 GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-1.0.0-x86_64-apple-darwin.zip scc
-GOOS=darwin GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-1.0.0-x86_64-apple-darwin.zip scc
+GOOS=darwin GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-1.0.0-i386-apple-darwin.zip scc
 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-1.0.0-x86_64-pc-windows.zip scc.exe
 GOOS=windows GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-1.0.0-i386-pc-windows.zip scc.exe
 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-1.0.0-x86_64-unknown-linux.zip scc
-GOOS=linux GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-1.0.0-x86_64-unknown-linux.zip scc
+GOOS=linux GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-1.0.0-i386-unknown-linux.zip scc
 ```
 
 ### Languages
