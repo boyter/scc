@@ -49,6 +49,12 @@ func main() {
 			Destination: &processor.SortBy,
 		},
 		cli.StringFlag{
+			Name:        "exclude, e",
+			Usage:       "Ignore all files & directories matching regular expression",
+			Value:       "",
+			Destination: &processor.Exclude,
+		},
+		cli.StringFlag{
 			Name:        "whitelist, wl",
 			Usage:       "Restrict file extensions to just those provided as a comma separated list E.G. go,java,js",
 			Value:       "",
