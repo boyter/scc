@@ -23,6 +23,7 @@ var More = false
 var Cocomo = false
 var DisableCheckBinary = false
 var SortBy = ""
+var Exclude = ""
 var Format = ""
 var FileOutput = ""
 var PathBlacklist = ""

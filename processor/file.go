@@ -6,6 +6,7 @@ import (
 	"github.com/monochromegane/go-gitignore"
 	"io/ioutil"
 	"path/filepath"
+	"regexp"
 	"runtime/debug"
 	"strings"
 	"sync"
@@ -78,6 +79,12 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 	gitignore, gitignoreerror := gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
 	resetGc := false
 
+	var regex *regexp.Regexp
+
+	if Exclude != "" {
+		regex = regexp.MustCompile(Exclude)
+	}
+
 	for _, f := range all {
 		// Godirwalk despite being faster than the default walk is still too slow to feed the
 		// CPU's and so we need to walk in parallel to keep up as much as possible
@@ -87,8 +94,19 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 			for _, black := range blackList {
 				if strings.HasPrefix(filepath.Join(root, f.Name()), black) {
 					shouldSkip = true
-					printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", filepath.Join(root, f.Name())))
+					if Verbose {
+						printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", filepath.Join(root, f.Name())))
+					}
 					break
+				}
+			}
+
+			if Exclude != "" {
+				if regex.Match([]byte(f.Name())) {
+					if Verbose {
+						printWarn("skipping directory due to match exclude: " + f.Name())
+					}
+					shouldSkip = true
 				}
 			}
 
@@ -114,28 +132,41 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 			}
 		} else {
 			if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, f.Name()), false) {
-				extension := ""
-				// Lookup in case the full name matches
-				language, ok := extensionLookup[strings.ToLower(f.Name())]
 
-				// If no match check if we have a matching extension
-				if !ok {
-					extension = getExtension(f.Name())
-					language, ok = extensionLookup[extension]
+				shouldSkip := false
+				if Exclude != "" {
+					if regex.Match([]byte(f.Name())) {
+						if Verbose {
+							printWarn("skipping file due to match exclude: " + f.Name())
+						}
+						shouldSkip = true
+					}
 				}
 
-				// Convert from d.ts to ts and check that in case of multiple extensions
-				if !ok {
-					language, ok = extensionLookup[getExtension(extension)]
-				}
+				if !shouldSkip {
+					extension := ""
+					// Lookup in case the full name matches
+					language, ok := extensionLookup[strings.ToLower(f.Name())]
 
-				if ok {
-					output <- &FileJob{Location: filepath.Join(root, f.Name()), Filename: f.Name(), Extension: extension, Language: language}
-					mutex.Lock()
-					totalCount++
-					mutex.Unlock()
-				} else if Verbose {
-					printWarn(fmt.Sprintf("skipping file unknown extension: %s", f.Name()))
+					// If no match check if we have a matching extension
+					if !ok {
+						extension = getExtension(f.Name())
+						language, ok = extensionLookup[extension]
+					}
+
+					// Convert from d.ts to ts and check that in case of multiple extensions
+					if !ok {
+						language, ok = extensionLookup[getExtension(extension)]
+					}
+
+					if ok {
+						output <- &FileJob{Location: filepath.Join(root, f.Name()), Filename: f.Name(), Extension: extension, Language: language}
+						mutex.Lock()
+						totalCount++
+						mutex.Unlock()
+					} else if Verbose {
+						printWarn(fmt.Sprintf("skipping file unknown extension: %s", f.Name()))
+					}
 				}
 			}
 		}
@@ -156,6 +187,21 @@ func walkDirectory(toWalk string, blackList []string, extensionLookup map[string
 		// Unsorted is meant to make the walk faster and we need to sort after processing anyway
 		Unsorted: true,
 		Callback: func(root string, info *godirwalk.Dirent) error {
+
+			var regex *regexp.Regexp
+			if Exclude != "" {
+				regex = regexp.MustCompile(Exclude)
+			}
+			
+			if Exclude != "" {
+				if regex.Match([]byte(info.Name())) {
+					if Verbose {
+						printWarn("skipping directory due to match exclude: " + info.Name())
+					}
+					return nil
+				}
+			}
+
 			if info.IsDir() {
 				for _, black := range blackList {
 					if strings.HasPrefix(root, black+"/") || strings.HasPrefix(root, black) {
