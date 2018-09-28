@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>scc</id>
+    <version>1.10.0</version>
+    <title>scc</title>
+    <authors>Ben Boyter</authors>
+    <owners>Ben Boyter</owners>
+    <projectUrl>https://github.com/boyter/scc/</projectUrl>
+    <projectSourceUrl>https://github.com/boyter/scc/</projectSourceUrl>
+    <bugTrackerUrl>https://github.com/boyter/scc/issues/</bugTrackerUrl>
+    <packageSourceUrl>https://github.com/boyter/scc/tree/master/packages/chocolatey/<packageSourceUrl>
+    <licenseUrl>https://github.com/boyter/scc/blob/v1.10.0/LICENSE</licenseUrl>
+    <tags>scc code counter sloc cloc</tags>
+    <summary>A tool similar to cloc, sloccount and tokei.</summary>
+    <description>A tool similar to cloc, sloccount and tokei. For counting physical the lines of code, blank lines, comment lines, and physical lines of source code in many programming languages with complexity estimates.</description>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>
