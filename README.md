@@ -231,8 +231,11 @@ Run go build for windows and linux then the following in linux, keep in mind nee
 
 ```
 GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-1.0.0-x86_64-apple-darwin.zip scc
+GOOS=darwin GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-1.0.0-x86_64-apple-darwin.zip scc
 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-1.0.0-x86_64-pc-windows.zip scc.exe
+GOOS=windows GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-1.0.0-i386-pc-windows.zip scc.exe
 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-1.0.0-x86_64-unknown-linux.zip scc
+GOOS=linux GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-1.0.0-x86_64-unknown-linux.zip scc
 ```
 
 ### Languages
@@ -357,6 +360,7 @@ MUMPS (mps)
 Mustache (mustache)
 Nim (nim)
 Nix (nix)
+nuspec (nuspec)
 Objective C (m)
 Objective C++ (mm)
 OCaml (ml,mli)
