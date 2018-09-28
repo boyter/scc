@@ -2917,7 +2917,7 @@
       ]
     ]
   },
-  "NuSpec": {
+  "nuspec": {
     "line_comment": [],
     "extensions": [
       "nuspec"
