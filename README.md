@@ -77,6 +77,7 @@ GLOBAL OPTIONS:
    --output FILE, -o FILE              Set output file if not set will print to stdout FILE
    --pathblacklist value, --pbl value  Which directories should be ignored as comma separated list (default: ".git,.hg,.svn")
    --sort value, -s value              Sort languages / files based on column [possible values: files, name, lines, blanks, code, comments, complexity] (default: "files")
+   --exclude value, -e value           Ignore files and directories matching regular expression
    --whitelist value, --wl value       Restrict file extensions to just those provided as a comma separated list E.G. go,java,js
    --files                             Set to specify you want to see the output for every file
    --verbose, -v                       Set to enable verbose output
