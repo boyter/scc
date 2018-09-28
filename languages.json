@@ -2917,6 +2917,24 @@
       ]
     ]
   },
+  "NuSpec": {
+    "line_comment": [],
+    "extensions": [
+      "nuspec"
+    ],
+    "multi_line": [
+      [
+        "<!--",
+        "-->"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
+  },
   "Polly": {
     "line_comment": [],
     "complexitychecks": [
