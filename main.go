@@ -22,7 +22,7 @@ func main() {
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
 			Name:        "languages",
-			Usage:       "Print out supported languages and their extensions",
+			Usage:       "Print out supported languages and extensions",
 			Destination: &processor.Languages,
 		},
 		cli.StringFlag{
@@ -33,7 +33,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:        "output, o",
-			Usage:       "Set output file if not set will print to stdout `FILE`",
+			Usage:       "Save to file, defaults to stdout",
 			Destination: &processor.FileOutput,
 		},
 		cli.StringFlag{
@@ -44,7 +44,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:        "sort, s",
-			Usage:       "Sort languages / files based on column [possible values: files, name, lines, blanks, code, comments, complexity]",
+			Usage:       "Sort based on column [possible values: files, name, lines, blanks, code, comments, complexity]",
 			Value:       "files",
 			Destination: &processor.SortBy,
 		},
@@ -56,32 +56,32 @@ func main() {
 		},
 		cli.BoolFlag{
 			Name:        "files",
-			Usage:       "Set to specify you want to see the output for every file",
+			Usage:       "Display output for every file",
 			Destination: &processor.Files,
 		},
 		cli.BoolFlag{
 			Name:        "verbose, v",
-			Usage:       "Set to enable verbose output",
+			Usage:       "Enable verbose output",
 			Destination: &processor.Verbose,
 		},
 		cli.BoolFlag{
 			Name:        "duplicates, d",
-			Usage:       "Set to check for and remove duplicate files from stats and output",
+			Usage:       "Check for and remove duplicate files from stats and output",
 			Destination: &processor.Duplicates,
 		},
 		cli.BoolFlag{
 			Name:        "complexity, c",
-			Usage:       "Set to skip complexity calculations note will be overridden if wide is set",
+			Usage:       "Skip complexity calculations, note this will be overridden if --wide -w is set",
 			Destination: &processor.Complexity,
 		},
 		cli.BoolFlag{
 			Name:        "wide, w",
-			Usage:       "Set to check produce more output such as complexity and code vs complexity ranking. Same as setting format to wide",
+			Usage:       "Wider output with additional statistics",
 			Destination: &processor.More,
 		},
 		cli.Int64Flag{
 			Name:        "averagewage, aw",
-			Usage:       "Set as integer to set the average wage used for basic COCOMO calculation",
+			Usage:       "Integer to override the average wage value used for basic COCOMO calculation",
 			Destination: &processor.AverageWage,
 			Value:       56286,
 		},
@@ -98,17 +98,17 @@ func main() {
 		},
 		cli.BoolFlag{
 			Name:        "binary",
-			Usage:       "Set to disable binary file detection",
+			Usage:       "Disable binary file detection",
 			Destination: &processor.DisableCheckBinary,
 		},
 		cli.BoolFlag{
 			Name:        "debug",
-			Usage:       "Set to enable debug output",
+			Usage:       "Enable debug output",
 			Destination: &processor.Debug,
 		},
 		cli.BoolFlag{
 			Name:        "trace",
-			Usage:       "Set to enable trace output, not recommended for multiple files",
+			Usage:       "Enable trace output, not recommended when processing multiple files",
 			Destination: &processor.Trace,
 		},
 	}
