@@ -196,7 +196,11 @@ func walkDirectory(toWalk string, blackList []string, extensionLookup map[string
 			if Exclude != "" {
 				if regex.Match([]byte(info.Name())) {
 					if Verbose {
-						printWarn("skipping directory due to match exclude: " + info.Name())
+						if info.IsDir() {
+							printWarn("skipping directory due to match exclude: " + root)
+						} else {
+							printWarn("skipping file due to match exclude: " + root)
+						}
 					}
 					return nil
 				}
