@@ -12,7 +12,12 @@ Also it has a very short name which is easy to type `scc`.
 
 Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
 
-Read all about how it came to be along with performance benchmarks https://boyter.org/posts/sloc-cloc-code/ or why use a code counting tool https://boyter.org/posts/why-count-lines-of-code/ or about making it even faster https://boyter.org/posts/sloc-cloc-code-performance/
+Read all about how it came to be along with performance benchmarks,
+
+ - https://boyter.org/posts/sloc-cloc-code/
+ - https://boyter.org/posts/why-count-lines-of-code/
+ - https://boyter.org/posts/sloc-cloc-code-revisited/
+ - https://boyter.org/posts/sloc-cloc-code-performance/
 
 For performance see the [Performance](https://github.com/boyter/scc#performance) section
 
