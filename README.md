@@ -90,7 +90,7 @@ GLOBAL OPTIONS:
    --complexity, -c                    Skip complexity calculations, note this will be overridden if --wide -w is set
    --wide, -w                          Wider output with additional statistics
    --averagewage value, --aw value     Integer to override the average wage value used for basic COCOMO calculation (default: 56286)
-   --cocomo, --co                      Set to check remove COCOMO calculation output
+   --cocomo, --co                      Remove COCOMO calculation output
    --filegccount value, --fgc value    How many files to parse before turning the GC on (default: 10000)
    --binary                            Disable binary file detection
    --debug                             Enable debug output
@@ -274,6 +274,7 @@ C# (cs)
 C++ (cc,cpp,cxx,c++,pcc)
 C++ Header (hh,hpp,hxx,inl,ipp)
 Cabal (cabal)
+Cargo Lock (cargo.lock)
 Cassius (cassius)
 Ceylon (ceylon)
 Clojure (clj)
@@ -345,7 +346,7 @@ LD Script (lds)
 Lean (lean,hlean)
 LESS (less)
 LEX (l)
-License (license,licence,copying,copying3,unlicense,unlicence)
+License (license,licence,copying,copying3,unlicense,unlicence,license-mit,licence-mit)
 Lisp (lisp,lsp)
 LOLCODE (lol,lols)
 Lua (lua)

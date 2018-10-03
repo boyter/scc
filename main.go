@@ -93,7 +93,7 @@ func main() {
 		},
 		cli.BoolFlag{
 			Name:        "cocomo, co",
-			Usage:       "Set to check remove COCOMO calculation output",
+			Usage:       "Remove COCOMO calculation output",
 			Destination: &processor.Cocomo,
 		},
 		cli.IntFlag{

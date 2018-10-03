@@ -799,6 +799,46 @@
     ],
     "quotes": []
   },
+  "Cargo Lock": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "cargo.lock"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [],
+    "quotes": [
+      [
+        "\\\"",
+        "\\\""
+      ],
+      [
+        "'",
+        "'"
+      ],
+      [
+        "\\\"\\\"\\\"",
+        "\\\"\\\"\\\""
+      ],
+      [
+        "'''",
+        "'''"
+      ]
+    ]
+  },
   "Cassius": {
     "complexitychecks": [
       "for ",
@@ -2711,7 +2751,9 @@
       "copying",
       "copying3",
       "unlicense",
-      "unlicence"
+      "unlicence",
+      "license-mit",
+      "licence-mit"
     ],
     "line_comment": [],
     "multi_line": [],
