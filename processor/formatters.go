@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-var tabularShortBreak = "-------------------------------------------------------------------------------\n"
+var tabularShortBreak = "───────────────────────────────────────────────────────────────────────────────\n"
 var tabularShortFormatHead = "%-20s %9s %9s %8s %9s %8s %10s\n"
 var tabularShortFormatBody = "%-20s %9d %9d %8d %9d %8d %10d\n"
 var tabularShortFormatFile = "%-30s %9d %8d %9d %8d %10d\n"
@@ -25,7 +25,8 @@ var tabularShortFormatFileNoComplexity = "%-34s %11d %9d %11d %10d\n"
 var shortFormatFileTrucateNoComplexity = 33
 var longNameTruncate = 22
 
-var tabularWideBreak = "-------------------------------------------------------------------------------------------------------------\n"
+
+var tabularWideBreak = "─────────────────────────────────────────────────────────────────────────────────────────────────────────────\n"
 var tabularWideFormatHead = "%-33s %9s %9s %8s %9s %8s %10s %16s\n"
 var tabularWideFormatBody = "%-33s %9d %9d %8d %9d %8d %10d %16.2f\n"
 var tabularWideFormatFile = "%-43s %9d %8d %9d %8d %10d %16.2f\n"
