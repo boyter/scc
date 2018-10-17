@@ -30,7 +30,7 @@ Other similar projects,
  - https://github.com/hhatto/gocloc/
  - https://github.com/vmchale/polyglot
 
-Interesting reading about about code counting about tokei, loc and polyglot
+Interesting reading about other code counting projects tokei, loc and polyglot
 
  - https://www.reddit.com/r/rust/comments/59bm3t/a_fast_cloc_replacement_in_rust/
  - https://www.reddit.com/r/rust/comments/82k9iy/loc_count_lines_of_code_quickly/
