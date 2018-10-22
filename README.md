@@ -71,7 +71,7 @@ USAGE:
    scc DIRECTORY
 
 VERSION:
-   1.11.0
+   1.12.0
 
 COMMANDS:
      help, h  Shows a list of commands or help for one command
@@ -103,37 +103,37 @@ Output should look something like the below for the redis project
 
 ```
 $ scc .
--------------------------------------------------------------------------------
+───────────────────────────────────────────────────────────────────────────────
 Language                 Files     Lines     Code  Comments   Blanks Complexity
--------------------------------------------------------------------------------
-C                          248    142725   102653     23885    16187      25729
-C Header                   199     27451    18485      5746     3220       1554
-TCL                         97     16356    13713       893     1750       1313
-Shell                       36      1103      772       215      116         86
+───────────────────────────────────────────────────────────────────────────────
+C                          249    143701   103269     24163    16269      25906
+C Header                   199     27537    18543      5768     3226       1557
+TCL                         98     16865    14098       954     1813       1404
+Shell                       36      1106      775       215      116         89
 Lua                         20       525      387        70       68         65
-Autoconf                    18     10817     8467      1325     1025        950
+Autoconf                    18     10821     8469      1326     1026        951
 gitignore                   11       151      135         0       16          0
 Makefile                     9      1031      722       100      209         50
 Markdown                     8      1886     1363         0      523          0
-Ruby                         8      2423     1905       323      195        292
+Ruby                         8       722      580        69       73        107
 HTML                         5      9658     8791        12      855          0
 C++                          5       311      244        16       51         31
 YAML                         4       273      254         0       19          0
 License                      3        66       55         0       11          0
 CSS                          2       107       91         0       16          0
-Python                       2       219      160        19       40         67
-Batch                        1        28       26         0        2          3
-m4                           1       562      393        53      116          0
+Python                       2       219      162        18       39         68
 C++ Header                   1         9        5         3        1          0
 Smarty Template              1        44       43         0        1          5
+m4                           1       562      393        53      116          0
 Plain Text                   1        23       16         0        7          0
--------------------------------------------------------------------------------
-Total                      680    215768   158680     32660    24428      30145
--------------------------------------------------------------------------------
-Estimated Cost to Develop $5,522,600
-Estimated Schedule Effort 29.370095 months
-Estimated People Required 22.273729
--------------------------------------------------------------------------------
+Batch                        1        28       26         0        2          3
+───────────────────────────────────────────────────────────────────────────────
+Total                      682    215645   158421     32767    24457      30236
+───────────────────────────────────────────────────────────────────────────────
+Estimated Cost to Develop $5,513,136
+Estimated Schedule Effort 29.350958 months
+Estimated People Required 22.250054
+───────────────────────────────────────────────────────────────────────────────
 ```
 
 ### Features
@@ -309,7 +309,9 @@ Fish (fish)
 Forth (4th,forth,fr,frt,fth,f83,fb,fpm,e4,rx,ft)
 FORTRAN Legacy (f,for,ftn,f77,pfo)
 FORTRAN Modern (f03,f08,f90,f95)
+Fragment Shader File (fsh)
 Freemarker Template (ftl)
+Game Maker Language (gml)
 GDScript (gd)
 Gherkin Specification (feature)
 gitignore (.gitignore)
@@ -434,6 +436,7 @@ Vala (vala)
 Varnish Configuration (vcl)
 Verilog (vg,vh)
 Verilog Args File (irunargs,xrunargs)
+Vertex Shader File (vsh)
 VHDL (vhd)
 Vim Script (vim)
 Visual Basic (vb)
