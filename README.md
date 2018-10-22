@@ -19,6 +19,10 @@ Read all about how it came to be along with performance benchmarks,
  - https://boyter.org/posts/sloc-cloc-code-revisited/
  - https://boyter.org/posts/sloc-cloc-code-performance/
 
+A new review of `scc`
+
+ - https://nickmchardy.com/2018/10/counting-lines-of-code-in-koi-cms.html
+
 For performance see the [Performance](https://github.com/boyter/scc#performance) section
 
 Other similar projects,
