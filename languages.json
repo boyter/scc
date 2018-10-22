@@ -1890,7 +1890,8 @@
       "gml"
     ],
     "line_comment": [
-      "//"
+      "//",
+      "///"
     ],
     "multi_line": [
       [
