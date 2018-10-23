@@ -96,7 +96,8 @@
       "and "
     ],
     "extensions": [
-      "dats"
+      "dats",
+      "sats"
     ],
     "line_comment": [
       "//"
