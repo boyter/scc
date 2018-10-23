@@ -2,8 +2,7 @@ package main
 
 import (
 	"github.com/boyter/scc/processor"
-	"github.com/urfave/cli"
-	"os"
+	"github.com/spf13/cobra"
 )
 
 //go:generate go run scripts/include.go
@@ -12,125 +11,139 @@ func main() {
 	//pprof.StartCPUProfile(f)
 	//defer pprof.StopCPUProfile()
 
-	app := cli.NewApp()
-	app.EnableBashCompletion = true
-	app.Name = "scc"
-	app.Version = "1.12.1"
-	app.Usage = "Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation."
-	app.UsageText = "scc DIRECTORY"
-
-	app.Flags = []cli.Flag{
-		cli.BoolFlag{
-			Name:        "languages",
-			Usage:       "Print out supported languages and extensions",
-			Destination: &processor.Languages,
-		},
-		cli.StringFlag{
-			Name:        "format, f",
-			Usage:       "Set output format [possible values: tabular, wide, json, csv]",
-			Destination: &processor.Format,
-			Value:       "tabular",
-		},
-		cli.StringFlag{
-			Name:        "output, o",
-			Usage:       "Save to file, defaults to stdout",
-			Destination: &processor.FileOutput,
-		},
-		cli.StringFlag{
-			Name:        "pathblacklist, pbl",
-			Usage:       "Which directories should be ignored as comma separated list",
-			Value:       ".git,.hg,.svn",
-			Destination: &processor.PathBlacklist,
-		},
-		cli.StringFlag{
-			Name:        "sort, s",
-			Usage:       "Sort based on column [possible values: files, name, lines, blanks, code, comments, complexity]",
-			Value:       "files",
-			Destination: &processor.SortBy,
-		},
-		cli.StringFlag{
-			Name:        "exclude, e",
-			Usage:       "Ignore files and directories matching supplied regular expression",
-			Value:       "",
-			Destination: &processor.Exclude,
-		},
-		cli.StringFlag{
-			Name:        "whitelist, wl",
-			Usage:       "Restrict file extensions to just those provided as a comma separated list E.G. go,java,js",
-			Value:       "",
-			Destination: &processor.WhiteListExtensions,
-		},
-		cli.BoolFlag{
-			Name:        "files",
-			Usage:       "Display output for every file",
-			Destination: &processor.Files,
-		},
-		cli.BoolFlag{
-			Name:        "verbose, v",
-			Usage:       "Enable verbose output",
-			Destination: &processor.Verbose,
-		},
-		cli.BoolFlag{
-			Name:        "duplicates, d",
-			Usage:       "Check for and remove duplicate files from stats and output",
-			Destination: &processor.Duplicates,
-		},
-		cli.BoolFlag{
-			Name:        "complexity, c",
-			Usage:       "Skip complexity calculations, note this will be overridden if --wide -w is set",
-			Destination: &processor.Complexity,
-		},
-		cli.BoolFlag{
-			Name:        "wide, w",
-			Usage:       "Wider output with additional statistics",
-			Destination: &processor.More,
-		},
-		cli.Int64Flag{
-			Name:        "averagewage, aw",
-			Usage:       "Integer to override the average wage value used for basic COCOMO calculation",
-			Destination: &processor.AverageWage,
-			Value:       56286,
-		},
-		cli.BoolFlag{
-			Name:        "cocomo, co",
-			Usage:       "Remove COCOMO calculation output",
-			Destination: &processor.Cocomo,
-		},
-		cli.IntFlag{
-			Name:        "filegccount, fgc",
-			Usage:       "How many files to parse before turning the GC on",
-			Destination: &processor.GcFileCount,
-			Value:       10000,
-		},
-		cli.BoolFlag{
-			Name:        "binary",
-			Usage:       "Disable binary file detection",
-			Destination: &processor.DisableCheckBinary,
-		},
-		cli.BoolFlag{
-			Name:        "debug",
-			Usage:       "Enable debug output",
-			Destination: &processor.Debug,
-		},
-		cli.BoolFlag{
-			Name:        "trace",
-			Usage:       "Enable trace output, not recommended when processing multiple files",
-			Destination: &processor.Trace,
+	rootCmd := &cobra.Command{
+		Use:   "scc",
+		Short: "scc DIRECTORY",
+		Long:  "Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.",
+		Version: "1.12.1",
+		Run: func(cmd *cobra.Command, args []string) {
+			processor.DirFilePaths = args
+			processor.ConfigureGc()
+			processor.Process()
 		},
 	}
 
-	// Override the default version flag because we want v for verbose
-	cli.VersionFlag = cli.BoolFlag{
-		Name:  "version, ver",
-		Usage: "Print the version",
-	}
+	flags := rootCmd.PersistentFlags()
 
-	app.Action = func(c *cli.Context) error {
-		processor.DirFilePaths = c.Args()
-		processor.ConfigureGc()
-		processor.Process()
-		return nil
-	}
+	flags.Int64Var(
+		&processor.AverageWage,
+		"avg-wage",
+		56286,
+		"average wage value used for basic COCOMO calculation",
+	)
+	flags.BoolVar(
+		&processor.DisableCheckBinary,
+		"binary",
+		false,
+		"disable binary file detection",
+	)
+	flags.BoolVar(
+		&processor.Files,
+		"by-file",
+		false,
+		"display output for every file",
+	)
+	flags.BoolVar(
+		&processor.Cocomo,
+		"cocomo",
+		false,
+		"remove COCOMO calculation output",
+	)
+	flags.BoolVar(
+		&processor.Debug,
+		"debug",
+		false,
+		"enable debug output",
+	)
+	flags.StringSliceVar(
+		&processor.PathBlacklist,
+		"exclude-dir",
+		[]string{".git", ".hg", ".svn"},
+		"directories to exclude",
+	)
+	flags.IntVar(
+		&processor.GcFileCount,
+		"file-gc-count",
+		10000,
+		"number of files to parse before turning the GC on",
+	)
+	flags.StringVarP(
+		&processor.Format,
+		"format",
+		"f",
+		"tabular",
+		"set output format [tabular, wide, json, csv]",
+	)
+	flags.StringSliceVarP(
+		&processor.WhiteListExtensions,
+		"include-ext",
+		"i",
+		[]string{},
+		"limit to file extensions [comma separated list: e.g. go,java,js]",
+	)
+	flags.BoolVarP(
+		&processor.Languages,
+		"languages",
+		"l",
+		false,
+		"print supported languages and extensions",
+	)
+	flags.BoolVarP(
+		&processor.Complexity,
+		"no-complexity",
+		"c",
+		false,
+		"skip calculation of code complexity",
+	)
+	flags.BoolVarP(
+		&processor.Duplicates,
+		"no-duplicates",
+		"d",
+		false,
+		"remove duplicate files from stats and output",
+	)
+	flags.StringVarP(
+		&processor.Exclude,
+		"not-match",
+		"M",
+		"",
+		"ignore files and directories matching regular expression",
+	)
+	flags.StringVarP(
+		&processor.FileOutput,
+		"output",
+		"o",
+		"",
+		"output filename (default stdout)",
+	)
+	flags.StringVarP(
+		&processor.SortBy,
+		"sort",
+		"s",
+		"files",
+		"column to sort by [files, name, lines, blanks, code, comments, complexity]",
+	)
+	flags.BoolVarP(
+		&processor.Trace,
+		"trace",
+		"t",
+		false,
+		"enable trace output. Not recommended when processing multiple files",
+	)
+	flags.BoolVarP(
+		&processor.Verbose,
+		"verbose",
+		"v",
+		false,
+		"verbose output",
+	)
+	flags.BoolVarP(
+		&processor.More,
+		"wide",
+		"w",
+		false,
+		"wider output with additional statistics (implies --complexity)",
+	)
 
-	app.Run(os.Args)
+	rootCmd.Execute()
 }

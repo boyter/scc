@@ -26,7 +26,7 @@ var SortBy = ""
 var Exclude = ""
 var Format = ""
 var FileOutput = ""
-var PathBlacklist = ""
+var PathBlacklist = []string{}
 var FileListQueueSize = runtime.NumCPU()
 var FileReadJobQueueSize = runtime.NumCPU()
 var FileReadJobWorkers = runtime.NumCPU() * 4
@@ -34,7 +34,7 @@ var FileReadContentJobQueueSize = runtime.NumCPU()
 var FileProcessJobQueueSize = runtime.NumCPU()
 var FileProcessJobWorkers = runtime.NumCPU() * 4
 var FileSummaryJobQueueSize = runtime.NumCPU()
-var WhiteListExtensions = ""
+var WhiteListExtensions = []string{}
 var AverageWage int64 = 56286
 var GcFileCount = 10000
 var gcPercent = -1
@@ -142,9 +142,9 @@ func processFlags() {
 	}
 
 	if Debug {
-		printDebug(fmt.Sprintf("Path Black List: %s", PathBlacklist))
+		printDebug(fmt.Sprintf("Path Black List: %v", PathBlacklist))
 		printDebug(fmt.Sprintf("Sort By: %s", SortBy))
-		printDebug(fmt.Sprintf("White List: %s", WhiteListExtensions))
+		printDebug(fmt.Sprintf("White List: %v", WhiteListExtensions))
 		printDebug(fmt.Sprintf("Files Output: %t", Files))
 		printDebug(fmt.Sprintf("Verbose: %t", Verbose))
 		printDebug(fmt.Sprintf("Duplicates Detection: %t", Duplicates))
@@ -211,7 +211,7 @@ func Process() {
 	if Debug {
 		printDebug(fmt.Sprintf("NumCPU: %d", runtime.NumCPU()))
 		printDebug(fmt.Sprintf("SortBy: %s", SortBy))
-		printDebug(fmt.Sprintf("PathBlacklist: %s", PathBlacklist))
+		printDebug(fmt.Sprintf("PathBlacklist: %v", PathBlacklist))
 	}
 
 	fileListQueue := make(chan *FileJob, FileListQueueSize)                     // Files ready to be read from disk
