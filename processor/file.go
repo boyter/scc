@@ -50,8 +50,6 @@ func getExtension(name string) string {
 //func walkDirectoryParallel(root string, output *RingBuffer) {
 func walkDirectoryParallel(root string, output chan *FileJob) {
 	startTime := makeTimestampMilli()
-	blackList := strings.Split(PathBlacklist, ",")
-	whiteList := strings.Split(WhiteListExtensions, ",")
 	extensionLookup := ExtensionToLanguage
 
 	// If input has a supplied white list of extensions then loop through them
@@ -59,7 +57,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 	if len(WhiteListExtensions) != 0 {
 		wlExtensionLookup := map[string]string{}
 
-		for _, white := range whiteList {
+		for _, white := range WhiteListExtensions {
 			language, ok := extensionLookup[white]
 
 			if ok {
@@ -91,7 +89,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 		if f.IsDir() {
 			// Need to check if the directory is in the blacklist and if so don't bother adding a goroutine to process it
 			shouldSkip := false
-			for _, black := range blackList {
+			for _, black := range PathBlacklist {
 				if strings.HasPrefix(filepath.Join(root, f.Name()), black) {
 					shouldSkip = true
 					if Verbose {
@@ -113,7 +111,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 			if !shouldSkip {
 				wg.Add(1)
 				go func(toWalk string) {
-					filejobs := walkDirectory(toWalk, blackList, extensionLookup)
+					filejobs := walkDirectory(toWalk, PathBlacklist, extensionLookup)
 					for i := 0; i < len(filejobs); i++ {
 						output <- &filejobs[i]
 					}
@@ -192,7 +190,7 @@ func walkDirectory(toWalk string, blackList []string, extensionLookup map[string
 			if Exclude != "" {
 				regex = regexp.MustCompile(Exclude)
 			}
-			
+
 			if Exclude != "" {
 				if regex.Match([]byte(info.Name())) {
 					if Verbose {

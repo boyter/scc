@@ -27,6 +27,7 @@ provided callback function.
             fmt.Printf("%s %s\n", de.ModeType(), osPathname)
             return nil
         },
+        Unsorted: true, // (optional) set true for faster yet non-deterministic enumeration (see godoc)
     })
 ```
 
@@ -50,8 +51,13 @@ observed to run between five and ten times the speed on darwin, at
 speeds comparable to the that of the unix `find` utility; about twice
 the speed on linux; and about four times the speed on Windows.
 
-How does it obtain this performance boost? Primarily by not invoking
-`os.Stat` on every file system node it encounters.
+How does it obtain this performance boost? It does less work to give
+you nearly the same output. This library calls the same `syscall`
+functions to do the work, but it makes fewer calls, does not throw
+away information that it might need, and creates less memory churn
+along the way by reusing the same scratch buffer rather than
+reallocating a new buffer every time it reads data from the operating
+system.
 
 While traversing a file system directory tree, `filepath.Walk` obtains
 the list of immediate descendants of a directory, and throws away the
