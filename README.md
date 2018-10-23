@@ -68,39 +68,32 @@ Full details can be found in `scc --help`.
 
 ```
 $ scc --help
-NAME:
-   scc - Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
+Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
 
-USAGE:
-   scc DIRECTORY
+Usage:
+  scc [flags]
 
-VERSION:
-   1.12.1
-
-COMMANDS:
-     help, h  Shows a list of commands or help for one command
-
-GLOBAL OPTIONS:
-   --languages                         Print out supported languages and extensions
-   --format value, -f value            Set output format [possible values: tabular, wide, json, csv] (default: "tabular")
-   --output value, -o value            Save to file, defaults to stdout
-   --pathblacklist value, --pbl value  Which directories should be ignored as comma separated list (default: ".git,.hg,.svn")
-   --sort value, -s value              Sort based on column [possible values: files, name, lines, blanks, code, comments, complexity] (default: "files")
-   --exclude value, -e value           Ignore files and directories matching supplied regular expression
-   --whitelist value, --wl value       Restrict file extensions to just those provided as a comma separated list E.G. go,java,js
-   --files                             Display output for every file
-   --verbose, -v                       Enable verbose output
-   --duplicates, -d                    Check for and remove duplicate files from stats and output
-   --complexity, -c                    Skip complexity calculations, note this will be overridden if --wide -w is set
-   --wide, -w                          Wider output with additional statistics
-   --averagewage value, --aw value     Integer to override the average wage value used for basic COCOMO calculation (default: 56286)
-   --cocomo, --co                      Remove COCOMO calculation output
-   --filegccount value, --fgc value    How many files to parse before turning the GC on (default: 10000)
-   --binary                            Disable binary file detection
-   --debug                             Enable debug output
-   --trace                             Enable trace output, not recommended when processing multiple files
-   --help, -h                          show help
-   --version, --ver                    Print the version
+Flags:
+      --avg-wage int          average wage value used for basic COCOMO calculation (default 56286)
+      --binary                disable binary file detection
+      --by-file               display output for every file
+      --cocomo                remove COCOMO calculation output
+      --debug                 enable debug output
+      --exclude-dir strings   directories to exclude (default [.git,.hg,.svn])
+      --file-gc-count int     number of files to parse before turning the GC on (default 10000)
+  -f, --format string         set output format [tabular, wide, json, csv] (default "tabular")
+  -h, --help                  help for scc
+  -i, --include-ext strings   limit to file extensions [comma separated list: e.g. go,java,js]
+  -l, --languages             print supported languages and extensions
+  -c, --no-complexity         skip calculation of code complexity
+  -d, --no-duplicates         remove duplicate files from stats and output
+  -M, --not-match string      ignore files and directories matching regular expression
+  -o, --output string         output filename (default stdout)
+  -s, --sort string           column to sort by [files, name, lines, blanks, code, comments, complexity] (default "files")
+  -t, --trace                 enable trace output. Not recommended when processing multiple files
+  -v, --verbose               verbose output
+      --version               version for scc
+  -w, --wide                  wider output with additional statistics (implies --complexity)
 ```
 
 Output should look something like the below for the redis project
@@ -262,7 +255,7 @@ AsciiDoc (adoc)
 ASP (asa,asp)
 ASP.NET (asax,ascx,asmx,aspx,master,sitemap,webinfo)
 Assembly (s,asm)
-ATS (dats)
+ATS (dats,sats)
 Autoconf (in)
 AutoHotKey (ahk)
 AWK (awk)
@@ -345,6 +338,7 @@ JSON (json)
 JSX (jsx)
 Julia (jl)
 Julius (julius)
+Just (justfile)
 Korn Shell (ksh)
 Kotlin (kt,kts)
 LaTeX (tex)
