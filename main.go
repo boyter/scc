@@ -12,9 +12,9 @@ func main() {
 	//defer pprof.StopCPUProfile()
 
 	rootCmd := &cobra.Command{
-		Use:   "scc",
-		Short: "scc DIRECTORY",
-		Long:  "Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.",
+		Use:     "scc",
+		Short:   "scc DIRECTORY",
+		Long:    "Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.",
 		Version: "1.12.1",
 		Run: func(cmd *cobra.Command, args []string) {
 			processor.DirFilePaths = args
