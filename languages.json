@@ -1907,6 +1907,15 @@
       ]
     ]
   },
+  "Game Maker Project": {
+    "complexitychecks": [],
+    "extensions": [
+      "yyp"
+    ],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": []
+  },
   "Gherkin Specification": {
     "complexitychecks": [
       "given",
