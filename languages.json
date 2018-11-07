@@ -97,7 +97,9 @@
     ],
     "extensions": [
       "dats",
-      "sats"
+      "sats",
+      "ats",
+      "hats"
     ],
     "line_comment": [
       "//"
@@ -230,6 +232,54 @@
     "complexitychecks": [],
     "extensions": [
       "x"
+    ],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": []
+  },
+  "Android Interface Definition Language": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "aidl"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/**",
+        "*/"
+      ],
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
+  },
+  "Arvo": {
+    "complexitychecks": [],
+    "extensions": [
+      "avdl",
+      "avpr",
+      "avsc"
     ],
     "line_comment": [],
     "multi_line": [],
@@ -416,6 +466,67 @@
     "multi_line": [],
     "quotes": []
   },
+  "Bazel": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "bzl",
+      "build.bazel",
+      "build",
+      "workspace"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
+  },
+  "Bitbake": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "bb",
+      "bbappend",
+      "bbclass"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
+  },
   "Boo": {
     "complexitychecks": [
       "for ",
@@ -473,6 +584,17 @@
       "bf"
     ],
     "line_comment": [],
+    "multi_line": [],
+    "quotes": []
+  },
+  "BuildStream": {
+    "complexitychecks": [],
+    "extensions": [
+      "bst"
+    ],
+    "line_comment": [
+      "#"
+    ],
     "multi_line": [],
     "quotes": []
   },
@@ -1111,6 +1233,15 @@
       ]
     ]
   },
+  "Creole": {
+    "complexitychecks": [],
+    "extensions": [
+      "creole"
+    ],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": []
+  },
   "Crystal": {
     "complexitychecks": [
       "for ",
@@ -1597,6 +1728,39 @@
       ]
     ]
   },
+  "FIDL": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "fidl"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
+  },
   "FORTRAN Legacy": {
     "complexitychecks": [
       "for ",
@@ -1864,6 +2028,34 @@
         "*/"
       ]
     ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
+  },
+  "GN": {
+    "complexitychecks": [
+      "if(",
+      "if (",
+      "else if(",
+      "else if (",
+      "else(",
+      "else (",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "gn",
+      "gni"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [],
     "quotes": [
       [
         "\"",
@@ -2544,6 +2736,41 @@
     "multi_line": [],
     "quotes": []
   },
+  "Jinja": {
+    "complexitychecks": [
+      "{% for ",
+      "{%- for ",
+      "{% if ",
+      "{%- if ",
+      "{% else ",
+      "{%- else ",
+      "{% elif ",
+      "{% macro ",
+      "{%- macro ",
+      "{% call ",
+      "{%- call ",
+      "{% filter ",
+      "{%- filter ",
+      "{% set ",
+      "{% include ",
+      "{% from ",
+      "{% extends ",
+      "{% with "
+    ],
+    "extensions": [
+      "jinja",
+      "j2",
+      "jinja2"
+    ],
+    "line_comment": [],
+    "multi_line": [
+      [
+        "{#",
+        "#}"
+      ]
+    ],
+    "quotes": []
+  },
   "Julia": {
     "complexitychecks": [
       "for ",
@@ -3182,7 +3409,8 @@
     "extensions": [
       "makefile",
       "mak",
-      "mk"
+      "mk",
+      "bp"
     ],
     "line_comment": [
       "#"
@@ -5632,7 +5860,9 @@
       "yaml",
       "yml"
     ],
-    "line_comment": [],
+    "line_comment": [
+      "#"
+    ],
     "multi_line": [],
     "quotes": []
   },
