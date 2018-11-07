@@ -2579,6 +2579,15 @@
     "multi_line": [],
     "quotes": []
   },
+  "JSONL": {
+    "complexitychecks": [],
+    "extensions": [
+      "jsonl"
+    ],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": []
+  },
   "JSX": {
     "complexitychecks": [
       "for ",
