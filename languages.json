@@ -2579,6 +2579,16 @@
     "multi_line": [],
     "quotes": []
   },
+  "Jupyter": {
+    "complexitychecks": [],
+    "extensions": [
+      "ipynb",
+      "jpynb"
+    ],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": []
+  },
   "JSONL": {
     "complexitychecks": [],
     "extensions": [
@@ -2776,6 +2786,28 @@
       [
         "{#",
         "#}"
+      ]
+    ],
+    "quotes": []
+  },
+  "Mako": {
+    "complexitychecks": [
+      "% for ",
+      "% if ",
+      "% else ",
+      "% elif ",
+    ],
+    "extensions": [
+      "mako",
+      "mao"
+    ],
+    "line_comment": [
+      "##"
+    ],
+    "multi_line": [
+      [
+        "<%doc>",
+        "</%doc>"
       ]
     ],
     "quotes": []
