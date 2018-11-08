@@ -1083,6 +1083,47 @@
     "multi_line": [],
     "quotes": []
   },
+  "Closure Template": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== ",
+      ">= ",
+      "<= ",
+      "?: ",
+      "? : "
+    ],
+    "extensions": [
+      "soy"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/**",
+        "*/"
+      ],
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
+  },
   "CoffeeScript": {
     "complexitychecks": [
       "for ",
@@ -4943,7 +4984,8 @@
       "== "
     ],
     "extensions": [
-      "sh"
+      "sh",
+      ".tcshrc"
     ],
     "line_comment": [
       "#"
@@ -5137,6 +5179,36 @@
       ]
     ]
   },
+  "Stylus": {
+    "complexitychecks": [
+      "for ",
+      "if ",
+      "unless ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "styl"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
+  },
   "Swift": {
     "complexitychecks": [
       "for ",
@@ -5164,6 +5236,25 @@
       ]
     ],
     "nestedmultiline": true,
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
+  },
+  "Swig": {
+    "complexitychecks": [],
+    "extensions": [
+      "i"
+    ],
+    "line_comment": [],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
     "quotes": [
       [
         "\"",
