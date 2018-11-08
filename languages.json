@@ -394,7 +394,15 @@
       "== "
     ],
     "extensions": [
-      "bash"
+      "bash",
+      ".bash_login",
+      "bash_login",
+      ".bash_logout",
+      "bash_logout",
+      ".bash_profile",
+      "bash_profile",
+      ".bashrc",
+      "bashrc"
     ],
     "line_comment": [
       "#"
@@ -681,7 +689,8 @@
       "== "
     ],
     "extensions": [
-      "csh"
+      "csh",
+      ".cshrc"
     ],
     "line_comment": [
       "#"
@@ -2904,7 +2913,8 @@
       "== "
     ],
     "extensions": [
-      "ksh"
+      "ksh",
+      ".kshrc"
     ],
     "line_comment": [
       "#"
@@ -5959,7 +5969,17 @@
       "== "
     ],
     "extensions": [
-      "zsh"
+      "zsh",
+      ".zshenv",
+      "zshenv",
+      ".zlogin",
+      "zlogin",
+      ".zlogout",
+      "zlogout",
+      ".zprofile",
+      "zprofile",
+      ".zshrc",
+      "zshrc"
     ],
     "line_comment": [
       "#"
