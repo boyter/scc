@@ -2475,7 +2475,9 @@
       "== "
     ],
     "extensions": [
-      "idl"
+      "idl",
+      "webidl",
+      "widl"
     ],
     "line_comment": [
       "//"
@@ -5312,6 +5314,26 @@
       ]
     ]
   },
+  "Systemd": {
+    "complexitychecks": [],
+    "extensions": [
+      "automount",
+      "device",
+      "link",
+      "mount",
+      "path",
+      "scope",
+      "service",
+      "slice",
+      "socket",
+      "swap",
+      "target",
+      "timer"
+    ],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": []
+  },
   "TCL": {
     "complexitychecks": [
       "for ",
@@ -5384,6 +5406,15 @@
       ]
     ]
   },
+  "TaskPaper": {
+    "complexitychecks": [],
+    "extensions": [
+      "taskpaper"
+    ],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": []
+  },
   "TeX": {
     "complexitychecks": [
       "for ",
@@ -5433,6 +5464,20 @@
         "'"
       ]
     ]
+  },
+  "Twig Template": {
+    "complexitychecks": [
+      "{% for ",
+      "{% if ",
+      "{% else ",
+      "{% elseif "
+    ],
+    "extensions": [
+      "twig"
+    ],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": []
   },
   "TypeScript": {
     "complexitychecks": [
