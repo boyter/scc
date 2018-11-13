@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/boyter/scc/processor"
 	"github.com/spf13/cobra"
 )
@@ -145,5 +147,7 @@ func main() {
 		"wider output with additional statistics (implies --complexity)",
 	)
 
-	rootCmd.Execute()
+	if err := rootCmd.Execute(); err != nil {
+		os.Exit(1)
+	}
 }
