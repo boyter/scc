@@ -133,6 +133,10 @@ Estimated People Required 22.250054
 ───────────────────────────────────────────────────────────────────────────────
 ```
 
+### Interesting Use Cases
+
+Used inside Intel Nemu Hypervisor to track code changes between revisions https://github.com/intel/nemu/blob/topic/virt-x86/tools/cloc-change.sh#L9
+
 ### Features
 
 `scc` uses a small state machine in order to determine what state the code is when it reaches a newline `\n`. As such it is aware of and able to count
