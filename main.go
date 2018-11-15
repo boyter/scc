@@ -16,7 +16,7 @@ func main() {
 	rootCmd := &cobra.Command{
 		Use:     "scc",
 		Short:   "scc DIRECTORY",
-		Long:    "Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.",
+		Long:    "Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.\nBen Boyter <ben@boyter.org> + Contributors",
 		Version: "1.12.1",
 		Run: func(cmd *cobra.Command, args []string) {
 			processor.DirFilePaths = args
