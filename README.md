@@ -69,6 +69,7 @@ Full details can be found in `scc --help`.
 ```
 $ scc --help
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
+Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
   scc [flags]
