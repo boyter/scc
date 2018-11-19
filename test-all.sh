@@ -13,58 +13,56 @@ echo "Running integration tests..."
 
 GREEN='\033[1;32m'
 RED='\033[0;31m'
+NC='\033[0m'
 
-if ./scc --not-a-real-option ; then
+if ./scc --not-a-real-option > /dev/null ; then
 	echo -e "${RED}================================================="
-    echo -e "TEST FAILED"
-    echo -e "Invalid option should produce error code "
+    echo -e "FAILED Invalid option should produce error code "
     echo -e "================================================="
     exit
-fi
-
-if ./scc ; then
-    echo ""
 else
-    echo -e "${RED}================================================="
-    echo -e "TEST FAILED"
-    echo -e "Should run correctly with no directory specified"
-    echo -e "================================================="
-    exit
+    echo -e "${GREEN}PASSED invalid option test"
 fi
 
-if ./scc processor ; then
-    echo ""
+if ./scc > /dev/null ; then
+    echo -e "${GREEN}PASSED no directory specified test"
 else
-    echo -e "${RED}================================================="
-    echo -e "TEST FAILED"
-    echo -e "Should run correctly with directory specified"
-    echo -e "================================================="
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should run correctly with no directory specified"
+    echo -e "======================================================="
     exit
 fi
 
-if ./scc --avg-wage 10000 --binary --by-file --cocomo --debug --exclude-dir .git -f tabular -i go -c -d -M something -s name -w processor ; then
-    echo ""
+if ./scc processor > /dev/null ; then
+    echo -e "${GREEN}PASSED directory specified test"
 else
-    echo -e "${RED}================================================="
-    echo -e "TEST FAILED"
-    echo -e "Should run correctly with multiple options"
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should run correctly with directory specified"
     echo -e "================================================="
     exit
 fi
 
-if ./scc -i sh -M "vendor|examples|p.*" ; then
-    echo ""
+if ./scc --avg-wage 10000 --binary --by-file --cocomo --debug --exclude-dir .git -f tabular -i go -c -d -M something -s name -w processor > /dev/null ; then
+    echo -e "${GREEN}PASSED multiple options test"
 else
-    echo -e "${RED}================================================="
-    echo -e "TEST FAILED"
-    echo -e "Should run with regular expression ignore"
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should run correctly with multiple options"
     echo -e "================================================="
     exit
 fi
 
-echo "Removing application..."
+if ./scc -i sh -M "vendor|examples|p.*" > /dev/null ; then
+    echo -e "${GREEN}PASSED regular expression ignore test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should run with regular expression ignore"
+    echo -e "================================================="
+    exit
+fi
+
+echo -e "${NC}Cleaning up..."
 rm ./scc
 
 echo -e "${GREEN}================================================="
-echo -e "TESTS PASSED"
+echo -e "ALL TESTS PASSED"
 echo -e "================================================="
