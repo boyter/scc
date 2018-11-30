@@ -5885,6 +5885,35 @@
       ]
     ]
   },
+  "Visual Basic for Applications": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "elseif ",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "cls"
+    ],
+    "line_comment": [
+      "'"
+    ],
+    "multi_line": [],
+    "quotes": [
+      [
+        "\\\"",
+        "\\\""
+      ]
+    ]
+  },
   "Vue": {
     "complexitychecks": [
       "for ",
