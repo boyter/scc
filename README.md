@@ -137,6 +137,7 @@ Estimated People Required 22.250054
 ### Interesting Use Cases
 
 Used inside Intel Nemu Hypervisor to track code changes between revisions https://github.com/intel/nemu/blob/topic/virt-x86/tools/cloc-change.sh#L9
+Appears to also be used inside both http://codescoop.com/ and https://pinpoint.com/
 
 ### Features
 
