@@ -181,15 +181,15 @@ func walkDirectory(toWalk string, blackList []string, extensionLookup map[string
 	extension := ""
 	var filejobs []FileJob
 
+	var regex *regexp.Regexp
+	if Exclude != "" {
+		regex = regexp.MustCompile(Exclude)
+	}
+
 	godirwalk.Walk(toWalk, &godirwalk.Options{
 		// Unsorted is meant to make the walk faster and we need to sort after processing anyway
 		Unsorted: true,
 		Callback: func(root string, info *godirwalk.Dirent) error {
-
-			var regex *regexp.Regexp
-			if Exclude != "" {
-				regex = regexp.MustCompile(Exclude)
-			}
 
 			if Exclude != "" {
 				if regex.Match([]byte(info.Name())) {
@@ -199,6 +199,9 @@ func walkDirectory(toWalk string, blackList []string, extensionLookup map[string
 						} else {
 							printWarn("skipping file due to match exclude: " + root)
 						}
+					}
+					if info.IsDir() {
+						return filepath.SkipDir
 					}
 					return nil
 				}
