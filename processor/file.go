@@ -200,6 +200,9 @@ func walkDirectory(toWalk string, blackList []string, extensionLookup map[string
 							printWarn("skipping file due to match exclude: " + root)
 						}
 					}
+					if info.IsDir() {
+						return filepath.SkipDir
+					}
 					return nil
 				}
 			}
