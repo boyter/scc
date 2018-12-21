@@ -249,7 +249,7 @@ GOOS=linux GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-1.0.0-i386-unknow
 
 ### Languages
 
-List of supported languages. The master version of `scc` supports 221 languages at last count. Note that this is always assumed that you built from master, and it might trail behind what is actually supported. To see what your version of `scc` supports run `scc --languages`
+List of supported languages. The master version of `scc` supports 222 languages at last count. Note that this is always assumed that you built from master, and it might trail behind what is actually supported. To see what your version of `scc` supports run `scc --languages`
 
 ```
 ABAP (abap)
@@ -463,6 +463,7 @@ Vertex Shader File (vsh)
 VHDL (vhd)
 Vim Script (vim)
 Visual Basic (vb)
+Visual Basic for Applications (cls)
 Vue (vue)
 Wolfram (nb,wl)
 XAML (xaml)
