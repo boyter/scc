@@ -87,6 +87,8 @@ func ProcessConstants() {
 		if Trace {
 			printTrace(fmt.Sprintf("milliseconds build language features: %d", makeTimestampMilli()-startTime))
 		}
+	} else {
+		printTrace("configured to lazy load language features")
 	}
 }
 
@@ -112,7 +114,11 @@ func LoadLanguageFeature(loadName string) {
 		}
 	}
 
+	startTime := makeTimestampNano()
 	processLanguageFeature(loadName, value)
+	if Trace {
+		printTrace(fmt.Sprintf("nanoseconds to build language %s features: %d", loadName, makeTimestampNano()-startTime))
+	}
 }
 
 func processLanguageFeature(name string, value Language) {
