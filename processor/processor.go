@@ -9,7 +9,6 @@ import (
 	"runtime/debug"
 	"sort"
 	"strings"
-	"sync"
 )
 
 // Flags set via the CLI which control how the output is displayed
@@ -39,18 +38,17 @@ var WhiteListExtensions = []string{}
 var AverageWage int64 = 56286
 var GcFileCount = 10000
 var gcPercent = -1
+var isLazy = false
 
 // Not set via flags but by arguments following the the flags
 var DirFilePaths = []string{}
 
-// Raw database loaded
-var database = map[string]Language{}
+// Raw languageDatabase loaded
+var languageDatabase = map[string]Language{}
 
 // Loaded from the JSON that is in constants.go
 var ExtensionToLanguage = map[string]string{}
 var LanguageFeatures = map[string]LanguageFeature{}
-
-var LanguageFeaturesLock sync.Mutex
 
 // This needs to be set outside of ProcessConstants because it should only be enabled in command line
 // mode https://github.com/boyter/scc/issues/32
@@ -58,13 +56,17 @@ func ConfigureGc() {
 	gcPercent = debug.SetGCPercent(gcPercent)
 }
 
+func ConfigureLazy(lazy bool) {
+	isLazy = lazy
+}
+
 // ProcessConstants is responsible for setting up the language features based on the JSON file that is stored in constants
 // Needs to be called at least once in order for anything to actually happen
 func ProcessConstants() {
-	database = loadDatabase()
+	languageDatabase = loadDatabase()
 
 	startTime := makeTimestampNano()
-	for name, value := range database {
+	for name, value := range languageDatabase {
 		for _, ext := range value.Extensions {
 			ExtensionToLanguage[ext] = name
 		}
@@ -74,18 +76,27 @@ func ProcessConstants() {
 		printTrace(fmt.Sprintf("nanoseconds build extension to language: %d", makeTimestampNano()-startTime))
 	}
 
-	//startTime = makeTimestampMilli()
-	//for name, value := range database {
-	//	processLanguageFeature(name, value)
-	//}
-	//
-	//if Trace {
-	//	printTrace(fmt.Sprintf("milliseconds build language features: %d", makeTimestampMilli()-startTime))
-	//}
+	// If lazy is set then we want to load in the features as we find them not in one go
+	// however otherwise being used as a library so just load them all in
+	if !isLazy {
+		startTime = makeTimestampMilli()
+		for name, value := range languageDatabase {
+			processLanguageFeature(name, value)
+		}
+
+		if Trace {
+			printTrace(fmt.Sprintf("milliseconds build language features: %d", makeTimestampMilli()-startTime))
+		}
+	}
 }
 
-// Will load a single feature given the name
+// Will load a single feature as requested given the name
+// this is used with lazy loading
 func LoadLanguageFeature(loadName string) {
+	if !isLazy {
+		return
+	}
+
 	// Check if already loaded and if so return because we don't need to do it again
 	_, ok := LanguageFeatures[loadName]
 	if ok {
@@ -95,7 +106,7 @@ func LoadLanguageFeature(loadName string) {
 	var name string
 	var value Language
 
-	for name, value = range database {
+	for name, value = range languageDatabase {
 		if name == loadName {
 			break
 		}

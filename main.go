@@ -21,6 +21,7 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			processor.DirFilePaths = args
 			processor.ConfigureGc()
+			processor.ConfigureLazy(true)
 			processor.Process()
 		},
 	}
