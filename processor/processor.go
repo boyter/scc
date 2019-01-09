@@ -9,6 +9,7 @@ import (
 	"runtime/debug"
 	"sort"
 	"strings"
+	"sync"
 )
 
 // Flags set via the CLI which control how the output is displayed
@@ -49,6 +50,7 @@ var languageDatabase = map[string]Language{}
 // Loaded from the JSON that is in constants.go
 var ExtensionToLanguage = map[string]string{}
 var LanguageFeatures = map[string]LanguageFeature{}
+var LanguageFeaturesMutex = sync.Mutex{}
 
 // This needs to be set outside of ProcessConstants because it should only be enabled in command line
 // mode https://github.com/boyter/scc/issues/32
@@ -100,7 +102,9 @@ func LoadLanguageFeature(loadName string) {
 	}
 
 	// Check if already loaded and if so return because we don't need to do it again
+	LanguageFeaturesMutex.Lock()
 	_, ok := LanguageFeatures[loadName]
+	LanguageFeaturesMutex.Unlock()
 	if ok {
 		return
 	}
@@ -166,6 +170,7 @@ func processLanguageFeature(name string, value Language) {
 	}
 	processMask |= stringMask
 
+	LanguageFeaturesMutex.Lock()
 	LanguageFeatures[name] = LanguageFeature{
 		Complexity:            complexityTrie,
 		MultiLineComments:     mlCommentTrie,
@@ -179,6 +184,7 @@ func processLanguageFeature(name string, value Language) {
 		StringCheckMask:       stringMask,
 		ProcessMask:           processMask,
 	}
+	LanguageFeaturesMutex.Unlock()
 }
 
 func processFlags() {

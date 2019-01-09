@@ -257,7 +257,9 @@ func CountStats(fileJob *FileJob) {
 		return
 	}
 
+	LanguageFeaturesMutex.Lock()
 	langFeatures := LanguageFeatures[fileJob.Language]
+	LanguageFeaturesMutex.Unlock()
 
 	if langFeatures.Complexity == nil {
 		langFeatures.Complexity = &Trie{}
