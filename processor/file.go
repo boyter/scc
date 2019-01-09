@@ -114,9 +114,10 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 					filejobs := walkDirectory(toWalk, PathBlacklist, extensionLookup)
 					for i := 0; i < len(filejobs); i++ {
 						mutex.Lock()
-						LoadLanguageFeature(filejobs[i].Language)
 						totalCount += len(filejobs)
 						mutex.Unlock()
+
+						LoadLanguageFeature(filejobs[i].Language)
 						output <- &filejobs[i]
 					}
 
@@ -159,11 +160,10 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 
 					if ok {
 						mutex.Lock()
-						// If we have the extension then load in the features for it
-						LoadLanguageFeature(language)
 						totalCount++
 						mutex.Unlock()
 
+						LoadLanguageFeature(language)
 						output <- &FileJob{Location: filepath.Join(root, f.Name()), Filename: f.Name(), Extension: extension, Language: language}
 					} else if Verbose {
 						printWarn(fmt.Sprintf("skipping file unknown extension: %s", f.Name()))
