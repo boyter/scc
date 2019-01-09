@@ -113,13 +113,13 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 				go func(toWalk string) {
 					filejobs := walkDirectory(toWalk, PathBlacklist, extensionLookup)
 					for i := 0; i < len(filejobs); i++ {
-						mutex.Lock()
-						totalCount += len(filejobs)
-						mutex.Unlock()
-
 						LoadLanguageFeature(filejobs[i].Language)
 						output <- &filejobs[i]
 					}
+
+					mutex.Lock()
+					totalCount += len(filejobs)
+					mutex.Unlock()
 
 					// Turn GC back to what it was before if we have parsed enough files
 					if !resetGc && totalCount >= GcFileCount {
