@@ -9,6 +9,7 @@ import (
 	"runtime/debug"
 	"sort"
 	"strings"
+	"sync"
 )
 
 // Flags set via the CLI which control how the output is displayed
@@ -38,13 +39,18 @@ var WhiteListExtensions = []string{}
 var AverageWage int64 = 56286
 var GcFileCount = 10000
 var gcPercent = -1
+var isLazy = false
 
 // Not set via flags but by arguments following the the flags
 var DirFilePaths = []string{}
 
+// Raw languageDatabase loaded
+var languageDatabase = map[string]Language{}
+
 // Loaded from the JSON that is in constants.go
 var ExtensionToLanguage = map[string]string{}
 var LanguageFeatures = map[string]LanguageFeature{}
+var LanguageFeaturesMutex = sync.Mutex{}
 
 // This needs to be set outside of ProcessConstants because it should only be enabled in command line
 // mode https://github.com/boyter/scc/issues/32
@@ -52,13 +58,17 @@ func ConfigureGc() {
 	gcPercent = debug.SetGCPercent(gcPercent)
 }
 
+func ConfigureLazy(lazy bool) {
+	isLazy = lazy
+}
+
 // ProcessConstants is responsible for setting up the language features based on the JSON file that is stored in constants
 // Needs to be called at least once in order for anything to actually happen
 func ProcessConstants() {
-	var database = loadDatabase()
+	languageDatabase = loadDatabase()
 
 	startTime := makeTimestampNano()
-	for name, value := range database {
+	for name, value := range languageDatabase {
 		for _, ext := range value.Extensions {
 			ExtensionToLanguage[ext] = name
 		}
@@ -68,70 +78,113 @@ func ProcessConstants() {
 		printTrace(fmt.Sprintf("nanoseconds build extension to language: %d", makeTimestampNano()-startTime))
 	}
 
-	startTime = makeTimestampMilli()
-	for name, value := range database {
-		complexityTrie := &Trie{}
-		slCommentTrie := &Trie{}
-		mlCommentTrie := &Trie{}
-		stringTrie := &Trie{}
-		tokenTrie := &Trie{}
-
-		complexityMask := byte(0)
-		singleLineCommentMask := byte(0)
-		multiLineCommentMask := byte(0)
-		stringMask := byte(0)
-		processMask := byte(0)
-
-		for _, v := range value.ComplexityChecks {
-			complexityMask |= v[0]
-			complexityTrie.Insert(T_COMPLEXITY, []byte(v))
-			if !Complexity {
-				tokenTrie.Insert(T_COMPLEXITY, []byte(v))
-			}
-		}
-		if !Complexity {
-			processMask |= complexityMask
+	// If lazy is set then we want to load in the features as we find them not in one go
+	// however otherwise being used as a library so just load them all in
+	if !isLazy {
+		startTime = makeTimestampMilli()
+		for name, value := range languageDatabase {
+			processLanguageFeature(name, value)
 		}
 
-		for _, v := range value.LineComment {
-			singleLineCommentMask |= v[0]
-			slCommentTrie.Insert(T_SLCOMMENT, []byte(v))
-			tokenTrie.Insert(T_SLCOMMENT, []byte(v))
+		if Trace {
+			printTrace(fmt.Sprintf("milliseconds build language features: %d", makeTimestampMilli()-startTime))
 		}
-		processMask |= singleLineCommentMask
+	} else {
+		printTrace("configured to lazy load language features")
+	}
+}
 
-		for _, v := range value.MultiLine {
-			multiLineCommentMask |= v[0][0]
-			mlCommentTrie.InsertClose(T_MLCOMMENT, []byte(v[0]), []byte(v[1]))
-			tokenTrie.InsertClose(T_MLCOMMENT, []byte(v[0]), []byte(v[1]))
-		}
-		processMask |= multiLineCommentMask
+// Will load a single feature as requested given the name
+// this is used with lazy loading
+func LoadLanguageFeature(loadName string) {
+	if !isLazy {
+		return
+	}
 
-		for _, v := range value.Quotes {
-			stringMask |= v[0][0]
-			stringTrie.InsertClose(T_STRING, []byte(v[0]), []byte(v[1]))
-			tokenTrie.InsertClose(T_STRING, []byte(v[0]), []byte(v[1]))
-		}
-		processMask |= stringMask
+	// Check if already loaded and if so return because we don't need to do it again
+	LanguageFeaturesMutex.Lock()
+	_, ok := LanguageFeatures[loadName]
+	LanguageFeaturesMutex.Unlock()
+	if ok {
+		return
+	}
 
-		LanguageFeatures[name] = LanguageFeature{
-			Complexity:            complexityTrie,
-			MultiLineComments:     mlCommentTrie,
-			SingleLineComments:    slCommentTrie,
-			Strings:               stringTrie,
-			Tokens:                tokenTrie,
-			Nested:                value.NestedMultiLine,
-			ComplexityCheckMask:   complexityMask,
-			MultiLineCommentMask:  multiLineCommentMask,
-			SingleLineCommentMask: singleLineCommentMask,
-			StringCheckMask:       stringMask,
-			ProcessMask:           processMask,
+	var name string
+	var value Language
+
+	for name, value = range languageDatabase {
+		if name == loadName {
+			break
 		}
 	}
 
+	startTime := makeTimestampNano()
+	processLanguageFeature(loadName, value)
 	if Trace {
-		printTrace(fmt.Sprintf("milliseconds build language features: %d", makeTimestampMilli()-startTime))
+		printTrace(fmt.Sprintf("nanoseconds to build language %s features: %d", loadName, makeTimestampNano()-startTime))
 	}
+}
+
+func processLanguageFeature(name string, value Language) {
+	complexityTrie := &Trie{}
+	slCommentTrie := &Trie{}
+	mlCommentTrie := &Trie{}
+	stringTrie := &Trie{}
+	tokenTrie := &Trie{}
+
+	complexityMask := byte(0)
+	singleLineCommentMask := byte(0)
+	multiLineCommentMask := byte(0)
+	stringMask := byte(0)
+	processMask := byte(0)
+
+	for _, v := range value.ComplexityChecks {
+		complexityMask |= v[0]
+		complexityTrie.Insert(T_COMPLEXITY, []byte(v))
+		if !Complexity {
+			tokenTrie.Insert(T_COMPLEXITY, []byte(v))
+		}
+	}
+	if !Complexity {
+		processMask |= complexityMask
+	}
+
+	for _, v := range value.LineComment {
+		singleLineCommentMask |= v[0]
+		slCommentTrie.Insert(T_SLCOMMENT, []byte(v))
+		tokenTrie.Insert(T_SLCOMMENT, []byte(v))
+	}
+	processMask |= singleLineCommentMask
+
+	for _, v := range value.MultiLine {
+		multiLineCommentMask |= v[0][0]
+		mlCommentTrie.InsertClose(T_MLCOMMENT, []byte(v[0]), []byte(v[1]))
+		tokenTrie.InsertClose(T_MLCOMMENT, []byte(v[0]), []byte(v[1]))
+	}
+	processMask |= multiLineCommentMask
+
+	for _, v := range value.Quotes {
+		stringMask |= v[0][0]
+		stringTrie.InsertClose(T_STRING, []byte(v[0]), []byte(v[1]))
+		tokenTrie.InsertClose(T_STRING, []byte(v[0]), []byte(v[1]))
+	}
+	processMask |= stringMask
+
+	LanguageFeaturesMutex.Lock()
+	LanguageFeatures[name] = LanguageFeature{
+		Complexity:            complexityTrie,
+		MultiLineComments:     mlCommentTrie,
+		SingleLineComments:    slCommentTrie,
+		Strings:               stringTrie,
+		Tokens:                tokenTrie,
+		Nested:                value.NestedMultiLine,
+		ComplexityCheckMask:   complexityMask,
+		MultiLineCommentMask:  multiLineCommentMask,
+		SingleLineCommentMask: singleLineCommentMask,
+		StringCheckMask:       stringMask,
+		ProcessMask:           processMask,
+	}
+	LanguageFeaturesMutex.Unlock()
 }
 
 func processFlags() {

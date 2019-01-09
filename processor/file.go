@@ -113,6 +113,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 				go func(toWalk string) {
 					filejobs := walkDirectory(toWalk, PathBlacklist, extensionLookup)
 					for i := 0; i < len(filejobs); i++ {
+						LoadLanguageFeature(filejobs[i].Language)
 						output <- &filejobs[i]
 					}
 
@@ -128,7 +129,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 					wg.Done()
 				}(filepath.Join(root, f.Name()))
 			}
-		} else {
+		} else { // File processing starts here
 			if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, f.Name()), false) {
 
 				shouldSkip := false
@@ -158,10 +159,12 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 					}
 
 					if ok {
-						output <- &FileJob{Location: filepath.Join(root, f.Name()), Filename: f.Name(), Extension: extension, Language: language}
 						mutex.Lock()
 						totalCount++
 						mutex.Unlock()
+
+						LoadLanguageFeature(language)
+						output <- &FileJob{Location: filepath.Join(root, f.Name()), Filename: f.Name(), Extension: extension, Language: language}
 					} else if Verbose {
 						printWarn(fmt.Sprintf("skipping file unknown extension: %s", f.Name()))
 					}

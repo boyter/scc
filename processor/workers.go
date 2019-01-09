@@ -257,7 +257,9 @@ func CountStats(fileJob *FileJob) {
 		return
 	}
 
+	LanguageFeaturesMutex.Lock()
 	langFeatures := LanguageFeatures[fileJob.Language]
+	LanguageFeaturesMutex.Unlock()
 
 	if langFeatures.Complexity == nil {
 		langFeatures.Complexity = &Trie{}
@@ -337,6 +339,8 @@ func CountStats(fileJob *FileJob) {
 			}
 		}
 
+		// Only check the first 10000 characters for null bytes indicating a binary file
+		// and if we find it then we return otherwise carry on and ignore binary markers
 		if index < 10000 && fileJob.Binary {
 			return
 		}
