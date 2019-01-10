@@ -18,6 +18,7 @@ Read all about how it came to be along with performance benchmarks,
  - https://boyter.org/posts/why-count-lines-of-code/
  - https://boyter.org/posts/sloc-cloc-code-revisited/
  - https://boyter.org/posts/sloc-cloc-code-performance/
+ - https://boyter.org/posts/sloc-cloc-code-performance-update/
 
 A new review of `scc`
 
@@ -162,11 +163,12 @@ However if you want greater performance and you have RAM to spare you can disabl
 Benchmarks are run on fresh 32 CPU Optimised Digital Ocean Virtual Machine 2019/01/10 all done using [hyperfine](https://github.com/sharkdp/hyperfine) with 3 warm-up runs and 10 timed runs.
 
 ```
-scc v2.1.0 (compilved with Go 1.11)
+scc v2.1.0 (compiled with Go 1.11)
 tokei v8.0.0 (compiled with Rust 1.31)
 loc v0.5.0 (compiled with Rust 1.31)
 polyglot v0.5.18 (downloaded from github)
 ```
+
 
 #### Redis https://github.com/antirez/redis/
 
