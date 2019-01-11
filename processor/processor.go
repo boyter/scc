@@ -59,10 +59,8 @@ var FileOutput = ""
 // PathBlackList sets the paths that should be skipped
 var PathBlacklist = []string{}
 var FileListQueueSize = runtime.NumCPU()
-var FileReadJobQueueSize = runtime.NumCPU()
 var FileReadJobWorkers = runtime.NumCPU() * 4
 var FileReadContentJobQueueSize = runtime.NumCPU()
-var FileProcessJobQueueSize = runtime.NumCPU()
 var FileProcessJobWorkers = runtime.NumCPU() * 4
 var FileSummaryJobQueueSize = runtime.NumCPU()
 var WhiteListExtensions = []string{}
@@ -71,23 +69,29 @@ var GcFileCount = 10000
 var gcPercent = -1
 var isLazy = false
 
-// Not set via flags but by arguments following the the flags
+// DirFilePaths is not set via flags but by arguments following the the flags for directories to process
 var DirFilePaths = []string{}
 
 // Raw languageDatabase loaded
 var languageDatabase = map[string]Language{}
 
-// Loaded from the JSON that is in constants.go
+// ExtensionToLanguage is loaded from the JSON that is in constants.go
 var ExtensionToLanguage = map[string]string{}
+
+// LanguageFeatures contains the processed languages from processLanguageFeature
 var LanguageFeatures = map[string]LanguageFeature{}
+
+// LanguageFeaturesMutex is the shared mutex used to control getting and setting of language features
+// used rather than sync.Map because it turned out to be marginally faster
 var LanguageFeaturesMutex = sync.Mutex{}
 
-// This needs to be set outside of ProcessConstants because it should only be enabled in command line
+// ConfigureGc needs to be set outside of ProcessConstants because it should only be enabled in command line
 // mode https://github.com/boyter/scc/issues/32
 func ConfigureGc() {
 	gcPercent = debug.SetGCPercent(gcPercent)
 }
 
+// ConfigureLazy is a simple setter used to turn on lazy loading used only by command line
 func ConfigureLazy(lazy bool) {
 	isLazy = lazy
 }
@@ -124,8 +128,7 @@ func ProcessConstants() {
 	}
 }
 
-// Will load a single feature as requested given the name
-// this is used with lazy loading
+// LoadLanguageFeature will load a single feature as requested given the name
 func LoadLanguageFeature(loadName string) {
 	if !isLazy {
 		return
@@ -275,6 +278,7 @@ func printLanguages() {
 	}
 }
 
+// Process is the main entry point of the command line it sets everything up and starts running
 func Process() {
 	if Languages {
 		printLanguages()
@@ -310,7 +314,7 @@ func Process() {
 	if FileOutput == "" {
 		fmt.Println(result)
 	} else {
-		ioutil.WriteFile(FileOutput, []byte(result), 0600)
+		_ = ioutil.WriteFile(FileOutput, []byte(result), 0600)
 		fmt.Println("results written to " + FileOutput)
 	}
 }
