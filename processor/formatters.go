@@ -181,7 +181,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 
 	languages := map[string]LanguageSummary{}
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
-	var sumWeightedComplexity float64 = 0
+	var sumWeightedComplexity float64
 
 	for res := range input {
 		sumFiles++
@@ -191,7 +191,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 		sumBlank += res.Blank
 		sumComplexity += res.Complexity
 
-		var weightedComplexity float64 = 0
+		var weightedComplexity float64
 		if res.Code != 0 {
 			weightedComplexity = (float64(res.Complexity) / float64(res.Code)) * 100
 		}
