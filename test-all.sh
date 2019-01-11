@@ -7,7 +7,7 @@ echo "Running unit tests..."
 go test ./... || exit
 
 echo "Building application..."
-go build || exit
+go build -ldflags="-s -w" || exit
 
 echo "Running integration tests..."
 
@@ -59,6 +59,20 @@ else
     echo -e "================================================="
     exit
 fi
+
+# Simple test to see if we get any concurrency issues
+for i in {1..100}
+do
+    if ./scc > /dev/null ; then
+        echo -e "${GREEN}PASSED concurrency issues test"
+    else
+        echo -e "${RED}======================================================="
+        echo -e "FAILED Should not have concurrency issues"
+        echo -e "================================================="
+        exit
+    fi
+done
+
 
 echo -e "${NC}Cleaning up..."
 rm ./scc
