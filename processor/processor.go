@@ -170,9 +170,9 @@ func processLanguageFeature(name string, value Language) {
 
 	for _, v := range value.ComplexityChecks {
 		complexityMask |= v[0]
-		complexityTrie.Insert(T_COMPLEXITY, []byte(v))
+		complexityTrie.Insert(TComplexity, []byte(v))
 		if !Complexity {
-			tokenTrie.Insert(T_COMPLEXITY, []byte(v))
+			tokenTrie.Insert(TComplexity, []byte(v))
 		}
 	}
 	if !Complexity {
@@ -181,22 +181,22 @@ func processLanguageFeature(name string, value Language) {
 
 	for _, v := range value.LineComment {
 		singleLineCommentMask |= v[0]
-		slCommentTrie.Insert(T_SLCOMMENT, []byte(v))
-		tokenTrie.Insert(T_SLCOMMENT, []byte(v))
+		slCommentTrie.Insert(TSlcomment, []byte(v))
+		tokenTrie.Insert(TSlcomment, []byte(v))
 	}
 	processMask |= singleLineCommentMask
 
 	for _, v := range value.MultiLine {
 		multiLineCommentMask |= v[0][0]
-		mlCommentTrie.InsertClose(T_MLCOMMENT, []byte(v[0]), []byte(v[1]))
-		tokenTrie.InsertClose(T_MLCOMMENT, []byte(v[0]), []byte(v[1]))
+		mlCommentTrie.InsertClose(TMlcomment, []byte(v[0]), []byte(v[1]))
+		tokenTrie.InsertClose(TMlcomment, []byte(v[0]), []byte(v[1]))
 	}
 	processMask |= multiLineCommentMask
 
 	for _, v := range value.Quotes {
 		stringMask |= v[0][0]
-		stringTrie.InsertClose(T_STRING, []byte(v[0]), []byte(v[1]))
-		tokenTrie.InsertClose(T_STRING, []byte(v[0]), []byte(v[1]))
+		stringTrie.InsertClose(TString, []byte(v[0]), []byte(v[1]))
+		tokenTrie.InsertClose(TString, []byte(v[0]), []byte(v[1]))
 	}
 	processMask |= stringMask
 

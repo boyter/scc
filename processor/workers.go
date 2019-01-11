@@ -138,15 +138,15 @@ func codeState(
 			}
 
 			switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[i:]); tokenType {
-			case T_STRING:
+			case TString:
 				currentState = SString
 				return i, currentState, endString, endComments
 
-			case T_SLCOMMENT:
+			case TSlcomment:
 				currentState = SCommentCode
 				return i, currentState, endString, endComments
 
-			case T_MLCOMMENT:
+			case TMlcomment:
 				if langFeatures.Nested || len(endComments) == 0 {
 					endComments = append(endComments, endString)
 					currentState = SMulticommentCode
@@ -154,7 +154,7 @@ func codeState(
 					return i, currentState, endString, endComments
 				}
 
-			case T_COMPLEXITY:
+			case TComplexity:
 				if index == 0 || isWhitespace(fileJob.Content[index-1]) {
 					fileJob.Complexity++
 				}
@@ -217,7 +217,7 @@ func blankState(
 	langFeatures LanguageFeature,
 ) (int, int64, []byte, [][]byte) {
 	switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[index:]); tokenType {
-	case T_MLCOMMENT:
+	case TMlcomment:
 		if langFeatures.Nested || len(endComments) == 0 {
 			endComments = append(endComments, endString)
 			currentState = SMulticomment
@@ -225,15 +225,15 @@ func blankState(
 			return index, currentState, endString, endComments
 		}
 
-	case T_SLCOMMENT:
+	case TSlcomment:
 		currentState = SComment
 		return index, currentState, endString, endComments
 
-	case T_STRING:
+	case TString:
 		currentState = SString
 		return index, currentState, endString, endComments
 
-	case T_COMPLEXITY:
+	case TComplexity:
 		currentState = SCode
 		if index == 0 || isWhitespace(fileJob.Content[index-1]) {
 			fileJob.Complexity++
