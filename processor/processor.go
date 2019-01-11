@@ -16,32 +16,46 @@ import (
 
 // Files indicates if there should be file output or not when formatting
 var Files = false
+
 // Languages indicates if the command line should print out the supported languages
 var Languages = false
+
 // Verbose enables verbose logging output
 var Verbose = false
+
 // Debug enables debug logging output
 var Debug = false
+
 // Trace enables trace logging output which is extremely verbose
 var Trace = false
+
 // Duplicates enables duplicate file detection
 var Duplicates = false
+
 // Complexity toggles complexity calculation
 var Complexity = false
+
 // More enables wider output with more information in formatter
 var More = false
+
 // Cocomo toggles the COCOMO calculation
 var Cocomo = false
+
 // DisableCheckBinary toggles checking for binary files using NUL bytes
 var DisableCheckBinary = false
+
 // SortBy sets which column output in formatter should be sorted by
 var SortBy = ""
+
 // Exclude is a regular expression which is used to exclude files from being processed
 var Exclude = ""
+
 // Format sets the output format of the formatter
 var Format = ""
+
 // FileOutput sets the file that output should be written to
 var FileOutput = ""
+
 // PathBlackList sets the paths that should be skipped
 var PathBlacklist = []string{}
 var FileListQueueSize = runtime.NumCPU()
