@@ -64,7 +64,7 @@ func sortSummaryFiles(summary *LanguageSummary) {
 	}
 }
 
-func toJson(input chan *FileJob) string {
+func toJSON(input chan *FileJob) string {
 	languages := map[string]LanguageSummary{}
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
 
@@ -161,7 +161,7 @@ func fileSummarize(input chan *FileJob) string {
 	case More || strings.ToLower(Format) == "wide":
 		return fileSummarizeLong(input)
 	case strings.ToLower(Format) == "json":
-		return toJson(input)
+		return toJSON(input)
 	case strings.ToLower(Format) == "csv":
 		return toCSV(input)
 	}
