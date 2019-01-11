@@ -8,19 +8,22 @@ import (
 	"sync"
 )
 
+// The below are used as identifiers for the code state machine
 const (
-	S_BLANK              int64 = 1
-	S_CODE               int64 = 2
-	S_COMMENT            int64 = 3
-	S_COMMENT_CODE       int64 = 4 // Indicates comment after code
-	S_MULTICOMMENT       int64 = 5
-	S_MULTICOMMENT_CODE  int64 = 6 // Indicates multi comment after code
-	S_MULTICOMMENT_BLANK int64 = 7 // Indicates multi comment ended with blank afterwards
-	S_STRING             int64 = 8
+	SBlank             int64 = 1
+	SCode              int64 = 2
+	SComment           int64 = 3
+	SCommentCode       int64 = 4 // Indicates comment after code
+	SMulticomment      int64 = 5
+	SMulticommentCode  int64 = 6 // Indicates multi comment after code
+	SMulticommentBlank int64 = 7 // Indicates multi comment ended with blank afterwards
+	SString            int64 = 8
 )
 
+// LineType what type of line are are processing
 type LineType int32
 
+// These are not meant to be CAMEL_CASE but as it us used by an external project we cannot change it
 const (
 	LINE_BLANK LineType = iota
 	LINE_CODE
@@ -71,12 +74,12 @@ func shouldProcess(currentByte, processBytesMask byte) bool {
 }
 
 func resetState(currentState int64) int64 {
-	if currentState == S_MULTICOMMENT || currentState == S_MULTICOMMENT_CODE {
-		currentState = S_MULTICOMMENT
-	} else if currentState == S_STRING {
-		currentState = S_STRING
+	if currentState == SMulticomment || currentState == SMulticommentCode {
+		currentState = SMulticomment
+	} else if currentState == SString {
+		currentState = SString
 	} else {
-		currentState = S_BLANK
+		currentState = SBlank
 	}
 
 	return currentState
@@ -94,7 +97,7 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, en
 
 		if fileJob.Content[i-1] != '\\' {
 			if ok, _, _ := stringTrie.Match(fileJob.Content[i:]); ok != 0 {
-				return i, S_CODE
+				return i, SCode
 			}
 		}
 	}
@@ -136,17 +139,17 @@ func codeState(
 
 			switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[i:]); tokenType {
 			case T_STRING:
-				currentState = S_STRING
+				currentState = SString
 				return i, currentState, endString, endComments
 
 			case T_SLCOMMENT:
-				currentState = S_COMMENT_CODE
+				currentState = SCommentCode
 				return i, currentState, endString, endComments
 
 			case T_MLCOMMENT:
 				if langFeatures.Nested || len(endComments) == 0 {
 					endComments = append(endComments, endString)
-					currentState = S_MULTICOMMENT_CODE
+					currentState = SMulticommentCode
 					i += offsetJump - 1
 					return i, currentState, endString, endComments
 				}
@@ -180,10 +183,10 @@ func commentState(fileJob *FileJob, index int, endPoint int, currentState int64,
 				// If we started as multiline code switch back to code so we count correctly
 				// IE i := 1 /* for the lols */
 				// TODO is that required? Might still be required to count correctly
-				if currentState == S_MULTICOMMENT_CODE {
-					currentState = S_CODE // TODO pointless to change here, just set S_MULTICOMMENT_BLANK
+				if currentState == SMulticommentCode {
+					currentState = SCode // TODO pointless to change here, just set S_MULTICOMMENT_BLANK
 				} else {
-					currentState = S_MULTICOMMENT_BLANK
+					currentState = SMulticommentBlank
 				}
 			}
 
@@ -217,27 +220,27 @@ func blankState(
 	case T_MLCOMMENT:
 		if langFeatures.Nested || len(endComments) == 0 {
 			endComments = append(endComments, endString)
-			currentState = S_MULTICOMMENT
+			currentState = SMulticomment
 			index += offsetJump - 1
 			return index, currentState, endString, endComments
 		}
 
 	case T_SLCOMMENT:
-		currentState = S_COMMENT
+		currentState = SComment
 		return index, currentState, endString, endComments
 
 	case T_STRING:
-		currentState = S_STRING
+		currentState = SString
 		return index, currentState, endString, endComments
 
 	case T_COMPLEXITY:
-		currentState = S_CODE
+		currentState = SCode
 		if index == 0 || isWhitespace(fileJob.Content[index-1]) {
 			fileJob.Complexity++
 		}
 
 	default:
-		currentState = S_CODE
+		currentState = SCode
 	}
 
 	return index, currentState, endString, endComments
@@ -278,7 +281,7 @@ func CountStats(fileJob *FileJob) {
 	}
 
 	endPoint := int(fileJob.Bytes - 1)
-	currentState := S_BLANK
+	currentState := SBlank
 	endComments := [][]byte{}
 	endString := []byte{}
 
@@ -301,7 +304,7 @@ func CountStats(fileJob *FileJob) {
 		if !isWhitespace(fileJob.Content[index]) {
 
 			switch currentState {
-			case S_CODE:
+			case SCode:
 				index, currentState, endString, endComments = codeState(
 					fileJob,
 					index,
@@ -312,9 +315,9 @@ func CountStats(fileJob *FileJob) {
 					langFeatures,
 					&digest,
 				)
-			case S_STRING:
+			case SString:
 				index, currentState = stringState(fileJob, index, endPoint, langFeatures.Strings, endString, currentState)
-			case S_MULTICOMMENT, S_MULTICOMMENT_CODE:
+			case SMulticomment, SMulticommentCode:
 				index, currentState, endString, endComments = commentState(
 					fileJob,
 					index,
@@ -324,7 +327,7 @@ func CountStats(fileJob *FileJob) {
 					endString,
 					langFeatures,
 				)
-			case S_BLANK, S_MULTICOMMENT_BLANK:
+			case SBlank, SMulticommentBlank:
 				// From blank we can move into comment, move into a multiline comment
 				// or move into code but we can only do one.
 				index, currentState, endString, endComments = blankState(
@@ -355,7 +358,7 @@ func CountStats(fileJob *FileJob) {
 			}
 
 			switch currentState {
-			case S_CODE, S_STRING, S_COMMENT_CODE, S_MULTICOMMENT_CODE:
+			case SCode, SString, SCommentCode, SMulticommentCode:
 				fileJob.Code++
 				currentState = resetState(currentState)
 				if fileJob.Callback != nil {
@@ -363,7 +366,7 @@ func CountStats(fileJob *FileJob) {
 						return
 					}
 				}
-			case S_COMMENT, S_MULTICOMMENT, S_MULTICOMMENT_BLANK:
+			case SComment, SMulticomment, SMulticommentBlank:
 				fileJob.Comment++
 				currentState = resetState(currentState)
 				if fileJob.Callback != nil {
@@ -371,7 +374,7 @@ func CountStats(fileJob *FileJob) {
 						return
 					}
 				}
-			case S_BLANK:
+			case SBlank:
 				fileJob.Blank++
 				if fileJob.Callback != nil {
 					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_BLANK) {
@@ -392,7 +395,7 @@ func CountStats(fileJob *FileJob) {
 
 // Reads entire file into memory and then pushes it onto the next queue
 func fileReaderWorker(input chan *FileJob, output chan *FileJob) {
-	var startTime int64 = 0
+	var startTime int64
 	var wg sync.WaitGroup
 
 	for i := 0; i < FileReadJobWorkers; i++ {
@@ -440,7 +443,7 @@ var duplicates = CheckDuplicates{
 
 // Does the actual processing of stats and as such contains the hot path CPU call
 func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
-	var startTime int64 = 0
+	var startTime int64
 	var wg sync.WaitGroup
 	for i := 0; i < FileProcessJobWorkers; i++ {
 		wg.Add(1)
