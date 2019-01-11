@@ -56,15 +56,31 @@ var Format = ""
 // FileOutput sets the file that output should be written to
 var FileOutput = ""
 
-// PathBlackList sets the paths that should be skipped
+// PathBlacklist sets the paths that should be skipped
 var PathBlacklist = []string{}
+
+// FileListQueueSize is the queue of files found and ready to be read into memory
 var FileListQueueSize = runtime.NumCPU()
+
+// FileReadJobWorkers is the number of processes that read files off disk into memory
 var FileReadJobWorkers = runtime.NumCPU() * 4
+
+// FileReadContentJobQueueSize is a queue of files ready to be processed
 var FileReadContentJobQueueSize = runtime.NumCPU()
+
+// FileProcessJobWorkers is the number of workers that process the file collecting stats
 var FileProcessJobWorkers = runtime.NumCPU() * 4
+
+// FileSummaryJobQueueSize is the queue used to hold processed file statistics before formatting
 var FileSummaryJobQueueSize = runtime.NumCPU()
+
+// WhiteListExtensions is a list of extensions which are whitelisted to be processed
 var WhiteListExtensions = []string{}
+
+// AverageWage is the average wage in dollars used for the COCOMO cost estimate
 var AverageWage int64 = 56286
+
+// GcFileCount is the number of files to process before turning the GC back on
 var GcFileCount = 10000
 var gcPercent = -1
 var isLazy = false
