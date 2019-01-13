@@ -138,6 +138,16 @@ func TestSortSummaryFiles(t *testing.T) {
 	}
 }
 
+func TestToJSONEmpty(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	close(inputChan)
+	res := toJSON(inputChan)
+
+	if res != "[]" {
+		t.Error("Expected empty JSON return", res)
+	}
+}
+
 // When using columise  ~28726 ns/op
 // When using optimised ~14293 ns/op
 func BenchmarkFileSummerize(b *testing.B) {
