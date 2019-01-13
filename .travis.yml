@@ -11,3 +11,8 @@ env:
   - GOOS=linux GOARCH=arm
 matrix:
   fast_finish: true
+
+before_install:
+  - go get github.com/mattn/goveralls
+script:
+  - $HOME/gopath/bin/goveralls -v -service=travis-ci
