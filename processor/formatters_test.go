@@ -148,6 +148,32 @@ func TestToJSONEmpty(t *testing.T) {
 	}
 }
 
+func TestToJSONSingle(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	close(inputChan)
+	Debug = true // Increase coverage slightly
+	res := toJSON(inputChan)
+	Debug = false
+
+	if !strings.Contains(res, `"Name":"Go"`) || !strings.Contains(res, `"Code":1000`) {
+		t.Error("Expected none empty JSON return", res)
+	}
+}
+
 // When using columise  ~28726 ns/op
 // When using optimised ~14293 ns/op
 func BenchmarkFileSummerize(b *testing.B) {
