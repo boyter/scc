@@ -9,6 +9,7 @@ Also it has a very short name which is easy to type `scc`.
 
 [![Build Status](https://travis-ci.org/boyter/scc.svg?branch=master)](https://travis-ci.org/boyter/scc)
 [![Go Report Card](https://goreportcard.com/badge/github.com/boyter/scc)](https://goreportcard.com/report/github.com/boyter/scc)
+[![Coverage Status](https://coveralls.io/repos/github/boyter/scc/badge.svg?branch=master)](https://coveralls.io/github/boyter/scc?branch=master)
 
 Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
 
