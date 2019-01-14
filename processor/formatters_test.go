@@ -439,6 +439,36 @@ func TestFileSummarizeShort(t *testing.T) {
 	}
 }
 
+func TestFileSummarizeShortSort(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	close(inputChan)
+
+	sortBy := []string{"name", "line", "blank", "code", "comment"}
+
+	for _, sort := range sortBy {
+		SortBy = sort
+		res := fileSummarizeShort(inputChan)
+
+		if !strings.Contains(res, `Language`) {
+			t.Error("Expected Summary return", res)
+		}
+	}
+}
+
 // When using columise  ~28726 ns/op
 // When using optimised ~14293 ns/op
 func BenchmarkFileSummerize(b *testing.B) {
