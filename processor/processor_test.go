@@ -16,6 +16,10 @@ func TestProcessConstants(t *testing.T) {
 	}
 }
 
+func TestConfigureGc(t *testing.T) {
+	ConfigureGc()
+}
+
 func TestConfigureLazy(t *testing.T) {
 	ConfigureLazy(true)
 	if isLazy != true {
