@@ -254,6 +254,88 @@ func TestToCsvMultiple(t *testing.T) {
 	}
 }
 
+func TestFileSummarizeWide(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+
+	close(inputChan)
+	Format = "wide"
+	More = true
+	res := fileSummarize(inputChan)
+	More = false
+
+	if !strings.Contains(res, `Language`) {
+		t.Error("Expected CSV return", res)
+	}
+}
+
+func TestFileSummarizeJson(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+
+	close(inputChan)
+	Format = "JSON"
+	More = false
+	res := fileSummarize(inputChan)
+
+	if !strings.Contains(res, `bbbb.go`) || !strings.HasPrefix(res, "[") {
+		t.Error("Expected JSON return", res)
+	}
+}
+
+func TestFileSummarizeCsv(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+
+	close(inputChan)
+	Format = "CSV"
+	More = false
+	res := fileSummarize(inputChan)
+
+	if !strings.Contains(res, `bbbb.go`) {
+		t.Error("Expected CSV return", res)
+	}
+}
+
 // When using columise  ~28726 ns/op
 // When using optimised ~14293 ns/op
 func BenchmarkFileSummerize(b *testing.B) {
