@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func CheckDuplicatesTest(t *testing.T) {
+func TestCheckDuplicates(t *testing.T) {
 	c := CheckDuplicates{
 		hashes: make(map[int64][][]byte),
 	}
