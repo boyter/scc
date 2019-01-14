@@ -69,6 +69,25 @@ func TestGetExtensionSecondPass(t *testing.T) {
 	}
 }
 
+func TestWalkDirectoryParallel(t *testing.T) {
+	isLazy = false
+	ProcessConstants()
+
+	inputChan := make(chan *FileJob, 10000)
+	walkDirectoryParallel("../", inputChan)
+
+	count := 0
+	for _ = range inputChan {
+		count++
+	}
+
+	if count == 0 {
+		t.Error("Expected at least one file")
+	}
+}
+
+
+
 func BenchmarkGetExtensionDifferent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 
