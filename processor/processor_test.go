@@ -5,6 +5,7 @@ import (
 )
 
 func TestProcessConstants(t *testing.T) {
+	Trace = true
 	ProcessConstants()
 
 	if len(ExtensionToLanguage) == 0 {
@@ -30,4 +31,8 @@ func TestConfigureLazy(t *testing.T) {
 	if isLazy != false {
 		t.Error("isLazy should be false")
 	}
+}
+
+func TestLoadLanguageFeature(t *testing.T) {
+	LoadLanguageFeature("Go")
 }

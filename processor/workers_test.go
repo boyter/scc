@@ -14,6 +14,10 @@ func TestIsWhitespace(t *testing.T) {
 }
 
 func TestCountStatsLines(t *testing.T) {
+	Trace = false
+	Debug = false
+	Verbose = false
+
 	fileJob := FileJob{
 		Content: []byte(""),
 		Lines:   0,
