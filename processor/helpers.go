@@ -28,16 +28,3 @@ func max(a, b int) int {
 	}
 	return b
 }
-
-// Takes a slice of bytes and returns a unique slice of bytes
-func uniqueByte(slice []byte) []byte {
-	keys := make(map[byte]bool)
-	list := []byte{}
-	for _, entry := range slice {
-		if _, value := keys[entry]; !value {
-			keys[entry] = true
-			list = append(list, entry)
-		}
-	}
-	return list
-}
