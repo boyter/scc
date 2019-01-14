@@ -688,6 +688,16 @@ t`)
 	}
 }
 
+func TestFileProcessorWorker(t *testing.T) {
+	inputChan := make(chan *FileJob, 10000)
+	close(inputChan)
+	outputChan := make(chan *FileJob, 10000)
+
+	Duplicates = true
+
+	fileProcessorWorker(inputChan, outputChan)
+}
+
 //////////////////////////////////////////////////
 // Benchmarks Below
 //////////////////////////////////////////////////

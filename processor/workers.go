@@ -491,6 +491,6 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 	}()
 
 	if Debug {
-		printDebug(fmt.Sprintf("milliseconds proessing files: %d", makeTimestampMilli()-startTime))
+		printDebug(fmt.Sprintf("milliseconds processing files: %d", makeTimestampMilli()-startTime))
 	}
 }
