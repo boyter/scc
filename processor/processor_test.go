@@ -15,3 +15,15 @@ func TestProcessConstants(t *testing.T) {
 		t.Error("Should not be 0")
 	}
 }
+
+func TestConfigureLazy(t *testing.T) {
+	ConfigureLazy(true)
+	if isLazy != true {
+		t.Error("isLazy should be true")
+	}
+
+	ConfigureLazy(false)
+	if isLazy != false {
+		t.Error("isLazy should be false")
+	}
+}
