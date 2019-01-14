@@ -473,6 +473,7 @@ func TestFileSummarizeShortSort(t *testing.T) {
 
 	sortBy := []string{"name", "line", "blank", "code", "comment"}
 
+	Files = true
 	for _, sort := range sortBy {
 		SortBy = sort
 		res := fileSummarizeShort(inputChan)
