@@ -34,5 +34,6 @@ func TestConfigureLazy(t *testing.T) {
 }
 
 func TestLoadLanguageFeature(t *testing.T) {
+	isLazy = true
 	LoadLanguageFeature("Go")
 }
