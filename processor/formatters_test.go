@@ -170,7 +170,7 @@ func TestToJSONSingle(t *testing.T) {
 	Debug = false
 
 	if !strings.Contains(res, `"Name":"Go"`) || !strings.Contains(res, `"Code":1000`) {
-		t.Error("Expected none empty JSON return", res)
+		t.Error("Expected JSON return", res)
 	}
 }
 
@@ -210,7 +210,47 @@ func TestToJSONMultiple(t *testing.T) {
 	Debug = false
 
 	if !strings.Contains(res, `aaaa.go`) || !strings.Contains(res, `bbbb.go`) {
-		t.Error("Expected none empty JSON return", res)
+		t.Error("Expected JSON return", res)
+	}
+}
+
+func TestToCsvMultiple(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "aaaa.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	close(inputChan)
+	Debug = true // Increase coverage slightly
+	res := toCSV(inputChan)
+	Debug = false
+
+	if !strings.Contains(res, `aaaa.go,`) || !strings.Contains(res, `bbbb.go`) {
+		t.Error("Expected CSV return", res)
 	}
 }
 
