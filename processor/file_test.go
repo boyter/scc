@@ -73,6 +73,9 @@ func TestWalkDirectoryParallel(t *testing.T) {
 	isLazy = false
 	ProcessConstants()
 
+	WhiteListExtensions = []string{"go"}
+	Exclude = "vendor"
+
 	inputChan := make(chan *FileJob, 10000)
 	walkDirectoryParallel("../", inputChan)
 
@@ -85,8 +88,6 @@ func TestWalkDirectoryParallel(t *testing.T) {
 		t.Error("Expected at least one file")
 	}
 }
-
-
 
 func BenchmarkGetExtensionDifferent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
