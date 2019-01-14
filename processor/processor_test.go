@@ -46,3 +46,7 @@ func TestProcessFlags(t *testing.T) {
 func TestPrintLanguages(t *testing.T) {
 	printLanguages()
 }
+
+func TestProcess(t *testing.T) {
+	Process()
+}
