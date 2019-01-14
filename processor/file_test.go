@@ -75,6 +75,11 @@ func TestWalkDirectoryParallel(t *testing.T) {
 
 	WhiteListExtensions = []string{"go"}
 	Exclude = "vendor"
+	PathBlacklist = []string{"vendor"}
+	Verbose = true
+	Trace = true
+	Debug = true
+	GcFileCount = 10
 
 	inputChan := make(chan *FileJob, 10000)
 	walkDirectoryParallel("../", inputChan)
