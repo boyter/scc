@@ -37,3 +37,8 @@ func TestLoadLanguageFeature(t *testing.T) {
 	isLazy = true
 	LoadLanguageFeature("Go")
 }
+
+func TestProcessFlags(t *testing.T) {
+	Debug = true
+	processFlags()
+}
