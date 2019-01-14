@@ -42,3 +42,7 @@ func TestProcessFlags(t *testing.T) {
 	Debug = true
 	processFlags()
 }
+
+func TestPrintLanguages(t *testing.T) {
+	printLanguages()
+}

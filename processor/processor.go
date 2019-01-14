@@ -238,7 +238,7 @@ func processLanguageFeature(name string, value Language) {
 
 func processFlags() {
 	// If wide/more mode is enabled we want the complexity calculation
-	// to happen regardless as thats the only purpose of the flag
+	// to happen regardless as that is the only purpose of the flag
 	if More && Complexity {
 		Complexity = false
 	}
