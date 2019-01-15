@@ -389,38 +389,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 		language = append(language, summary)
 	}
 
-	// Cater for the common case of adding plural even for those options that don't make sense
-	// as its quite common for those who English is not a first language to make a simple mistake
-	switch {
-	case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "languages":
-		sort.Slice(language, func(i, j int) bool {
-			return strings.Compare(language[i].Name, language[j].Name) < 0
-		})
-	case SortBy == "line" || SortBy == "lines":
-		sort.Slice(language, func(i, j int) bool {
-			return language[i].Lines > language[j].Lines
-		})
-	case SortBy == "blank" || SortBy == "blanks":
-		sort.Slice(language, func(i, j int) bool {
-			return language[i].Blank > language[j].Blank
-		})
-	case SortBy == "code" || SortBy == "codes":
-		sort.Slice(language, func(i, j int) bool {
-			return language[i].Code > language[j].Code
-		})
-	case SortBy == "comment" || SortBy == "comments":
-		sort.Slice(language, func(i, j int) bool {
-			return language[i].Comment > language[j].Comment
-		})
-	case SortBy == "complexity" || SortBy == "complexitys":
-		sort.Slice(language, func(i, j int) bool {
-			return language[i].Complexity > language[j].Complexity
-		})
-	default:
-		sort.Slice(language, func(i, j int) bool {
-			return language[i].Count > language[j].Count
-		})
-	}
+	language = sortLanguageSummary(language)
 
 	startTime := makeTimestampMilli()
 	for _, summary := range language {
@@ -487,6 +456,43 @@ func fileSummarizeShort(input chan *FileJob) string {
 	}
 
 	return str.String()
+}
+
+func sortLanguageSummary(language []LanguageSummary) []LanguageSummary {
+	// Cater for the common case of adding plural even for those options that don't make sense
+	// as its quite common for those who English is not a first language to make a simple mistake
+	switch {
+	case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "languages":
+		sort.Slice(language, func(i, j int) bool {
+			return strings.Compare(language[i].Name, language[j].Name) < 0
+		})
+	case SortBy == "line" || SortBy == "lines":
+		sort.Slice(language, func(i, j int) bool {
+			return language[i].Lines > language[j].Lines
+		})
+	case SortBy == "blank" || SortBy == "blanks":
+		sort.Slice(language, func(i, j int) bool {
+			return language[i].Blank > language[j].Blank
+		})
+	case SortBy == "code" || SortBy == "codes":
+		sort.Slice(language, func(i, j int) bool {
+			return language[i].Code > language[j].Code
+		})
+	case SortBy == "comment" || SortBy == "comments":
+		sort.Slice(language, func(i, j int) bool {
+			return language[i].Comment > language[j].Comment
+		})
+	case SortBy == "complexity" || SortBy == "complexitys":
+		sort.Slice(language, func(i, j int) bool {
+			return language[i].Complexity > language[j].Complexity
+		})
+	default:
+		sort.Slice(language, func(i, j int) bool {
+			return language[i].Count > language[j].Count
+		})
+	}
+
+	return language
 }
 
 // Get the time as standard UTC/Zulu format
