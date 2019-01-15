@@ -1,14 +1,16 @@
 language: go
 os:
   - linux
-  - osx
 go:
   - 1.11.x
 env:
   - GOOS=windows GOARCH=amd64
+  - GOOS=windows GOARCH=386
   - GOOS=linux GOARCH=amd64
   - GOOS=linux GOARCH=386
   - GOOS=linux GOARCH=arm
+  - GOOS=darwin GOARCH=amd64
+  - GOOS=darwin GOARCH=386
 matrix:
   fast_finish: true
 
