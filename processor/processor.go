@@ -319,7 +319,7 @@ func Process() {
 
 	fileListQueue := make(chan *FileJob, FileListQueueSize)                     // Files ready to be read from disk
 	fileReadContentJobQueue := make(chan *FileJob, FileReadContentJobQueueSize) // Files ready to be processed
-	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)         // Files ready to be summerised
+	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)         // Files ready to be summarised
 
 	go walkDirectoryParallel(DirFilePaths[0], fileListQueue)
 	go fileReaderWorker(fileListQueue, fileReadContentJobQueue)
