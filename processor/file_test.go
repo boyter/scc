@@ -96,6 +96,7 @@ func TestWalkDirectoryParallel(t *testing.T) {
 
 func TestWalkDirectory(t *testing.T) {
 	Debug = true
+	Exclude = "test"
 	files := walkDirectory(".", []string{}, ExtensionToLanguage)
 
 	if len(files) == 0 {
