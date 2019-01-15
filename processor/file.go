@@ -189,7 +189,7 @@ func walkDirectory(toWalk string, blackList []string, extensionLookup map[string
 		regex = regexp.MustCompile(Exclude)
 	}
 
-	godirwalk.Walk(toWalk, &godirwalk.Options{
+	_ = godirwalk.Walk(toWalk, &godirwalk.Options{
 		// Unsorted is meant to make the walk faster and we need to sort after processing anyway
 		Unsorted: true,
 		Callback: func(root string, info *godirwalk.Dirent) error {
