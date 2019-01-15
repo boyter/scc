@@ -36,6 +36,11 @@ func TestConfigureLazy(t *testing.T) {
 func TestLoadLanguageFeature(t *testing.T) {
 	isLazy = true
 	LoadLanguageFeature("Go")
+	_, ok := LanguageFeatures["Go"]
+
+	if !ok {
+		t.Error("Language should have been loaded")
+	}
 }
 
 func TestLoadLanguageFeatureNew(t *testing.T) {
@@ -44,13 +49,26 @@ func TestLoadLanguageFeatureNew(t *testing.T) {
 	LoadLanguageFeature("Go")
 	LoadLanguageFeature("Go")
 
+	_, ok := LanguageFeatures["Go"]
+
+	if !ok {
+		t.Error("Language should have been loaded")
+	}
+
 	isLazy = false
 	ProcessConstants()
 }
 
 func TestProcessFlags(t *testing.T) {
 	Debug = true
+	More = true
+	Complexity = true
+
 	processFlags()
+
+	if Complexity {
+		t.Error("Complexity should be false")
+	}
 }
 
 func TestPrintLanguages(t *testing.T) {
