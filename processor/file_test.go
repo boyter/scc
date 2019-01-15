@@ -94,6 +94,15 @@ func TestWalkDirectoryParallel(t *testing.T) {
 	}
 }
 
+func TestWalkDirectory(t *testing.T) {
+	Debug = true
+	files := walkDirectory(".", []string{}, ExtensionToLanguage)
+
+	if len(files) == 0 {
+		t.Error("Expected at least one file")
+	}
+}
+
 func BenchmarkGetExtensionDifferent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 
