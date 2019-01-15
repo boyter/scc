@@ -463,9 +463,9 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 						}
 						wg.Done()
 						return
-					} else {
-						duplicates.Add(res.Bytes, res.Hash)
 					}
+
+					duplicates.Add(res.Bytes, res.Hash)
 				}
 
 				if Trace {
