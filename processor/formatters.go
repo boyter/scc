@@ -398,9 +398,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 		}
 
 		trimmedName := summary.Name
-		if len(summary.Name) > shortNameTruncate {
-			trimmedName = summary.Name[:shortNameTruncate-1] + "…"
-		}
+		trimmedName = trimNameShort(summary, trimmedName)
 
 		if !Complexity {
 			str.WriteString(fmt.Sprintf(tabularShortFormatBody, trimmedName, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity))
@@ -441,25 +439,31 @@ func fileSummarizeShort(input chan *FileJob) string {
 	}
 	str.WriteString(tabularShortBreak)
 
-	if !Cocomo {
-		calculateCocomo(sumCode, &str)
-	}
-
+	calculateCocomo(sumCode, &str)
 	return str.String()
 }
 
+func trimNameShort(summary LanguageSummary, trimmedName string) string {
+	if len(summary.Name) > shortNameTruncate {
+		trimmedName = summary.Name[:shortNameTruncate-1] + "…"
+	}
+	return trimmedName
+}
+
 func calculateCocomo(sumCode int64, str *strings.Builder) {
-	estimatedEffort := EstimateEffort(int64(sumCode))
-	estimatedCost := EstimateCost(estimatedEffort, AverageWage)
-	estimatedScheduleMonths := EstimateScheduleMonths(estimatedEffort)
-	estimatedPeopleRequired := estimatedEffort / estimatedScheduleMonths
+	if !Cocomo {
+		estimatedEffort := EstimateEffort(int64(sumCode))
+		estimatedCost := EstimateCost(estimatedEffort, AverageWage)
+		estimatedScheduleMonths := EstimateScheduleMonths(estimatedEffort)
+		estimatedPeopleRequired := estimatedEffort / estimatedScheduleMonths
 
-	p := gmessage.NewPrinter(glang.English)
+		p := gmessage.NewPrinter(glang.English)
 
-	str.WriteString(p.Sprintf("Estimated Cost to Develop $%d\n", int64(estimatedCost)))
-	str.WriteString(fmt.Sprintf("Estimated Schedule Effort %f months\n", estimatedScheduleMonths))
-	str.WriteString(fmt.Sprintf("Estimated People Required %f\n", estimatedPeopleRequired))
-	str.WriteString(tabularShortBreak)
+		str.WriteString(p.Sprintf("Estimated Cost to Develop $%d\n", int64(estimatedCost)))
+		str.WriteString(fmt.Sprintf("Estimated Schedule Effort %f months\n", estimatedScheduleMonths))
+		str.WriteString(fmt.Sprintf("Estimated People Required %f\n", estimatedPeopleRequired))
+		str.WriteString(tabularShortBreak)
+	}
 }
 
 func sortLanguageSummary(language []LanguageSummary) []LanguageSummary {
