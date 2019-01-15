@@ -690,12 +690,26 @@ t`)
 
 func TestFileProcessorWorker(t *testing.T) {
 	inputChan := make(chan *FileJob, 10000)
+
+	inputChan <- &FileJob{
+		Filename:  "testing.go",
+		Location:  "./",
+		Extension: "go",
+		Content:   []byte("this is some content"),
+	}
+
 	close(inputChan)
 	outputChan := make(chan *FileJob, 10000)
 
 	Duplicates = true
 
 	fileProcessorWorker(inputChan, outputChan)
+
+	for res := range outputChan {
+		if res.Bytes == 0 {
+			t.Error("Expect bytes to have something")
+		}
+	}
 }
 
 //////////////////////////////////////////////////
