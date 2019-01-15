@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Running go fmt..."
-go fmt ./...
+gofmt -s -w ./..
 
 echo "Running unit tests..."
 go test ./... || exit

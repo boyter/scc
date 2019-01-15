@@ -85,7 +85,7 @@ func TestWalkDirectoryParallel(t *testing.T) {
 	walkDirectoryParallel("../", inputChan)
 
 	count := 0
-	for _ = range inputChan {
+	for range inputChan {
 		count++
 	}
 
