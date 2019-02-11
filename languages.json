@@ -1339,7 +1339,9 @@
       "in "
     ],
     "extensions": [
-      "pyx"
+      "pyx",
+      "pxi",
+      "pxd"
     ],
     "line_comment": [
       "#"
