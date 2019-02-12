@@ -73,6 +73,14 @@ do
     fi
 done
 
+if ./scc main.go > /dev/null ; then
+    echo -e "${GREEN}PASSED file specified test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should run correctly with a file is specified"
+    echo -e "================================================="
+    exit
+fi
 
 echo -e "${NC}Cleaning up..."
 rm ./scc

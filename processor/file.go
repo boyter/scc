@@ -5,6 +5,7 @@ import (
 	"github.com/karrick/godirwalk"
 	"github.com/monochromegane/go-gitignore"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"runtime/debug"
@@ -72,7 +73,18 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 	totalCount := 0
 
 	var wg sync.WaitGroup
-	all, _ := ioutil.ReadDir(root)
+
+	var is_solo_file bool = false
+	var all []os.FileInfo
+	target, _ := os.Lstat(root)
+	if !target.IsDir() {
+		// create an array with a single FileInfo
+		all = append(all, target)
+		is_solo_file = true
+	} else {
+		all, _ = ioutil.ReadDir(root)
+	}
+
 	// TODO the gitignore should check for further gitignores deeper in the tree
 	gitignore, gitignoreerror := gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
 	resetGc := false
@@ -83,6 +95,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 		regex = regexp.MustCompile(Exclude)
 	}
 
+	var fpath string
 	for _, f := range all {
 		// Godirwalk despite being faster than the default walk is still too slow to feed the
 		// CPU's and so we need to walk in parallel to keep up as much as possible
@@ -130,7 +143,12 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 				}(filepath.Join(root, f.Name()))
 			}
 		} else { // File processing starts here
-			if gitignoreerror != nil || !gitignore.Match(filepath.Join(root, f.Name()), false) {
+			if is_solo_file {
+				fpath = root
+			} else {
+				fpath = filepath.Join(root, f.Name())
+			}
+			if gitignoreerror != nil || !gitignore.Match(fpath, false) {
 
 				shouldSkip := false
 				if Exclude != "" {
@@ -164,7 +182,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 						mutex.Unlock()
 
 						LoadLanguageFeature(language)
-						output <- &FileJob{Location: filepath.Join(root, f.Name()), Filename: f.Name(), Extension: extension, Language: language}
+						output <- &FileJob{Location: fpath, Filename: f.Name(), Extension: extension, Language: language}
 					} else if Verbose {
 						printWarn(fmt.Sprintf("skipping file unknown extension: %s", f.Name()))
 					}

@@ -85,7 +85,7 @@ var GcFileCount = 10000
 var gcPercent = -1
 var isLazy = false
 
-// DirFilePaths is not set via flags but by arguments following the the flags for directories to process
+// DirFilePaths is not set via flags but by arguments following the flags for file or directory to process
 var DirFilePaths = []string{}
 
 // Raw languageDatabase loaded
