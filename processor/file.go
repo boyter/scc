@@ -74,13 +74,13 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 
 	var wg sync.WaitGroup
 
-	var is_solo_file bool = false
+	var isSoloFile bool = false
 	var all []os.FileInfo
 	target, _ := os.Lstat(root)
 	if !target.IsDir() {
 		// create an array with a single FileInfo
 		all = append(all, target)
-		is_solo_file = true
+		isSoloFile = true
 	} else {
 		all, _ = ioutil.ReadDir(root)
 	}
@@ -143,7 +143,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 				}(filepath.Join(root, f.Name()))
 			}
 		} else { // File processing starts here
-			if is_solo_file {
+			if isSoloFile {
 				fpath = root
 			} else {
 				fpath = filepath.Join(root, f.Name())
