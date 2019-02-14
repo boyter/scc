@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"runtime"
 	"runtime/debug"
 	"sort"
@@ -307,6 +308,11 @@ func Process() {
 	// Clean up any invalid arguments before setting everything up
 	if len(DirFilePaths) == 0 {
 		DirFilePaths = append(DirFilePaths, ".")
+	}
+
+	if _, err := os.Stat(DirFilePaths[0]); os.IsNotExist(err) {
+		fmt.Println("file or directory does not exists: " + DirFilePaths[0])
+		return
 	}
 
 	SortBy = strings.ToLower(SortBy)
