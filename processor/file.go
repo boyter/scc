@@ -76,6 +76,8 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 
 	var isSoloFile bool = false
 	var all []os.FileInfo
+	// clean path including trailing slashes
+	root = filepath.Clean(root)
 	target, _ := os.Lstat(root)
 	if !target.IsDir() {
 		// create an array with a single FileInfo

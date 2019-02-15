@@ -119,6 +119,31 @@ func TestWalkDirectoryParallelWorksWithSingleInputFile(t *testing.T) {
 	}
 }
 
+func TestWalkDirectoryParallelIgnoresRootTrailingSlash(t *testing.T) {
+	isLazy = false
+	ProcessConstants()
+
+	WhiteListExtensions = []string{"go"}
+	Exclude = "vendor"
+	PathBlacklist = []string{"vendor"}
+	Verbose = true
+	Trace = true
+	Debug = true
+	GcFileCount = 10
+
+	inputChan := make(chan *FileJob, 10000)
+	walkDirectoryParallel("file_test.go/", inputChan)
+
+	count := 0
+	for range inputChan {
+		count++
+	}
+
+	if count != 1 {
+		t.Error("Expected exactly one file")
+	}
+}
+
 func TestWalkDirectory(t *testing.T) {
 	Debug = true
 	Exclude = "test"

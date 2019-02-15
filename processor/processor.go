@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"runtime"
 	"runtime/debug"
 	"sort"
@@ -309,9 +310,10 @@ func Process() {
 	if len(DirFilePaths) == 0 {
 		DirFilePaths = append(DirFilePaths, ".")
 	}
+	fpath := filepath.Clean(DirFilePaths[0])
 
-	if _, err := os.Stat(DirFilePaths[0]); os.IsNotExist(err) {
-		fmt.Println("file or directory does not exists: " + DirFilePaths[0])
+	if _, err := os.Stat(fpath); os.IsNotExist(err) {
+		fmt.Println("file or directory does not exists: " + fpath)
 		return
 	}
 
@@ -327,7 +329,7 @@ func Process() {
 	fileReadContentJobQueue := make(chan *FileJob, FileReadContentJobQueueSize) // Files ready to be processed
 	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)         // Files ready to be summarised
 
-	go walkDirectoryParallel(DirFilePaths[0], fileListQueue)
+	go walkDirectoryParallel(fpath, fileListQueue)
 	go fileReaderWorker(fileListQueue, fileReadContentJobQueue)
 	go fileProcessorWorker(fileReadContentJobQueue, fileSummaryJobQueue)
 
