@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"runtime"
 	"runtime/debug"
 	"sort"
@@ -85,7 +87,7 @@ var GcFileCount = 10000
 var gcPercent = -1
 var isLazy = false
 
-// DirFilePaths is not set via flags but by arguments following the the flags for directories to process
+// DirFilePaths is not set via flags but by arguments following the flags for file or directory to process
 var DirFilePaths = []string{}
 
 // Raw languageDatabase loaded
@@ -308,6 +310,12 @@ func Process() {
 	if len(DirFilePaths) == 0 {
 		DirFilePaths = append(DirFilePaths, ".")
 	}
+	fpath := filepath.Clean(DirFilePaths[0])
+
+	if _, err := os.Stat(fpath); os.IsNotExist(err) {
+		fmt.Println("file or directory does not exists: " + fpath)
+		return
+	}
 
 	SortBy = strings.ToLower(SortBy)
 
@@ -321,7 +329,7 @@ func Process() {
 	fileReadContentJobQueue := make(chan *FileJob, FileReadContentJobQueueSize) // Files ready to be processed
 	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)         // Files ready to be summarised
 
-	go walkDirectoryParallel(DirFilePaths[0], fileListQueue)
+	go walkDirectoryParallel(fpath, fileListQueue)
 	go fileReaderWorker(fileListQueue, fileReadContentJobQueue)
 	go fileProcessorWorker(fileReadContentJobQueue, fileSummaryJobQueue)
 
