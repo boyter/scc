@@ -38,7 +38,7 @@ type LanguageFeature struct {
 	MultiLineCommentMask  byte
 	StringCheckMask       byte
 	ProcessMask           byte
-	Languages             []string
+	Keywords              []string
 }
 
 // FileJobCallback is an interface that FileJobs can implement to get a per line callback with the line type

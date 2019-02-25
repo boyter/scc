@@ -122,9 +122,14 @@ func ProcessConstants() {
 	startTime := makeTimestampNano()
 	for name, value := range languageDatabase {
 		for _, ext := range value.Extensions {
-			// TODO check if value exists and append
-			fmt.Println("TODO check if value exists and append")
-			ExtensionToLanguage[ext] = []string{name}
+			_, ok := ExtensionToLanguage[ext]
+
+			// If no match check if we have a matching extension
+			if ok {
+				ExtensionToLanguage[ext] = append(ExtensionToLanguage[ext], name)
+			} else {
+				ExtensionToLanguage[ext] = []string{name}
+			}
 		}
 	}
 
@@ -236,6 +241,7 @@ func processLanguageFeature(name string, value Language) {
 		SingleLineCommentMask: singleLineCommentMask,
 		StringCheckMask:       stringMask,
 		ProcessMask:           processMask,
+		Keywords:              value.Keywords,
 	}
 	LanguageFeaturesMutex.Unlock()
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hash"
 	"io/ioutil"
+	"strings"
 	"sync"
 )
 
@@ -260,6 +261,11 @@ func CountStats(fileJob *FileJob) {
 		return
 	}
 
+	// If we have multiple languages then we need to guess which one this might be
+	if len(fileJob.Languages) != 1 {
+		guessLanguage(fileJob)
+	}
+
 	LanguageFeaturesMutex.Lock()
 	langFeatures := LanguageFeatures[fileJob.Language]
 	LanguageFeaturesMutex.Unlock()
@@ -391,6 +397,29 @@ func CountStats(fileJob *FileJob) {
 
 	// Save memory by unsetting the content as we no longer require it
 	fileJob.Content = nil
+}
+
+func guessLanguage(fileJob *FileJob) {
+	fmt.Println("TODO identified more than one language attempt to guess")
+	fmt.Println(fileJob.Languages)
+
+	// Get the first 1000 bytes of the file
+	toCheck := string(fileJob.Content[:1000])
+
+	for _, lan := range fileJob.Languages {
+		LanguageFeaturesMutex.Lock()
+		langFeatures := LanguageFeatures[lan]
+		LanguageFeaturesMutex.Unlock()
+
+		for _, key := range langFeatures.Keywords {
+			if strings.Contains(toCheck, key) {
+				fmt.Println("Contains expected keyword")
+			}
+		}
+	}
+
+	fileJob.Language = fileJob.Languages[0]
+
 }
 
 // Reads entire file into memory and then pushes it onto the next queue

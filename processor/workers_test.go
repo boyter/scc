@@ -712,6 +712,32 @@ func TestFileProcessorWorker(t *testing.T) {
 	}
 }
 
+func TestGuessLanguageCoq(t *testing.T) {
+	fileJob := &FileJob{
+		Languages: []string{"Coq", "SystemVerilog"},
+		Content: []byte(`Require Hypothesis Inductive`),
+	}
+
+	guessLanguage(fileJob)
+
+	if fileJob.Language != "Coq" {
+		t.Error("Expected guessed language to have been Coq got", fileJob.Language)
+	}
+}
+
+func TestGuessLanguageSystemVerilog(t *testing.T) {
+	fileJob := &FileJob{
+		Languages: []string{"Coq", "SystemVerilog"},
+		Content: []byte(`endmodule posedge edge always wire`),
+	}
+
+	guessLanguage(fileJob)
+
+	if fileJob.Language != "SystemVerilog" {
+		t.Error("Expected guessed language to have been SystemVerilog got", fileJob.Language)
+	}
+}
+
 //////////////////////////////////////////////////
 // Benchmarks Below
 //////////////////////////////////////////////////
