@@ -22,6 +22,7 @@ type Language struct {
 	MultiLine        [][]string `json:"multi_line"`
 	Quotes           [][]string `json:"quotes"`
 	NestedMultiLine  bool       `json:"nestedmultiline"`
+	Keywords         []string   `json:"keywords"`
 }
 
 // LanguageFeature is a struct which represents the conversion from Language into what is used for matching

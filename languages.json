@@ -1281,7 +1281,8 @@
         "\"",
         "\""
       ]
-    ]
+    ],
+    "keywords": ["Require", "Hypothesis", "Inductive", "Remark", "Lemma", "Proof", "Definition", "Theorem"]
   },
   "Creole": {
     "complexitychecks": [],
@@ -5300,7 +5301,8 @@
     ],
     "extensions": [
       "sv",
-      "svh"
+      "svh",
+      "v"
     ],
     "line_comment": [
       "//"
@@ -5316,7 +5318,8 @@
         "\"",
         "\""
       ]
-    ]
+    ],
+    "keywords": ["endmodule", "posedge", "edge", "always", "wire"]
   },
   "Systemd": {
     "complexitychecks": [],

@@ -64,14 +64,15 @@ fi
 for i in {1..100}
 do
     if ./scc > /dev/null ; then
-        echo -e "${GREEN}PASSED concurrency issues test"
+        :
     else
         echo -e "${RED}======================================================="
-        echo -e "FAILED Should not have concurrency issues"
+        echo -e "FAILED Should not have concurrency issue"
         echo -e "================================================="
         exit
     fi
 done
+echo -e "${GREEN}PASSED concurrency issue test"
 
 if ./scc main.go > /dev/null ; then
     echo -e "${GREEN}PASSED file specified test"
