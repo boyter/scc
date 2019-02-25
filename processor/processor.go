@@ -94,7 +94,7 @@ var DirFilePaths = []string{}
 var languageDatabase = map[string]Language{}
 
 // ExtensionToLanguage is loaded from the JSON that is in constants.go
-var ExtensionToLanguage = map[string]string{}
+var ExtensionToLanguage = map[string][]string{}
 
 // LanguageFeatures contains the processed languages from processLanguageFeature
 var LanguageFeatures = map[string]LanguageFeature{}
@@ -122,7 +122,9 @@ func ProcessConstants() {
 	startTime := makeTimestampNano()
 	for name, value := range languageDatabase {
 		for _, ext := range value.Extensions {
-			ExtensionToLanguage[ext] = name
+			// TODO check if value exists and append
+			fmt.Println("TODO check if value exists and append")
+			ExtensionToLanguage[ext] = []string{name}
 		}
 	}
 
