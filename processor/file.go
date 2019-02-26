@@ -128,7 +128,9 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 				go func(toWalk string) {
 					filejobs := walkDirectory(toWalk, PathBlacklist, extensionLookup)
 					for i := 0; i < len(filejobs); i++ {
-						LoadLanguageFeature(filejobs[i].Language)
+						for _, lan := range filejobs[i].Languages {
+							LoadLanguageFeature(lan)
+						}
 						output <- &filejobs[i]
 					}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hash"
 	"io/ioutil"
+	"sort"
 	"strings"
 	"sync"
 )
@@ -399,27 +400,46 @@ func CountStats(fileJob *FileJob) {
 	fileJob.Content = nil
 }
 
+type languageGuess struct {
+	Name string
+	Count int
+}
+
 func guessLanguage(fileJob *FileJob) {
-	fmt.Println("TODO identified more than one language attempt to guess")
-	fmt.Println(fileJob.Languages)
+	startTime := makeTimestampNano()
 
-	// Get the first 1000 bytes of the file
-	toCheck := string(fileJob.Content[:1000])
+	toCheck := string(fileJob.Content)
 
+	toSort := []languageGuess{}
 	for _, lan := range fileJob.Languages {
 		LanguageFeaturesMutex.Lock()
 		langFeatures := LanguageFeatures[lan]
 		LanguageFeaturesMutex.Unlock()
 
+		count := 0
 		for _, key := range langFeatures.Keywords {
 			if strings.Contains(toCheck, key) {
-				fmt.Println("Contains expected keyword")
+				fileJob.Language = lan
+				count++
 			}
 		}
+
+		toSort = append(toSort, languageGuess{Name: lan, Count: count})
 	}
 
-	fileJob.Language = fileJob.Languages[0]
+	sort.Slice(toSort, func(i, j int) bool {
+		return toSort[i].Count > toSort[j].Count
+	})
 
+	if Verbose {
+		printWarn(fmt.Sprintf("guessing language %s for file %s", toSort[0].Name, fileJob.Filename))
+	}
+
+	if Trace {
+		printTrace(fmt.Sprintf("nanoseconds to guess language: %s: %d", fileJob.Filename, makeTimestampNano()-startTime))
+	}
+
+	fileJob.Language = toSort[0].Name
 }
 
 // Reads entire file into memory and then pushes it onto the next queue
