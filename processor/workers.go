@@ -401,7 +401,7 @@ func CountStats(fileJob *FileJob) {
 }
 
 type languageGuess struct {
-	Name string
+	Name  string
 	Count int
 }
 
