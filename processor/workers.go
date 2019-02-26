@@ -423,7 +423,12 @@ func determineLanguage(fileJob *FileJob) {
 
 	startTime := makeTimestampNano()
 
-	toCheck := string(fileJob.Content)
+	var toCheck string
+	if len(fileJob.Content) > 2000 {
+		toCheck = string(fileJob.Content)[:2000]
+	} else {
+		toCheck = string(fileJob.Content)
+	}
 
 	toSort := []languageGuess{}
 	for _, lan := range fileJob.PossibleLanguages {
