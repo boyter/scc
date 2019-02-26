@@ -18,7 +18,7 @@ NC='\033[0m'
 if ./scc --not-a-real-option > /dev/null ; then
 	echo -e "${RED}================================================="
     echo -e "FAILED Invalid option should produce error code "
-    echo -e "================================================="
+    echo -e "======================================================="
     exit
 else
     echo -e "${GREEN}PASSED invalid option test"
@@ -38,7 +38,7 @@ if ./scc processor > /dev/null ; then
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED Should run correctly with directory specified"
-    echo -e "================================================="
+    echo -e "======================================================="
     exit
 fi
 
@@ -47,7 +47,7 @@ if ./scc --avg-wage 10000 --binary --by-file --cocomo --debug --exclude-dir .git
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED Should run correctly with multiple options"
-    echo -e "================================================="
+    echo -e "======================================================="
     exit
 fi
 
@@ -56,7 +56,34 @@ if ./scc -i sh -M "vendor|examples|p.*" > /dev/null ; then
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED Should run with regular expression ignore"
-    echo -e "================================================="
+    echo -e "======================================================="
+    exit
+fi
+
+if ./scc "examples/shared_extension/" | grep -q "Coq"; then
+    echo -e "${GREEN}PASSED shared extension test 1"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should be able to work with shared extension 1"
+    echo -e "======================================================="
+    exit
+fi
+
+if ./scc "examples/shared_extension/" | grep -q "SystemVerilog"; then
+    echo -e "${GREEN}PASSED shared extension test 2"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should be able to work with shared extension 2"
+    echo -e "======================================================="
+    exit
+fi
+
+if ./scc "examples/shared_extension/" | grep -q "V "; then
+    echo -e "${GREEN}PASSED shared extension test 3"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should be able to work with shared extension 3"
+    echo -e "======================================================="
     exit
 fi
 
