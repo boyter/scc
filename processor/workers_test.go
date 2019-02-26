@@ -738,6 +738,33 @@ func TestGuessLanguageSystemVerilog(t *testing.T) {
 	}
 }
 
+func TestGuessLanguageLanguageSetNoPossible(t *testing.T) {
+	fileJob := &FileJob{
+		Language: "Java",
+		Content:  []byte(`endmodule posedge edge always wire`),
+	}
+
+	determineLanguage(fileJob)
+
+	if fileJob.Language != "Java" {
+		t.Error("Expected guessed language to have been Java got", fileJob.Language)
+	}
+}
+
+func TestGuessLanguageSingleLanguageSet(t *testing.T) {
+	fileJob := &FileJob{
+		Language:          "Java",
+		PossibleLanguages: []string{"Rust"},
+		Content:           []byte(`endmodule posedge edge always wire`),
+	}
+
+	determineLanguage(fileJob)
+
+	if fileJob.Language != "Rust" {
+		t.Error("Expected guessed language to have been Rust got", fileJob.Language)
+	}
+}
+
 //////////////////////////////////////////////////
 // Benchmarks Below
 //////////////////////////////////////////////////

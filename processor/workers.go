@@ -407,7 +407,13 @@ type languageGuess struct {
 // If however there is only a single language we
 func determineLanguage(fileJob *FileJob) {
 
-	// There should only be two possibilities either we have a single language
+	// If being called through an API its possible nothing is set here and as
+	// such should just return as the Language value should have already been set
+	if len(fileJob.PossibleLanguages) == 0 {
+		return
+	}
+
+	// There should only be two possibilities now, either we have a single language
 	// in which case we set it and return
 	// or we have multiple in which case we try to determine it heuristically
 	if len(fileJob.PossibleLanguages) == 1 {
