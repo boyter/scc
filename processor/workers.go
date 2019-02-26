@@ -405,6 +405,8 @@ type languageGuess struct {
 	Count int
 }
 
+// Given a filejob which could have multiple language types make a guess to the type
+// based on keywords supplied, which is similar to how https://github.com/vmchale/polyglot does it
 func guessLanguage(fileJob *FileJob) {
 	startTime := makeTimestampNano()
 
@@ -439,7 +441,9 @@ func guessLanguage(fileJob *FileJob) {
 		printTrace(fmt.Sprintf("nanoseconds to guess language: %s: %d", fileJob.Filename, makeTimestampNano()-startTime))
 	}
 
-	fileJob.Language = toSort[0].Name
+	if len(toSort) != 0 {
+		fileJob.Language = toSort[0].Name
+	}
 }
 
 // Reads entire file into memory and then pushes it onto the next queue
