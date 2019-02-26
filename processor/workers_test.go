@@ -718,7 +718,7 @@ func TestGuessLanguageCoq(t *testing.T) {
 		Content:           []byte(`Require Hypothesis Inductive`),
 	}
 
-	guessLanguage(fileJob)
+	determineLanguage(fileJob)
 
 	if fileJob.Language != "Coq" {
 		t.Error("Expected guessed language to have been Coq got", fileJob.Language)
@@ -731,7 +731,7 @@ func TestGuessLanguageSystemVerilog(t *testing.T) {
 		Content:           []byte(`endmodule posedge edge always wire`),
 	}
 
-	guessLanguage(fileJob)
+	determineLanguage(fileJob)
 
 	if fileJob.Language != "SystemVerilog" {
 		t.Error("Expected guessed language to have been SystemVerilog got", fileJob.Language)

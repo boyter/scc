@@ -262,10 +262,7 @@ func CountStats(fileJob *FileJob) {
 		return
 	}
 
-	// If we have multiple languages then we need to guess which one this might be
-	if len(fileJob.PossibleLanguages) != 1 {
-		guessLanguage(fileJob)
-	}
+	determineLanguage(fileJob)
 
 	LanguageFeaturesMutex.Lock()
 	langFeatures := LanguageFeatures[fileJob.Language]
@@ -407,7 +404,17 @@ type languageGuess struct {
 
 // Given a filejob which could have multiple language types make a guess to the type
 // based on keywords supplied, which is similar to how https://github.com/vmchale/polyglot does it
-func guessLanguage(fileJob *FileJob) {
+// If however there is only a single language we
+func determineLanguage(fileJob *FileJob) {
+
+	// There should only be two possibilities either we have a single language
+	// in which case we set it and return
+	// or we have multiple in which case we try to determine it heuristically
+	if len(fileJob.PossibleLanguages) == 1 {
+		fileJob.Language = fileJob.PossibleLanguages[0]
+		return
+	}
+
 	startTime := makeTimestampNano()
 
 	toCheck := string(fileJob.Content)
