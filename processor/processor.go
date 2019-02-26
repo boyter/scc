@@ -123,7 +123,7 @@ func ProcessConstants() {
 	for name, value := range languageDatabase {
 		for _, ext := range value.Extensions {
 			_, ok := ExtensionToLanguage[ext]
-			
+
 			if ok {
 				ExtensionToLanguage[ext] = append(ExtensionToLanguage[ext], name)
 			} else {
