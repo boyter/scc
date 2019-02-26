@@ -128,7 +128,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 				go func(toWalk string) {
 					filejobs := walkDirectory(toWalk, PathBlacklist, extensionLookup)
 					for i := 0; i < len(filejobs); i++ {
-						for _, lan := range filejobs[i].Languages {
+						for _, lan := range filejobs[i].PossibleLanguages {
 							LoadLanguageFeature(lan)
 						}
 						output <- &filejobs[i]
@@ -189,7 +189,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 							LoadLanguageFeature(l)
 						}
 
-						output <- &FileJob{Location: fpath, Filename: f.Name(), Extension: extension, Language: language[0], Languages: language}
+						output <- &FileJob{Location: fpath, Filename: f.Name(), Extension: extension, Language: language[0], PossibleLanguages: language}
 					} else if Verbose {
 						printWarn(fmt.Sprintf("skipping file unknown extension: %s", f.Name()))
 					}
@@ -262,7 +262,7 @@ func walkDirectory(toWalk string, blackList []string, extensionLookup map[string
 				}
 
 				if ok {
-					filejobs = append(filejobs, FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language[0], Languages: language})
+					filejobs = append(filejobs, FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language[0], PossibleLanguages: language})
 				} else if Verbose {
 					printWarn(fmt.Sprintf("skipping file unknown extension: %s", info.Name()))
 				}

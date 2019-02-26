@@ -714,8 +714,8 @@ func TestFileProcessorWorker(t *testing.T) {
 
 func TestGuessLanguageCoq(t *testing.T) {
 	fileJob := &FileJob{
-		Languages: []string{"Coq", "SystemVerilog"},
-		Content:   []byte(`Require Hypothesis Inductive`),
+		PossibleLanguages: []string{"Coq", "SystemVerilog"},
+		Content:           []byte(`Require Hypothesis Inductive`),
 	}
 
 	guessLanguage(fileJob)
@@ -727,8 +727,8 @@ func TestGuessLanguageCoq(t *testing.T) {
 
 func TestGuessLanguageSystemVerilog(t *testing.T) {
 	fileJob := &FileJob{
-		Languages: []string{"Coq", "SystemVerilog"},
-		Content:   []byte(`endmodule posedge edge always wire`),
+		PossibleLanguages: []string{"Coq", "SystemVerilog"},
+		Content:           []byte(`endmodule posedge edge always wire`),
 	}
 
 	guessLanguage(fileJob)

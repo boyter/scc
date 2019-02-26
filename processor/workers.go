@@ -263,7 +263,7 @@ func CountStats(fileJob *FileJob) {
 	}
 
 	// If we have multiple languages then we need to guess which one this might be
-	if len(fileJob.Languages) != 1 {
+	if len(fileJob.PossibleLanguages) != 1 {
 		guessLanguage(fileJob)
 	}
 
@@ -413,7 +413,7 @@ func guessLanguage(fileJob *FileJob) {
 	toCheck := string(fileJob.Content)
 
 	toSort := []languageGuess{}
-	for _, lan := range fileJob.Languages {
+	for _, lan := range fileJob.PossibleLanguages {
 		LanguageFeaturesMutex.Lock()
 		langFeatures := LanguageFeatures[lan]
 		LanguageFeaturesMutex.Unlock()

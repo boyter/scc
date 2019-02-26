@@ -50,7 +50,7 @@ type FileJobCallback interface {
 // FileJob is a struct used to hold all of the results of processing internally before sent to the formatter
 type FileJob struct {
 	Language           string
-	Languages          []string // Used to hold potentially more than one language which populates language when determined
+	PossibleLanguages  []string // Used to hold potentially more than one language which populates language when determined
 	Filename           string
 	Extension          string
 	Location           string
