@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"hash"
 	"io/ioutil"
+	"sort"
+	"strings"
 	"sync"
 )
 
@@ -260,6 +262,8 @@ func CountStats(fileJob *FileJob) {
 		return
 	}
 
+	determineLanguage(fileJob)
+
 	LanguageFeaturesMutex.Lock()
 	langFeatures := LanguageFeatures[fileJob.Language]
 	LanguageFeaturesMutex.Unlock()
@@ -391,6 +395,73 @@ func CountStats(fileJob *FileJob) {
 
 	// Save memory by unsetting the content as we no longer require it
 	fileJob.Content = nil
+}
+
+type languageGuess struct {
+	Name  string
+	Count int
+}
+
+// Given a filejob which could have multiple language types make a guess to the type
+// based on keywords supplied, which is similar to how https://github.com/vmchale/polyglot does it
+// If however there is only a single language we
+func determineLanguage(fileJob *FileJob) {
+
+	// If being called through an API its possible nothing is set here and as
+	// such should just return as the Language value should have already been set
+	if len(fileJob.PossibleLanguages) == 0 {
+		return
+	}
+
+	// There should only be two possibilities now, either we have a single language
+	// in which case we set it and return
+	// or we have multiple in which case we try to determine it heuristically
+	if len(fileJob.PossibleLanguages) == 1 {
+		fileJob.Language = fileJob.PossibleLanguages[0]
+		return
+	}
+
+	startTime := makeTimestampNano()
+
+	var toCheck string
+	if len(fileJob.Content) > 2000 {
+		toCheck = string(fileJob.Content)[:2000]
+	} else {
+		toCheck = string(fileJob.Content)
+	}
+
+	toSort := []languageGuess{}
+	for _, lan := range fileJob.PossibleLanguages {
+		LanguageFeaturesMutex.Lock()
+		langFeatures := LanguageFeatures[lan]
+		LanguageFeaturesMutex.Unlock()
+
+		count := 0
+		for _, key := range langFeatures.Keywords {
+			if strings.Contains(toCheck, key) {
+				fileJob.Language = lan
+				count++
+			}
+		}
+
+		toSort = append(toSort, languageGuess{Name: lan, Count: count})
+	}
+
+	sort.Slice(toSort, func(i, j int) bool {
+		return toSort[i].Count > toSort[j].Count
+	})
+
+	if Verbose {
+		printWarn(fmt.Sprintf("guessing language %s for file %s", toSort[0].Name, fileJob.Filename))
+	}
+
+	if Trace {
+		printTrace(fmt.Sprintf("nanoseconds to guess language: %s: %d", fileJob.Filename, makeTimestampNano()-startTime))
+	}
+
+	if len(toSort) != 0 {
+		fileJob.Language = toSort[0].Name
+	}
 }
 
 // Reads entire file into memory and then pushes it onto the next queue

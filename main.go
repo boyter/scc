@@ -1,10 +1,9 @@
 package main
 
 import (
-	"os"
-
 	"github.com/boyter/scc/processor"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 //go:generate go run scripts/include.go

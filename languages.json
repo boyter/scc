@@ -1281,7 +1281,8 @@
         "\"",
         "\""
       ]
-    ]
+    ],
+    "keywords": ["Require", "Hypothesis", "Inductive", "Remark", "Lemma", "Proof", "Definition", "Theorem"]
   },
   "Creole": {
     "complexitychecks": [],
@@ -2177,6 +2178,45 @@
     ],
     "multi_line": [],
     "quotes": []
+  },
+  "V": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "v"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "nestedmultiline": true,
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ],
+      [
+        "`",
+        "`"
+      ]
+    ],
+    "keywords": ["fn", "const", "println", "import", "struct", "module"]
   },
   "Go": {
     "complexitychecks": [
@@ -5300,7 +5340,8 @@
     ],
     "extensions": [
       "sv",
-      "svh"
+      "svh",
+      "v"
     ],
     "line_comment": [
       "//"
@@ -5316,7 +5357,8 @@
         "\"",
         "\""
       ]
-    ]
+    ],
+    "keywords": ["endmodule", "posedge", "edge", "always", "wire"]
   },
   "Systemd": {
     "complexitychecks": [],

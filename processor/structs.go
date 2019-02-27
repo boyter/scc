@@ -22,6 +22,7 @@ type Language struct {
 	MultiLine        [][]string `json:"multi_line"`
 	Quotes           [][]string `json:"quotes"`
 	NestedMultiLine  bool       `json:"nestedmultiline"`
+	Keywords         []string   `json:"keywords"`
 }
 
 // LanguageFeature is a struct which represents the conversion from Language into what is used for matching
@@ -37,6 +38,7 @@ type LanguageFeature struct {
 	MultiLineCommentMask  byte
 	StringCheckMask       byte
 	ProcessMask           byte
+	Keywords              []string
 }
 
 // FileJobCallback is an interface that FileJobs can implement to get a per line callback with the line type
@@ -48,6 +50,7 @@ type FileJobCallback interface {
 // FileJob is a struct used to hold all of the results of processing internally before sent to the formatter
 type FileJob struct {
 	Language           string
+	PossibleLanguages  []string // Used to hold potentially more than one language which populates language when determined
 	Filename           string
 	Extension          string
 	Location           string

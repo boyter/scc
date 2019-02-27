@@ -56,7 +56,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 	// If input has a supplied white list of extensions then loop through them
 	// and modify the lookup we use to cut down on extra checks
 	if len(WhiteListExtensions) != 0 {
-		wlExtensionLookup := map[string]string{}
+		wlExtensionLookup := map[string][]string{}
 
 		for _, white := range WhiteListExtensions {
 			language, ok := extensionLookup[white]
@@ -128,7 +128,9 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 				go func(toWalk string) {
 					filejobs := walkDirectory(toWalk, PathBlacklist, extensionLookup)
 					for i := 0; i < len(filejobs); i++ {
-						LoadLanguageFeature(filejobs[i].Language)
+						for _, lan := range filejobs[i].PossibleLanguages {
+							LoadLanguageFeature(lan)
+						}
 						output <- &filejobs[i]
 					}
 
@@ -183,8 +185,11 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 						totalCount++
 						mutex.Unlock()
 
-						LoadLanguageFeature(language)
-						output <- &FileJob{Location: fpath, Filename: f.Name(), Extension: extension, Language: language}
+						for _, l := range language {
+							LoadLanguageFeature(l)
+						}
+
+						output <- &FileJob{Location: fpath, Filename: f.Name(), Extension: extension, PossibleLanguages: language}
 					} else if Verbose {
 						printWarn(fmt.Sprintf("skipping file unknown extension: %s", f.Name()))
 					}
@@ -200,7 +205,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 	}
 }
 
-func walkDirectory(toWalk string, blackList []string, extensionLookup map[string]string) []FileJob {
+func walkDirectory(toWalk string, blackList []string, extensionLookup map[string][]string) []FileJob {
 	extension := ""
 	var filejobs []FileJob
 
@@ -257,7 +262,7 @@ func walkDirectory(toWalk string, blackList []string, extensionLookup map[string
 				}
 
 				if ok {
-					filejobs = append(filejobs, FileJob{Location: root, Filename: info.Name(), Extension: extension, Language: language})
+					filejobs = append(filejobs, FileJob{Location: root, Filename: info.Name(), Extension: extension, PossibleLanguages: language})
 				} else if Verbose {
 					printWarn(fmt.Sprintf("skipping file unknown extension: %s", info.Name()))
 				}

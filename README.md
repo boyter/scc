@@ -65,12 +65,11 @@ Why use `scc`?
  - Large language support
  - Can ignore duplicate files
  - Has complexity estimations
+ - You need to tell the difference between Coq and Verilog in the same directory
 
 Why not use `scc`?
 
- - Unable to tell the difference between Coq and Verilog (currently, if enough people raise a bug it will be resolved)
  - You don't like Go for some reason
- - You are working on a Linux system with less than 4 CPU cores and really need the fastest counter possible (use loc or polyglot)
 
 ### Usage
 
@@ -307,7 +306,7 @@ Creole (creole)
 Crystal (cr)
 CSS (css)
 CSV (csv)
-Cython (pyx)
+Cython (pyx,pxi,pxd)
 D (d)
 Dart (dart)
 Device Tree (dts,dtsi)
@@ -451,7 +450,7 @@ SVG (svg)
 Swift (swift)
 Swig (i)
 Systemd (automount,device,link,mount,path,scope,service,slice,socket,swap,target,timer)
-SystemVerilog (sv,svh)
+SystemVerilog (sv,svh,v)
 TaskPaper (taskpaper)
 TCL (tcl)
 TeX (tex,sty)
@@ -463,6 +462,7 @@ TypeScript Typings (d.ts)
 Unreal Script (uc,uci,upkg)
 Ur/Web (ur,urs)
 Ur/Web Project (urp)
+V (v)
 Vala (vala)
 Varnish Configuration (vcl)
 Verilog (vg,vh)
