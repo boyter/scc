@@ -122,13 +122,7 @@ func ProcessConstants() {
 	startTime := makeTimestampNano()
 	for name, value := range languageDatabase {
 		for _, ext := range value.Extensions {
-			_, ok := ExtensionToLanguage[ext]
-
-			if ok {
-				ExtensionToLanguage[ext] = append(ExtensionToLanguage[ext], name)
-			} else {
-				ExtensionToLanguage[ext] = []string{name}
-			}
+			ExtensionToLanguage[ext] = append(ExtensionToLanguage[ext], name)
 		}
 	}
 
