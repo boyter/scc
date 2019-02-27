@@ -255,14 +255,15 @@ func blankState(
 // This is the 'hot' path for the application and needs to be as fast as possible
 func CountStats(fileJob *FileJob) {
 
+	// Needs to always run to ensure the language is set
+	determineLanguage(fileJob)
+
 	// If the file has a length of 0 it is is empty then we say it has no lines
 	fileJob.Bytes = int64(len(fileJob.Content))
 	if fileJob.Bytes == 0 {
 		fileJob.Lines = 0
 		return
 	}
-
-	determineLanguage(fileJob)
 
 	LanguageFeaturesMutex.Lock()
 	langFeatures := LanguageFeatures[fileJob.Language]
