@@ -765,6 +765,19 @@ func TestGuessLanguageSingleLanguageSet(t *testing.T) {
 	}
 }
 
+func TestGuessLanguageLanguageEmptyContent(t *testing.T) {
+	fileJob := &FileJob{
+		PossibleLanguages: []string{"Rust"},
+		Content:           []byte(``),
+	}
+
+	determineLanguage(fileJob)
+
+	if fileJob.Language != "Rust" {
+		t.Error("Expected guessed language to have been Rust got", fileJob.Language)
+	}
+}
+
 //////////////////////////////////////////////////
 // Benchmarks Below
 //////////////////////////////////////////////////
