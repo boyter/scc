@@ -1289,8 +1289,8 @@ func BenchmarkCheckLenPrecalc(b *testing.B) {
 
 	count := 0
 	for i := 0; i < b.N; i++ {
-		len := len(matches)
-		for j := 0; j < len; j++ {
+		l := len(matches)
+		for j := 0; j < l; j++ {
 			count++
 		}
 	}
