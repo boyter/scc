@@ -38,7 +38,7 @@ func getExtension(name string) string {
 		// If there are multiple extensions, it is the value of subExt,
 		// otherwise subExt is an empty string.
 		subExt := filepath.Ext(strings.TrimSuffix(name, ext))
-		extension = strings.TrimPrefix(subExt + ext, ".")
+		extension = strings.TrimPrefix(subExt+ext, ".")
 	}
 
 	extensionCache.Store(name, extension)
