@@ -9,7 +9,9 @@ go test ./... || exit
 echo "Building application..."
 go build -ldflags="-s -w" || exit
 
-./scc --languages > LANGUAGES.md
+echo '```' > LANGUAGES.md
+./scc --languages >> LANGUAGES.md
+echo '```' >> LANGUAGES.md
 
 echo "Running integration tests..."
 
