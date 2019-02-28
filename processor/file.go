@@ -28,15 +28,17 @@ func getExtension(name string) string {
 		return extension.(string)
 	}
 
-	locs := strings.Split(name, ".")
+	ext := filepath.Ext(name)
 
-	switch {
-	case len(locs) == 0 || len(locs) == 1 || strings.LastIndex(name, ".") == 0:
+	if ext == "" || strings.LastIndex(name, ".") == 0 {
 		extension = name
-	case len(locs) == 2:
-		extension = locs[len(locs)-1]
-	default:
-		extension = locs[len(locs)-2] + "." + locs[len(locs)-1]
+	} else {
+		// Handling multiple dots or multiple extensions only needs to delete the last extension
+		// and then call filepath.Ext.
+		// If there are multiple extensions, it is the value of subExt,
+		// otherwise subExt is an empty string.
+		subExt := filepath.Ext(strings.TrimSuffix(name, ext))
+		extension = strings.TrimPrefix(subExt + ext, ".")
 	}
 
 	extensionCache.Store(name, extension)
