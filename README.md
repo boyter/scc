@@ -173,7 +173,7 @@ Benchmarks are run on fresh 32 CPU Optimised Digital Ocean Virtual Machine 2019/
 
 ```
 scc v2.2.0 (compiled with Go 1.12)
-tokei v8.0.0 (compiled with Rust 1.33)
+tokei v9.0.0 (compiled with Rust 1.33)
 loc v0.5.0 (compiled with Rust 1.33)
 polyglot v0.5.19 (downloaded from github)
 ```
