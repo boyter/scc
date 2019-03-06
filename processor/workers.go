@@ -20,6 +20,7 @@ const (
 	SMulticommentCode  int64 = 6 // Indicates multi comment after code
 	SMulticommentBlank int64 = 7 // Indicates multi comment ended with blank afterwards
 	SString            int64 = 8
+	SDocString         int64 = 9 // A docstring which means it should be counted as a comment if surrounded by whitespace
 )
 
 // LineType what type of line are are processing
@@ -99,6 +100,43 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, en
 
 		if fileJob.Content[i-1] != '\\' {
 			if ok, _, _ := stringTrie.Match(fileJob.Content[i:]); ok != 0 {
+				return i, SCode
+			}
+		}
+	}
+
+	return index, currentState
+}
+
+// This is a special state check pretty much only ever used by Python codebases
+// but potentially it could be expanded to deal with other types
+func docStringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, endString []byte, currentState int64) (int, int64) {
+	// Its not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
+	// without checking if it is out of bounds first
+	for i := index; i < endPoint; i++ {
+		index = i
+
+		if fileJob.Content[i] == '\n' {
+			return i, currentState
+		}
+
+		if fileJob.Content[i-1] != '\\' {
+			if ok, _, _ := stringTrie.Match(fileJob.Content[i:]); ok != 0 {
+
+				// So we have hit end of docstring at this point in which case check if only whitespace characters till the next
+				// newline and if so we change to a comment otherwise to code
+				for j := index+1; j < endPoint; j++ {
+					if fileJob.Content[j] == '\n' {
+						fmt.Println("Found newline so docstring is comment")
+						return i, SComment
+					}
+
+					if !isWhitespace(fileJob.Content[j]) {
+						fmt.Println("Found something not whitespace so is code", string(fileJob.Content[j]))
+						return i, SCode
+					}
+				}
+
 				return i, SCode
 			}
 		}
@@ -232,6 +270,17 @@ func blankState(
 		return index, currentState, endString, endComments
 
 	case TString:
+		fmt.Println(">>>>", index, fileJob.Content[index], string(endString), endComments)
+
+		// Check if this string potentially could be a docstring
+		// TODO check if only whitespace characters appeared before it till a newline
+		for _, v := range langFeatures.DocString {
+			if v == string(endString) {
+				currentState = SDocString
+				return index, currentState, endString, endComments
+			}
+		}
+
 		currentState = SString
 		return index, currentState, endString, endComments
 
@@ -300,6 +349,9 @@ func CountStats(fileJob *FileJob) {
 		digest = md5.New()
 	}
 
+	// Docstring counts
+	docStringNewLine := 0
+
 	for index := 0; index < len(fileJob.Content); index++ {
 
 		// Based on our current state determine if the state should change by checking
@@ -322,6 +374,10 @@ func CountStats(fileJob *FileJob) {
 				)
 			case SString:
 				index, currentState = stringState(fileJob, index, endPoint, langFeatures.Strings, endString, currentState)
+			case SDocString:
+				// For a docstring we can either move into blank in which case we count it as a docstring
+				// or back into code in which case it should be counted as code
+				index, currentState = docStringState(fileJob, index, endPoint, langFeatures.Strings, endString, currentState)
 			case SMulticomment, SMulticommentCode:
 				index, currentState, endString, endComments = commentState(
 					fileJob,
@@ -386,15 +442,21 @@ func CountStats(fileJob *FileJob) {
 						return
 					}
 				}
+			case SDocString:
+				// Need to keep track of how many times we hit this. When we
+				// transition out we need to then add all the values to the count
+				docStringNewLine++
 			}
 		}
 	}
+
+	fmt.Println(docStringNewLine)
 
 	if Duplicates {
 		fileJob.Hash = digest.Sum(nil)
 	}
 
-	// Save memory by unsetting the content as we no longer require it
+	// Save memory by un-setting the content as we no longer require it
 	fileJob.Content = nil
 }
 

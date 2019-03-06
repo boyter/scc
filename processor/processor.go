@@ -214,7 +214,18 @@ func processLanguageFeature(name string, value Language) {
 	}
 	processMask |= multiLineCommentMask
 
+	docString := []string{}
 	for _, v := range value.Quotes {
+		// If the length is > 2 it means that we want to indicate that this
+		// string type has the potential to be a docstring
+		// which means if it starts and ends with whitespace it
+		// should be counted as a comment and not code
+		// NB we don't check the value but it could be used to indicate what should be
+		// before or after the string to make it a docstring if there is special syntax for it
+		if len(v) > 2 {
+			docString = append(docString, v[0])
+		}
+
 		stringMask |= v[0][0]
 		stringTrie.InsertClose(TString, []byte(v[0]), []byte(v[1]))
 		tokenTrie.InsertClose(TString, []byte(v[0]), []byte(v[1]))
@@ -235,6 +246,7 @@ func processLanguageFeature(name string, value Language) {
 		StringCheckMask:       stringMask,
 		ProcessMask:           processMask,
 		Keywords:              value.Keywords,
+		DocString:			   docString,
 	}
 	LanguageFeaturesMutex.Unlock()
 }
