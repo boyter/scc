@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 )
 
 // The below are used as identifiers for the code state machine
@@ -474,9 +475,7 @@ func fileReaderWorker(input chan *FileJob, output chan *FileJob) {
 		wg.Add(1)
 		go func() {
 			for res := range input {
-				if startTime == 0 {
-					startTime = makeTimestampMilli()
-				}
+				atomic.CompareAndSwapInt64(&startTime, 0, makeTimestampMilli())
 
 				fileStartTime := makeTimestampNano()
 				content, err := ioutil.ReadFile(res.Location)
@@ -521,9 +520,7 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 		wg.Add(1)
 		go func() {
 			for res := range input {
-				if startTime == 0 {
-					startTime = makeTimestampMilli()
-				}
+				atomic.CompareAndSwapInt64(&startTime, 0, makeTimestampMilli())
 
 				fileStartTime := makeTimestampNano()
 				CountStats(res)
