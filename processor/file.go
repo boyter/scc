@@ -11,6 +11,7 @@ import (
 	"runtime/debug"
 	"strings"
 	"sync"
+	"sync/atomic"
 )
 
 // Used as quick lookup for files with the same name to avoid some processing
@@ -71,8 +72,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 		extensionLookup = wlExtensionLookup
 	}
 
-	var mutex = &sync.Mutex{}
-	totalCount := 0
+	var totalCount int64 = 0
 
 	var wg sync.WaitGroup
 
@@ -136,12 +136,10 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 						output <- &filejobs[i]
 					}
 
-					mutex.Lock()
-					totalCount += len(filejobs)
-					mutex.Unlock()
+					atomic.AddInt64(&totalCount, int64(len(filejobs)))
 
 					// Turn GC back to what it was before if we have parsed enough files
-					if !resetGc && totalCount >= GcFileCount {
+					if !resetGc && atomic.LoadInt64(&totalCount) >= int64(GcFileCount) {
 						debug.SetGCPercent(gcPercent)
 						resetGc = true
 					}
@@ -183,9 +181,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 					}
 
 					if ok {
-						mutex.Lock()
-						totalCount++
-						mutex.Unlock()
+						atomic.AddInt64(&totalCount, 1)
 
 						for _, l := range language {
 							LoadLanguageFeature(l)
