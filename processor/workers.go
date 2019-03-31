@@ -120,12 +120,14 @@ func docStringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie,
 			return i, currentState
 		}
 
+		// If the previous character is \ then the string is escaped so don't check
 		if fileJob.Content[i-1] != '\\' {
 			if ok, _, _ := stringTrie.Match(fileJob.Content[i:]); ok != 0 {
 
 				// So we have hit end of docstring at this point in which case check if only whitespace characters till the next
 				// newline and if so we change to a comment otherwise to code
-				for j := index+1; j < endPoint; j++ {
+				for j := index; j < endPoint; j++ {
+					fmt.Println(j)
 					if fileJob.Content[j] == '\n' {
 						fmt.Println("Found newline so docstring is comment")
 						return i, SComment
@@ -270,10 +272,9 @@ func blankState(
 		return index, currentState, endString, endComments
 
 	case TString:
-		fmt.Println(">>>>", index, fileJob.Content[index], string(endString), endComments)
+		fmt.Println(">>", index, fileJob.Content[index], string(endString), endComments)
 
-		// Check if this string potentially could be a docstring
-		// TODO check if only whitespace characters appeared before it till a newline
+		// Check if this string can be a docstring
 		for _, v := range langFeatures.DocString {
 			if v == string(endString) {
 				currentState = SDocString
