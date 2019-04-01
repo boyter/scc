@@ -87,17 +87,15 @@ type OpenClose struct {
 	Close []byte
 }
 
-// CheckDuplicates is used to hold hashes if duplicate detection is enabled
+// CheckDuplicates is used to hold hashes if duplicate detection is enabled it comes with a mutex
+// that should be locked while a check is being performed then added
 type CheckDuplicates struct {
 	hashes map[int64][][]byte
 	mux    sync.Mutex
 }
 
-// Add concurrent safe add a key into the duplicates check
+// Non thread safe add a key into the duplicates check need to use mutex inside struct before calling this
 func (c *CheckDuplicates) Add(key int64, hash []byte) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
 	hashes, ok := c.hashes[key]
 	if ok {
 		c.hashes[key] = append(hashes, hash)
@@ -106,11 +104,8 @@ func (c *CheckDuplicates) Add(key int64, hash []byte) {
 	}
 }
 
-// Check concurrent safe check to see if the key exists already
+// Non thread safe check to see if the key exists already need to use mutex inside struct before calling this
 func (c *CheckDuplicates) Check(key int64, hash []byte) bool {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
 	hashes, ok := c.hashes[key]
 	if ok {
 		for _, h := range hashes {

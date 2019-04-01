@@ -526,15 +526,18 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 				CountStats(res)
 
 				if Duplicates {
+					duplicates.mux.Lock()
 					if duplicates.Check(res.Bytes, res.Hash) {
 						if Verbose {
 							printWarn(fmt.Sprintf("skipping duplicate file: %s", res.Location))
 						}
-						wg.Done()
-						return
+
+						duplicates.mux.Unlock()
+						continue
 					}
 
 					duplicates.Add(res.Bytes, res.Hash)
+					duplicates.mux.Unlock()
 				}
 
 				if Trace {
