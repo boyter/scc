@@ -114,6 +114,17 @@ else
     exit
 fi
 
+# Try out duplicates
+if ./scc -d "examples/duplicates/" | grep -e "Java" | grep -q -e " 1 "; then
+    echo -e "${GREEN}PASSED duplicates test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Duplicates should be consistent"
+    echo -e "======================================================="
+    exit
+fi
+
+
 echo -e "${NC}Cleaning up..."
 rm ./scc
 
