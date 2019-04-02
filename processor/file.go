@@ -91,6 +91,13 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 
 	// TODO the gitIgnore should check for further gitignores deeper in the tree
 	gitIgnore, gitIgnoreError := gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
+	if Verbose {
+		if gitIgnoreError == nil {
+			printWarn(fmt.Sprintf("found and loaded gitignore file: %s", filepath.Join(root, ".gitignore")))
+		} else {
+			printWarn(fmt.Sprintf("no gitignore found: %s", filepath.Join(root, ".gitignore")))
+		}
+	}
 
 	resetGc := false
 
@@ -126,7 +133,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 				}
 			}
 
-			if gitIgnoreError != nil || gitIgnore.Match(filepath.Join(root, f.Name()), true) {
+			if gitIgnoreError == nil && gitIgnore.Match(filepath.Join(root, f.Name()), true) {
 				if Verbose {
 					printWarn("skipping directory due to git ignore: " + filepath.Join(root, f.Name()))
 				}
@@ -163,7 +170,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 
 			shouldSkip := false
 
-			if gitIgnoreError != nil || gitIgnore.Match(fpath, false) {
+			if gitIgnoreError == nil && gitIgnore.Match(fpath, false) {
 				if Verbose {
 					printWarn("skipping file due to git ignore: " + f.Name())
 				}
