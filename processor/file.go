@@ -76,7 +76,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 
 	var wg sync.WaitGroup
 
-	var isSoloFile = false
+	isSoloFile := false
 	var all []os.FileInfo
 	// clean path including trailing slashes
 	root = filepath.Clean(root)
