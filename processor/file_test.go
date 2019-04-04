@@ -90,7 +90,7 @@ func TestWalkDirectoryParallel(t *testing.T) {
 	}
 
 	if count == 0 {
-		t.Error("Expected at least one file")
+		t.Errorf("Expected at least one file got %d", count)
 	}
 }
 
@@ -115,7 +115,7 @@ func TestWalkDirectoryParallelWorksWithSingleInputFile(t *testing.T) {
 	}
 
 	if count != 1 {
-		t.Error("Expected exactly one file")
+		t.Errorf("Expected exactly one file got %d", count)
 	}
 }
 
@@ -140,13 +140,14 @@ func TestWalkDirectoryParallelIgnoresRootTrailingSlash(t *testing.T) {
 	}
 
 	if count != 1 {
-		t.Error("Expected exactly one file")
+		t.Errorf("Expected exactly one file got %d", count)
 	}
 }
 
 func TestWalkDirectory(t *testing.T) {
 	Debug = true
 	Exclude = "test"
+	ProcessConstants()
 	files := walkDirectory(".", []string{}, ExtensionToLanguage)
 
 	if len(files) == 0 {

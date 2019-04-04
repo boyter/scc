@@ -76,7 +76,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 
 	var wg sync.WaitGroup
 
-	var isSoloFile bool = false
+	isSoloFile := false
 	var all []os.FileInfo
 	// clean path including trailing slashes
 	root = filepath.Clean(root)
@@ -89,8 +89,16 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 		all, _ = ioutil.ReadDir(root)
 	}
 
-	// TODO the gitignore should check for further gitignores deeper in the tree
-	gitignore, gitignoreerror := gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
+	// TODO the gitIgnore should check for further gitignores deeper in the tree
+	gitIgnore, gitIgnoreError := gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
+	if Verbose {
+		if gitIgnoreError == nil {
+			printWarn(fmt.Sprintf("found and loaded gitignore file: %s", filepath.Join(root, ".gitignore")))
+		} else {
+			printWarn(fmt.Sprintf("no gitignore found: %s", filepath.Join(root, ".gitignore")))
+		}
+	}
+
 	resetGc := false
 
 	var regex *regexp.Regexp
@@ -125,6 +133,13 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 				}
 			}
 
+			if gitIgnoreError == nil && gitIgnore.Match(filepath.Join(root, f.Name()), true) {
+				if Verbose {
+					printWarn("skipping directory due to git ignore: " + filepath.Join(root, f.Name()))
+				}
+				shouldSkip = true
+			}
+
 			if !shouldSkip {
 				wg.Add(1)
 				go func(toWalk string) {
@@ -152,45 +167,51 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 			} else {
 				fpath = filepath.Join(root, f.Name())
 			}
-			if gitignoreerror != nil || !gitignore.Match(fpath, false) {
 
-				shouldSkip := false
-				if Exclude != "" {
-					if regex.Match([]byte(f.Name())) {
-						if Verbose {
-							printWarn("skipping file due to match exclude: " + f.Name())
-						}
-						shouldSkip = true
+			shouldSkip := false
+
+			if gitIgnoreError == nil && gitIgnore.Match(fpath, false) {
+				if Verbose {
+					printWarn("skipping file due to git ignore: " + f.Name())
+				}
+				shouldSkip = true
+			}
+
+			if Exclude != "" {
+				if regex.Match([]byte(f.Name())) {
+					if Verbose {
+						printWarn("skipping file due to match exclude: " + f.Name())
 					}
+					shouldSkip = true
+				}
+			}
+
+			if !shouldSkip {
+				extension := ""
+				// Lookup in case the full name matches
+				language, ok := extensionLookup[strings.ToLower(f.Name())]
+
+				// If no match check if we have a matching extension
+				if !ok {
+					extension = getExtension(f.Name())
+					language, ok = extensionLookup[extension]
 				}
 
-				if !shouldSkip {
-					extension := ""
-					// Lookup in case the full name matches
-					language, ok := extensionLookup[strings.ToLower(f.Name())]
+				// Convert from d.ts to ts and check that in case of multiple extensions
+				if !ok {
+					language, ok = extensionLookup[getExtension(extension)]
+				}
 
-					// If no match check if we have a matching extension
-					if !ok {
-						extension = getExtension(f.Name())
-						language, ok = extensionLookup[extension]
+				if ok {
+					atomic.AddInt64(&totalCount, 1)
+
+					for _, l := range language {
+						LoadLanguageFeature(l)
 					}
 
-					// Convert from d.ts to ts and check that in case of multiple extensions
-					if !ok {
-						language, ok = extensionLookup[getExtension(extension)]
-					}
-
-					if ok {
-						atomic.AddInt64(&totalCount, 1)
-
-						for _, l := range language {
-							LoadLanguageFeature(l)
-						}
-
-						output <- &FileJob{Location: fpath, Filename: f.Name(), Extension: extension, PossibleLanguages: language}
-					} else if Verbose {
-						printWarn(fmt.Sprintf("skipping file unknown extension: %s", f.Name()))
-					}
+					output <- &FileJob{Location: fpath, Filename: f.Name(), Extension: extension, PossibleLanguages: language}
+				} else if Verbose {
+					printWarn(fmt.Sprintf("skipping file unknown extension: %s", f.Name()))
 				}
 			}
 		}
