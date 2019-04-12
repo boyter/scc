@@ -22,9 +22,10 @@ Read all about how it came to be along with performance benchmarks,
  - https://boyter.org/posts/sloc-cloc-code-performance/
  - https://boyter.org/posts/sloc-cloc-code-performance-update/
 
-A new review of `scc`
+Some reviews of `scc`
 
  - https://nickmchardy.com/2018/10/counting-lines-of-code-in-koi-cms.html
+ - https://www.feliciano.tech/blog/determine-source-code-size-and-complexity-with-scc/
 
 For performance see the [Performance](https://github.com/boyter/scc#performance) section
 
