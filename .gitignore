@@ -17,3 +17,14 @@ scc
 
 # IDE
 .idea/
+
+# Performance tests
+examples/performance_tests/0
+examples/performance_tests/1
+examples/performance_tests/2
+examples/performance_tests/3
+examples/performance_tests/4
+examples/performance_tests/5
+examples/performance_tests/6
+examples/performance_tests/7
+examples/performance_tests/8

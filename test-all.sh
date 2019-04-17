@@ -128,6 +128,18 @@ do
 done
 echo -e "${GREEN}PASSED duplicates test"
 
+
+# Try out specific languages
+# TODO make this a loop with every example
+if ./scc "examples/language/" | grep -q "Bosque "; then
+    echo -e "${GREEN}PASSED Bosque Language Check"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should be able to find Bosque"
+    echo -e "======================================================="
+    exit
+fi
+
 echo -e "${NC}Cleaning up..."
 rm ./scc
 

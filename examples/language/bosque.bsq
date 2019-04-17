@@ -1,0 +1,179 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
+//
+//This is a bosque test/benchmark for a nbody program -- based on https://benchmarksgame-team.pages.debian.net/benchmarksgame/performance/nbody.html.
+//Expected output is: -0.16907302171469984
+//
+
+namespace NSMain;
+
+function sigmaSum(args: List[Float]): Float # misc_sigmasum
+
+entity Body {
+   const solar_mass: Float = Float::mult('4.0'@Float, Float::pi, Float::pi);
+   const days_per_year: Float = '365.24'@Float;
+
+   field name: String;
+   field mass: Float;
+   field x: Float;
+   field y: Float;
+   field z: Float;
+
+   field vx: Float;
+   field vy: Float; 
+   field vz: Float;
+
+   const jupiter: Body = Body@{
+      name="jupiter",
+      x='4.84143144246472090e+00'@Float,
+      y='-1.16032004402742839e+00'@Float,
+      z='-1.03622044471123109e-01'@Float,
+      vx=Float::mult('1.66007664274403694e-03'@Float, Body::days_per_year),
+      vy=Float::mult('7.69901118419740425e-03'@Float, Body::days_per_year),
+      vz=Float::mult('-6.90460016972063023e-05'@Float, Body::days_per_year),
+      mass=Float::mult('9.54791938424326609e-04'@Float, Body::solar_mass)
+   };
+
+   const saturn: Body = Body@{
+      name="saturn",
+      x='8.34336671824457987e+00'@Float,
+      y='4.12479856412430479e+00'@Float,
+      z='-4.03523417114321381e-01'@Float,
+      vx=Float::mult('-2.76742510726862411e-03'@Float, Body::days_per_year),
+      vy=Float::mult('4.99852801234917238e-03'@Float, Body::days_per_year),
+      vz=Float::mult('2.30417297573763929e-05'@Float, Body::days_per_year),
+      mass=Float::mult('2.85885980666130812e-04'@Float, Body::solar_mass)
+   };
+
+   const uranus: Body = Body@{
+      name="uranus",
+      x='1.28943695621391310e+01'@Float,
+      y='-1.51111514016986312e+01'@Float,
+      z='-2.23307578892655734e-01'@Float,
+      vx=Float::mult('2.96460137564761618e-03'@Float, Body::days_per_year),
+      vy=Float::mult('2.37847173959480950e-03'@Float, Body::days_per_year),
+      vz=Float::mult('-2.96589568540237556e-05'@Float, Body::days_per_year),
+      mass=Float::mult('4.36624404335156298e-05'@Float, Body::solar_mass)
+   };
+
+   const neptune: Body = Body@{
+      name="neptune",
+      x='1.53796971148509165e+01'@Float,
+      y='-2.59193146099879641e+01'@Float,
+      z='1.79258772950371181e-01'@Float,
+      vx=Float::mult('2.68067772490389322e-03'@Float, Body::days_per_year),
+      vy=Float::mult('1.62824170038242295e-03'@Float, Body::days_per_year),
+      vz=Float::mult('-9.51592254519715870e-05'@Float, Body::days_per_year),
+      mass=Float::mult('5.15138902046611451e-05'@Float, Body::solar_mass)
+   };
+
+   const sun: Body = Body@{
+      name="sun",
+      x='0.0'@Float,
+      y='0.0'@Float,
+      z='0.0'@Float,
+      vx='0.0'@Float,
+      vy='0.0'@Float,
+      vz='0.0'@Float,
+      mass=Body::solar_mass
+   };
+
+   method offsetMomentum(px: Float, py: Float, pz: Float): Body {
+      return this<~(vx=Float::div(px->negate(), Body::solar_mass), vy=Float::div(py->negate(), Body::solar_mass), vz=Float::div(pz->negate(), Body::solar_mass));
+   }
+}
+
+entity NBodySystem {
+   field bodies: List[Body];
+
+   factory static create(): { bodies: List[Body] } {
+      var planets = List[Body]@{
+         Body::jupiter,
+         Body::saturn,
+         Body::uranus,
+         Body::neptune
+      };
+
+      var px = sigmaSum(planets->map[Float](fn(p: Body): Float => Float::mult(p.vx, p.mass)));
+      var py = sigmaSum(planets->map[Float](fn(p: Body): Float => Float::mult(p.vy, p.mass)));
+      var pz = sigmaSum(planets->map[Float](fn(p: Body): Float => Float::mult(p.vz, p.mass)));
+
+      return @{ bodies=List[Body]@{ Body::sun->offsetMomentum(px, py, pz), ...planets} };
+   }
+
+   method energy(): Float {
+      var keneticEnergies = this.bodies->map[Float](fn(b: Body): Float => {
+         return Float::mult('0.5'@Float, b.mass, Float::add(b.vx->square(), b.vy->square(), b.vz->square()));
+      });
+
+      var potentialEnergies = this.bodies->pairs(true)
+         ->map[Float](fn(bp: [Body, Body]): Float => {
+            var dx = Float::sub(bp[0].x, bp[1].x);
+            var dy = Float::sub(bp[0].y, bp[1].y);
+            var dz = Float::sub(bp[0].z, bp[1].z);
+
+            var distance = Float::add(dx->square(), dy->square(), dz->square())->sqrt();
+            return Float::div(Float::mult(bp[0].mass, bp[1].mass), distance);
+         });
+
+      return Float::sub(sigmaSum(keneticEnergies), sigmaSum(potentialEnergies));
+   }
+
+   method advance(dt: Float): NBodySystem {
+      var deltav = this.bodies->map[[Body, Float, Float, Float]](fn(b: Body): [Body, Float, Float, Float] => { 
+         var obodies = this.bodies->filter(fn(ob: Body): Bool => b.name != ob.name);
+         var forces = obodies->map[[Float, Float, Float]](fn(ob: Body): [Float, Float, Float] => {
+            var dx = Float::sub(ob.x, b.x);
+            var dy = Float::sub(ob.y, b.y);
+            var dz = Float::sub(ob.z, b.z);
+
+            var distance = Float::add(dx->square(), dy->square(), dz->square())->sqrt();
+            var mag = Float::div(dt, Float::mult(distance, distance, distance));
+
+            return @[ Float::mult(dx, ob.mass, mag), Float::mult(dy, ob.mass, mag), Float::mult(dz, ob.mass, mag) ];
+         });
+
+         var fx = sigmaSum(List[Float]@{ b.vx, ...forces->map[Float](fn(fv: [Float, Float, Float]): Float => fv[0]) });
+         var fy = sigmaSum(List[Float]@{ b.vy, ...forces->map[Float](fn(fv: [Float, Float, Float]): Float => fv[1]) });
+         var fz = sigmaSum(List[Float]@{ b.vz, ...forces->map[Float](fn(fv: [Float, Float, Float]): Float => fv[2]) });
+
+         return @[ b, fx, fy, fz ];
+      });
+
+      var bodies = deltav->map[Body](fn(utuple: [Body, Float, Float, Float]): Body => {
+         var b = utuple[0];
+         var nvx = utuple[1];
+         var nvy = utuple[2];
+         var nvz = utuple[3];
+
+         var nx = Float::add(b.x, Float::mult(nvx, dt));
+         var ny = Float::add(b.y, Float::mult(nvy, dt));
+         var nz = Float::add(b.z, Float::mult(nvz, dt));
+
+         return b<~(x=nx, y=ny, z=nz, vx=nvx, vy=nvy, vz=nvz);
+      });
+
+      return NBodySystem@{ bodies=bodies };
+   }
+}
+
+entrypoint function main(): Float {
+   var! system = NBodySystem@create();
+   var step = '0.01'@Float;
+
+   system = system->advance(step);
+   system = system->advance(step);
+   system = system->advance(step);
+   system = system->advance(step);
+   system = system->advance(step);
+   system = system->advance(step);
+   system = system->advance(step);
+   system = system->advance(step);
+   system = system->advance(step);
+   system = system->advance(step);
+
+   return system->energy();
+}

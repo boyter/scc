@@ -549,6 +549,36 @@ test"; // a quote: "`)
 	}
 }
 
+func TestCountStatsBosque(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Bosque",
+	}
+
+	fileJob.Content = []byte(`//This is a bosque test
+method offsetMomentum(px: Float, py: Float, pz: Float): Body {
+      return this<~(vx=Float::div(px->negate(), Body::solar_mass), vy=Float::div(py->negate(), Body::solar_mass), vz=Float::div(pz->negate(), Body::solar_mass));
+}`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 4 {
+		t.Errorf("Expected 4 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 3 {
+		t.Errorf("Expected 4 code lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 0 comment lines got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 0 {
+		t.Errorf("Expected 0 blank lines got %d", fileJob.Blank)
+	}
+}
+
 func TestCheckForMatchNoMatch(t *testing.T) {
 	ProcessConstants()
 

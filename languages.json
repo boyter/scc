@@ -577,6 +577,40 @@
       ]
     ]
   },
+  "Bosque": {
+    "complexitychecks": [
+      "if ",
+      "if(",
+      "switch ",
+      "match ",
+      "case ",
+      "| ",
+      "|| ",
+      "& ",
+      "&& ",
+      "!= ",
+      "!== ",
+      "== ",
+      "=== "
+    ],
+    "extensions": [
+      "bsq"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ],
+      [
+        "'",
+        "'"
+      ]
+    ]
+  },
   "Brainfuck": {
     "complexitychecks": [
       "[",
