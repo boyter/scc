@@ -39,11 +39,12 @@ Other similar projects,
  - https://github.com/vmchale/polyglot
  - https://gitlab.com/esr/loccount
 
-Interesting reading about other code counting projects tokei, loc and polyglot
+Interesting reading about other code counting projects tokei, loc, polyglot and loccount
 
  - https://www.reddit.com/r/rust/comments/59bm3t/a_fast_cloc_replacement_in_rust/
  - https://www.reddit.com/r/rust/comments/82k9iy/loc_count_lines_of_code_quickly/
  - http://blog.vmchale.com/article/polyglot-comparisons
+ - http://esr.ibiblio.org/?p=8270
 
 Further reading about processing files on the disk performance
 
