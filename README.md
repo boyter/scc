@@ -37,6 +37,7 @@ Other similar projects,
  - https://github.com/cgag/loc
  - https://github.com/hhatto/gocloc/
  - https://github.com/vmchale/polyglot
+ - https://gitlab.com/esr/loccount
 
 Interesting reading about other code counting projects tokei, loc and polyglot
 
