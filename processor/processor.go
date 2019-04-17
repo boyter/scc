@@ -314,7 +314,7 @@ func Process() {
 	fpath := filepath.Clean(DirFilePaths[0])
 
 	if _, err := os.Stat(fpath); os.IsNotExist(err) {
-		fmt.Println("file or directory does not exists: " + fpath)
+		fmt.Println("file or directory does not exist: " + fpath)
 		return
 	}
 
