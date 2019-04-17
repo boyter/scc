@@ -311,11 +311,15 @@ func Process() {
 	if len(DirFilePaths) == 0 {
 		DirFilePaths = append(DirFilePaths, ".")
 	}
-	fpath := filepath.Clean(DirFilePaths[0])
 
-	if _, err := os.Stat(fpath); os.IsNotExist(err) {
-		fmt.Println("file or directory does not exist: " + fpath)
-		return
+	// Check if the paths or files added exist and exit if not
+	for _, f := range DirFilePaths {
+		fpath := filepath.Clean(f)
+
+		if _, err := os.Stat(fpath); os.IsNotExist(err) {
+			fmt.Println("file or directory does not exist: " + fpath)
+			os.Exit(1)
+		}
 	}
 
 	SortBy = strings.ToLower(SortBy)
@@ -330,7 +334,20 @@ func Process() {
 	fileReadContentJobQueue := make(chan *FileJob, FileReadContentJobQueueSize) // Files ready to be processed
 	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)         // Files ready to be summarised
 
-	go walkDirectoryParallel(fpath, fileListQueue)
+	go func() {
+		var wg sync.WaitGroup
+		for _, f := range DirFilePaths {
+			wg.Add(1)
+			fpath := filepath.Clean(f)
+
+			go func() {
+				walkDirectoryParallel(fpath, fileListQueue)
+				wg.Done()
+			}()
+		}
+		wg.Wait()
+		close(fileListQueue)
+	}()
 	go fileReaderWorker(fileListQueue, fileReadContentJobQueue)
 	go fileProcessorWorker(fileReadContentJobQueue, fileSummaryJobQueue)
 

@@ -218,7 +218,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 	}
 
 	wg.Wait()
-	close(output)
+
 	if Debug {
 		printDebug(fmt.Sprintf("milliseconds to walk directory: %d", makeTimestampMilli()-startTime))
 	}

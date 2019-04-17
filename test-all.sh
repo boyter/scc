@@ -28,6 +28,15 @@ else
     echo -e "${GREEN}PASSED invalid option test"
 fi
 
+if ./scc NOTAREALDIRECTORYORFILE > /dev/null ; then
+    echo -e "${RED}================================================="
+    echo -e "FAILED Invalid file/directory should produce error code "
+    echo -e "======================================================="
+    exit
+else
+    echo -e "${GREEN}PASSED invalid file/directory test"
+fi
+
 if ./scc > /dev/null ; then
     echo -e "${GREEN}PASSED no directory specified test"
 else
@@ -114,6 +123,35 @@ else
     exit
 fi
 
+# Multiple directory or file arguments
+if ./scc main.go README.md | grep -q "Go " ; then
+    echo -e "${GREEN}PASSED multiple file argument test 1"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should work with multiple file arguments 1"
+    echo -e "======================================================="
+    exit
+fi
+
+if ./scc main.go README.md | grep -q "Markdown " ; then
+    echo -e "${GREEN}PASSED multiple file argument test 2"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should work with multiple file arguments 2"
+    echo -e "======================================================="
+    exit
+fi
+
+if ./scc processor scripts > /dev/null ; then
+    echo -e "${GREEN}PASSED multiple directory specified test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should run correctly with multiple directory specified"
+    echo -e "================================================="
+    exit
+fi
+
+
 # Try out duplicates
 for i in {1..100}
 do
@@ -128,14 +166,13 @@ do
 done
 echo -e "${GREEN}PASSED duplicates test"
 
-
 # Try out specific languages
 # TODO make this a loop with every example
 if ./scc "examples/language/" | grep -q "Bosque "; then
-    echo -e "${GREEN}PASSED Bosque Language Check"
+    echo -e "${GREEN}PASSED bosque Language Check"
 else
     echo -e "${RED}======================================================="
-    echo -e "FAILED Should be able to find Bosque"
+    echo -e "FAILED Should be able to find bosque"
     echo -e "======================================================="
     exit
 fi
