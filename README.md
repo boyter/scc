@@ -54,7 +54,9 @@ If you are comfortable using Go and have >= 1.10 installed the usual `go get -u 
 
 If you are looking for binaries see [Releases](https://github.com/boyter/scc/releases) for Windows, GNU/Linux and macOS for both i386 and x86_64 bit machines.
 
-If you would like to assist with getting `scc` added into snap/apt/homebrew/chocolatey/etc... please submit a PR or at least raise an issue with instructions.
+A snap install exists https://snapcraft.io/scc thanks to [Ricardo](https://feliciano.tech/). You can run `sudo snap install scc` to install it.
+
+If you would like to assist with getting `scc` added into apt/homebrew/chocolatey/etc... please submit a PR or at least raise an issue with instructions.
 
 ### Pitch
 
