@@ -83,6 +83,7 @@ func TestWalkDirectoryParallel(t *testing.T) {
 
 	inputChan := make(chan *FileJob, 10000)
 	walkDirectoryParallel("../", inputChan)
+	close(inputChan)
 
 	count := 0
 	for range inputChan {
@@ -108,6 +109,7 @@ func TestWalkDirectoryParallelWorksWithSingleInputFile(t *testing.T) {
 
 	inputChan := make(chan *FileJob, 10000)
 	walkDirectoryParallel("file_test.go", inputChan)
+	close(inputChan)
 
 	count := 0
 	for range inputChan {
@@ -133,6 +135,7 @@ func TestWalkDirectoryParallelIgnoresRootTrailingSlash(t *testing.T) {
 
 	inputChan := make(chan *FileJob, 10000)
 	walkDirectoryParallel("file_test.go/", inputChan)
+	close(inputChan)
 
 	count := 0
 	for range inputChan {
