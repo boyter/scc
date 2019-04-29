@@ -31,13 +31,13 @@ For performance see the [Performance](https://github.com/boyter/scc#performance)
 
 Other similar projects,
 
- - https://github.com/Aaronepower/tokei
- - https://github.com/AlDanial/cloc
- - https://www.dwheeler.com/sloccount/
- - https://github.com/cgag/loc
- - https://github.com/hhatto/gocloc/
- - https://github.com/vmchale/polyglot
- - https://gitlab.com/esr/loccount
+ - [cloc](https://github.com/AlDanial/cloc)
+ - [gocloc](https://github.com/hhatto/gocloc)
+ - [loc](https://github.com/cgag/loc)
+ - [loccount](https://gitlab.com/esr/loccount)
+ - [ployglot](https://github.com/vmchale/polyglot)
+ - [sloccount](https://www.dwheeler.com/sloccount/)
+ - [tokei](https://github.com/XAMPPRocky/tokei)
 
 Interesting reading about other code counting projects tokei, loc, polyglot and loccount
 
@@ -148,6 +148,10 @@ Estimated Schedule Effort 29.350958 months
 Estimated People Required 22.250054
 ───────────────────────────────────────────────────────────────────────────────
 ```
+
+Note that you don't have to specify the directory you want to run against. Running `scc` will assume you want to run against the current directory.
+
+You can also run against multiple files or directories `scc directory1 directory2 file1 file2` with the results aggregated in the output.
 
 ### Interesting Use Cases
 
