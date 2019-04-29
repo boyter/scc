@@ -251,16 +251,16 @@ scc is pretty well tested with many unit, integration and benchmarks to ensure t
 Run go build for windows and linux then the following in linux, keep in mind need to update the version
 
 ```
-GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.3.0-x86_64-apple-darwin.zip scc
-GOOS=darwin GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.3.0-i386-apple-darwin.zip scc
-GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.3.0-x86_64-pc-windows.zip scc.exe
-GOOS=windows GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.3.0-i386-pc-windows.zip scc.exe
-GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.3.0-x86_64-unknown-linux.zip scc
-GOOS=linux GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.3.0-i386-unknown-linux.zip scc
+GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.4.0-x86_64-apple-darwin.zip scc
+GOOS=darwin GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.4.0-i386-apple-darwin.zip scc
+GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.4.0-x86_64-pc-windows.zip scc.exe
+GOOS=windows GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.4.0-i386-pc-windows.zip scc.exe
+GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.4.0-x86_64-unknown-linux.zip scc
+GOOS=linux GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.4.0-i386-unknown-linux.zip scc
 ```
 
 ### Languages
 
-List of supported languages. The master version of `scc` supports 224 languages at last count. Note that this is always assumed that you built from master, and it might trail behind what is actually supported. To see what your version of `scc` supports run `scc --languages`
+List of supported languages. The master version of `scc` supports 225 languages at last count. Note that this is always assumed that you built from master, and it might trail behind what is actually supported. To see what your version of `scc` supports run `scc --languages`
 
 [Click here to view all languages supported by master](LANGUAGES.md)
