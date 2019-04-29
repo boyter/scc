@@ -177,6 +177,16 @@ else
     exit
 fi
 
+if ./scc "examples/language/" | grep -q "Flow9 "; then
+    echo -e "${GREEN}PASSED flow9 Language Check"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should be able to find flow9"
+    echo -e "======================================================="
+    exit
+fi
+## END TODO
+
 echo -e "${NC}Cleaning up..."
 rm ./scc
 

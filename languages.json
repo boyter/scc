@@ -1959,6 +1959,43 @@
       ]
     ]
   },
+  "Flow9": {
+    "complexitychecks": [
+      "if ",
+      "if(",
+      "else ",
+      "else{",
+      "fori ",
+      "fori(",
+      "switch ",
+      "switch(",
+      "fold ",
+      "fold(",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== ",
+      "|> "
+    ],
+    "extensions": [
+      "flow"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
+  },
   "Forth": {
     "complexitychecks": [
       "for ",
