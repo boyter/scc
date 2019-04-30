@@ -2,79 +2,42 @@
 
 
 [[projects]]
-  branch = "master"
-  digest = "1:a43533baccdb3c8c2b849c932d70f56df8e2b83c6861c529dee8a031d69fa3cc"
-  name = "github.com/MichaelTJones/walk"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "4748e29d5718c2df4028a6543edf86fd8cc0f881"
-
-[[projects]]
-  branch = "master"
-  digest = "1:67d0b50be0549e610017cb91e0b0b745ec0cad7c613bc8e18ff2d1c1fc8825a7"
-  name = "github.com/edsrzf/mmap-go"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "0bce6a6887123b67a60366d2c9fe2dfb74289d2e"
-
-[[projects]]
-  branch = "master"
-  digest = "1:8c7be11930ea680b5f59a9605bcd7c3432241c771609555b158062d1a08687a4"
-  name = "github.com/iafan/cwalk"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "4c301c02b9f45b8589be22ceac59cf24eeddad63"
-
-[[projects]]
-  digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
-  pruneopts = "UT"
   revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
   version = "v1.0"
 
 [[projects]]
-  digest = "1:d395d2621c61bdbcaf62fb749d90ec55a51d112329e653aeca87fbd1075723aa"
   name = "github.com/karrick/godirwalk"
   packages = ["."]
-  pruneopts = "UT"
   revision = "2de2192f9e35ce981c152a873ed943b93b79ced4"
   version = "v1.7.5"
 
 [[projects]]
   branch = "master"
-  digest = "1:e7a1af77ee190b4c4558142e769a6ab5df14e9f5768119f630128cff9060df54"
   name = "github.com/monochromegane/go-gitignore"
   packages = ["."]
-  pruneopts = "UT"
   revision = "38717d0a108ca0e5af632cd6845ca77d45b50729"
 
 [[projects]]
-  digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
   name = "github.com/pkg/errors"
   packages = ["."]
-  pruneopts = "UT"
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
 
 [[projects]]
-  digest = "1:645cabccbb4fa8aab25a956cbcbdf6a6845ca736b2c64e197ca7cbb9d210b939"
   name = "github.com/spf13/cobra"
   packages = ["."]
-  pruneopts = "UT"
   revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
   version = "v0.0.3"
 
 [[projects]]
-  digest = "1:c1b1102241e7f645bc8e0c22ae352e8f0dc6484b6cb4d132fa9f24174e0119e2"
   name = "github.com/spf13/pflag"
   packages = ["."]
-  pruneopts = "UT"
   revision = "298182f68c66c05229eb03ac171abe6e309ee79a"
   version = "v1.0.3"
 
 [[projects]]
-  digest = "1:b154eb17b54cec56332bb76d6b5cf1b23f96beaf19468d0da5e94fc737a9093d"
   name = "golang.org/x/text"
   packages = [
     "feature/plural",
@@ -88,24 +51,14 @@
     "language",
     "message",
     "message/catalog",
-    "unicode/cldr",
+    "unicode/cldr"
   ]
-  pruneopts = "UT"
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  input-imports = [
-    "github.com/MichaelTJones/walk",
-    "github.com/edsrzf/mmap-go",
-    "github.com/iafan/cwalk",
-    "github.com/karrick/godirwalk",
-    "github.com/monochromegane/go-gitignore",
-    "github.com/spf13/cobra",
-    "golang.org/x/text/language",
-    "golang.org/x/text/message",
-  ]
+  inputs-digest = "9d144105a69f02809dbc8994ee559714e3d228e17d49a4624a36f708770ba469"
   solver-name = "gps-cdcl"
   solver-version = 1
