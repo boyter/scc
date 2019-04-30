@@ -104,11 +104,11 @@ func main() {
 		false,
 		"remove duplicate files from stats and output",
 	)
-	flags.StringVarP(
+	flags.StringArrayVarP(
 		&processor.Exclude,
 		"not-match",
 		"M",
-		"",
+		[]string{},
 		"ignore files and directories matching regular expression",
 	)
 	flags.StringVarP(
