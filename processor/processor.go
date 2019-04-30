@@ -50,7 +50,7 @@ var DisableCheckBinary = false
 var SortBy = ""
 
 // Exclude is a regular expression which is used to exclude files from being processed
-var Exclude = ""
+var Exclude = []string{}
 
 // Format sets the output format of the formatter
 var Format = ""

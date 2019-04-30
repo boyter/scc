@@ -101,10 +101,10 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 
 	resetGc := false
 
-	var regex *regexp.Regexp
+	var excludes []*regexp.Regexp
 
-	if Exclude != "" {
-		regex = regexp.MustCompile(Exclude)
+	for _, exclude := range Exclude {
+		excludes = append(excludes, regexp.MustCompile(exclude))
 	}
 
 	var fpath string
@@ -124,12 +124,13 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 				}
 			}
 
-			if Exclude != "" {
-				if regex.Match([]byte(f.Name())) {
+			for _, exclude := range excludes {
+				if exclude.Match([]byte(f.Name())) {
 					if Verbose {
 						printWarn("skipping directory due to match exclude: " + f.Name())
 					}
 					shouldSkip = true
+					break
 				}
 			}
 
@@ -177,12 +178,13 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 				shouldSkip = true
 			}
 
-			if Exclude != "" {
-				if regex.Match([]byte(f.Name())) {
+			for _, exclude := range excludes {
+				if exclude.Match([]byte(f.Name())) {
 					if Verbose {
 						printWarn("skipping file due to match exclude: " + f.Name())
 					}
 					shouldSkip = true
+					break
 				}
 			}
 
@@ -228,9 +230,10 @@ func walkDirectory(toWalk string, blackList []string, extensionLookup map[string
 	extension := ""
 	var filejobs []FileJob
 
-	var regex *regexp.Regexp
-	if Exclude != "" {
-		regex = regexp.MustCompile(Exclude)
+	var excludes []*regexp.Regexp
+
+	for _, exclude := range Exclude {
+		excludes = append(excludes, regexp.MustCompile(exclude))
 	}
 
 	_ = godirwalk.Walk(toWalk, &godirwalk.Options{
@@ -238,8 +241,8 @@ func walkDirectory(toWalk string, blackList []string, extensionLookup map[string
 		Unsorted: true,
 		Callback: func(root string, info *godirwalk.Dirent) error {
 
-			if Exclude != "" {
-				if regex.Match([]byte(info.Name())) {
+			for _, exclude := range excludes {
+				if exclude.Match([]byte(info.Name())) {
 					if Verbose {
 						if info.IsDir() {
 							printWarn("skipping directory due to match exclude: " + root)

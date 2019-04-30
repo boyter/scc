@@ -74,7 +74,7 @@ func TestWalkDirectoryParallel(t *testing.T) {
 	ProcessConstants()
 
 	WhiteListExtensions = []string{"go"}
-	Exclude = "vendor"
+	Exclude = []string{"vendor"}
 	PathBlacklist = []string{"vendor"}
 	Verbose = true
 	Trace = true
@@ -100,7 +100,7 @@ func TestWalkDirectoryParallelWorksWithSingleInputFile(t *testing.T) {
 	ProcessConstants()
 
 	WhiteListExtensions = []string{"go"}
-	Exclude = "vendor"
+	Exclude = []string{"vendor"}
 	PathBlacklist = []string{"vendor"}
 	Verbose = true
 	Trace = true
@@ -126,7 +126,7 @@ func TestWalkDirectoryParallelIgnoresRootTrailingSlash(t *testing.T) {
 	ProcessConstants()
 
 	WhiteListExtensions = []string{"go"}
-	Exclude = "vendor"
+	Exclude = []string{"vendor"}
 	PathBlacklist = []string{"vendor"}
 	Verbose = true
 	Trace = true
@@ -149,7 +149,7 @@ func TestWalkDirectoryParallelIgnoresRootTrailingSlash(t *testing.T) {
 
 func TestWalkDirectory(t *testing.T) {
 	Debug = true
-	Exclude = "test"
+	Exclude = []string{"test"}
 	ProcessConstants()
 	files := walkDirectory(".", []string{}, ExtensionToLanguage)
 
