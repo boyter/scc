@@ -808,6 +808,52 @@ func TestGuessLanguageLanguageEmptyContent(t *testing.T) {
 	}
 }
 
+func TestCountStatsCSharpIgnoreEscape(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "C#",
+	}
+
+	fileJob.Content = []byte(`namespace Ns
+{
+    public class Cls
+    {
+        private const string BasePath = @"a:\";
+
+        [Fact]
+        public void MyTest()
+        {
+            // Arrange.
+            Foo();
+
+            // Act.
+            Bar();
+
+            // Assert.
+            Baz();
+        }
+    }
+}`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 20 {
+		t.Errorf("Expected 20 lines")
+	}
+
+	if fileJob.Code != 14 {
+		t.Errorf("Expected 14 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 3 {
+		t.Errorf("Expected 3 lines got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 3 {
+		t.Errorf("Expected 3 lines got %d", fileJob.Blank)
+	}
+}
+
 //////////////////////////////////////////////////
 // Benchmarks Below
 //////////////////////////////////////////////////
