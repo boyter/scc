@@ -99,11 +99,11 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, en
 		}
 
 		// TODO if the string state entered was a special one we can skip this check
-		//if fileJob.Content[i-1] != '\\' {
+		if fileJob.Content[i-1] != '\\' {
 			if ok, _, _ := stringTrie.Match(fileJob.Content[i:]); ok != 0 {
 				return i, SCode
 			}
-		//}
+		}
 	}
 
 	return index, currentState
@@ -146,7 +146,7 @@ func codeState(
 
 				// TODO if we are in string state then check what sort of string so we know if docstring OR ignoreescape string
 				// TODO need to jump over the end of the match as @" will enter, then exit straight away
-				fmt.Println(">>>>>>", string(fileJob.Content[i-1]), string(fileJob.Content[i]), string(fileJob.Content[i+1]))
+				//fmt.Println(">>>>>>", string(fileJob.Content[i-1]), string(fileJob.Content[i]), string(fileJob.Content[i+1]))
 
 				currentState = SString
 				return i, currentState, endString, endComments
@@ -242,9 +242,14 @@ func blankState(
 		// TODO But was it a special state which means we should ignore \ further on?
 		// TODO if we are in string state then check what sort of string so we know if docstring OR ignoreescape string
 		// TODO need to jump over the end of the match as @" will enter, then exit straight away
-		fmt.Println(">>>>>>", string(fileJob.Content[index]), string(fileJob.Content[index+1]))
 
-		// loop over the string states and if we have the special flags, then set things
+		// loop over the string states and if we have the special flag match, and if so we need to ensure we can handle them
+		for i := 0; i < len(langFeatures.Quotes); i++ {
+			if langFeatures.Quotes[i].DocString || langFeatures.Quotes[i].IgnoreEscape {
+				// If so we need to check if where we are falls into these conditions
+				fmt.Println(">>>>>>", string(fileJob.Content[index]), string(fileJob.Content[index+1]))
+			}
+		}
 
 		currentState = SString
 		return index, currentState, endString, endComments

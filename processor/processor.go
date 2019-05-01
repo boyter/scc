@@ -235,6 +235,7 @@ func processLanguageFeature(name string, value Language) {
 		StringCheckMask:       stringMask,
 		ProcessMask:           processMask,
 		Keywords:              value.Keywords,
+		Quotes:                value.Quotes,
 	}
 	LanguageFeaturesMutex.Unlock()
 }

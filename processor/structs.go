@@ -47,6 +47,7 @@ type LanguageFeature struct {
 	StringCheckMask       byte
 	ProcessMask           byte
 	Keywords              []string
+	Quotes                []Quote
 }
 
 // FileJobCallback is an interface that FileJobs can implement to get a per line callback with the line type
