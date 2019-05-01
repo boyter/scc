@@ -166,6 +166,18 @@ do
 done
 echo -e "${GREEN}PASSED duplicates test"
 
+# Check for multiple regex via https://github.com/andyfitzgerald
+a=$(./scc --not-match="(.*\.hex|.*\.d|.*\.o|.*\.csv|^(./)?[0-9]{8}_.*)" . | grep Estimated | md5sum)
+b=$(./scc --not-match=".*\.hex" --not-match=".*\.d" --not-match=".*\.o" --not-match=".*\.csv" --not-match="^(./)?[0-9]{8}_.*" . | grep Estimated | md5sum)
+if [ "$a" == "$b" ]; then
+    echo -e "${GREEN}PASSED multiple regex test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED multiple regex test"
+    echo -e "================================================="
+    exit
+fi
+
 # Try out specific languages
 # TODO make this a loop with every example
 if ./scc "examples/language/" | grep -q "Bosque "; then
