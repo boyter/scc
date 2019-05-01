@@ -808,6 +808,60 @@ func TestGuessLanguageLanguageEmptyContent(t *testing.T) {
 	}
 }
 
+func TestEdgeCase(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "C#",
+	}
+
+	// For C# we can enter a string using @" or " but if we do the former,
+	// and we don't skip over the full length we exit the string in this case
+	// which means we pick up the /* and the count is incorrect
+	fileJob.Content = []byte(`@"\ /*"
+a`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 2 {
+		t.Errorf("Expected 2 lines")
+	}
+
+	if fileJob.Code != 2 {
+		t.Errorf("Expected 2 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Comment)
+	}
+}
+
+func TestEdgeCaseOther(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "C#",
+	}
+
+	// For C# we can enter a string using @" or " but if we do the former,
+	// and we don't skip over the full length we exit the string in this case
+	// which means we pick up the /* and the count is incorrect
+	fileJob.Content = []byte(`@"C:\" /*
+a */`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 2 {
+		t.Errorf("Expected 2 lines")
+	}
+
+	if fileJob.Code != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Comment)
+	}
+}
+
 func TestCountStatsCSharpIgnoreEscape(t *testing.T) {
 	ProcessConstants()
 	fileJob := FileJob{

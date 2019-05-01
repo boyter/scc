@@ -98,11 +98,12 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, en
 			return i, currentState
 		}
 
-		if fileJob.Content[i-1] != '\\' {
+		// TODO if the string state entered was a special one we can skip this check
+		//if fileJob.Content[i-1] != '\\' {
 			if ok, _, _ := stringTrie.Match(fileJob.Content[i:]); ok != 0 {
 				return i, SCode
 			}
-		}
+		//}
 	}
 
 	return index, currentState
@@ -233,6 +234,7 @@ func blankState(
 		return index, currentState, endString, endComments
 
 	case TString:
+		// TODO But was it a special state which means we should ignore \ further on?
 		currentState = SString
 		return index, currentState, endString, endComments
 
