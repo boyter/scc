@@ -143,6 +143,11 @@ func codeState(
 
 			switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[i:]); tokenType {
 			case TString:
+
+				// TODO if we are in string state then check what sort of string so we know if docstring OR ignoreescape string
+				// TODO need to jump over the end of the match as @" will enter, then exit straight away
+				fmt.Println(">>>>>>", string(fileJob.Content[i-1]), string(fileJob.Content[i]), string(fileJob.Content[i+1]))
+
 				currentState = SString
 				return i, currentState, endString, endComments
 
@@ -235,6 +240,12 @@ func blankState(
 
 	case TString:
 		// TODO But was it a special state which means we should ignore \ further on?
+		// TODO if we are in string state then check what sort of string so we know if docstring OR ignoreescape string
+		// TODO need to jump over the end of the match as @" will enter, then exit straight away
+		fmt.Println(">>>>>>", string(fileJob.Content[index]), string(fileJob.Content[index+1]))
+
+		// loop over the string states and if we have the special flags, then set things
+
 		currentState = SString
 		return index, currentState, endString, endComments
 
