@@ -301,7 +301,18 @@ func CountStats(fileJob *FileJob) {
 		digest = md5.New()
 	}
 
-	for index := 0; index < len(fileJob.Content); index++ {
+	// Index starts at 0 unless we have BOM in which case we want to skip it
+	// Check if BOM exists and if so remove it
+	start := 0
+
+	if fileJob.Bytes >= 3 {
+		if fileJob.Content[0] == 239 && fileJob.Content[1] == 187 && fileJob.Content[2] == 191 {
+			// BOM exists set the start to skip over it
+			start = 3
+		}
+	}
+
+	for index := start; index < len(fileJob.Content); index++ {
 
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
