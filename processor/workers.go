@@ -247,7 +247,17 @@ func blankState(
 		for i := 0; i < len(langFeatures.Quotes); i++ {
 			if langFeatures.Quotes[i].DocString || langFeatures.Quotes[i].IgnoreEscape {
 				// If so we need to check if where we are falls into these conditions
-				fmt.Println(">>>>>>", string(fileJob.Content[index]), string(fileJob.Content[index+1]))
+				isMatch := true
+				for j := 0; j < len(langFeatures.Quotes[i].Start); j++ {
+					fmt.Println(string(langFeatures.Quotes[i].Start[j]))
+					if fileJob.Content[index + j] != langFeatures.Quotes[i].Start[j] {
+						isMatch = false
+					}
+				}
+
+				// If
+
+				fmt.Println(">>>>>>", isMatch, langFeatures.Quotes[i].Start, string(fileJob.Content[index]), string(fileJob.Content[index+1]))
 			}
 		}
 
