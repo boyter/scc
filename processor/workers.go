@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"bytes"
 	"crypto/md5"
 	"fmt"
 	"hash"
@@ -32,6 +33,25 @@ const (
 	LINE_CODE
 	LINE_COMMENT
 )
+
+// Taken from Thttps://en.wikipedia.org/wiki/Byte_order_mark#Byte_order_marks_by_encoding
+var ByteOrderMarks = [][]byte{
+	{239, 187, 191},       // UTF-8 make this first as it is likely to be the most common case
+	{254, 255},            // UTF-16 BE
+	{255, 254},            // UTF-16 LE
+	{0, 0, 254, 255},      // UTF-32 BE
+	{255, 254, 0, 0},      // UTF-32 LE
+	{43, 47, 118, 56},     // UTF-7
+	{43, 47, 118, 57},     // UTF-7
+	{43, 47, 118, 43},     // UTF-7
+	{43, 47, 118, 47},     // UTF-7
+	{43, 47, 118, 56, 45}, // UTF-7
+	{247, 100, 76},        // UTF-1
+	{221, 115, 102, 115},  // UTF-EBCDIC
+	{14, 254, 255},        // SCSU
+	{251, 238, 40},        // BOCU-1
+	{132, 49, 149, 51},    // GB-18030
+}
 
 func checkForMatchSingle(currentByte byte, index int, endPoint int, matches []byte, fileJob *FileJob) bool {
 	potentialMatch := true
@@ -302,13 +322,15 @@ func CountStats(fileJob *FileJob) {
 	}
 
 	// Index starts at 0 unless we have BOM in which case we want to skip it
-	// Check if BOM exists and if so remove it
+	// Check if BOM exists and if so skip ahead enough bytes to ignore it
 	start := 0
+	for _, v := range ByteOrderMarks {
+		if bytes.HasPrefix(fileJob.Content, v) {
+			start = len(v)
 
-	if fileJob.Bytes >= 3 {
-		if fileJob.Content[0] == 239 && fileJob.Content[1] == 187 && fileJob.Content[2] == 191 {
-			// BOM exists set the start to skip over it
-			start = 3
+			if Verbose {
+				printWarn(fmt.Sprintf("BOM found for file %s skipping %d bytes", fileJob.Filename, len(v)))
+			}
 		}
 	}
 
