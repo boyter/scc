@@ -6,11 +6,14 @@ import "testing"
 // Turns out the above is due to BOM being present for that file
 func TestCountStatsIssue72(t *testing.T) {
 	ProcessConstants()
-	fileJob := FileJob{
-		Language: "C#",
-	}
 
-	fileJob.Content = []byte(`   // Comment 1
+	// Try out every since BOM that we are aware of
+	for _, v := range ByteOrderMarks {
+		fileJob := FileJob{
+			Language: "C#",
+		}
+
+		fileJob.Content = append(v, []byte(`// Comment 1
 namespace Baz
 {
     using System;
@@ -23,28 +26,24 @@ namespace Baz
           throw new NotImplementedException();
         }
     }
-}`)
+}`)...)
 
-	// Set the BOM
-	fileJob.Content[0] = 239
-	fileJob.Content[1] = 187
-	fileJob.Content[2] = 191
+		CountStats(&fileJob)
 
-	CountStats(&fileJob)
+		if fileJob.Lines != 14 {
+			t.Errorf("Expected 14 lines")
+		}
 
-	if fileJob.Lines != 14 {
-		t.Errorf("Expected 14 lines")
-	}
+		if fileJob.Code != 11 {
+			t.Errorf("Expected 11 lines got %d", fileJob.Code)
+		}
 
-	if fileJob.Code != 11 {
-		t.Errorf("Expected 11 lines got %d", fileJob.Code)
-	}
+		if fileJob.Comment != 2 {
+			t.Errorf("Expected 2 lines got %d", fileJob.Comment)
+		}
 
-	if fileJob.Comment != 2 {
-		t.Errorf("Expected 2 lines got %d", fileJob.Comment)
-	}
-
-	if fileJob.Blank != 1 {
-		t.Errorf("Expected 1 lines got %d", fileJob.Blank)
+		if fileJob.Blank != 1 {
+			t.Errorf("Expected 1 lines got %d", fileJob.Blank)
+		}
 	}
 }
