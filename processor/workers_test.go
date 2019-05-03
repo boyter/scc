@@ -809,6 +809,7 @@ func TestGuessLanguageLanguageEmptyContent(t *testing.T) {
 }
 
 func TestCheckBomSkip(t *testing.T) {
+	Verbose = true
 	for _, v := range ByteOrderMarks {
 		fileJob := &FileJob{
 			Content: v,
