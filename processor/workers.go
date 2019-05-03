@@ -34,7 +34,7 @@ const (
 	LINE_COMMENT
 )
 
-// Taken from Thttps://en.wikipedia.org/wiki/Byte_order_mark#Byte_order_marks_by_encoding
+// Taken from https://en.wikipedia.org/wiki/Byte_order_mark#Byte_order_marks_by_encoding
 var ByteOrderMarks = [][]byte{
 	{239, 187, 191},       // UTF-8 make this first as it is likely to be the most common case
 	{254, 255},            // UTF-16 BE
