@@ -321,20 +321,7 @@ func CountStats(fileJob *FileJob) {
 		digest = md5.New()
 	}
 
-	// Index starts at 0 unless we have BOM in which case we want to skip it
-	// Check if BOM exists and if so skip ahead enough bytes to ignore it
-	start := 0
-	for _, v := range ByteOrderMarks {
-		if bytes.HasPrefix(fileJob.Content, v) {
-			start = len(v)
-
-			if Verbose {
-				printWarn(fmt.Sprintf("BOM found for file %s skipping %d bytes", fileJob.Filename, len(v)))
-			}
-		}
-	}
-
-	for index := start; index < len(fileJob.Content); index++ {
+	for index := checkBomSkip(fileJob); index < len(fileJob.Content); index++ {
 
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
@@ -430,6 +417,24 @@ func CountStats(fileJob *FileJob) {
 
 	// Save memory by unsetting the content as we no longer require it
 	fileJob.Content = nil
+}
+
+// Check if we have any Byte Order Marks (BOM) in front of the file and if so return
+// the count so we can skip them to avoid a potential miscount of comments if they
+// start on the first line of the file
+func checkBomSkip(fileJob *FileJob) int {
+	start := 0
+	for _, v := range ByteOrderMarks {
+		if bytes.HasPrefix(fileJob.Content, v) {
+			start = len(v)
+
+			if Verbose {
+				printWarn(fmt.Sprintf("BOM found for file %s skipping %d bytes", fileJob.Filename, start))
+			}
+		}
+	}
+
+	return start
 }
 
 type languageGuess struct {
