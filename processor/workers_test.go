@@ -808,6 +808,20 @@ func TestGuessLanguageLanguageEmptyContent(t *testing.T) {
 	}
 }
 
+func TestCheckBomSkip(t *testing.T) {
+	for _, v := range ByteOrderMarks {
+		fileJob := &FileJob{
+			Content: v,
+		}
+
+		skip := checkBomSkip(fileJob)
+
+		if skip != len(v) {
+			t.Errorf("Expected skip length to match %d got %d", len(v), skip)
+		}
+	}
+}
+
 //////////////////////////////////////////////////
 // Benchmarks Below
 //////////////////////////////////////////////////
