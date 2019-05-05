@@ -808,6 +808,38 @@ func TestGuessLanguageLanguageEmptyContent(t *testing.T) {
 	}
 }
 
+// Captures checking if a quote is prefixed by \ such as in
+// a char which should otherwise trigger the string state which is incorrect
+func TestCountStatsIssue73(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Java",
+	}
+
+	fileJob.Content = []byte(`'\"'{
+code
+
+`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 3 {
+		t.Errorf("Expected 3 lines")
+	}
+
+	if fileJob.Code != 2 {
+		t.Errorf("Expected 2 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Blank)
+	}
+}
+
 //////////////////////////////////////////////////
 // Benchmarks Below
 //////////////////////////////////////////////////
