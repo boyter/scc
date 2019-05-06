@@ -26,6 +26,10 @@ func TestPrintWarn(t *testing.T) {
 	printWarn("Testing print warn")
 }
 
+func TestPrintError(t *testing.T) {
+	printError("Testing print error")
+}
+
 func TestGetFormattedTime(t *testing.T) {
 	res := getFormattedTime()
 
