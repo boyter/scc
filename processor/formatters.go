@@ -7,6 +7,7 @@ import (
 	"fmt"
 	glang "golang.org/x/text/language"
 	gmessage "golang.org/x/text/message"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -527,4 +528,9 @@ func printTrace(msg string) {
 	if Trace {
 		fmt.Println(fmt.Sprintf("TRACE %s: %s", getFormattedTime(), msg))
 	}
+}
+
+// Used when explicitly for os.exit output when crashing out
+func printError(msg string) {
+	_, _ = fmt.Fprintf(os.Stderr, "ERROR %s: %s", getFormattedTime(), msg)
 }
