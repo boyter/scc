@@ -870,23 +870,23 @@ func TestCountStatsCSharpIgnoreEscape(t *testing.T) {
 
 	fileJob.Content = []byte(`namespace Ns
 {
-    public class Cls
-    {
-        private const string BasePath = @"a:\";
+   public class Cls
+   {
+       private const string BasePath = @"a:\";
 
-        [Fact]
-        public void MyTest()
-        {
-            // Arrange.
-            Foo();
+       [Fact]
+       public void MyTest()
+       {
+           // Arrange.
+           Foo();
 
-            // Act.
-            Bar();
+           // Act.
+           Bar();
 
-            // Assert.
-            Baz();
-        }
-    }
+           // Assert.
+           Baz();
+       }
+   }
 }`)
 
 	CountStats(&fileJob)
