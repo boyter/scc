@@ -125,18 +125,18 @@ func codeState(
 	endComments [][]byte,
 	langFeatures LanguageFeature,
 	digest *hash.Hash,
-) (int, int64, []byte, [][]byte) {
+) (int, int64, []byte, [][]byte, bool) {
 	for i := index; i < endPoint; i++ {
 		curByte := fileJob.Content[i]
 		index = i
 
 		if curByte == '\n' {
-			return i, currentState, endString, endComments
+			return i, currentState, endString, endComments, false
 		}
 
 		if isBinary(i, curByte) {
 			fileJob.Binary = true
-			return i, currentState, endString, endComments
+			return i, currentState, endString, endComments, false
 		}
 
 		if shouldProcess(curByte, langFeatures.ProcessMask) {
@@ -153,21 +153,40 @@ func codeState(
 
 				// TODO if we are in string state then check what sort of string so we know if docstring OR ignoreescape string
 				// TODO need to jump over the end of the match as @" will enter, then exit straight away
-				//fmt.Println(">>>>>>", string(fileJob.Content[i-1]), string(fileJob.Content[i]), string(fileJob.Content[i+1]))
+				ignoreEscape := false
+
+				// loop over the string states and if we have the special flag match, and if so we need to ensure we can handle them
+				for k := 0; k < len(langFeatures.Quotes); k++ {
+					if langFeatures.Quotes[k].DocString || langFeatures.Quotes[k].IgnoreEscape {
+						// If so we need to check if where we are falls into these conditions
+						isMatch := true
+						for j := 0; j < len(langFeatures.Quotes[k].Start); j++ {
+							if fileJob.Content[index+j] != langFeatures.Quotes[k].Start[j] {
+								isMatch = false
+							}
+						}
+
+						// If we have a match then jump ahead enough so we don't pick it up again for cases like @"
+						if isMatch {
+							ignoreEscape = true
+							i = i + len(langFeatures.Quotes[k].Start)
+						}
+					}
+				}
 
 				currentState = SString
-				return i, currentState, endString, endComments
+				return i, currentState, endString, endComments, ignoreEscape
 
 			case TSlcomment:
 				currentState = SCommentCode
-				return i, currentState, endString, endComments
+				return i, currentState, endString, endComments, false
 
 			case TMlcomment:
 				if langFeatures.Nested || len(endComments) == 0 {
 					endComments = append(endComments, endString)
 					currentState = SMulticommentCode
 					i += offsetJump - 1
-					return i, currentState, endString, endComments
+					return i, currentState, endString, endComments, false
 				}
 
 			case TComplexity:
@@ -178,7 +197,7 @@ func codeState(
 		}
 	}
 
-	return index, currentState, endString, endComments
+	return index, currentState, endString, endComments, false
 }
 
 func commentState(fileJob *FileJob, index int, endPoint int, currentState int64, endComments [][]byte, endString []byte, langFeatures LanguageFeature) (int, int64, []byte, [][]byte) {
@@ -350,7 +369,7 @@ func CountStats(fileJob *FileJob) {
 
 			switch currentState {
 			case SCode:
-				index, currentState, endString, endComments = codeState(
+				index, currentState, endString, endComments, ignoreEscape = codeState(
 					fileJob,
 					index,
 					endPoint,
