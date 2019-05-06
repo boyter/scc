@@ -80,7 +80,15 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 	var all []os.FileInfo
 	// clean path including trailing slashes
 	root = filepath.Clean(root)
-	target, _ := os.Lstat(root)
+	target, err := os.Lstat(root)
+
+	if err != nil {
+		// This error is non-recoverable due to user input so hard crash
+		printError(err.Error())
+		os.Exit(1)
+		return
+	}
+
 	if !target.IsDir() {
 		// create an array with a single FileInfo
 		all = append(all, target)
