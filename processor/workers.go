@@ -35,8 +35,8 @@ const (
 )
 
 // Taken from https://en.wikipedia.org/wiki/Byte_order_mark#Byte_order_marks_by_encoding
+// These indicate that we cannot count the file correctly so we can at least warn the user
 var ByteOrderMarks = [][]byte{
-	{239, 187, 191},       // UTF-8 make this first as it is likely to be the most common case
 	{254, 255},            // UTF-16 BE
 	{255, 254},            // UTF-16 LE
 	{0, 0, 254, 255},      // UTF-32 BE
@@ -419,22 +419,27 @@ func CountStats(fileJob *FileJob) {
 	fileJob.Content = nil
 }
 
-// Check if we have any Byte Order Marks (BOM) in front of the file and if so return
-// the count so we can skip them to avoid a potential miscount of comments if they
-// start on the first line of the file
+// Check if we have any Byte Order Marks (BOM) in front of the file
 func checkBomSkip(fileJob *FileJob) int {
-	start := 0
-	for _, v := range ByteOrderMarks {
-		if bytes.HasPrefix(fileJob.Content, v) {
-			start = len(v)
+	// UTF-8 BOM which if detected we should skip the BOM as we can then count correctly
+	// []byte is UTF-8 BOM taken from https://en.wikipedia.org/wiki/Byte_order_mark#Byte_order_marks_by_encoding
+	if bytes.HasPrefix(fileJob.Content, []byte{239, 187, 191}) {
+		if Verbose {
+			printWarn(fmt.Sprintf("UTF-8 BOM found for file %s skipping 3 bytes", fileJob.Filename))
+		}
+		return 3
+	}
 
-			if Verbose {
-				printWarn(fmt.Sprintf("BOM found for file %s skipping %d bytes", fileJob.Filename, start))
+	// If we have one of the other BOM then we might not be able to count correctly so if verbose let the user know
+	if Verbose {
+		for _, v := range ByteOrderMarks {
+			if bytes.HasPrefix(fileJob.Content, v) {
+				printWarn(fmt.Sprintf("BOM found for file %s indicating it is not ASCII/UTF-8 and may be counted incorrectly or ignored as a binary file", fileJob.Filename))
 			}
 		}
 	}
 
-	return start
+	return 0
 }
 
 type languageGuess struct {

@@ -808,6 +808,17 @@ func TestGuessLanguageLanguageEmptyContent(t *testing.T) {
 	}
 }
 
+func TestCheckBomSkipUTF8(t *testing.T) {
+	fileJob := &FileJob{
+		Content: []byte{239, 187, 191}, // UTF-8 BOM
+	}
+
+	skip := checkBomSkip(fileJob)
+	if skip != 3 {
+		t.Errorf("Expected skip length to match 3 got %d", skip)
+	}
+}
+
 func TestCheckBomSkip(t *testing.T) {
 	Verbose = true
 	for _, v := range ByteOrderMarks {
@@ -816,8 +827,7 @@ func TestCheckBomSkip(t *testing.T) {
 		}
 
 		skip := checkBomSkip(fileJob)
-
-		if skip != len(v) {
+		if skip != 0 {
 			t.Errorf("Expected skip length to match %d got %d", len(v), skip)
 		}
 	}
