@@ -830,9 +830,10 @@ func TestCheckBomSkip(t *testing.T) {
 		if skip != 0 {
 			t.Errorf("Expected skip length to match %d got %d", len(v), skip)
 		}
+	}
 }
 
-  // Captures checking if a quote is prefixed by \ such as in
+// Captures checking if a quote is prefixed by \ such as in
 // a char which should otherwise trigger the string state which is incorrect
 func TestCountStatsIssue73(t *testing.T) {
 	ProcessConstants()
