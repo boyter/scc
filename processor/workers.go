@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"bytes"
 	"crypto/md5"
 	"fmt"
 	"hash"
@@ -32,6 +33,25 @@ const (
 	LINE_CODE
 	LINE_COMMENT
 )
+
+// Taken from https://en.wikipedia.org/wiki/Byte_order_mark#Byte_order_marks_by_encoding
+// These indicate that we cannot count the file correctly so we can at least warn the user
+var ByteOrderMarks = [][]byte{
+	{254, 255},            // UTF-16 BE
+	{255, 254},            // UTF-16 LE
+	{0, 0, 254, 255},      // UTF-32 BE
+	{255, 254, 0, 0},      // UTF-32 LE
+	{43, 47, 118, 56},     // UTF-7
+	{43, 47, 118, 57},     // UTF-7
+	{43, 47, 118, 43},     // UTF-7
+	{43, 47, 118, 47},     // UTF-7
+	{43, 47, 118, 56, 45}, // UTF-7
+	{247, 100, 76},        // UTF-1
+	{221, 115, 102, 115},  // UTF-EBCDIC
+	{14, 254, 255},        // SCSU
+	{251, 238, 40},        // BOCU-1
+	{132, 49, 149, 51},    // GB-18030
+}
 
 func checkForMatchSingle(currentByte byte, index int, endPoint int, matches []byte, fileJob *FileJob) bool {
 	potentialMatch := true
@@ -150,7 +170,6 @@ func codeState(
 
 			switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[i:]); tokenType {
 			case TString:
-
 				// TODO if we are in string state then check what sort of string so we know if docstring OR ignoreescape string
 				// TODO need to jump over the end of the match as @" will enter, then exit straight away
 				ignoreEscape := false
@@ -174,7 +193,13 @@ func codeState(
 					}
 				}
 
-				currentState = SString
+				// It is safe to -1 here as to enter the code state we need to have
+				// transitioned from blank to here hence i should always be >= 1
+				// This check is to ensure we aren't in a character declaration
+				if fileJob.Content[i-1] != '\\' {
+					currentState = SString
+				}
+
 				return i, currentState, endString, endComments, ignoreEscape
 
 			case TSlcomment:
@@ -359,7 +384,7 @@ func CountStats(fileJob *FileJob) {
 		digest = md5.New()
 	}
 
-	for index := 0; index < len(fileJob.Content); index++ {
+	for index := checkBomSkip(fileJob); index < len(fileJob.Content); index++ {
 
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
@@ -455,6 +480,29 @@ func CountStats(fileJob *FileJob) {
 
 	// Save memory by unsetting the content as we no longer require it
 	fileJob.Content = nil
+}
+
+// Check if we have any Byte Order Marks (BOM) in front of the file
+func checkBomSkip(fileJob *FileJob) int {
+	// UTF-8 BOM which if detected we should skip the BOM as we can then count correctly
+	// []byte is UTF-8 BOM taken from https://en.wikipedia.org/wiki/Byte_order_mark#Byte_order_marks_by_encoding
+	if bytes.HasPrefix(fileJob.Content, []byte{239, 187, 191}) {
+		if Verbose {
+			printWarn(fmt.Sprintf("UTF-8 BOM found for file %s skipping 3 bytes", fileJob.Filename))
+		}
+		return 3
+	}
+
+	// If we have one of the other BOM then we might not be able to count correctly so if verbose let the user know
+	if Verbose {
+		for _, v := range ByteOrderMarks {
+			if bytes.HasPrefix(fileJob.Content, v) {
+				printWarn(fmt.Sprintf("BOM found for file %s indicating it is not ASCII/UTF-8 and may be counted incorrectly or ignored as a binary file", fileJob.Filename))
+			}
+		}
+	}
+
+	return 0
 }
 
 type languageGuess struct {
