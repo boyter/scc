@@ -162,7 +162,12 @@ func codeState(
 
 			switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[i:]); tokenType {
 			case TString:
-				currentState = SString
+				// It is safe to -1 here as to enter the code state we need to have
+				// transitioned from blank to here hence i should always be >= 1
+				// This check is to ensure we aren't in a character declaration
+				if fileJob.Content[i-1] != '\\' {
+					currentState = SString
+				}
 				return i, currentState, endString, endComments
 
 			case TSlcomment:
