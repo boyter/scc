@@ -23,6 +23,17 @@
     "multi_line": [],
     "quotes": []
   },
+  "Bitbucket Pipeline": {
+    "complexitychecks": [],
+    "extensions": [
+      "bitbucket-pipelines.yml"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [],
+    "quotes": []
+  },
   "ASP": {
     "complexitychecks": [
       "for ",
