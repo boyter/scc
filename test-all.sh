@@ -197,6 +197,15 @@ else
     echo -e "======================================================="
     exit
 fi
+
+if ./scc "examples/language/" | grep -q "Bitbucket Pipeline "; then
+    echo -e "${GREEN}PASSED Bitbucket Pipeline Language Check"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should be able to find Bitbucket Pipeline"
+    echo -e "======================================================="
+    exit
+fi
 ## END TODO
 
 echo -e "${NC}Cleaning up..."

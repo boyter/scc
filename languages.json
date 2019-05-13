@@ -535,6 +535,17 @@
       }
     ]
   },
+  "Bitbucket Pipeline": {
+    "complexitychecks": [],
+    "extensions": [
+      "bitbucket-pipelines.yml"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [],
+    "quotes": []
+  },
   "Boo": {
     "complexitychecks": [
       "for ",
@@ -760,13 +771,13 @@
     ],
     "quotes": [
       {
-        "start": "@\"",
         "end": "\"",
-        "ignoreEscape": true
+        "ignoreEscape": true,
+        "start": "@\""
       },
       {
-        "start": "\"",
-        "end": "\""
+        "end": "\"",
+        "start": "\""
       }
     ]
   },
@@ -4483,14 +4494,14 @@
         "start": "'"
       },
       {
+        "docString": true,
         "end": "\\\"\\\"\\\"",
-        "start": "\\\"\\\"\\\"",
-        "docString": true
+        "start": "\\\"\\\"\\\""
       },
       {
+        "docString": true,
         "end": "'''",
-        "start": "'''",
-        "docString": true
+        "start": "'''"
       }
     ]
   },
