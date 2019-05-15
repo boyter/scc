@@ -23,17 +23,6 @@
     "multi_line": [],
     "quotes": []
   },
-  "Bitbucket Pipeline": {
-    "complexitychecks": [],
-    "extensions": [
-      "bitbucket-pipelines.yml"
-    ],
-    "line_comment": [
-      "#"
-    ],
-    "multi_line": [],
-    "quotes": []
-  },
   "ASP": {
     "complexitychecks": [
       "for ",
@@ -545,6 +534,17 @@
         "\""
       ]
     ]
+  },
+  "Bitbucket Pipeline": {
+    "complexitychecks": [],
+    "extensions": [
+      "bitbucket-pipelines.yml"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [],
+    "quotes": []
   },
   "Boo": {
     "complexitychecks": [
@@ -1551,6 +1551,17 @@
       ]
     ]
   },
+  "Docker ignore": {
+    "complexitychecks": [],
+    "extensions": [
+      ".dockerignore"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [],
+    "quotes": []
+  },
   "Dockerfile": {
     "complexitychecks": [
       "for ",
@@ -1566,8 +1577,7 @@
       "== "
     ],
     "extensions": [
-      "dockerfile",
-      "dockerignore"
+      "dockerfile"
     ],
     "line_comment": [
       "#"
