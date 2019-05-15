@@ -206,6 +206,16 @@ else
     echo -e "======================================================="
     exit
 fi
+
+if ./scc "examples/language/" | grep -q "Docker ignore "; then
+    echo -e "${GREEN}PASSED Docker ignore Language Check"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should be able to find Docker ignore"
+    echo -e "======================================================="
+    exit
+fi
+
 ## END TODO
 
 echo -e "${NC}Cleaning up..."

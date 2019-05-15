@@ -1556,6 +1556,17 @@
       }
     ]
   },
+  "Docker ignore": {
+    "complexitychecks": [],
+    "extensions": [
+      ".dockerignore"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [],
+    "quotes": []
+  },
   "Dockerfile": {
     "complexitychecks": [
       "for ",
@@ -1571,8 +1582,7 @@
       "== "
     ],
     "extensions": [
-      "dockerfile",
-      "dockerignore"
+      "dockerfile"
     ],
     "line_comment": [
       "#"
