@@ -1557,7 +1557,8 @@
       ".dockerignore"
     ],
     "line_comment": [
-      "#"
+      "#",
+      "//"
     ],
     "multi_line": [],
     "quotes": []
