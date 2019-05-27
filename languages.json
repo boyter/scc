@@ -4256,6 +4256,44 @@
       ]
     ]
   },
+  "Pony": {
+    "complexitychecks": [
+      "for ",
+      "if ",
+      "match ",
+      "repeat",
+      "while ",
+      "else ",
+      "elseif ",
+      "| ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "pony"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ],
+      [
+        "\\\"\\\"\\\"",
+        "\\\"\\\"\\\""
+      ]
+    ]
+  },
   "Powershell": {
     "complexitychecks": [
       "while ",
