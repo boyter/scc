@@ -4547,6 +4547,43 @@
       ]
     ]
   },
+  "Q#": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "repeat ",
+      "repeat{",
+      "until (",
+      "until(",
+      "if ",
+      "if(",
+      "elif ",
+      "elif{",
+      "else ",
+      "else{",
+      "||| ",
+      "&&& ",
+      "<<<",
+      ">>>",
+      "^^^",
+      "~~~",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "qs"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
+  },
   "QCL": {
     "complexitychecks": [
       "for ",

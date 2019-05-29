@@ -179,42 +179,18 @@ else
 fi
 
 # Try out specific languages
-# TODO make this a loop with every example
-if ./scc "examples/language/" | grep -q "Bosque "; then
-    echo -e "${GREEN}PASSED bosque Language Check"
-else
-    echo -e "${RED}======================================================="
-    echo -e "FAILED Should be able to find bosque"
-    echo -e "======================================================="
-    exit
-fi
+for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# '
+do
+    if ./scc "examples/language/" | grep -q "$i "; then
+        echo -e "${GREEN}PASSED $i Language Check"
+    else
+        echo -e "${RED}======================================================="
+        echo -e "FAILED Should be able to find $i"
+        echo -e "======================================================="
+        exit
+    fi
+done
 
-if ./scc "examples/language/" | grep -q "Flow9 "; then
-    echo -e "${GREEN}PASSED flow9 Language Check"
-else
-    echo -e "${RED}======================================================="
-    echo -e "FAILED Should be able to find flow9"
-    echo -e "======================================================="
-    exit
-fi
-
-if ./scc "examples/language/" | grep -q "Bitbucket Pipeline "; then
-    echo -e "${GREEN}PASSED Bitbucket Pipeline Language Check"
-else
-    echo -e "${RED}======================================================="
-    echo -e "FAILED Should be able to find Bitbucket Pipeline"
-    echo -e "======================================================="
-    exit
-fi
-
-if ./scc "examples/language/" | grep -q "Docker ignore "; then
-    echo -e "${GREEN}PASSED Docker ignore Language Check"
-else
-    echo -e "${RED}======================================================="
-    echo -e "FAILED Should be able to find Docker ignore"
-    echo -e "======================================================="
-    exit
-fi
 ## END TODO
 
 echo -e "${NC}Cleaning up..."
