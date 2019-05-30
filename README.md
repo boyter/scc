@@ -265,6 +265,6 @@ GOOS=linux GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.4.0-i386-unknow
 
 ### Languages
 
-List of supported languages. The master version of `scc` supports 226 languages at last count. Note that this is always assumed that you built from master, and it might trail behind what is actually supported. To see what your version of `scc` supports run `scc --languages`
+List of supported languages. The master version of `scc` supports 230 languages at last count. Note that this is always assumed that you built from master, and it might trail behind what is actually supported. To see what your version of `scc` supports run `scc --languages`
 
 [Click here to view all languages supported by master](LANGUAGES.md)
