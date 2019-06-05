@@ -237,6 +237,33 @@
     "multi_line": [],
     "quotes": []
   },
+  "Alloy": {
+    "complexitychecks": [
+      "implies ",
+      "else ",
+      "for ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== ",
+      "<= ",
+      ">= "
+    ],
+    "extensions": [
+      "als"
+    ],
+    "line_comment": [
+      "//",
+      "--"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": []
+  },
   "Android Interface Definition Language": {
     "complexitychecks": [
       "for ",
