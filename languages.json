@@ -6297,6 +6297,40 @@
       ]
     ]
   },
+  "Wren": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "wren"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "nestedmultiline": true,
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
+  },
   "XAML": {
     "complexitychecks": [
       "for ",
