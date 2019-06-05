@@ -136,51 +136,56 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, en
 	return index, currentState
 }
 
-func codeState(
-	fileJob *FileJob,
-	index int,
-	endPoint int,
-	currentState int64,
-	endString []byte,
-	endComments [][]byte,
-	langFeatures LanguageFeature,
-	digest *hash.Hash,
-) (int, int64, []byte, [][]byte, bool) {
-	for i := index; i < endPoint; i++ {
-		curByte := fileJob.Content[i]
-		index = i
+//func codeState(
+//	fileJob *FileJob,
+//	index int,
+//	endPoint int,
+//	currentState int64,
+//	endString []byte,
+//	endComments [][]byte,
+//	langFeatures LanguageFeature,
+//	digest *hash.Hash,
+//) (int, int64, []byte, [][]byte, bool) {
+func codeState(state statsState) (statsState) {
+	for i := state.index; i < state.endPoint; i++ {
+		curByte := state.fileJob.Content[i]
+		state.index = i
 
 		if curByte == '\n' {
-			return i, currentState, endString, endComments, false
+			//return i, currentState, endString, endComments, false
+			state.ignoreEscape = false
+			return state
 		}
 
 		if isBinary(i, curByte) {
-			fileJob.Binary = true
-			return i, currentState, endString, endComments, false
+			state.fileJob.Binary = true
+			//return i, currentState, endString, endComments, false
+			state.ignoreEscape = false
+			return state
 		}
 
-		if shouldProcess(curByte, langFeatures.ProcessMask) {
+		if shouldProcess(curByte, state.langFeatures.ProcessMask) {
 			if Duplicates {
 				// Technically this is wrong because we skip bytes so this is not a true
 				// hash of the file contents, but for duplicate files it shouldn't matter
 				// as both will skip the same way
-				digestible := []byte{fileJob.Content[index]}
-				(*digest).Write(digestible)
+				digestible := []byte{state.fileJob.Content[state.index]}
+				(*state.digest).Write(digestible)
 			}
 
-			switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[i:]); tokenType {
+			switch tokenType, offsetJump, endString := state.langFeatures.Tokens.Match(state.fileJob.Content[i:]); tokenType {
 			case TString:
 				// TODO if we are in string state then check what sort of string so we know if docstring OR ignoreescape string
 				// TODO need to jump over the end of the match as @" will enter, then exit straight away
 				ignoreEscape := false
 
 				// loop over the string states and if we have the special flag match, and if so we need to ensure we can handle them
-				for k := 0; k < len(langFeatures.Quotes); k++ {
-					if langFeatures.Quotes[k].DocString || langFeatures.Quotes[k].IgnoreEscape {
+				for k := 0; k < len(state.langFeatures.Quotes); k++ {
+					if state.langFeatures.Quotes[k].DocString || state.langFeatures.Quotes[k].IgnoreEscape {
 						// If so we need to check if where we are falls into these conditions
 						isMatch := true
-						for j := 0; j < len(langFeatures.Quotes[k].Start); j++ {
-							if fileJob.Content[index+j] != langFeatures.Quotes[k].Start[j] {
+						for j := 0; j < len(state.langFeatures.Quotes[k].Start); j++ {
+							if state.fileJob.Content[state.index+j] != state.langFeatures.Quotes[k].Start[j] {
 								isMatch = false
 							}
 						}
@@ -188,7 +193,7 @@ func codeState(
 						// If we have a match then jump ahead enough so we don't pick it up again for cases like @"
 						if isMatch {
 							ignoreEscape = true
-							i = i + len(langFeatures.Quotes[k].Start)
+							i = i + len(state.langFeatures.Quotes[k].Start)
 						}
 					}
 				}
@@ -196,33 +201,44 @@ func codeState(
 				// It is safe to -1 here as to enter the code state we need to have
 				// transitioned from blank to here hence i should always be >= 1
 				// This check is to ensure we aren't in a character declaration
-				if fileJob.Content[i-1] != '\\' {
-					currentState = SString
+				if state.fileJob.Content[i-1] != '\\' {
+					state.currentState = SString
 				}
 
-				return i, currentState, endString, endComments, ignoreEscape
+				state.index = i
+				state.ignoreEscape = ignoreEscape
+				//return i, currentState, endString, endComments, ignoreEscape
+				return state
 
 			case TSlcomment:
-				currentState = SCommentCode
-				return i, currentState, endString, endComments, false
+				state.currentState = SCommentCode
+				state.ignoreEscape = false
+				//return i, currentState, endString, endComments, false
+				return state
 
 			case TMlcomment:
-				if langFeatures.Nested || len(endComments) == 0 {
-					endComments = append(endComments, endString)
-					currentState = SMulticommentCode
+				if state.langFeatures.Nested || len(state.endComments) == 0 {
+					state.endComments = append(state.endComments, endString)
+					state.currentState = SMulticommentCode
 					i += offsetJump - 1
-					return i, currentState, endString, endComments, false
+
+					state.ignoreEscape = false
+					state.index = i
+					//return i, currentState, endString, endComments, false
+					return state
 				}
 
 			case TComplexity:
-				if index == 0 || isWhitespace(fileJob.Content[index-1]) {
-					fileJob.Complexity++
+				if state.index == 0 || isWhitespace(state.fileJob.Content[state.index-1]) {
+					state.fileJob.Complexity++
 				}
 			}
 		}
 	}
 
-	return index, currentState, endString, endComments, false
+	//return index, currentState, endString, endComments, false
+	state.ignoreEscape = false
+	return state
 }
 
 func commentState(fileJob *FileJob, index int, endPoint int, currentState int64, endComments [][]byte, endString []byte, langFeatures LanguageFeature) (int, int64, []byte, [][]byte) {
@@ -331,6 +347,20 @@ func blankState(
 	return index, currentState, endString, endComments, false
 }
 
+// Used to hold state when counting stats rather than
+// passing around multiple values and returns
+type statsState struct {
+	fileJob      *FileJob
+	index        int
+	endPoint     int
+	currentState int64
+	endString    []byte
+	endComments  [][]byte
+	langFeatures LanguageFeature
+	digest       *hash.Hash
+	ignoreEscape bool
+}
+
 // CountStats will process the fileJob
 // If the file contains anything even just a newline its line count should be >= 1.
 // If the file has a size of 0 its line count should be 0.
@@ -374,6 +404,16 @@ func CountStats(fileJob *FileJob) {
 	endString := []byte{}
 	ignoreEscape := false
 
+	state := statsState{
+		fileJob: fileJob,
+		endPoint: endPoint,
+		currentState: currentState,
+		endComments: [][]byte{},
+		endString: []byte{},
+		langFeatures: langFeatures,
+		ignoreEscape: ignoreEscape,
+	}
+
 	// For determining duplicates we need the below. The reason for creating
 	// the byte array here is to avoid GC pressure. MD5 is in the standard library
 	// and is fast enough to not warrant murmur3 hashing. No need to be
@@ -382,9 +422,11 @@ func CountStats(fileJob *FileJob) {
 	var digest hash.Hash
 	if Duplicates {
 		digest = md5.New()
+		state.digest = &digest
 	}
 
 	for index := checkBomSkip(fileJob); index < len(fileJob.Content); index++ {
+		state.index = index
 
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
@@ -394,16 +436,23 @@ func CountStats(fileJob *FileJob) {
 
 			switch currentState {
 			case SCode:
-				index, currentState, endString, endComments, ignoreEscape = codeState(
-					fileJob,
-					index,
-					endPoint,
-					currentState,
-					endString,
-					endComments,
-					langFeatures,
-					&digest,
-				)
+				//index, currentState, endString, endComments, ignoreEscape = codeState(
+				//	fileJob,
+				//	index,
+				//	endPoint,
+				//	currentState,
+				//	endString,
+				//	endComments,
+				//	langFeatures,
+				//	&digest,
+				//)
+				state = codeState(state)
+
+				index = state.index
+				currentState = state.currentState
+				endString = state.endString
+				endComments = state.endComments
+				ignoreEscape = state.ignoreEscape
 			case SString:
 				index, currentState = stringState(fileJob, index, endPoint, langFeatures.Strings, endString, currentState, ignoreEscape)
 			case SMulticomment, SMulticommentCode:
