@@ -2116,6 +2116,29 @@
     ],
     "quotes": []
   },
+  "Futhark": {
+    "complexitychecks": [
+      "if ",
+      "else ",
+      "then ",
+      "for ",
+      "loop ",
+      "while ",
+      "|| ",
+      "&& ",
+      "!= ",
+      ">= ",
+      "<= "
+    ],
+    "extensions": [
+      "fut"
+    ],
+    "line_comment": [
+      "--"
+    ],
+    "multi_line": [],
+    "quotes": []
+  },
   "GDScript": {
     "complexitychecks": [
       "for ",
