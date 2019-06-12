@@ -114,12 +114,15 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, en
 	for i := index; i < endPoint; i++ {
 		index = i
 
+		// If we hit a newline, return because we want to count the stats but keep
+		// the current state so we end up back in this loop when the outer
+		// one calls again
 		if fileJob.Content[i] == '\n' {
 			return i, currentState
 		}
 
 		// If we are in a literal string we want to ignore the \ check
-		// TODO this needs to be refactored
+		// TODO this needs to be refactored to use a feature so its not on for everything
 		if ignoreEscape {
 			if ok, _, _ := stringTrie.Match(fileJob.Content[i:]); ok != 0 {
 				return i, SCode
@@ -203,6 +206,10 @@ func codeState(
 				return i, currentState, endString, endComments, ignoreEscape
 
 			case TSlcomment:
+				// TODO why is this missing!?
+				fmt.Println("this ran")
+				fmt.Println(currentState)
+				currentState = SCommentCode
 				return i, currentState, endString, endComments, false
 
 			case TMlcomment:
@@ -259,6 +266,7 @@ func commentState(fileJob *FileJob, index int, endPoint int, currentState int64,
 			if ok, offsetJump, endString := langFeatures.MultiLineComments.Match(fileJob.Content[i:]); ok != 0 {
 				endComments = append(endComments, endString)
 				i += offsetJump - 1
+
 				return i, currentState, endString, endComments
 			}
 		}
@@ -440,7 +448,7 @@ func CountStats(fileJob *FileJob) {
 		// we are currently in
 		if fileJob.Content[index] == '\n' || index >= endPoint {
 			fileJob.Lines++
-			
+
 			switch currentState {
 			case SCode, SString, SCommentCode, SMulticommentCode:
 				fileJob.Code++
