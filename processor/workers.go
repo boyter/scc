@@ -148,6 +148,7 @@ func codeState(
 ) (int, int64, []byte, [][]byte, bool) {
 	for i := index; i < endPoint; i++ {
 		curByte := fileJob.Content[i]
+		index = i
 
 		if curByte == '\n' {
 			return i, currentState, endString, endComments, false
@@ -199,16 +200,10 @@ func codeState(
 					currentState = SString
 				}
 
-				//state.index = i
-				//state.ignoreEscape = ignoreEscape
 				return i, currentState, endString, endComments, ignoreEscape
-				//return state
 
 			case TSlcomment:
-				//state.currentState = SCommentCode
-				//state.ignoreEscape = false
 				return i, currentState, endString, endComments, false
-				//return state
 
 			case TMlcomment:
 				if langFeatures.Nested || len(endComments) == 0 {
@@ -216,10 +211,7 @@ func codeState(
 					currentState = SMulticommentCode
 					i += offsetJump - 1
 
-					//state.ignoreEscape = false
-					//state.index = i
 					return i, currentState, endString, endComments, false
-					//return state
 				}
 
 			case TComplexity:
@@ -231,8 +223,6 @@ func codeState(
 	}
 
 	return index, currentState, endString, endComments, false
-	//state.ignoreEscape = false
-	//return state
 }
 
 func commentState(fileJob *FileJob, index int, endPoint int, currentState int64, endComments [][]byte, endString []byte, langFeatures LanguageFeature) (int, int64, []byte, [][]byte) {
@@ -341,20 +331,6 @@ func blankState(
 	return index, currentState, endString, endComments, false
 }
 
-// Used to hold state when counting stats rather than
-// passing around multiple values and returns
-type statsState struct {
-	fileJob      *FileJob
-	index        int
-	endPoint     int
-	currentState int64
-	endString    []byte
-	endComments  [][]byte
-	langFeatures LanguageFeature
-	digest       *hash.Hash
-	ignoreEscape bool
-}
-
 // CountStats will process the fileJob
 // If the file contains anything even just a newline its line count should be >= 1.
 // If the file has a size of 0 its line count should be 0.
@@ -397,16 +373,6 @@ func CountStats(fileJob *FileJob) {
 	endComments := [][]byte{}
 	endString := []byte{}
 	ignoreEscape := false
-
-	//state := statsState{
-	//	fileJob: fileJob,
-	//	endPoint: endPoint,
-	//	currentState: currentState,
-	//	endComments: [][]byte{},
-	//	endString: []byte{},
-	//	langFeatures: langFeatures,
-	//	ignoreEscape: ignoreEscape,
-	//}
 
 	// For determining duplicates we need the below. The reason for creating
 	// the byte array here is to avoid GC pressure. MD5 is in the standard library
