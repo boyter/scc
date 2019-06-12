@@ -206,9 +206,6 @@ func codeState(
 				return i, currentState, endString, endComments, ignoreEscape
 
 			case TSlcomment:
-				// TODO why is this missing!?
-				fmt.Println("this ran")
-				fmt.Println(currentState)
 				currentState = SCommentCode
 				return i, currentState, endString, endComments, false
 
