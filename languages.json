@@ -1,37 +1,4 @@
 {
-  "Monkey C": {
-    "complexitychecks": [
-      "for ",
-      "for(",
-      "if ",
-      "if(",
-      "switch ",
-      "while ",
-      "else ",
-      "|| ",
-      "&& ",
-      "!= ",
-      "== "
-    ],
-    "extensions": [
-      "mc"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
-    "quotes": [
-      [
-        "\"",
-        "\""
-      ]
-    ]
-  },
   "ABAP": {
     "complexitychecks": [
       "for ",
@@ -3846,6 +3813,39 @@
     ],
     "multi_line": [],
     "quotes": []
+  },
+  "Monkey C": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "mc"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
   },
   "Mustache": {
     "complexitychecks": [
