@@ -1,4 +1,37 @@
 {
+  "Monkey C": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "mc"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
+    ]
+  },
   "ABAP": {
     "complexitychecks": [
       "for ",
@@ -235,6 +268,33 @@
     ],
     "line_comment": [],
     "multi_line": [],
+    "quotes": []
+  },
+  "Alloy": {
+    "complexitychecks": [
+      "implies ",
+      "else ",
+      "for ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== ",
+      "<= ",
+      ">= "
+    ],
+    "extensions": [
+      "als"
+    ],
+    "line_comment": [
+      "//",
+      "--"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
     "quotes": []
   },
   "Android Interface Definition Language": {
@@ -1562,7 +1622,8 @@
       ".dockerignore"
     ],
     "line_comment": [
-      "#"
+      "#",
+      "//"
     ],
     "multi_line": [],
     "quotes": []
@@ -2118,6 +2179,29 @@
         "-->"
       ]
     ],
+    "quotes": []
+  },
+  "Futhark": {
+    "complexitychecks": [
+      "if ",
+      "else ",
+      "then ",
+      "for ",
+      "loop ",
+      "while ",
+      "|| ",
+      "&& ",
+      "!= ",
+      ">= ",
+      "<= "
+    ],
+    "extensions": [
+      "fut"
+    ],
+    "line_comment": [
+      "--"
+    ],
+    "multi_line": [],
     "quotes": []
   },
   "GDScript": {
@@ -4261,6 +4345,44 @@
       }
     ]
   },
+  "Pony": {
+    "complexitychecks": [
+      "for ",
+      "if ",
+      "match ",
+      "repeat",
+      "while ",
+      "else ",
+      "elseif ",
+      "| ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "pony"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ],
+      [
+        "\\\"\\\"\\\"",
+        "\\\"\\\"\\\""
+      ]
+    ]
+  },
   "Powershell": {
     "complexitychecks": [
       "while ",
@@ -4513,6 +4635,43 @@
         "end": "'''",
         "start": "'''"
       }
+    ]
+  },
+  "Q#": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "repeat ",
+      "repeat{",
+      "until (",
+      "until(",
+      "if ",
+      "if(",
+      "elif ",
+      "elif{",
+      "else ",
+      "else{",
+      "||| ",
+      "&&& ",
+      "<<<",
+      ">>>",
+      "^^^",
+      "~~~",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "qs"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [],
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
     ]
   },
   "QCL": {
@@ -6176,6 +6335,40 @@
         "end": "\"",
         "start": "\""
       }
+    ]
+  },
+  "Wren": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "wren"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "nestedmultiline": true,
+    "quotes": [
+      [
+        "\"",
+        "\""
+      ]
     ]
   },
   "XAML": {
