@@ -1,0 +1,20 @@
+_ -> readk + In_n
+readk -> init0 + In_k
+init0 + k -> r + t + init0
+init0 + 0k -> init1
+init1 + t -> k + init1
+init1 + 0t + r + n -> i + loop0
+loop0 + 0n -> Out_r
+loop0 + n -> i + loop1
+loop1 + k -> r + t + loop1
+loop1 + 0k -> loop2
+loop2 + t -> k + loop2
+loop2 + 0t -> loop3
+loop3 + 0i -> loop4
+loop3 + i -> loop5
+loop4 + t -> i + loop4
+loop4 + 0t -> loop3
+loop5 + r -> t + loop3
+loop5 + 0r -> loop6
+loop6 + t -> i + r + loop6
+loop6 + 0t -> i + loop0

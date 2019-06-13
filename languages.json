@@ -228,6 +228,21 @@
     ],
     "quotes": []
   },
+  "Alchemist": {
+    "complexitychecks": [
+      "+",
+      "->",
+      "!"
+    ],
+    "extensions": [
+      "crn"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [],
+    "quotes": []
+  },
   "Alex": {
     "complexitychecks": [],
     "extensions": [
@@ -2369,8 +2384,8 @@
       },
       {
         "end": "`",
-        "start": "`",
-        "ignoreEscape": true
+        "ignoreEscape": true,
+        "start": "`"
       }
     ]
   },
