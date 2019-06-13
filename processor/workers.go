@@ -184,6 +184,7 @@ func codeState(
 						for j := 0; j < len(langFeatures.Quotes[k].Start); j++ {
 							if fileJob.Content[index+j] != langFeatures.Quotes[k].Start[j] {
 								isMatch = false
+								break
 							}
 						}
 
