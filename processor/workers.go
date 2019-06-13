@@ -174,28 +174,7 @@ func codeState(
 			switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[i:]); tokenType {
 			case TString:
 				// If we are in string state then check what sort of string so we know if docstring OR ignoreescape string
-				ignoreEscape := false
-
-				// Loop over the string states and if we have the special flag match, and if so we need to ensure we can handle them
-				for k := 0; k < len(langFeatures.Quotes); k++ {
-					if langFeatures.Quotes[k].DocString || langFeatures.Quotes[k].IgnoreEscape {
-						// If so we need to check if where we are falls into these conditions
-						isMatch := true
-						for j := 0; j < len(langFeatures.Quotes[k].Start); j++ {
-							if fileJob.Content[index+j] != langFeatures.Quotes[k].Start[j] {
-								isMatch = false
-								break
-							}
-						}
-
-						// If we have a match then jump ahead enough so we don't pick it up again for cases like @"
-						if isMatch {
-							// We say we want to ignore escape characters for this occurrence of a string now
-							ignoreEscape = true
-							i = i + len(langFeatures.Quotes[k].Start)
-						}
-					}
-				}
+				i, ignoreEscape := verifyIgnoreEscape(langFeatures, fileJob, index)
 
 				// It is safe to -1 here as to enter the code state we need to have
 				// transitioned from blank to here hence i should always be >= 1
@@ -297,31 +276,7 @@ func blankState(
 		return index, currentState, endString, endComments, false
 
 	case TString:
-		// TODO But was it a special state which means we should ignore \ further on?
-		// TODO if we are in string state then check what sort of string so we know if docstring OR ignoreescape string
-		// TODO need to jump over the end of the match as @" will enter, then exit straight away
-
-		ignoreEscape := false
-
-		// loop over the string states and if we have the special flag match, and if so we need to ensure we can handle them
-		for i := 0; i < len(langFeatures.Quotes); i++ {
-			if langFeatures.Quotes[i].DocString || langFeatures.Quotes[i].IgnoreEscape {
-				// If so we need to check if where we are falls into these conditions
-				isMatch := true
-				for j := 0; j < len(langFeatures.Quotes[i].Start); j++ {
-					if fileJob.Content[index+j] != langFeatures.Quotes[i].Start[j] {
-						isMatch = false
-					}
-				}
-
-				// If we have a match then jump ahead enough so we don't pick it up again for cases like @"
-				if isMatch {
-					ignoreEscape = true
-					index = index + len(langFeatures.Quotes[i].Start)
-				}
-			}
-		}
-
+		index, ignoreEscape := verifyIgnoreEscape(langFeatures, fileJob, index)
 		currentState = SString
 		return index, currentState, endString, endComments, ignoreEscape
 
@@ -336,6 +291,34 @@ func blankState(
 	}
 
 	return index, currentState, endString, endComments, false
+}
+
+// Some languages such as C# have quoted strings like @"\" where no escape character is required
+// this checks if there is one so we can cater for these cases
+func verifyIgnoreEscape(langFeatures LanguageFeature, fileJob *FileJob, index int) (int, bool) {
+	ignoreEscape := false
+
+	// loop over the string states and if we have the special flag match, and if so we need to ensure we can handle them
+	for i := 0; i < len(langFeatures.Quotes); i++ {
+		if langFeatures.Quotes[i].DocString || langFeatures.Quotes[i].IgnoreEscape {
+			// If so we need to check if where we are falls into these conditions
+			isMatch := true
+			for j := 0; j < len(langFeatures.Quotes[i].Start); j++ {
+				if fileJob.Content[index+j] != langFeatures.Quotes[i].Start[j] {
+					isMatch = false
+					break
+				}
+			}
+
+			// If we have a match then jump ahead enough so we don't pick it up again for cases like @"
+			if isMatch {
+				ignoreEscape = true
+				index = index + len(langFeatures.Quotes[i].Start)
+			}
+		}
+	}
+
+	return index, ignoreEscape
 }
 
 // CountStats will process the fileJob
