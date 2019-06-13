@@ -383,7 +383,6 @@ func CountStats(fileJob *FileJob) {
 	// TODO needs to be set via langFeatures.Quotes[0].IgnoreEscape for the matching feature
 	ignoreEscape := false
 
-
 	// For determining duplicates we need the below. The reason for creating
 	// the byte array here is to avoid GC pressure. MD5 is in the standard library
 	// and is fast enough to not warrant murmur3 hashing. No need to be
