@@ -122,13 +122,12 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, en
 		}
 
 		// If we are in a literal string we want to ignore the \ check
-		// TODO this needs to be refactored to use a feature so its not on for everything
 		if ignoreEscape {
 			if ok, _, _ := stringTrie.Match(fileJob.Content[i:]); ok != 0 {
 				return i, SCode
 			}
 		} else {
-			if fileJob.Content[i-1] != '\\' { // ONLY do this check IF we arent checking for special ones
+			if fileJob.Content[i-1] != '\\' { // ONLY do this check IF we aren't checking for special ones
 				if ok, _, _ := stringTrie.Match(fileJob.Content[i:]); ok != 0 {
 					return i, SCode
 				}

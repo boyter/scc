@@ -2369,7 +2369,8 @@
       },
       {
         "end": "`",
-        "start": "`"
+        "start": "`",
+        "ignoreEscape": true
       }
     ]
   },
