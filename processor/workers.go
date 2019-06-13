@@ -173,11 +173,10 @@ func codeState(
 
 			switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[i:]); tokenType {
 			case TString:
-				// TODO if we are in string state then check what sort of string so we know if docstring OR ignoreescape string
-				// TODO need to jump over the end of the match as @" will enter, then exit straight away
+				// If we are in string state then check what sort of string so we know if docstring OR ignoreescape string
 				ignoreEscape := false
 
-				// loop over the string states and if we have the special flag match, and if so we need to ensure we can handle them
+				// Loop over the string states and if we have the special flag match, and if so we need to ensure we can handle them
 				for k := 0; k < len(langFeatures.Quotes); k++ {
 					if langFeatures.Quotes[k].DocString || langFeatures.Quotes[k].IgnoreEscape {
 						// If so we need to check if where we are falls into these conditions
@@ -190,6 +189,7 @@ func codeState(
 
 						// If we have a match then jump ahead enough so we don't pick it up again for cases like @"
 						if isMatch {
+							// We say we want to ignore escape characters for this occurrence of a string now
 							ignoreEscape = true
 							i = i + len(langFeatures.Quotes[k].Start)
 						}
@@ -199,6 +199,7 @@ func codeState(
 				// It is safe to -1 here as to enter the code state we need to have
 				// transitioned from blank to here hence i should always be >= 1
 				// This check is to ensure we aren't in a character declaration
+				// TODO this should use language features
 				if fileJob.Content[i-1] != '\\' {
 					currentState = SString
 				}
@@ -377,7 +378,10 @@ func CountStats(fileJob *FileJob) {
 	currentState := SBlank
 	endComments := [][]byte{}
 	endString := []byte{}
+
+	// TODO needs to be set via langFeatures.Quotes[0].IgnoreEscape for the matching feature
 	ignoreEscape := false
+
 
 	// For determining duplicates we need the below. The reason for creating
 	// the byte array here is to avoid GC pressure. MD5 is in the standard library
