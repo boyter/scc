@@ -3446,6 +3446,28 @@
       }
     ]
   },
+  "Luna": {
+    "complexitychecks": [
+    ],
+    "extensions": [
+      "luna"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [
+    ],
+    "quotes": [
+      {
+        "end": "\\\"",
+        "start": "\\\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
   "Lucius": {
     "complexitychecks": [
       "for ",

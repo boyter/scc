@@ -1,0 +1,23 @@
+def barify t: 'bar ' + t.toText + ' bar'
+
+# This is a comment
+reportedValue = case myNumber of
+    Just v -> 'Got a number ' + v.toText + '.'
+    Nothing -> 'Did not get a number.'
+print reportedValue
+
+
+class Shape:
+    Circle:
+        radius :: Real
+    Rectangle:
+        width  :: Real
+        height :: Real
+
+    def perimeter: case self of
+        Circle r: 2.0 * pi * r
+        Rectangle w h: 2.0 * w + 2.0 * h
+
+    def area: case self of
+        Circle r: pi * r * r
+        Rectangle w h: w * h
