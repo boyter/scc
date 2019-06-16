@@ -215,9 +215,9 @@ func processLanguageFeature(name string, value Language) {
 	processMask |= multiLineCommentMask
 
 	for _, v := range value.Quotes {
-		stringMask |= v[0][0]
-		stringTrie.InsertClose(TString, []byte(v[0]), []byte(v[1]))
-		tokenTrie.InsertClose(TString, []byte(v[0]), []byte(v[1]))
+		stringMask |= v.Start[0]
+		stringTrie.InsertClose(TString, []byte(v.Start), []byte(v.End))
+		tokenTrie.InsertClose(TString, []byte(v.Start), []byte(v.End))
 	}
 	processMask |= stringMask
 
@@ -235,6 +235,7 @@ func processLanguageFeature(name string, value Language) {
 		StringCheckMask:       stringMask,
 		ProcessMask:           processMask,
 		Keywords:              value.Keywords,
+		Quotes:                value.Quotes,
 	}
 	LanguageFeaturesMutex.Unlock()
 }

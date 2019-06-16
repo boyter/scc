@@ -48,3 +48,32 @@ namespace Baz
 		t.Errorf("Expected 1 lines got %d", fileJob.Blank)
 	}
 }
+
+func TestCountStatsPr76(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Go",
+	}
+
+	fileJob.Content = []byte(`package main
+var MyString = ` + "`\\`" + `
+// Comment`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 3 {
+		t.Errorf("Expected 3 lines")
+	}
+
+	if fileJob.Code != 2 {
+		t.Errorf("Expected 2 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Blank)
+	}
+}

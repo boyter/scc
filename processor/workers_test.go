@@ -13,6 +13,22 @@ func TestIsWhitespace(t *testing.T) {
 	}
 }
 
+func TestIsBinaryTrue(t *testing.T) {
+	DisableCheckBinary = false
+
+	if !isBinary(0, 0) {
+		t.Errorf("Expected to be true")
+	}
+}
+
+func TestIsBinaryDisableCheck(t *testing.T) {
+	DisableCheckBinary = true
+
+	if isBinary(0, 0) {
+		t.Errorf("Expected to be false")
+	}
+}
+
 func TestCountStatsLines(t *testing.T) {
 	Trace = false
 	Debug = false
@@ -805,6 +821,106 @@ func TestGuessLanguageLanguageEmptyContent(t *testing.T) {
 
 	if fileJob.Language != "Rust" {
 		t.Error("Expected guessed language to have been Rust got", fileJob.Language)
+	}
+}
+
+func TestEdgeCase(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "C#",
+	}
+
+	// For C# we can enter a string using @" or " but if we do the former,
+	// and we don't skip over the full length we exit the string in this case
+	// which means we pick up the /* and the count is incorrect
+	fileJob.Content = []byte(`@"\ /*"
+a`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 2 {
+		t.Errorf("Expected 2 lines")
+	}
+
+	if fileJob.Code != 2 {
+		t.Errorf("Expected 2 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Comment)
+	}
+}
+
+func TestEdgeCaseOther(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "C#",
+	}
+
+	// For C# we can enter a string using @" or " but if we do the former,
+	// and we don't skip over the full length we exit the string in this case
+	// which means we pick up the /* and the count is incorrect
+	fileJob.Content = []byte(`@"C:\" /*
+a */`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 2 {
+		t.Errorf("Expected 2 lines")
+	}
+
+	if fileJob.Code != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Comment)
+	}
+}
+
+func TestCountStatsCSharpIgnoreEscape(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "C#",
+	}
+
+	fileJob.Content = []byte(`namespace Ns
+{
+   public class Cls
+   {
+       private const string BasePath = @"a:\";
+
+       [Fact]
+       public void MyTest()
+       {
+           // Arrange.
+           Foo();
+
+           // Act.
+           Bar();
+
+           // Assert.
+           Baz();
+       }
+   }
+}`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 20 {
+		t.Errorf("Expected 20 lines")
+	}
+
+	if fileJob.Code != 14 {
+		t.Errorf("Expected 14 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 3 {
+		t.Errorf("Expected 3 lines got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 3 {
+		t.Errorf("Expected 3 lines got %d", fileJob.Blank)
 	}
 }
 
