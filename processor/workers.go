@@ -133,7 +133,6 @@ func stringState(index int, currentState int64, ignoreEscape bool, sta *state) (
 }
 
 func codeState(
-	endString []byte,
 	endComments [][]byte,
 	digest *hash.Hash,
 	sta *state,
@@ -143,12 +142,12 @@ func codeState(
 		sta.index = i
 
 		if curByte == '\n' {
-			return i, sta.currentState, endString, endComments, false
+			return i, sta.currentState, sta.endString, endComments, false
 		}
 
 		if isBinary(i, curByte) {
 			sta.fileJob.Binary = true
-			return i, sta.currentState, endString, endComments, false
+			return i, sta.currentState, sta.endString, endComments, false
 		}
 
 		if shouldProcess(curByte, sta.langFeatures.ProcessMask) {
@@ -173,19 +172,22 @@ func codeState(
 					sta.currentState = SString
 				}
 
-				return i, sta.currentState, endString, endComments, ignoreEscape
+				sta.endString = endString
+
+				return i, sta.currentState, sta.endString, endComments, ignoreEscape
 
 			case TSlcomment:
 				sta.currentState = SCommentCode
-				return i, sta.currentState, endString, endComments, false
+				return i, sta.currentState, sta.endString, endComments, false
 
 			case TMlcomment:
 				if sta.langFeatures.Nested || len(endComments) == 0 {
 					endComments = append(endComments, endString)
 					sta.currentState = SMulticommentCode
 					i += offsetJump - 1
+					sta.endString = endString
 
-					return i, sta.currentState, endString, endComments, false
+					return i, sta.currentState, sta.endString, endComments, false
 				}
 
 			case TComplexity:
@@ -196,7 +198,7 @@ func codeState(
 		}
 	}
 
-	return sta.index, sta.currentState, endString, endComments, false
+	return sta.index, sta.currentState, sta.endString, endComments, false
 }
 
 func commentState(index int, currentState int64, endComments [][]byte, endString []byte, langFeatures LanguageFeature, sta *state) (int, int64, []byte, [][]byte) {
@@ -400,7 +402,6 @@ func CountStats(fileJob *FileJob) {
 			switch currentState {
 			case SCode:
 				index, currentState, endString, endComments, ignoreEscape = codeState(
-					endString,
 					endComments,
 					&digest,
 					sta,
