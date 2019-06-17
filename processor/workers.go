@@ -108,7 +108,7 @@ func resetState(currentState int64) int64 {
 	return currentState
 }
 
-func stringState(fileJob *FileJob, index int, stringTrie *Trie, currentState int64, ignoreEscape bool, sta *state) (int, int64) {
+func stringState(index int, stringTrie *Trie, currentState int64, ignoreEscape bool, sta *state) (int, int64) {
 	// Its not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
 	// without checking if it is out of bounds first
 	for i := index; i < sta.endPoint; i++ {
@@ -117,13 +117,13 @@ func stringState(fileJob *FileJob, index int, stringTrie *Trie, currentState int
 		// If we hit a newline, return because we want to count the stats but keep
 		// the current state so we end up back in this loop when the outer
 		// one calls again
-		if fileJob.Content[i] == '\n' {
+		if sta.fileJob.Content[i] == '\n' {
 			return i, currentState
 		}
 
 		// If we are in a literal string we want to ignore the \ check OR we aren't checking for special ones
-		if ignoreEscape || fileJob.Content[i-1] != '\\' {
-			if ok, _, _ := stringTrie.Match(fileJob.Content[i:]); ok != 0 {
+		if ignoreEscape || sta.fileJob.Content[i-1] != '\\' {
+			if ok, _, _ := stringTrie.Match(sta.fileJob.Content[i:]); ok != 0 {
 				return i, SCode
 			}
 		}
@@ -410,7 +410,7 @@ func CountStats(fileJob *FileJob) {
 					sta,
 				)
 			case SString:
-				index, currentState = stringState(fileJob, index, langFeatures.Strings, currentState, ignoreEscape, sta)
+				index, currentState = stringState(index, langFeatures.Strings, currentState, ignoreEscape, sta)
 			case SMulticomment, SMulticommentCode:
 				index, currentState, endString, endComments = commentState(
 					index,
