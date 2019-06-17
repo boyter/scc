@@ -133,16 +133,15 @@ func stringState(index int, currentState int64, ignoreEscape bool, sta *state) (
 }
 
 func codeState(
-	index int,
 	currentState int64,
 	endString []byte,
 	endComments [][]byte,
 	digest *hash.Hash,
 	sta *state,
 ) (int, int64, []byte, [][]byte, bool) {
-	for i := index; i < sta.endPoint; i++ {
+	for i := sta.index; i < sta.endPoint; i++ {
 		curByte := sta.fileJob.Content[i]
-		index = i
+		sta.index = i
 
 		if curByte == '\n' {
 			return i, currentState, endString, endComments, false
@@ -158,14 +157,14 @@ func codeState(
 				// Technically this is wrong because we skip bytes so this is not a true
 				// hash of the file contents, but for duplicate files it shouldn't matter
 				// as both will skip the same way
-				digestible := []byte{sta.fileJob.Content[index]}
+				digestible := []byte{sta.fileJob.Content[sta.index]}
 				(*digest).Write(digestible)
 			}
 
 			switch tokenType, offsetJump, endString := sta.langFeatures.Tokens.Match(sta.fileJob.Content[i:]); tokenType {
 			case TString:
 				// If we are in string state then check what sort of string so we know if docstring OR ignoreescape string
-				i, ignoreEscape := verifyIgnoreEscape(sta.langFeatures, sta.fileJob, index)
+				i, ignoreEscape := verifyIgnoreEscape(sta.langFeatures, sta.fileJob, sta.index)
 
 				// It is safe to -1 here as to enter the code state we need to have
 				// transitioned from blank to here hence i should always be >= 1
@@ -191,14 +190,14 @@ func codeState(
 				}
 
 			case TComplexity:
-				if index == 0 || isWhitespace(sta.fileJob.Content[index-1]) {
+				if sta.index == 0 || isWhitespace(sta.fileJob.Content[sta.index-1]) {
 					sta.fileJob.Complexity++
 				}
 			}
 		}
 	}
 
-	return index, currentState, endString, endComments, false
+	return sta.index, currentState, endString, endComments, false
 }
 
 func commentState(index int, currentState int64, endComments [][]byte, endString []byte, langFeatures LanguageFeature, sta *state) (int, int64, []byte, [][]byte) {
@@ -402,7 +401,6 @@ func CountStats(fileJob *FileJob) {
 			switch currentState {
 			case SCode:
 				index, currentState, endString, endComments, ignoreEscape = codeState(
-					index,
 					currentState,
 					endString,
 					endComments,
