@@ -133,7 +133,6 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, en
 }
 
 func codeState(
-	fileJob *FileJob,
 	index int,
 	endPoint int,
 	currentState int64,
@@ -141,9 +140,10 @@ func codeState(
 	endComments [][]byte,
 	langFeatures LanguageFeature,
 	digest *hash.Hash,
+	sta *state,
 ) (int, int64, []byte, [][]byte, bool) {
 	for i := index; i < endPoint; i++ {
-		curByte := fileJob.Content[i]
+		curByte := sta.fileJob.Content[i]
 		index = i
 
 		if curByte == '\n' {
@@ -151,7 +151,7 @@ func codeState(
 		}
 
 		if isBinary(i, curByte) {
-			fileJob.Binary = true
+			sta.fileJob.Binary = true
 			return i, currentState, endString, endComments, false
 		}
 
@@ -160,20 +160,20 @@ func codeState(
 				// Technically this is wrong because we skip bytes so this is not a true
 				// hash of the file contents, but for duplicate files it shouldn't matter
 				// as both will skip the same way
-				digestible := []byte{fileJob.Content[index]}
+				digestible := []byte{sta.fileJob.Content[index]}
 				(*digest).Write(digestible)
 			}
 
-			switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[i:]); tokenType {
+			switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(sta.fileJob.Content[i:]); tokenType {
 			case TString:
 				// If we are in string state then check what sort of string so we know if docstring OR ignoreescape string
-				i, ignoreEscape := verifyIgnoreEscape(langFeatures, fileJob, index)
+				i, ignoreEscape := verifyIgnoreEscape(langFeatures, sta.fileJob, index)
 
 				// It is safe to -1 here as to enter the code state we need to have
 				// transitioned from blank to here hence i should always be >= 1
 				// This check is to ensure we aren't in a character declaration
 				// TODO this should use language features
-				if fileJob.Content[i-1] != '\\' {
+				if sta.fileJob.Content[i-1] != '\\' {
 					currentState = SString
 				}
 
@@ -193,8 +193,8 @@ func codeState(
 				}
 
 			case TComplexity:
-				if index == 0 || isWhitespace(fileJob.Content[index-1]) {
-					fileJob.Complexity++
+				if index == 0 || isWhitespace(sta.fileJob.Content[index-1]) {
+					sta.fileJob.Complexity++
 				}
 			}
 		}
@@ -314,6 +314,18 @@ func verifyIgnoreEscape(langFeatures LanguageFeature, fileJob *FileJob, index in
 	return index, ignoreEscape
 }
 
+// Struct used to hold the state of the current byte in the file
+type state struct {
+	fileJob      *FileJob
+	index        int
+	endPoint     int
+	currentState int64
+	endString    []byte
+	endComments  [][]byte
+	langFeatures LanguageFeature
+	ignoreEscape bool
+}
+
 // CountStats will process the fileJob
 // If the file contains anything even just a newline its line count should be >= 1.
 // If the file has a size of 0 its line count should be 0.
@@ -359,6 +371,17 @@ func CountStats(fileJob *FileJob) {
 	// TODO needs to be set via langFeatures.Quotes[0].IgnoreEscape for the matching feature
 	ignoreEscape := false
 
+	sta := &state{
+		ignoreEscape: ignoreEscape,
+		langFeatures: langFeatures,
+		currentState: currentState,
+		endPoint:     endPoint,
+		endComments:  endComments,
+		endString:    endString,
+		index:        0,
+		fileJob:      fileJob,
+	}
+
 	// For determining duplicates we need the below. The reason for creating
 	// the byte array here is to avoid GC pressure. MD5 is in the standard library
 	// and is fast enough to not warrant murmur3 hashing. No need to be
@@ -370,6 +393,9 @@ func CountStats(fileJob *FileJob) {
 	}
 
 	for index := checkBomSkip(fileJob); index < len(fileJob.Content); index++ {
+
+		sta.index = index
+
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
 		// changing anything in here and profile/measure afterwards!
@@ -379,7 +405,6 @@ func CountStats(fileJob *FileJob) {
 			switch currentState {
 			case SCode:
 				index, currentState, endString, endComments, ignoreEscape = codeState(
-					fileJob,
 					index,
 					endPoint,
 					currentState,
@@ -387,6 +412,7 @@ func CountStats(fileJob *FileJob) {
 					endComments,
 					langFeatures,
 					&digest,
+					sta,
 				)
 			case SString:
 				index, currentState = stringState(fileJob, index, endPoint, langFeatures.Strings, endString, currentState, ignoreEscape)
