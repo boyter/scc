@@ -134,7 +134,6 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, en
 
 func codeState(
 	index int,
-	endPoint int,
 	currentState int64,
 	endString []byte,
 	endComments [][]byte,
@@ -142,7 +141,7 @@ func codeState(
 	digest *hash.Hash,
 	sta *state,
 ) (int, int64, []byte, [][]byte, bool) {
-	for i := index; i < endPoint; i++ {
+	for i := index; i < sta.endPoint; i++ {
 		curByte := sta.fileJob.Content[i]
 		index = i
 
@@ -203,8 +202,8 @@ func codeState(
 	return index, currentState, endString, endComments, false
 }
 
-func commentState(index int, endPoint int, currentState int64, endComments [][]byte, endString []byte, langFeatures LanguageFeature, sta *state) (int, int64, []byte, [][]byte) {
-	for i := index; i < endPoint; i++ {
+func commentState(index int, currentState int64, endComments [][]byte, endString []byte, langFeatures LanguageFeature, sta *state) (int, int64, []byte, [][]byte) {
+	for i := index; i < sta.endPoint; i++ {
 		curByte := sta.fileJob.Content[i]
 		index = i
 
@@ -212,7 +211,7 @@ func commentState(index int, endPoint int, currentState int64, endComments [][]b
 			return i, currentState, endString, endComments
 		}
 
-		if checkForMatchSingle(curByte, index, endPoint, endComments[len(endComments)-1], sta.fileJob) {
+		if checkForMatchSingle(curByte, index, sta.endPoint, endComments[len(endComments)-1], sta.fileJob) {
 			// set offset jump here
 			offsetJump := len(endComments[len(endComments)-1])
 			endComments = endComments[:len(endComments)-1]
@@ -248,7 +247,6 @@ func commentState(index int, endPoint int, currentState int64, endComments [][]b
 
 func blankState(
 	index int,
-	endPoint int,
 	currentState int64,
 	endComments [][]byte,
 	endString []byte,
@@ -406,7 +404,6 @@ func CountStats(fileJob *FileJob) {
 			case SCode:
 				index, currentState, endString, endComments, ignoreEscape = codeState(
 					index,
-					endPoint,
 					currentState,
 					endString,
 					endComments,
@@ -419,7 +416,6 @@ func CountStats(fileJob *FileJob) {
 			case SMulticomment, SMulticommentCode:
 				index, currentState, endString, endComments = commentState(
 					index,
-					endPoint,
 					currentState,
 					endComments,
 					endString,
@@ -431,7 +427,6 @@ func CountStats(fileJob *FileJob) {
 				// or move into code but we can only do one.
 				index, currentState, endString, endComments, ignoreEscape = blankState(
 					index,
-					endPoint,
 					currentState,
 					endComments,
 					endString,
