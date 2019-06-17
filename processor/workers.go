@@ -133,9 +133,8 @@ func stringState(index int, currentState int64, ignoreEscape bool, sta *state) (
 }
 
 func codeState(
-	endComments [][]byte,
-	digest *hash.Hash,
 	sta *state,
+	digest *hash.Hash,
 ) (int, int64, []byte, [][]byte, bool) {
 	for i := sta.index; i < sta.endPoint; i++ {
 		curByte := sta.fileJob.Content[i]
@@ -401,11 +400,8 @@ func CountStats(fileJob *FileJob) {
 
 			switch currentState {
 			case SCode:
-				index, currentState, endString, endComments, ignoreEscape = codeState(
-					endComments,
-					&digest,
-					sta,
-				)
+				index, currentState, endString, endComments, ignoreEscape = codeState(sta, &digest)
+
 				sta.currentState = currentState
 				sta.endComments = endComments
 			case SString:
