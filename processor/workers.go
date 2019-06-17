@@ -254,22 +254,22 @@ func blankState(
 ) (int, int64, []byte, [][]byte, bool) {
 	switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(sta.fileJob.Content[sta.index:]); tokenType {
 	case TMlcomment:
-		if langFeatures.Nested || len(endComments) == 0 {
-			endComments = append(endComments, endString)
+		if langFeatures.Nested || len(sta.endComments) == 0 {
+			sta.endComments = append(sta.endComments, endString)
 			sta.currentState = SMulticomment
 			sta.index += offsetJump - 1
-			return sta.index, sta.currentState, endString, endComments, false
+			return sta.index, sta.currentState, endString, sta.endComments, false
 		}
 
 	case TSlcomment:
 		sta.currentState = SComment
-		return sta.index, sta.currentState, endString, endComments, false
+		return sta.index, sta.currentState, endString, sta.endComments, false
 
 	case TString:
 		index, ignoreEscape := verifyIgnoreEscape(langFeatures, sta.fileJob, sta.index)
 		sta.currentState = SString
 		sta.index = index
-		return sta.index, sta.currentState, endString, endComments, ignoreEscape
+		return sta.index, sta.currentState, endString, sta.endComments, ignoreEscape
 
 	case TComplexity:
 		sta.currentState = SCode
@@ -281,7 +281,7 @@ func blankState(
 		sta.currentState = SCode
 	}
 
-	return sta.index, sta.currentState, endString, endComments, false
+	return sta.index, sta.currentState, endString, sta.endComments, false
 }
 
 // Some languages such as C# have quoted strings like @"\" where no escape character is required
