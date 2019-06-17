@@ -108,7 +108,7 @@ func resetState(currentState int64) int64 {
 	return currentState
 }
 
-func stringState(index int, stringTrie *Trie, currentState int64, ignoreEscape bool, sta *state) (int, int64) {
+func stringState(index int, currentState int64, ignoreEscape bool, sta *state) (int, int64) {
 	// Its not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
 	// without checking if it is out of bounds first
 	for i := index; i < sta.endPoint; i++ {
@@ -123,7 +123,7 @@ func stringState(index int, stringTrie *Trie, currentState int64, ignoreEscape b
 
 		// If we are in a literal string we want to ignore the \ check OR we aren't checking for special ones
 		if ignoreEscape || sta.fileJob.Content[i-1] != '\\' {
-			if ok, _, _ := stringTrie.Match(sta.fileJob.Content[i:]); ok != 0 {
+			if ok, _, _ := sta.langFeatures.Strings.Match(sta.fileJob.Content[i:]); ok != 0 {
 				return i, SCode
 			}
 		}
@@ -410,7 +410,7 @@ func CountStats(fileJob *FileJob) {
 					sta,
 				)
 			case SString:
-				index, currentState = stringState(index, langFeatures.Strings, currentState, ignoreEscape, sta)
+				index, currentState = stringState(index, currentState, ignoreEscape, sta)
 			case SMulticomment, SMulticommentCode:
 				index, currentState, endString, endComments = commentState(
 					index,
