@@ -133,7 +133,6 @@ func stringState(index int, currentState int64, ignoreEscape bool, sta *state) (
 }
 
 func codeState(
-	currentState int64,
 	endString []byte,
 	endComments [][]byte,
 	digest *hash.Hash,
@@ -144,12 +143,12 @@ func codeState(
 		sta.index = i
 
 		if curByte == '\n' {
-			return i, currentState, endString, endComments, false
+			return i, sta.currentState, endString, endComments, false
 		}
 
 		if isBinary(i, curByte) {
 			sta.fileJob.Binary = true
-			return i, currentState, endString, endComments, false
+			return i, sta.currentState, endString, endComments, false
 		}
 
 		if shouldProcess(curByte, sta.langFeatures.ProcessMask) {
@@ -171,22 +170,22 @@ func codeState(
 				// This check is to ensure we aren't in a character declaration
 				// TODO this should use language features
 				if sta.fileJob.Content[i-1] != '\\' {
-					currentState = SString
+					sta.currentState = SString
 				}
 
-				return i, currentState, endString, endComments, ignoreEscape
+				return i, sta.currentState, endString, endComments, ignoreEscape
 
 			case TSlcomment:
-				currentState = SCommentCode
-				return i, currentState, endString, endComments, false
+				sta.currentState = SCommentCode
+				return i, sta.currentState, endString, endComments, false
 
 			case TMlcomment:
 				if sta.langFeatures.Nested || len(endComments) == 0 {
 					endComments = append(endComments, endString)
-					currentState = SMulticommentCode
+					sta.currentState = SMulticommentCode
 					i += offsetJump - 1
 
-					return i, currentState, endString, endComments, false
+					return i, sta.currentState, endString, endComments, false
 				}
 
 			case TComplexity:
@@ -197,7 +196,7 @@ func codeState(
 		}
 	}
 
-	return sta.index, currentState, endString, endComments, false
+	return sta.index, sta.currentState, endString, endComments, false
 }
 
 func commentState(index int, currentState int64, endComments [][]byte, endString []byte, langFeatures LanguageFeature, sta *state) (int, int64, []byte, [][]byte) {
@@ -401,14 +400,15 @@ func CountStats(fileJob *FileJob) {
 			switch currentState {
 			case SCode:
 				index, currentState, endString, endComments, ignoreEscape = codeState(
-					currentState,
 					endString,
 					endComments,
 					&digest,
 					sta,
 				)
+				sta.currentState = currentState
 			case SString:
 				index, currentState = stringState(index, currentState, ignoreEscape, sta)
+				sta.currentState = currentState
 			case SMulticomment, SMulticommentCode:
 				index, currentState, endString, endComments = commentState(
 					index,
@@ -418,6 +418,7 @@ func CountStats(fileJob *FileJob) {
 					langFeatures,
 					sta,
 				)
+				sta.currentState = currentState
 			case SBlank, SMulticommentBlank:
 				// From blank we can move into comment, move into a multiline comment
 				// or move into code but we can only do one.
@@ -429,6 +430,7 @@ func CountStats(fileJob *FileJob) {
 					langFeatures,
 					sta,
 				)
+				sta.currentState = currentState
 			}
 		}
 
