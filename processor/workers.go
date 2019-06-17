@@ -248,12 +248,11 @@ func commentState(sta *state) (int, int64, []byte, [][]byte) {
 
 func blankState(
 	endString []byte,
-	langFeatures LanguageFeature,
 	sta *state,
 ) (int, int64, []byte, [][]byte, bool) {
-	switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(sta.fileJob.Content[sta.index:]); tokenType {
+	switch tokenType, offsetJump, endString := sta.langFeatures.Tokens.Match(sta.fileJob.Content[sta.index:]); tokenType {
 	case TMlcomment:
-		if langFeatures.Nested || len(sta.endComments) == 0 {
+		if sta.langFeatures.Nested || len(sta.endComments) == 0 {
 			sta.endComments = append(sta.endComments, endString)
 			sta.currentState = SMulticomment
 			sta.index += offsetJump - 1
@@ -265,7 +264,7 @@ func blankState(
 		return sta.index, sta.currentState, endString, sta.endComments, false
 
 	case TString:
-		index, ignoreEscape := verifyIgnoreEscape(langFeatures, sta.fileJob, sta.index)
+		index, ignoreEscape := verifyIgnoreEscape(sta.langFeatures, sta.fileJob, sta.index)
 		sta.currentState = SString
 		sta.index = index
 		return sta.index, sta.currentState, endString, sta.endComments, ignoreEscape
@@ -423,7 +422,6 @@ func CountStats(fileJob *FileJob) {
 				// or move into code but we can only do one.
 				index, currentState, endString, endComments, ignoreEscape = blankState(
 					endString,
-					langFeatures,
 					sta,
 				)
 
