@@ -201,7 +201,7 @@ func codeState(
 	return sta.index, sta.currentState, sta.endString, sta.endComments, false
 }
 
-func commentState(endComments [][]byte, endString []byte, langFeatures LanguageFeature, sta *state) (int, int64, []byte, [][]byte) {
+func commentState(endString []byte, langFeatures LanguageFeature, sta *state) (int, int64, []byte, [][]byte) {
 	for i := sta.index; i < sta.endPoint; i++ {
 		curByte := sta.fileJob.Content[i]
 		sta.index = i
@@ -416,7 +416,6 @@ func CountStats(fileJob *FileJob) {
 			case SMulticomment, SMulticommentCode:
 				sta.currentState = currentState
 				index, currentState, endString, endComments = commentState(
-					endComments,
 					endString,
 					langFeatures,
 					sta,
