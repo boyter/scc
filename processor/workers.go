@@ -201,16 +201,16 @@ func codeState(
 	return sta.index, sta.currentState, sta.endString, sta.endComments, false
 }
 
-func commentState(index int, currentState int64, endComments [][]byte, endString []byte, langFeatures LanguageFeature, sta *state) (int, int64, []byte, [][]byte) {
-	for i := index; i < sta.endPoint; i++ {
+func commentState(currentState int64, endComments [][]byte, endString []byte, langFeatures LanguageFeature, sta *state) (int, int64, []byte, [][]byte) {
+	for i := sta.index; i < sta.endPoint; i++ {
 		curByte := sta.fileJob.Content[i]
-		index = i
+		sta.index = i
 
 		if curByte == '\n' {
 			return i, currentState, endString, endComments
 		}
 
-		if checkForMatchSingle(curByte, index, sta.endPoint, endComments[len(endComments)-1], sta.fileJob) {
+		if checkForMatchSingle(curByte, sta.index, sta.endPoint, endComments[len(endComments)-1], sta.fileJob) {
 			// set offset jump here
 			offsetJump := len(endComments[len(endComments)-1])
 			endComments = endComments[:len(endComments)-1]
@@ -227,6 +227,7 @@ func commentState(index int, currentState int64, endComments [][]byte, endString
 			}
 
 			i += offsetJump - 1
+			sta.index = i
 			return i, currentState, endString, endComments
 		}
 		// Check if we are entering another multiline comment
@@ -236,12 +237,13 @@ func commentState(index int, currentState int64, endComments [][]byte, endString
 				endComments = append(endComments, endString)
 				i += offsetJump - 1
 
+				sta.index = i
 				return i, currentState, endString, endComments
 			}
 		}
 	}
 
-	return index, currentState, endString, endComments
+	return sta.index, currentState, endString, endComments
 }
 
 func blankState(
@@ -413,7 +415,6 @@ func CountStats(fileJob *FileJob) {
 				sta.currentState = currentState
 			case SMulticomment, SMulticommentCode:
 				index, currentState, endString, endComments = commentState(
-					index,
 					currentState,
 					endComments,
 					endString,
