@@ -247,7 +247,6 @@ func commentState(sta *state) (int, int64, []byte, [][]byte) {
 }
 
 func blankState(
-	endComments [][]byte,
 	endString []byte,
 	langFeatures LanguageFeature,
 	sta *state,
@@ -423,7 +422,6 @@ func CountStats(fileJob *FileJob) {
 				// From blank we can move into comment, move into a multiline comment
 				// or move into code but we can only do one.
 				index, currentState, endString, endComments, ignoreEscape = blankState(
-					endComments,
 					endString,
 					langFeatures,
 					sta,
