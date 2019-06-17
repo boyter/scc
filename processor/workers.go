@@ -201,13 +201,13 @@ func codeState(
 	return sta.index, sta.currentState, sta.endString, sta.endComments, false
 }
 
-func commentState(currentState int64, endComments [][]byte, endString []byte, langFeatures LanguageFeature, sta *state) (int, int64, []byte, [][]byte) {
+func commentState(endComments [][]byte, endString []byte, langFeatures LanguageFeature, sta *state) (int, int64, []byte, [][]byte) {
 	for i := sta.index; i < sta.endPoint; i++ {
 		curByte := sta.fileJob.Content[i]
 		sta.index = i
 
 		if curByte == '\n' {
-			return i, currentState, endString, endComments
+			return i, sta.currentState, endString, endComments
 		}
 
 		if checkForMatchSingle(curByte, sta.index, sta.endPoint, endComments[len(endComments)-1], sta.fileJob) {
@@ -219,16 +219,16 @@ func commentState(currentState int64, endComments [][]byte, endString []byte, la
 				// If we started as multiline code switch back to code so we count correctly
 				// IE i := 1 /* for the lols */
 				// TODO is that required? Might still be required to count correctly
-				if currentState == SMulticommentCode {
-					currentState = SCode // TODO pointless to change here, just set S_MULTICOMMENT_BLANK
+				if sta.currentState == SMulticommentCode {
+					sta.currentState = SCode // TODO pointless to change here, just set S_MULTICOMMENT_BLANK
 				} else {
-					currentState = SMulticommentBlank
+					sta.currentState = SMulticommentBlank
 				}
 			}
 
 			i += offsetJump - 1
 			sta.index = i
-			return i, currentState, endString, endComments
+			return i, sta.currentState, endString, endComments
 		}
 		// Check if we are entering another multiline comment
 		// This should come below check for match single as it speeds up processing
@@ -238,12 +238,12 @@ func commentState(currentState int64, endComments [][]byte, endString []byte, la
 				i += offsetJump - 1
 
 				sta.index = i
-				return i, currentState, endString, endComments
+				return i, sta.currentState, endString, endComments
 			}
 		}
 	}
 
-	return sta.index, currentState, endString, endComments
+	return sta.index, sta.currentState, endString, endComments
 }
 
 func blankState(
@@ -414,8 +414,8 @@ func CountStats(fileJob *FileJob) {
 
 				sta.currentState = currentState
 			case SMulticomment, SMulticommentCode:
+				sta.currentState = currentState
 				index, currentState, endString, endComments = commentState(
-					currentState,
 					endComments,
 					endString,
 					langFeatures,
