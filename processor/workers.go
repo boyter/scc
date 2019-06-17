@@ -247,34 +247,34 @@ func commentState(sta *state) (int, int64, []byte, [][]byte) {
 }
 
 func blankState(
-	index int,
 	currentState int64,
 	endComments [][]byte,
 	endString []byte,
 	langFeatures LanguageFeature,
 	sta *state,
 ) (int, int64, []byte, [][]byte, bool) {
-	switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(sta.fileJob.Content[index:]); tokenType {
+	switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(sta.fileJob.Content[sta.index:]); tokenType {
 	case TMlcomment:
 		if langFeatures.Nested || len(endComments) == 0 {
 			endComments = append(endComments, endString)
 			currentState = SMulticomment
-			index += offsetJump - 1
-			return index, currentState, endString, endComments, false
+			sta.index += offsetJump - 1
+			return sta.index, currentState, endString, endComments, false
 		}
 
 	case TSlcomment:
 		currentState = SComment
-		return index, currentState, endString, endComments, false
+		return sta.index, currentState, endString, endComments, false
 
 	case TString:
-		index, ignoreEscape := verifyIgnoreEscape(langFeatures, sta.fileJob, index)
+		index, ignoreEscape := verifyIgnoreEscape(langFeatures, sta.fileJob, sta.index)
 		currentState = SString
-		return index, currentState, endString, endComments, ignoreEscape
+		sta.index = index
+		return sta.index, currentState, endString, endComments, ignoreEscape
 
 	case TComplexity:
 		currentState = SCode
-		if index == 0 || isWhitespace(sta.fileJob.Content[index-1]) {
+		if sta.index == 0 || isWhitespace(sta.fileJob.Content[sta.index-1]) {
 			sta.fileJob.Complexity++
 		}
 
@@ -282,7 +282,7 @@ func blankState(
 		currentState = SCode
 	}
 
-	return index, currentState, endString, endComments, false
+	return sta.index, currentState, endString, endComments, false
 }
 
 // Some languages such as C# have quoted strings like @"\" where no escape character is required
@@ -415,20 +415,22 @@ func CountStats(fileJob *FileJob) {
 				sta.currentState = currentState
 			case SMulticomment, SMulticommentCode:
 				sta.currentState = currentState
+
 				index, currentState, endString, endComments = commentState(sta)
+
 				sta.currentState = currentState
 				sta.endComments = endComments
 			case SBlank, SMulticommentBlank:
 				// From blank we can move into comment, move into a multiline comment
 				// or move into code but we can only do one.
 				index, currentState, endString, endComments, ignoreEscape = blankState(
-					index,
 					currentState,
 					endComments,
 					endString,
 					langFeatures,
 					sta,
 				)
+
 				sta.currentState = currentState
 				sta.endComments = endComments
 			}
