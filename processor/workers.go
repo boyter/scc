@@ -207,15 +207,15 @@ func commentState(endComments [][]byte, endString []byte, langFeatures LanguageF
 		sta.index = i
 
 		if curByte == '\n' {
-			return i, sta.currentState, endString, endComments
+			return i, sta.currentState, endString, sta.endComments
 		}
 
-		if checkForMatchSingle(curByte, sta.index, sta.endPoint, endComments[len(endComments)-1], sta.fileJob) {
+		if checkForMatchSingle(curByte, sta.index, sta.endPoint, sta.endComments[len(sta.endComments)-1], sta.fileJob) {
 			// set offset jump here
-			offsetJump := len(endComments[len(endComments)-1])
-			endComments = endComments[:len(endComments)-1]
+			offsetJump := len(sta.endComments[len(sta.endComments)-1])
+			sta.endComments = sta.endComments[:len(sta.endComments)-1]
 
-			if len(endComments) == 0 {
+			if len(sta.endComments) == 0 {
 				// If we started as multiline code switch back to code so we count correctly
 				// IE i := 1 /* for the lols */
 				// TODO is that required? Might still be required to count correctly
@@ -228,22 +228,22 @@ func commentState(endComments [][]byte, endString []byte, langFeatures LanguageF
 
 			i += offsetJump - 1
 			sta.index = i
-			return i, sta.currentState, endString, endComments
+			return i, sta.currentState, endString, sta.endComments
 		}
 		// Check if we are entering another multiline comment
 		// This should come below check for match single as it speeds up processing
-		if langFeatures.Nested || len(endComments) == 0 {
+		if langFeatures.Nested || len(sta.endComments) == 0 {
 			if ok, offsetJump, endString := langFeatures.MultiLineComments.Match(sta.fileJob.Content[i:]); ok != 0 {
-				endComments = append(endComments, endString)
+				sta.endComments = append(sta.endComments, endString)
 				i += offsetJump - 1
 
 				sta.index = i
-				return i, sta.currentState, endString, endComments
+				return i, sta.currentState, endString, sta.endComments
 			}
 		}
 	}
 
-	return sta.index, sta.currentState, endString, endComments
+	return sta.index, sta.currentState, endString, sta.endComments
 }
 
 func blankState(
