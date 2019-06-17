@@ -203,16 +203,16 @@ func codeState(
 	return index, currentState, endString, endComments, false
 }
 
-func commentState(fileJob *FileJob, index int, endPoint int, currentState int64, endComments [][]byte, endString []byte, langFeatures LanguageFeature) (int, int64, []byte, [][]byte) {
+func commentState(index int, endPoint int, currentState int64, endComments [][]byte, endString []byte, langFeatures LanguageFeature, sta *state) (int, int64, []byte, [][]byte) {
 	for i := index; i < endPoint; i++ {
-		curByte := fileJob.Content[i]
+		curByte := sta.fileJob.Content[i]
 		index = i
 
 		if curByte == '\n' {
 			return i, currentState, endString, endComments
 		}
 
-		if checkForMatchSingle(curByte, index, endPoint, endComments[len(endComments)-1], fileJob) {
+		if checkForMatchSingle(curByte, index, endPoint, endComments[len(endComments)-1], sta.fileJob) {
 			// set offset jump here
 			offsetJump := len(endComments[len(endComments)-1])
 			endComments = endComments[:len(endComments)-1]
@@ -234,7 +234,7 @@ func commentState(fileJob *FileJob, index int, endPoint int, currentState int64,
 		// Check if we are entering another multiline comment
 		// This should come below check for match single as it speeds up processing
 		if langFeatures.Nested || len(endComments) == 0 {
-			if ok, offsetJump, endString := langFeatures.MultiLineComments.Match(fileJob.Content[i:]); ok != 0 {
+			if ok, offsetJump, endString := langFeatures.MultiLineComments.Match(sta.fileJob.Content[i:]); ok != 0 {
 				endComments = append(endComments, endString)
 				i += offsetJump - 1
 
@@ -418,13 +418,13 @@ func CountStats(fileJob *FileJob) {
 				index, currentState = stringState(fileJob, index, endPoint, langFeatures.Strings, endString, currentState, ignoreEscape)
 			case SMulticomment, SMulticommentCode:
 				index, currentState, endString, endComments = commentState(
-					fileJob,
 					index,
 					endPoint,
 					currentState,
 					endComments,
 					endString,
 					langFeatures,
+					sta,
 				)
 			case SBlank, SMulticommentBlank:
 				// From blank we can move into comment, move into a multiline comment
