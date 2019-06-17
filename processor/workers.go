@@ -247,15 +247,15 @@ func commentState(index int, endPoint int, currentState int64, endComments [][]b
 }
 
 func blankState(
-	fileJob *FileJob,
 	index int,
 	endPoint int,
 	currentState int64,
 	endComments [][]byte,
 	endString []byte,
 	langFeatures LanguageFeature,
+	sta *state,
 ) (int, int64, []byte, [][]byte, bool) {
-	switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[index:]); tokenType {
+	switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(sta.fileJob.Content[index:]); tokenType {
 	case TMlcomment:
 		if langFeatures.Nested || len(endComments) == 0 {
 			endComments = append(endComments, endString)
@@ -269,14 +269,14 @@ func blankState(
 		return index, currentState, endString, endComments, false
 
 	case TString:
-		index, ignoreEscape := verifyIgnoreEscape(langFeatures, fileJob, index)
+		index, ignoreEscape := verifyIgnoreEscape(langFeatures, sta.fileJob, index)
 		currentState = SString
 		return index, currentState, endString, endComments, ignoreEscape
 
 	case TComplexity:
 		currentState = SCode
-		if index == 0 || isWhitespace(fileJob.Content[index-1]) {
-			fileJob.Complexity++
+		if index == 0 || isWhitespace(sta.fileJob.Content[index-1]) {
+			sta.fileJob.Complexity++
 		}
 
 	default:
@@ -430,13 +430,13 @@ func CountStats(fileJob *FileJob) {
 				// From blank we can move into comment, move into a multiline comment
 				// or move into code but we can only do one.
 				index, currentState, endString, endComments, ignoreEscape = blankState(
-					fileJob,
 					index,
 					endPoint,
 					currentState,
 					endComments,
 					endString,
 					langFeatures,
+					sta,
 				)
 			}
 		}
