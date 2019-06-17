@@ -108,10 +108,10 @@ func resetState(currentState int64) int64 {
 	return currentState
 }
 
-func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, endString []byte, currentState int64, ignoreEscape bool) (int, int64) {
+func stringState(fileJob *FileJob, index int, stringTrie *Trie, currentState int64, ignoreEscape bool, sta *state) (int, int64) {
 	// Its not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
 	// without checking if it is out of bounds first
-	for i := index; i < endPoint; i++ {
+	for i := index; i < sta.endPoint; i++ {
 		index = i
 
 		// If we hit a newline, return because we want to count the stats but keep
@@ -137,7 +137,6 @@ func codeState(
 	currentState int64,
 	endString []byte,
 	endComments [][]byte,
-	langFeatures LanguageFeature,
 	digest *hash.Hash,
 	sta *state,
 ) (int, int64, []byte, [][]byte, bool) {
@@ -154,7 +153,7 @@ func codeState(
 			return i, currentState, endString, endComments, false
 		}
 
-		if shouldProcess(curByte, langFeatures.ProcessMask) {
+		if shouldProcess(curByte, sta.langFeatures.ProcessMask) {
 			if Duplicates {
 				// Technically this is wrong because we skip bytes so this is not a true
 				// hash of the file contents, but for duplicate files it shouldn't matter
@@ -163,10 +162,10 @@ func codeState(
 				(*digest).Write(digestible)
 			}
 
-			switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(sta.fileJob.Content[i:]); tokenType {
+			switch tokenType, offsetJump, endString := sta.langFeatures.Tokens.Match(sta.fileJob.Content[i:]); tokenType {
 			case TString:
 				// If we are in string state then check what sort of string so we know if docstring OR ignoreescape string
-				i, ignoreEscape := verifyIgnoreEscape(langFeatures, sta.fileJob, index)
+				i, ignoreEscape := verifyIgnoreEscape(sta.langFeatures, sta.fileJob, index)
 
 				// It is safe to -1 here as to enter the code state we need to have
 				// transitioned from blank to here hence i should always be >= 1
@@ -183,7 +182,7 @@ func codeState(
 				return i, currentState, endString, endComments, false
 
 			case TMlcomment:
-				if langFeatures.Nested || len(endComments) == 0 {
+				if sta.langFeatures.Nested || len(endComments) == 0 {
 					endComments = append(endComments, endString)
 					currentState = SMulticommentCode
 					i += offsetJump - 1
@@ -407,12 +406,11 @@ func CountStats(fileJob *FileJob) {
 					currentState,
 					endString,
 					endComments,
-					langFeatures,
 					&digest,
 					sta,
 				)
 			case SString:
-				index, currentState = stringState(fileJob, index, endPoint, langFeatures.Strings, endString, currentState, ignoreEscape)
+				index, currentState = stringState(fileJob, index, langFeatures.Strings, currentState, ignoreEscape, sta)
 			case SMulticomment, SMulticommentCode:
 				index, currentState, endString, endComments = commentState(
 					index,
