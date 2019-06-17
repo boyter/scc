@@ -142,12 +142,12 @@ func codeState(
 		sta.index = i
 
 		if curByte == '\n' {
-			return i, sta.currentState, sta.endString, endComments, false
+			return i, sta.currentState, sta.endString, sta.endComments, false
 		}
 
 		if isBinary(i, curByte) {
 			sta.fileJob.Binary = true
-			return i, sta.currentState, sta.endString, endComments, false
+			return i, sta.currentState, sta.endString, sta.endComments, false
 		}
 
 		if shouldProcess(curByte, sta.langFeatures.ProcessMask) {
@@ -174,20 +174,20 @@ func codeState(
 
 				sta.endString = endString
 
-				return i, sta.currentState, sta.endString, endComments, ignoreEscape
+				return i, sta.currentState, sta.endString, sta.endComments, ignoreEscape
 
 			case TSlcomment:
 				sta.currentState = SCommentCode
-				return i, sta.currentState, sta.endString, endComments, false
+				return i, sta.currentState, sta.endString, sta.endComments, false
 
 			case TMlcomment:
-				if sta.langFeatures.Nested || len(endComments) == 0 {
-					endComments = append(endComments, endString)
+				if sta.langFeatures.Nested || len(sta.endComments) == 0 {
+					sta.endComments = append(sta.endComments, endString)
 					sta.currentState = SMulticommentCode
 					i += offsetJump - 1
 					sta.endString = endString
 
-					return i, sta.currentState, sta.endString, endComments, false
+					return i, sta.currentState, sta.endString, sta.endComments, false
 				}
 
 			case TComplexity:
@@ -198,7 +198,7 @@ func codeState(
 		}
 	}
 
-	return sta.index, sta.currentState, sta.endString, endComments, false
+	return sta.index, sta.currentState, sta.endString, sta.endComments, false
 }
 
 func commentState(index int, currentState int64, endComments [][]byte, endString []byte, langFeatures LanguageFeature, sta *state) (int, int64, []byte, [][]byte) {
@@ -407,6 +407,7 @@ func CountStats(fileJob *FileJob) {
 					sta,
 				)
 				sta.currentState = currentState
+				sta.endComments = endComments
 			case SString:
 				index, currentState = stringState(index, currentState, ignoreEscape, sta)
 				sta.currentState = currentState
@@ -420,6 +421,7 @@ func CountStats(fileJob *FileJob) {
 					sta,
 				)
 				sta.currentState = currentState
+				sta.endComments = endComments
 			case SBlank, SMulticommentBlank:
 				// From blank we can move into comment, move into a multiline comment
 				// or move into code but we can only do one.
@@ -432,6 +434,7 @@ func CountStats(fileJob *FileJob) {
 					sta,
 				)
 				sta.currentState = currentState
+				sta.endComments = endComments
 			}
 		}
 
