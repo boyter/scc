@@ -247,7 +247,6 @@ func commentState(sta *state) (int, int64, []byte, [][]byte) {
 }
 
 func blankState(
-	currentState int64,
 	endComments [][]byte,
 	endString []byte,
 	langFeatures LanguageFeature,
@@ -257,32 +256,32 @@ func blankState(
 	case TMlcomment:
 		if langFeatures.Nested || len(endComments) == 0 {
 			endComments = append(endComments, endString)
-			currentState = SMulticomment
+			sta.currentState = SMulticomment
 			sta.index += offsetJump - 1
-			return sta.index, currentState, endString, endComments, false
+			return sta.index, sta.currentState, endString, endComments, false
 		}
 
 	case TSlcomment:
-		currentState = SComment
-		return sta.index, currentState, endString, endComments, false
+		sta.currentState = SComment
+		return sta.index, sta.currentState, endString, endComments, false
 
 	case TString:
 		index, ignoreEscape := verifyIgnoreEscape(langFeatures, sta.fileJob, sta.index)
-		currentState = SString
+		sta.currentState = SString
 		sta.index = index
-		return sta.index, currentState, endString, endComments, ignoreEscape
+		return sta.index, sta.currentState, endString, endComments, ignoreEscape
 
 	case TComplexity:
-		currentState = SCode
+		sta.currentState = SCode
 		if sta.index == 0 || isWhitespace(sta.fileJob.Content[sta.index-1]) {
 			sta.fileJob.Complexity++
 		}
 
 	default:
-		currentState = SCode
+		sta.currentState = SCode
 	}
 
-	return sta.index, currentState, endString, endComments, false
+	return sta.index, sta.currentState, endString, endComments, false
 }
 
 // Some languages such as C# have quoted strings like @"\" where no escape character is required
@@ -424,7 +423,6 @@ func CountStats(fileJob *FileJob) {
 				// From blank we can move into comment, move into a multiline comment
 				// or move into code but we can only do one.
 				index, currentState, endString, endComments, ignoreEscape = blankState(
-					currentState,
 					endComments,
 					endString,
 					langFeatures,
