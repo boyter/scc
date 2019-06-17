@@ -201,7 +201,7 @@ func codeState(
 	return sta.index, sta.currentState, sta.endString, sta.endComments, false
 }
 
-func commentState(endString []byte, langFeatures LanguageFeature, sta *state) (int, int64, []byte, [][]byte) {
+func commentState(endString []byte, sta *state) (int, int64, []byte, [][]byte) {
 	for i := sta.index; i < sta.endPoint; i++ {
 		curByte := sta.fileJob.Content[i]
 		sta.index = i
@@ -232,8 +232,8 @@ func commentState(endString []byte, langFeatures LanguageFeature, sta *state) (i
 		}
 		// Check if we are entering another multiline comment
 		// This should come below check for match single as it speeds up processing
-		if langFeatures.Nested || len(sta.endComments) == 0 {
-			if ok, offsetJump, endString := langFeatures.MultiLineComments.Match(sta.fileJob.Content[i:]); ok != 0 {
+		if sta.langFeatures.Nested || len(sta.endComments) == 0 {
+			if ok, offsetJump, endString := sta.langFeatures.MultiLineComments.Match(sta.fileJob.Content[i:]); ok != 0 {
 				sta.endComments = append(sta.endComments, endString)
 				i += offsetJump - 1
 
@@ -417,7 +417,6 @@ func CountStats(fileJob *FileJob) {
 				sta.currentState = currentState
 				index, currentState, endString, endComments = commentState(
 					endString,
-					langFeatures,
 					sta,
 				)
 				sta.currentState = currentState
