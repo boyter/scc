@@ -387,6 +387,7 @@ func CountStats(fileJob *FileJob) {
 
 	for index := checkBomSkip(sta.fileJob); index < len(sta.fileJob.Content); index++ {
 
+		// TODO these should be removed
 		sta.index = index
 		sta.currentState = currentState
 
@@ -395,7 +396,7 @@ func CountStats(fileJob *FileJob) {
 		// changing anything in here and profile/measure afterwards!
 		// NB that the order of the if statements matters and has been set to what in benchmarks is most efficient
 		if !isWhitespace(sta.fileJob.Content[sta.index]) {
-			switch currentState {
+			switch sta.currentState {
 			case SCode:
 				index, currentState = codeState(sta, &digest)
 			case SString:
@@ -409,7 +410,9 @@ func CountStats(fileJob *FileJob) {
 			}
 		}
 
+		// TODO these should be removed
 		sta.index = index
+		sta.currentState = currentState
 
 		// Only check the first 10000 characters for null bytes indicating a binary file
 		// and if we find it then we return otherwise carry on and ignore binary markers
