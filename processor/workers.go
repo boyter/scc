@@ -398,21 +398,16 @@ func CountStats(fileJob *FileJob) {
 			switch currentState {
 			case SCode:
 				index, currentState, endString, endComments, ignoreEscape = codeState(sta, &digest)
-				sta.endComments = endComments
 			case SString:
 				index, currentState = stringState(sta)
 			case SMulticomment, SMulticommentCode:
 				sta.currentState = currentState
 
 				index, currentState, endString, endComments = commentState(sta)
-
-				sta.endComments = endComments
 			case SBlank, SMulticommentBlank:
 				// From blank we can move into comment, move into a multiline comment
 				// or move into code but we can only do one.
 				index, currentState, endString, endComments, ignoreEscape = blankState(sta)
-
-				sta.endComments = endComments
 			}
 		}
 
