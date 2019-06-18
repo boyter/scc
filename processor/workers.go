@@ -388,21 +388,19 @@ func CountStats(fileJob *FileJob) {
 	for index := checkBomSkip(sta.fileJob); index < len(sta.fileJob.Content); index++ {
 
 		sta.index = index
+		sta.currentState = currentState
 
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
 		// changing anything in here and profile/measure afterwards!
 		// NB that the order of the if statements matters and has been set to what in benchmarks is most efficient
 		if !isWhitespace(sta.fileJob.Content[sta.index]) {
-
 			switch currentState {
 			case SCode:
 				index, currentState, endString, endComments, ignoreEscape = codeState(sta, &digest)
 			case SString:
 				index, currentState = stringState(sta)
 			case SMulticomment, SMulticommentCode:
-				sta.currentState = currentState
-
 				index, currentState, endString, endComments = commentState(sta)
 			case SBlank, SMulticommentBlank:
 				// From blank we can move into comment, move into a multiline comment
