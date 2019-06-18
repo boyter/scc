@@ -389,7 +389,7 @@ func CountStats(fileJob *FileJob) {
 
 		// TODO these should be removed
 		sta.index = index
-		sta.currentState = currentState
+		//sta.currentState = currentState
 
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
@@ -428,7 +428,7 @@ func CountStats(fileJob *FileJob) {
 			switch sta.currentState {
 			case SCode, SString, SCommentCode, SMulticommentCode:
 				sta.fileJob.Code++
-				currentState = resetState(currentState)
+				sta.currentState = resetState(sta.currentState)
 				if sta.fileJob.Callback != nil {
 					if !sta.fileJob.Callback.ProcessLine(sta.fileJob, sta.fileJob.Lines, LINE_CODE) {
 						return
@@ -439,7 +439,7 @@ func CountStats(fileJob *FileJob) {
 				}
 			case SComment, SMulticomment, SMulticommentBlank:
 				sta.fileJob.Comment++
-				currentState = resetState(currentState)
+				sta.currentState = resetState(sta.currentState)
 				if sta.fileJob.Callback != nil {
 					if !sta.fileJob.Callback.ProcessLine(sta.fileJob, sta.fileJob.Lines, LINE_COMMENT) {
 						return
@@ -460,6 +460,9 @@ func CountStats(fileJob *FileJob) {
 				}
 			}
 		}
+
+		// TODO this needs to be removed
+		currentState = sta.currentState
 	}
 
 	if Duplicates {
