@@ -133,10 +133,7 @@ func stringState(sta *state) (int, int64) {
 	return sta.index, sta.currentState
 }
 
-func codeState(
-	sta *state,
-	digest *hash.Hash,
-) (int, int64, []byte, [][]byte, bool) {
+func codeState(sta *state, digest *hash.Hash) (int, int64, []byte, [][]byte, bool) {
 	for i := sta.index; i < sta.endPoint; i++ {
 		curByte := sta.fileJob.Content[i]
 		sta.index = i
@@ -246,9 +243,7 @@ func commentState(sta *state) (int, int64, []byte, [][]byte) {
 	return sta.index, sta.currentState, sta.endString, sta.endComments
 }
 
-func blankState(
-	sta *state,
-) (int, int64, []byte, [][]byte, bool) {
+func blankState(sta *state) (int, int64, []byte, [][]byte, bool) {
 	switch tokenType, offsetJump, endString := sta.langFeatures.Tokens.Match(sta.fileJob.Content[sta.index:]); tokenType {
 	case TMlcomment:
 		if sta.langFeatures.Nested || len(sta.endComments) == 0 {
@@ -388,7 +383,7 @@ func CountStats(fileJob *FileJob) {
 		digest = md5.New()
 	}
 
-	for index := checkBomSkip(fileJob); index < len(fileJob.Content); index++ {
+	for index := checkBomSkip(sta.fileJob); index < len(sta.fileJob.Content); index++ {
 
 		sta.index = index
 
@@ -396,7 +391,7 @@ func CountStats(fileJob *FileJob) {
 		// what the character is. The below is very CPU bound so need to be careful if
 		// changing anything in here and profile/measure afterwards!
 		// NB that the order of the if statements matters and has been set to what in benchmarks is most efficient
-		if !isWhitespace(fileJob.Content[index]) {
+		if !isWhitespace(sta.fileJob.Content[sta.index]) {
 
 			switch currentState {
 			case SCode:
@@ -422,60 +417,62 @@ func CountStats(fileJob *FileJob) {
 			}
 		}
 
+		sta.index = index
+
 		// Only check the first 10000 characters for null bytes indicating a binary file
 		// and if we find it then we return otherwise carry on and ignore binary markers
-		if index < 10000 && fileJob.Binary {
+		if sta.index < 10000 && sta.fileJob.Binary {
 			return
 		}
 
 		// This means the end of processing the line so calculate the stats according to what state
 		// we are currently in
-		if fileJob.Content[index] == '\n' || index >= endPoint {
-			fileJob.Lines++
+		if sta.fileJob.Content[sta.index] == '\n' || sta.index >= sta.endPoint {
+			sta.fileJob.Lines++
 
 			switch currentState {
 			case SCode, SString, SCommentCode, SMulticommentCode:
-				fileJob.Code++
+				sta.fileJob.Code++
 				currentState = resetState(currentState)
-				if fileJob.Callback != nil {
-					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_CODE) {
+				if sta.fileJob.Callback != nil {
+					if !sta.fileJob.Callback.ProcessLine(sta.fileJob, sta.fileJob.Lines, LINE_CODE) {
 						return
 					}
 				}
 				if Trace {
-					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as code", fileJob.Location, fileJob.Lines, currentState))
+					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as code", sta.fileJob.Location, sta.fileJob.Lines, currentState))
 				}
 			case SComment, SMulticomment, SMulticommentBlank:
-				fileJob.Comment++
+				sta.fileJob.Comment++
 				currentState = resetState(currentState)
-				if fileJob.Callback != nil {
-					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
+				if sta.fileJob.Callback != nil {
+					if !sta.fileJob.Callback.ProcessLine(sta.fileJob, sta.fileJob.Lines, LINE_COMMENT) {
 						return
 					}
 				}
 				if Trace {
-					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState))
+					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as comment", sta.fileJob.Location, sta.fileJob.Lines, currentState))
 				}
 			case SBlank:
-				fileJob.Blank++
-				if fileJob.Callback != nil {
-					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_BLANK) {
+				sta.fileJob.Blank++
+				if sta.fileJob.Callback != nil {
+					if !sta.fileJob.Callback.ProcessLine(sta.fileJob, sta.fileJob.Lines, LINE_BLANK) {
 						return
 					}
 				}
 				if Trace {
-					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as blank", fileJob.Location, fileJob.Lines, currentState))
+					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as blank", sta.fileJob.Location, sta.fileJob.Lines, currentState))
 				}
 			}
 		}
 	}
 
 	if Duplicates {
-		fileJob.Hash = digest.Sum(nil)
+		sta.fileJob.Hash = digest.Sum(nil)
 	}
 
 	// Save memory by unsetting the content as we no longer require it
-	fileJob.Content = nil
+	sta.fileJob.Content = nil
 }
 
 // Check if we have any Byte Order Marks (BOM) in front of the file
