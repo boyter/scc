@@ -133,18 +133,18 @@ func stringState(sta *state) (int, int64) {
 	return sta.index, sta.currentState
 }
 
-func codeState(sta *state, digest *hash.Hash) (int, int64, []byte, [][]byte, bool) {
+func codeState(sta *state, digest *hash.Hash) (int, int64, [][]byte, bool) {
 	for i := sta.index; i < sta.endPoint; i++ {
 		curByte := sta.fileJob.Content[i]
 		sta.index = i
 
 		if curByte == '\n' {
-			return i, sta.currentState, sta.endString, sta.endComments, false
+			return i, sta.currentState, sta.endComments, false
 		}
 
 		if isBinary(i, curByte) {
 			sta.fileJob.Binary = true
-			return i, sta.currentState, sta.endString, sta.endComments, false
+			return i, sta.currentState, sta.endComments, false
 		}
 
 		if shouldProcess(curByte, sta.langFeatures.ProcessMask) {
@@ -172,11 +172,11 @@ func codeState(sta *state, digest *hash.Hash) (int, int64, []byte, [][]byte, boo
 				sta.endString = endString
 				sta.ignoreEscape = ignoreEscape
 
-				return i, sta.currentState, sta.endString, sta.endComments, ignoreEscape
+				return i, sta.currentState, sta.endComments, ignoreEscape
 
 			case TSlcomment:
 				sta.currentState = SCommentCode
-				return i, sta.currentState, sta.endString, sta.endComments, false
+				return i, sta.currentState, sta.endComments, false
 
 			case TMlcomment:
 				if sta.langFeatures.Nested || len(sta.endComments) == 0 {
@@ -185,7 +185,7 @@ func codeState(sta *state, digest *hash.Hash) (int, int64, []byte, [][]byte, boo
 					i += offsetJump - 1
 					sta.endString = endString
 
-					return i, sta.currentState, sta.endString, sta.endComments, false
+					return i, sta.currentState, sta.endComments, false
 				}
 
 			case TComplexity:
@@ -196,7 +196,7 @@ func codeState(sta *state, digest *hash.Hash) (int, int64, []byte, [][]byte, boo
 		}
 	}
 
-	return sta.index, sta.currentState, sta.endString, sta.endComments, false
+	return sta.index, sta.currentState, sta.endComments, false
 }
 
 func commentState(sta *state) (int, int64, []byte, [][]byte) {
@@ -397,15 +397,15 @@ func CountStats(fileJob *FileJob) {
 		if !isWhitespace(sta.fileJob.Content[sta.index]) {
 			switch currentState {
 			case SCode:
-				index, currentState, endString, endComments, ignoreEscape = codeState(sta, &digest)
+				index, currentState, endComments, ignoreEscape = codeState(sta, &digest)
 			case SString:
 				index, currentState = stringState(sta)
 			case SMulticomment, SMulticommentCode:
-				index, currentState, endString, endComments = commentState(sta)
+				index, currentState, _, endComments = commentState(sta)
 			case SBlank, SMulticommentBlank:
 				// From blank we can move into comment, move into a multiline comment
 				// or move into code but we can only do one.
-				index, currentState, endString, endComments, ignoreEscape = blankState(sta)
+				index, currentState, _, endComments, ignoreEscape = blankState(sta)
 			}
 		}
 
