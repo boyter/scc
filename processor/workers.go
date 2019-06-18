@@ -199,13 +199,13 @@ func codeState(sta *state, digest *hash.Hash) (int, int64, [][]byte, bool) {
 	return sta.index, sta.currentState, sta.endComments, false
 }
 
-func commentState(sta *state) (int, int64, []byte, [][]byte) {
+func commentState(sta *state) (int, int64, [][]byte) {
 	for i := sta.index; i < sta.endPoint; i++ {
 		curByte := sta.fileJob.Content[i]
 		sta.index = i
 
 		if curByte == '\n' {
-			return i, sta.currentState, sta.endString, sta.endComments
+			return i, sta.currentState, sta.endComments
 		}
 
 		if checkForMatchSingle(curByte, sta.index, sta.endPoint, sta.endComments[len(sta.endComments)-1], sta.fileJob) {
@@ -226,7 +226,7 @@ func commentState(sta *state) (int, int64, []byte, [][]byte) {
 
 			i += offsetJump - 1
 			sta.index = i
-			return i, sta.currentState, sta.endString, sta.endComments
+			return i, sta.currentState, sta.endComments
 		}
 		// Check if we are entering another multiline comment
 		// This should come below check for match single as it speeds up processing
@@ -236,15 +236,15 @@ func commentState(sta *state) (int, int64, []byte, [][]byte) {
 				i += offsetJump - 1
 
 				sta.index = i
-				return i, sta.currentState, sta.endString, sta.endComments
+				return i, sta.currentState, sta.endComments
 			}
 		}
 	}
 
-	return sta.index, sta.currentState, sta.endString, sta.endComments
+	return sta.index, sta.currentState, sta.endComments
 }
 
-func blankState(sta *state) (int, int64, []byte, [][]byte, bool) {
+func blankState(sta *state) (int, int64, [][]byte, bool) {
 	switch tokenType, offsetJump, endString := sta.langFeatures.Tokens.Match(sta.fileJob.Content[sta.index:]); tokenType {
 	case TMlcomment:
 		if sta.langFeatures.Nested || len(sta.endComments) == 0 {
@@ -252,19 +252,19 @@ func blankState(sta *state) (int, int64, []byte, [][]byte, bool) {
 			sta.currentState = SMulticomment
 			sta.index += offsetJump - 1
 			sta.endString = endString
-			return sta.index, sta.currentState, sta.endString, sta.endComments, false
+			return sta.index, sta.currentState, sta.endComments, false
 		}
 
 	case TSlcomment:
 		sta.currentState = SComment
-		return sta.index, sta.currentState, sta.endString, sta.endComments, false
+		return sta.index, sta.currentState, sta.endComments, false
 
 	case TString:
 		index, ignoreEscape := verifyIgnoreEscape(sta.langFeatures, sta.fileJob, sta.index)
 		sta.currentState = SString
 		sta.index = index
 		sta.ignoreEscape = ignoreEscape
-		return sta.index, sta.currentState, sta.endString, sta.endComments, ignoreEscape
+		return sta.index, sta.currentState, sta.endComments, ignoreEscape
 
 	case TComplexity:
 		sta.currentState = SCode
@@ -276,7 +276,7 @@ func blankState(sta *state) (int, int64, []byte, [][]byte, bool) {
 		sta.currentState = SCode
 	}
 
-	return sta.index, sta.currentState, sta.endString, sta.endComments, false
+	return sta.index, sta.currentState, sta.endComments, false
 }
 
 // Some languages such as C# have quoted strings like @"\" where no escape character is required
@@ -401,11 +401,11 @@ func CountStats(fileJob *FileJob) {
 			case SString:
 				index, currentState = stringState(sta)
 			case SMulticomment, SMulticommentCode:
-				index, currentState, _, endComments = commentState(sta)
+				index, currentState, endComments = commentState(sta)
 			case SBlank, SMulticommentBlank:
 				// From blank we can move into comment, move into a multiline comment
 				// or move into code but we can only do one.
-				index, currentState, _, endComments, ignoreEscape = blankState(sta)
+				index, currentState, endComments, ignoreEscape = blankState(sta)
 			}
 		}
 
