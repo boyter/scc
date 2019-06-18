@@ -133,18 +133,18 @@ func stringState(sta *state) (int, int64) {
 	return sta.index, sta.currentState
 }
 
-func codeState(sta *state, digest *hash.Hash) (int, int64, bool) {
+func codeState(sta *state, digest *hash.Hash) (int, int64) {
 	for i := sta.index; i < sta.endPoint; i++ {
 		curByte := sta.fileJob.Content[i]
 		sta.index = i
 
 		if curByte == '\n' {
-			return i, sta.currentState, false
+			return i, sta.currentState
 		}
 
 		if isBinary(i, curByte) {
 			sta.fileJob.Binary = true
-			return i, sta.currentState, false
+			return i, sta.currentState
 		}
 
 		if shouldProcess(curByte, sta.langFeatures.ProcessMask) {
@@ -172,11 +172,11 @@ func codeState(sta *state, digest *hash.Hash) (int, int64, bool) {
 				sta.endString = endString
 				sta.ignoreEscape = ignoreEscape
 
-				return i, sta.currentState, ignoreEscape
+				return i, sta.currentState
 
 			case TSlcomment:
 				sta.currentState = SCommentCode
-				return i, sta.currentState, false
+				return i, sta.currentState
 
 			case TMlcomment:
 				if sta.langFeatures.Nested || len(sta.endComments) == 0 {
@@ -185,7 +185,7 @@ func codeState(sta *state, digest *hash.Hash) (int, int64, bool) {
 					i += offsetJump - 1
 					sta.endString = endString
 
-					return i, sta.currentState, false
+					return i, sta.currentState
 				}
 
 			case TComplexity:
@@ -196,7 +196,7 @@ func codeState(sta *state, digest *hash.Hash) (int, int64, bool) {
 		}
 	}
 
-	return sta.index, sta.currentState, false
+	return sta.index, sta.currentState
 }
 
 func commentState(sta *state) (int, int64) {
@@ -244,7 +244,7 @@ func commentState(sta *state) (int, int64) {
 	return sta.index, sta.currentState
 }
 
-func blankState(sta *state) (int, int64, bool) {
+func blankState(sta *state) (int, int64) {
 	switch tokenType, offsetJump, endString := sta.langFeatures.Tokens.Match(sta.fileJob.Content[sta.index:]); tokenType {
 	case TMlcomment:
 		if sta.langFeatures.Nested || len(sta.endComments) == 0 {
@@ -252,19 +252,19 @@ func blankState(sta *state) (int, int64, bool) {
 			sta.currentState = SMulticomment
 			sta.index += offsetJump - 1
 			sta.endString = endString
-			return sta.index, sta.currentState, false
+			return sta.index, sta.currentState
 		}
 
 	case TSlcomment:
 		sta.currentState = SComment
-		return sta.index, sta.currentState, false
+		return sta.index, sta.currentState
 
 	case TString:
 		index, ignoreEscape := verifyIgnoreEscape(sta.langFeatures, sta.fileJob, sta.index)
 		sta.currentState = SString
 		sta.index = index
 		sta.ignoreEscape = ignoreEscape
-		return sta.index, sta.currentState, ignoreEscape
+		return sta.index, sta.currentState
 
 	case TComplexity:
 		sta.currentState = SCode
@@ -276,7 +276,7 @@ func blankState(sta *state) (int, int64, bool) {
 		sta.currentState = SCode
 	}
 
-	return sta.index, sta.currentState, false
+	return sta.index, sta.currentState
 }
 
 // Some languages such as C# have quoted strings like @"\" where no escape character is required
@@ -397,7 +397,7 @@ func CountStats(fileJob *FileJob) {
 		if !isWhitespace(sta.fileJob.Content[sta.index]) {
 			switch currentState {
 			case SCode:
-				index, currentState, ignoreEscape = codeState(sta, &digest)
+				index, currentState = codeState(sta, &digest)
 			case SString:
 				index, currentState = stringState(sta)
 			case SMulticomment, SMulticommentCode:
@@ -405,7 +405,7 @@ func CountStats(fileJob *FileJob) {
 			case SBlank, SMulticommentBlank:
 				// From blank we can move into comment, move into a multiline comment
 				// or move into code but we can only do one.
-				index, currentState, ignoreEscape = blankState(sta)
+				index, currentState = blankState(sta)
 			}
 		}
 
