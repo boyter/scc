@@ -170,6 +170,7 @@ func codeState(sta *state, digest *hash.Hash) (int, int64, []byte, [][]byte, boo
 				}
 
 				sta.endString = endString
+				sta.ignoreEscape = ignoreEscape
 
 				return i, sta.currentState, sta.endString, sta.endComments, ignoreEscape
 
@@ -262,6 +263,7 @@ func blankState(sta *state) (int, int64, []byte, [][]byte, bool) {
 		index, ignoreEscape := verifyIgnoreEscape(sta.langFeatures, sta.fileJob, sta.index)
 		sta.currentState = SString
 		sta.index = index
+		sta.ignoreEscape = ignoreEscape
 		return sta.index, sta.currentState, sta.endString, sta.endComments, ignoreEscape
 
 	case TComplexity:
@@ -398,10 +400,7 @@ func CountStats(fileJob *FileJob) {
 				index, currentState, endString, endComments, ignoreEscape = codeState(sta, &digest)
 				sta.endComments = endComments
 			case SString:
-				sta.ignoreEscape = ignoreEscape
-
 				index, currentState = stringState(sta)
-
 			case SMulticomment, SMulticommentCode:
 				sta.currentState = currentState
 
