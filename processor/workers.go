@@ -422,7 +422,7 @@ func CountStats(fileJob *FileJob) {
 		if sta.fileJob.Content[sta.index] == '\n' || sta.index >= sta.endPoint {
 			sta.fileJob.Lines++
 
-			switch currentState {
+			switch sta.currentState {
 			case SCode, SString, SCommentCode, SMulticommentCode:
 				sta.fileJob.Code++
 				currentState = resetState(currentState)
@@ -432,7 +432,7 @@ func CountStats(fileJob *FileJob) {
 					}
 				}
 				if Trace {
-					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as code", sta.fileJob.Location, sta.fileJob.Lines, currentState))
+					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as code", sta.fileJob.Location, sta.fileJob.Lines, sta.currentState))
 				}
 			case SComment, SMulticomment, SMulticommentBlank:
 				sta.fileJob.Comment++
@@ -443,7 +443,7 @@ func CountStats(fileJob *FileJob) {
 					}
 				}
 				if Trace {
-					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as comment", sta.fileJob.Location, sta.fileJob.Lines, currentState))
+					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as comment", sta.fileJob.Location, sta.fileJob.Lines, sta.currentState))
 				}
 			case SBlank:
 				sta.fileJob.Blank++
@@ -453,7 +453,7 @@ func CountStats(fileJob *FileJob) {
 					}
 				}
 				if Trace {
-					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as blank", sta.fileJob.Location, sta.fileJob.Lines, currentState))
+					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as blank", sta.fileJob.Location, sta.fileJob.Lines, sta.currentState))
 				}
 			}
 		}
