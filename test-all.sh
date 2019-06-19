@@ -178,6 +178,18 @@ else
     exit
 fi
 
+# Regression issue https://github.com/boyter/scc/issues/82
+a=$(./scc . | grep Total)
+b=$(./scc ${PWD} | grep Total)
+if [ "$a" == "$b" ]; then
+    echo -e "${GREEN}PASSED git filter"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED git filter"
+    echo -e "================================================="
+    exit
+fi
+
 # Try out specific languages
 for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna '
 do
