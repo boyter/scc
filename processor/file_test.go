@@ -2,7 +2,9 @@ package processor
 
 import (
 	"math/rand"
+	"path/filepath"
 	"testing"
+	"strings"
 )
 
 func TestGetExtension(t *testing.T) {
@@ -144,6 +146,44 @@ func TestWalkDirectoryParallelIgnoresRootTrailingSlash(t *testing.T) {
 
 	if count != 1 {
 		t.Errorf("Expected exactly one file got %d", count)
+	}
+}
+
+// Issue #82 - project .git directory not being filtered when using absolute
+// path argument
+func TestWalkDirectoryParallelIgnoresAbsoluteGitPath(t *testing.T) {
+	isLazy = false
+	ProcessConstants()
+
+	// master is a file extension for ASP.NET, and also a filename (almost)
+	// certain to appear in the .git directory.
+	// This test also relies on the behaviour of treating `master` as a file
+	// with the `master` file extension.
+	WhiteListExtensions = []string{"master", "go"}
+	Exclude = []string{"vendor"}
+	PathBlacklist = []string{".git", "vendor"}
+	Verbose = true
+	Trace = true
+	Debug = true
+	GcFileCount = 10
+
+	inputChan := make(chan *FileJob, 10000)
+	absBaseDir, _ := filepath.Abs("../")
+	absGitDir := filepath.Join(absBaseDir, ".git")
+
+	walkDirectoryParallel(absBaseDir, inputChan)
+	close(inputChan)
+
+	sawGit := false
+	for fileJob := range inputChan {
+		if strings.HasPrefix(fileJob.Location, absGitDir) {
+			sawGit = true
+			break
+		}
+	}
+
+	if sawGit {
+		t.Errorf("Expected .git folder to be ignored")
 	}
 }
 

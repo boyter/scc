@@ -123,7 +123,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 			// Need to check if the directory is in the blacklist and if so don't bother adding a goroutine to process it
 			shouldSkip := false
 			for _, black := range PathBlacklist {
-				if strings.HasPrefix(filepath.Join(root, f.Name()), black) {
+				if strings.HasPrefix(filepath.Join(root, f.Name()), filepath.Join(root, black)) {
 					shouldSkip = true
 					if Verbose {
 						printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", filepath.Join(root, f.Name())))
@@ -267,7 +267,7 @@ func walkDirectory(toWalk string, blackList []string, extensionLookup map[string
 
 			if info.IsDir() {
 				for _, black := range blackList {
-					if strings.HasPrefix(root, black+"/") || strings.HasPrefix(root, black) {
+					if strings.HasPrefix(root, filepath.Join(toWalk, black)) {
 						if Verbose {
 							printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", root))
 						}
