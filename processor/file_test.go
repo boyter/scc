@@ -3,8 +3,8 @@ package processor
 import (
 	"math/rand"
 	"path/filepath"
-	"testing"
 	"strings"
+	"testing"
 )
 
 func TestGetExtension(t *testing.T) {
