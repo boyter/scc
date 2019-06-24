@@ -264,6 +264,21 @@ GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.4.0-x86_64-un
 GOOS=linux GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.4.0-i386-unknown-linux.zip scc
 ```
 
+### Badges (beta)
+
+You can use `scc` to provide badges on your github/bitbucket/gitlab open repositories. The format to do so is,
+
+https://sloc.xyz/PROVIDER/USER/REPO
+
+An example of the badge for `scc` is included below, and is used on this page.
+
+```
+[![Scc Count Badge](https://sloc.xyz/github/boyter/scc/)](https://github.com/boyter/scc/)
+```
+
+*NB* it may not work for VERY large repositories (has been tested on Apache hadoop/spark without issue). In time additional metrics
+will be added.
+
 ### Languages
 
 List of supported languages. The master version of `scc` supports 234 languages at last count. Note that this is always assumed that you built from master, and it might trail behind what is actually supported. To see what your version of `scc` supports run `scc --languages`
