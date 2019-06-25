@@ -266,7 +266,8 @@ GOOS=linux GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.4.0-i386-unknow
 
 ### Badges (beta)
 
-You can use `scc` to provide badges on your github/bitbucket/gitlab open repositories. The format to do so is,
+You can use `scc` to provide badges on your github/bitbucket/gitlab open repositories. For example, [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/)](https://github.com/boyter/scc/)
+ The format to do so is,
 
 https://sloc.xyz/PROVIDER/USER/REPO
 
@@ -275,6 +276,17 @@ An example of the badge for `scc` is included below, and is used on this page.
 ```
 [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/)](https://github.com/boyter/scc/)
 ```
+
+By default the badge will show the repo's lines count. You can also specify for it to show a different category, by using the `?category=` query string. 
+
+Valid values include `code, blanks, lines, comments, cocomo` and examples of the appearance are included below.
+
+[![Scc Count Badge](https://sloc.xyz/github/boyter/scc/?category=code)](https://github.com/boyter/scc/)
+[![Scc Count Badge](https://sloc.xyz/github/boyter/scc/?category=blanks)](https://github.com/boyter/scc/)
+[![Scc Count Badge](https://sloc.xyz/github/boyter/scc/?category=lines)](https://github.com/boyter/scc/)
+[![Scc Count Badge](https://sloc.xyz/github/boyter/scc/?category=comments)](https://github.com/boyter/scc/)
+[![Scc Count Badge](https://sloc.xyz/github/boyter/scc/?category=cocomo)](https://github.com/boyter/scc/)
+
 
 *NB* it may not work for VERY large repositories (has been tested on Apache hadoop/spark without issue). In time additional metrics
 will be added.
