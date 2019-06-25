@@ -151,6 +151,15 @@ else
     exit
 fi
 
+if ./scc -v . | grep -q "skipping directory due to ignore: vendor" ; then
+    echo -e "${GREEN}PASSED ignore file directory check"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED ignore file directory check"
+    echo -e "======================================================="
+    exit
+fi
+
 
 # Try out duplicates
 for i in {1..100}
