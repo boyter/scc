@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"errors"
 	"fmt"
 	"github.com/karrick/godirwalk"
 	"github.com/monochromegane/go-gitignore"
@@ -97,22 +98,32 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 		all, _ = ioutil.ReadDir(root)
 	}
 
-	// TODO the gitIgnore should check for further gitignores deeper in the tree
-	gitIgnore, gitIgnoreError := gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
-	if Verbose {
-		if gitIgnoreError == nil {
-			printWarn(fmt.Sprintf("found and loaded gitignore file: %s", filepath.Join(root, ".gitignore")))
-		} else {
-			printWarn(fmt.Sprintf("no gitignore found: %s", filepath.Join(root, ".gitignore")))
+	var gitIgnore gitignore.IgnoreMatcher
+	gitIgnoreError := errors.New("")
+
+	if !GitIgnore {
+		// TODO the gitIgnore should check for further gitignores deeper in the tree
+		gitIgnore, gitIgnoreError = gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
+		if Verbose {
+			if gitIgnoreError == nil {
+				printWarn(fmt.Sprintf("found and loaded gitignore file: %s", filepath.Join(root, ".gitignore")))
+			} else {
+				printWarn(fmt.Sprintf("no gitignore found: %s", filepath.Join(root, ".gitignore")))
+			}
 		}
 	}
 
-	ignore, ignoreError := gitignore.NewGitIgnore(filepath.Join(root, ".ignore"))
-	if Verbose {
-		if ignoreError == nil {
-			printWarn(fmt.Sprintf("found and loaded ignore file: %s", filepath.Join(root, ".ignore")))
-		} else {
-			printWarn(fmt.Sprintf("no ignore found: %s", filepath.Join(root, ".ignore")))
+	var ignore gitignore.IgnoreMatcher
+	ignoreError := errors.New("")
+
+	if !Ignore {
+		ignore, ignoreError = gitignore.NewGitIgnore(filepath.Join(root, ".ignore"))
+		if Verbose {
+			if ignoreError == nil {
+				printWarn(fmt.Sprintf("found and loaded ignore file: %s", filepath.Join(root, ".ignore")))
+			} else {
+				printWarn(fmt.Sprintf("no ignore found: %s", filepath.Join(root, ".ignore")))
+			}
 		}
 	}
 

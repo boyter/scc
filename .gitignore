@@ -28,3 +28,6 @@ examples/performance_tests/5
 examples/performance_tests/6
 examples/performance_tests/7
 examples/performance_tests/8
+
+# Ignore test
+ignored.xml

@@ -43,6 +43,12 @@ var More = false
 // Cocomo toggles the COCOMO calculation
 var Cocomo = false
 
+// Disables .gitignore checks
+var GitIgnore = false
+
+// Disables ignore file checks
+var Ignore = false
+
 // DisableCheckBinary toggles checking for binary files using NUL bytes
 var DisableCheckBinary = false
 

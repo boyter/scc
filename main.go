@@ -52,6 +52,18 @@ func main() {
 		"remove COCOMO calculation output",
 	)
 	flags.BoolVar(
+		&processor.Ignore,
+		"ignore",
+		false,
+		"disables .ignore file logic",
+	)
+	flags.BoolVar(
+		&processor.GitIgnore,
+		"gitignore",
+		false,
+		"disables .gitignore file logic",
+	)
+	flags.BoolVar(
 		&processor.Debug,
 		"debug",
 		false,

@@ -199,6 +199,30 @@ else
     exit
 fi
 
+# Turn off gitignore https://github.com/boyter/scc/issues/53
+touch ignored.xml
+a=$(./scc  | grep Total)
+b=$(./scc --gitignore | grep Total)
+if [ "$a" == "$b" ]; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED git ignore filter"
+    echo -e "================================================="
+    exit
+else
+    echo -e "${GREEN}PASSED git ignore filter"
+fi
+
+a=$(./scc  | grep Total)
+b=$(./scc --ignore | grep Total)
+if [ "$a" == "$b" ]; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED ignore filter"
+    echo -e "================================================="
+    exit
+else
+    echo -e "${GREEN}PASSED ignore filter"
+fi
+
 # Try out specific languages
 for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna '
 do
@@ -214,6 +238,7 @@ done
 
 echo -e "${NC}Cleaning up..."
 rm ./scc
+rm ./ignored.xml
 
 echo -e "${GREEN}================================================="
 echo -e "ALL TESTS PASSED"
