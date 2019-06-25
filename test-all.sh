@@ -202,7 +202,7 @@ fi
 # Turn off gitignore https://github.com/boyter/scc/issues/53
 touch ignored.xml
 a=$(./scc  | grep Total)
-b=$(./scc --gitignore | grep Total)
+b=$(./scc --no-gitignore | grep Total)
 if [ "$a" == "$b" ]; then
     echo -e "${RED}======================================================="
     echo -e "FAILED git ignore filter"
@@ -213,7 +213,7 @@ else
 fi
 
 a=$(./scc  | grep Total)
-b=$(./scc --ignore | grep Total)
+b=$(./scc --no-ignore | grep Total)
 if [ "$a" == "$b" ]; then
     echo -e "${RED}======================================================="
     echo -e "FAILED ignore filter"

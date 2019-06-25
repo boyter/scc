@@ -53,13 +53,13 @@ func main() {
 	)
 	flags.BoolVar(
 		&processor.Ignore,
-		"ignore",
+		"no-ignore",
 		false,
 		"disables .ignore file logic",
 	)
 	flags.BoolVar(
 		&processor.GitIgnore,
-		"gitignore",
+		"no-gitignore",
 		false,
 		"disables .gitignore file logic",
 	)
