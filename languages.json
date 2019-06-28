@@ -3446,28 +3446,6 @@
       }
     ]
   },
-  "Luna": {
-    "complexitychecks": [
-    ],
-    "extensions": [
-      "luna"
-    ],
-    "line_comment": [
-      "#"
-    ],
-    "multi_line": [
-    ],
-    "quotes": [
-      {
-        "end": "\\\"",
-        "start": "\\\""
-      },
-      {
-        "end": "'",
-        "start": "'"
-      }
-    ]
-  },
   "Lucius": {
     "complexitychecks": [
       "for ",
@@ -3498,6 +3476,26 @@
       {
         "end": "\"",
         "start": "\""
+      }
+    ]
+  },
+  "Luna": {
+    "complexitychecks": [],
+    "extensions": [
+      "luna"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\\\"",
+        "start": "\\\""
+      },
+      {
+        "end": "'",
+        "start": "'"
       }
     ]
   },
@@ -6599,6 +6597,17 @@
     "complexitychecks": [],
     "extensions": [
       ".gitignore"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [],
+    "quotes": []
+  },
+  "ignore": {
+    "complexitychecks": [],
+    "extensions": [
+      ".ignore"
     ],
     "line_comment": [
       "#"
