@@ -288,8 +288,7 @@ Valid values include `code, blanks, lines, comments, cocomo` and examples of the
 [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/?category=cocomo)](https://github.com/boyter/scc/)
 
 
-*NB* it may not work for VERY large repositories (has been tested on Apache hadoop/spark without issue). In time additional metrics
-will be added.
+*NB* it may not work for VERY large repositories (has been tested on Apache hadoop/spark without issue).
 
 ### Languages
 
