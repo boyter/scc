@@ -83,7 +83,6 @@ Command line usage of `scc` is designed to be as simple as possible.
 Full details can be found in `scc --help`.
 
 ```
-$ scc --help
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
 Ben Boyter <ben@boyter.org> + Contributors
 
@@ -91,27 +90,29 @@ Usage:
   scc [flags]
 
 Flags:
-      --avg-wage int          average wage value used for basic COCOMO calculation (default 56286)
-      --binary                disable binary file detection
-      --by-file               display output for every file
-      --cocomo                remove COCOMO calculation output
-      --debug                 enable debug output
-      --exclude-dir strings   directories to exclude (default [.git,.hg,.svn])
-      --file-gc-count int     number of files to parse before turning the GC on (default 10000)
-  -f, --format string         set output format [tabular, wide, json, csv] (default "tabular")
-  -h, --help                  help for scc
-  -i, --include-ext strings   limit to file extensions [comma separated list: e.g. go,java,js]
-  -l, --languages             print supported languages and extensions
-  -c, --no-complexity         skip calculation of code complexity
-  -d, --no-duplicates         remove duplicate files from stats and output
-  -M, --not-match string      ignore files and directories matching regular expression
-  -o, --output string         output filename (default stdout)
-  -s, --sort string           column to sort by [files, name, lines, blanks, code, comments, complexity] (default "files")
-  -t, --trace                 enable trace output. Not recommended when processing multiple files
-  -v, --verbose               verbose output
-      --version               version for scc
-  -w, --wide                  wider output with additional statistics (implies --complexity)
-```
+      --avg-wage int            average wage value used for basic COCOMO calculation (default 56286)
+      --binary                  disable binary file detection
+      --by-file                 display output for every file
+      --cocomo                  remove COCOMO calculation output
+      --debug                   enable debug output
+      --exclude-dir strings     directories to exclude (default [.git,.hg,.svn])
+      --file-gc-count int       number of files to parse before turning the GC on (default 10000)
+  -f, --format string           set output format [tabular, wide, json, csv] (default "tabular")
+  -h, --help                    help for scc
+  -i, --include-ext strings     limit to file extensions [comma separated list: e.g. go,java,js]
+  -l, --languages               print supported languages and extensions
+  -c, --no-complexity           skip calculation of code complexity
+  -d, --no-duplicates           remove duplicate files from stats and output
+      --no-gitignore            disables .gitignore file logic
+      --no-ignore               disables .ignore file logic
+  -M, --not-match stringArray   ignore files and directories matching regular expression
+  -o, --output string           output filename (default stdout)
+  -s, --sort string             column to sort by [files, name, lines, blanks, code, comments, complexity] (default "files")
+  -t, --trace                   enable trace output. Not recommended when processing multiple files
+  -v, --verbose                 verbose output
+      --version                 version for scc
+  -w, --wide                    wider output with additional statistics (implies --complexity)
+  ```
 
 Output should look something like the below for the redis project
 
@@ -256,12 +257,12 @@ scc is pretty well tested with many unit, integration and benchmarks to ensure t
 Run go build for windows and linux then the following in linux, keep in mind need to update the version
 
 ```
-GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.4.0-x86_64-apple-darwin.zip scc
-GOOS=darwin GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.4.0-i386-apple-darwin.zip scc
-GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.4.0-x86_64-pc-windows.zip scc.exe
-GOOS=windows GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.4.0-i386-pc-windows.zip scc.exe
-GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.4.0-x86_64-unknown-linux.zip scc
-GOOS=linux GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.4.0-i386-unknown-linux.zip scc
+GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.5.0-x86_64-apple-darwin.zip scc
+GOOS=darwin GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.5.0-i386-apple-darwin.zip scc
+GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.5.0-x86_64-pc-windows.zip scc.exe
+GOOS=windows GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.5.0-i386-pc-windows.zip scc.exe
+GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.5.0-x86_64-unknown-linux.zip scc
+GOOS=linux GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.5.0-i386-unknown-linux.zip scc
 ```
 
 ### Badges (beta)
@@ -292,6 +293,6 @@ Valid values include `code, blanks, lines, comments, cocomo` and examples of the
 
 ### Languages
 
-List of supported languages. The master version of `scc` supports 234 languages at last count. Note that this is always assumed that you built from master, and it might trail behind what is actually supported. To see what your version of `scc` supports run `scc --languages`
+List of supported languages. The master version of `scc` supports 239 languages at last count. Note that this is always assumed that you built from master, and it might trail behind what is actually supported. To see what your version of `scc` supports run `scc --languages`
 
 [Click here to view all languages supported by master](LANGUAGES.md)
