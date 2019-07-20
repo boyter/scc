@@ -4217,6 +4217,44 @@
     "multi_line": [],
     "quotes": []
   },
+  "PL/SQL": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "fnc",
+      "pkb",
+      "pks",
+      "prc",
+      "trg",
+      "vw"
+    ],
+    "line_comment": [
+      "--"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
   "PSL Assertion": {
     "complexitychecks": [
       "for ",
