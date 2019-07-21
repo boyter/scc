@@ -4219,17 +4219,21 @@
   },
   "PL/SQL": {
     "complexitychecks": [
-      "for ",
-      "for(",
+      "and ",
+      "and(",
+      "else ",
+      "else(",
+      "elseif ",
+      "elseif(",
       "if ",
       "if(",
-      "switch ",
-      "while ",
-      "else ",
-      "|| ",
-      "&& ",
-      "!= ",
-      "== "
+      "loop ",
+      "not ",
+      "not(",
+      "or ",
+      "or(",
+      "<> ",
+      "= "
     ],
     "extensions": [
       "fnc",
