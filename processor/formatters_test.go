@@ -218,6 +218,93 @@ func TestToJSONMultiple(t *testing.T) {
 	}
 }
 
+func TestToYAMLEmpty(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	close(inputChan)
+	res := toYAML(inputChan)
+
+	if res != `sum:
+  code: 0
+  comment: 0
+  blank: 0
+  count: 0
+header:
+  version: 1.0.0
+  elapsed_seconds: 0
+  n_files: 0
+  n_lines: 0
+{}
+` {
+		t.Error("Expected empty YAML return", res)
+	}
+}
+
+func TestToYAMLSingle(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	close(inputChan)
+	Debug = true // Increase coverage slightly
+	res := toYAML(inputChan)
+	Debug = false
+
+	if !strings.Contains(res, `version: 1.0.0`) || !strings.Contains(res, `n_lines: 1000`) {
+		t.Error("Expected YAML return", res)
+	}
+}
+
+func TestToYAMLMultiple(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "aaaa.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	close(inputChan)
+	Debug = true // Increase coverage slightly
+	res := toYAML(inputChan)
+	Debug = false
+
+	if !strings.Contains(res, `code: 2000`) || !strings.Contains(res, `n_lines: 2000`) {
+		t.Error("Expected JSON return", res)
+	}
+}
+
 func TestToCsvMultiple(t *testing.T) {
 	inputChan := make(chan *FileJob, 1000)
 	inputChan <- &FileJob{

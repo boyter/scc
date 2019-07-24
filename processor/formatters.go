@@ -109,7 +109,6 @@ func toYAML(input chan *FileJob) string {
 		_, ok := languages[res.Language]
 
 		if !ok {
-
 			languages[res.Language] = LanguageSummaryCloc{
 				Name:    res.Language,
 				Code:    res.Code,
@@ -256,7 +255,7 @@ func fileSummarize(input chan *FileJob) string {
 		return fileSummarizeLong(input)
 	case strings.ToLower(Format) == "json":
 		return toJSON(input)
-	case strings.ToLower(Format) == "yaml":
+	case strings.ToLower(Format) == "yaml" || strings.ToLower(Format) == "yml":
 		return toYAML(input)
 	case strings.ToLower(Format) == "csv":
 		return toCSV(input)
