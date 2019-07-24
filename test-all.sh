@@ -22,7 +22,7 @@ NC='\033[0m'
 if ./scc --not-a-real-option > /dev/null ; then
     echo -e "${RED}================================================="
     echo -e "FAILED Invalid option should produce error code "
-    echo -e "======================================================="
+    echo -e "=======================================================${NC}"
     exit
 else
     echo -e "${GREEN}PASSED invalid option test"
@@ -31,7 +31,7 @@ fi
 if ./scc NOTAREALDIRECTORYORFILE > /dev/null ; then
     echo -e "${RED}================================================="
     echo -e "FAILED Invalid file/directory should produce error code "
-    echo -e "======================================================="
+    echo -e "=======================================================${NC}"
     exit
 else
     echo -e "${GREEN}PASSED invalid file/directory test"
@@ -42,7 +42,7 @@ if ./scc > /dev/null ; then
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED Should run correctly with no directory specified"
-    echo -e "======================================================="
+    echo -e "=======================================================${NC}"
     exit
 fi
 
@@ -51,7 +51,7 @@ if ./scc processor > /dev/null ; then
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED Should run correctly with directory specified"
-    echo -e "======================================================="
+    echo -e "=======================================================${NC}"
     exit
 fi
 
@@ -60,7 +60,7 @@ if ./scc --avg-wage 10000 --binary --by-file --cocomo --debug --exclude-dir .git
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED Should run correctly with multiple options"
-    echo -e "======================================================="
+    echo -e "=======================================================${NC}"
     exit
 fi
 
@@ -69,7 +69,7 @@ if ./scc -i sh -M "vendor|examples|p.*" > /dev/null ; then
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED Should run with regular expression ignore"
-    echo -e "======================================================="
+    echo -e "=======================================================${NC}"
     exit
 fi
 
@@ -78,16 +78,16 @@ if ./scc "examples/shared_extension/" | grep -q "Coq"; then
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED Should be able to work with shared extension 1"
-    echo -e "======================================================="
+    echo -e "=======================================================${NC}"
     exit
 fi
 
-if ./scc "examples/shared_extension/" | grep -q "SystemVerilog"; then
+if ./scc "examples/shared_extension/" | grep -q "Verilog"; then
     echo -e "${GREEN}PASSED shared extension test 2"
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED Should be able to work with shared extension 2"
-    echo -e "======================================================="
+    echo -e "=======================================================${NC}"
     exit
 fi
 
@@ -96,7 +96,7 @@ if ./scc "examples/shared_extension/" | grep -q "V "; then
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED Should be able to work with shared extension 3"
-    echo -e "======================================================="
+    echo -e "=======================================================${NC}"
     exit
 fi
 
@@ -108,7 +108,7 @@ do
     else
         echo -e "${RED}======================================================="
         echo -e "FAILED Should not have concurrency issue"
-        echo -e "================================================="
+        echo -e "=================================================${NC}"
         exit
     fi
 done
@@ -119,7 +119,7 @@ if ./scc main.go > /dev/null ; then
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED Should run correctly with a file is specified"
-    echo -e "================================================="
+    echo -e "=================================================${NC}"
     exit
 fi
 
@@ -129,7 +129,7 @@ if ./scc main.go README.md | grep -q "Go " ; then
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED Should work with multiple file arguments 1"
-    echo -e "======================================================="
+    echo -e "=======================================================${NC}"
     exit
 fi
 
@@ -138,7 +138,7 @@ if ./scc main.go README.md | grep -q "Markdown " ; then
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED Should work with multiple file arguments 2"
-    echo -e "======================================================="
+    echo -e "=======================================================${NC}"
     exit
 fi
 
@@ -147,7 +147,7 @@ if ./scc processor scripts > /dev/null ; then
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED Should run correctly with multiple directory specified"
-    echo -e "================================================="
+    echo -e "=================================================${NC}"
     exit
 fi
 
@@ -156,7 +156,7 @@ if ./scc -v . | grep -q "skipping directory due to ignore: vendor" ; then
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED ignore file directory check"
-    echo -e "======================================================="
+    echo -e "=======================================================${NC}"
     exit
 fi
 
@@ -169,7 +169,7 @@ do
     else
         echo -e "${RED}======================================================="
         echo -e "FAILED Duplicates should be consistent"
-        echo -e "======================================================="
+        echo -e "=======================================================${NC}"
         exit
     fi
 done
@@ -183,7 +183,7 @@ if [ "$a" == "$b" ]; then
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED multiple regex test"
-    echo -e "================================================="
+    echo -e "=================================================${NC}"
     exit
 fi
 
@@ -195,7 +195,7 @@ if [ "$a" == "$b" ]; then
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED git filter"
-    echo -e "================================================="
+    echo -e "=================================================${NC}"
     exit
 fi
 
@@ -206,7 +206,7 @@ b=$(./scc --no-gitignore | grep Total)
 if [ "$a" == "$b" ]; then
     echo -e "${RED}======================================================="
     echo -e "FAILED git ignore filter"
-    echo -e "================================================="
+    echo -e "=================================================${NC}"
     exit
 else
     echo -e "${GREEN}PASSED git ignore filter"
@@ -217,7 +217,7 @@ b=$(./scc --no-ignore | grep Total)
 if [ "$a" == "$b" ]; then
     echo -e "${RED}======================================================="
     echo -e "FAILED ignore filter"
-    echo -e "================================================="
+    echo -e "=================================================${NC}"
     exit
 else
     echo -e "${GREEN}PASSED ignore filter"
@@ -231,7 +231,7 @@ do
     else
         echo -e "${RED}======================================================="
         echo -e "FAILED Should be able to find $i"
-        echo -e "======================================================="
+        echo -e "=======================================================${NC}"
         exit
     fi
 done
@@ -242,4 +242,4 @@ rm ./ignored.xml
 
 echo -e "${GREEN}================================================="
 echo -e "ALL TESTS PASSED"
-echo -e "================================================="
+echo -e "=================================================${NC}"
