@@ -86,7 +86,7 @@ func main() {
 		"format",
 		"f",
 		"tabular",
-		"set output format [tabular, wide, json, csv]",
+		"set output format [tabular, wide, json, csv, yaml]",
 	)
 	flags.StringSliceVarP(
 		&processor.WhiteListExtensions,

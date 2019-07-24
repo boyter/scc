@@ -7,6 +7,7 @@ import (
 	"fmt"
 	glang "golang.org/x/text/language"
 	gmessage "golang.org/x/text/message"
+	"gopkg.in/yaml.v2"
 	"os"
 	"sort"
 	"strings"
@@ -63,6 +64,98 @@ func sortSummaryFiles(summary *LanguageSummary) {
 			return summary.Files[i].Lines > summary.Files[j].Lines
 		})
 	}
+}
+
+// LanguageSummary to generate output like cloc
+type LanguageSummaryCloc struct {
+	Name    string
+	Code    int64
+	Comment int64
+	Blank   int64
+	Count   int64
+}
+
+type SummaryStruct struct {
+	Code    int64
+	Comment int64
+	Blank   int64
+	Count   int64
+}
+
+type HeaderStruct struct {
+	Version         string
+	Elapsed_seconds float32
+	N_files         int64
+	N_lines         int64
+}
+
+type LanguageReport struct {
+	SUM    SummaryStruct
+	Header HeaderStruct
+}
+
+func toYAML(input chan *FileJob) string {
+	languages := map[string]LanguageSummaryCloc{}
+	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
+
+	for res := range input {
+		sumFiles++
+		sumLines += res.Lines
+		sumCode += res.Code
+		sumComment += res.Comment
+		sumBlank += res.Blank
+		sumComplexity += res.Complexity
+
+		_, ok := languages[res.Language]
+
+		if !ok {
+
+			languages[res.Language] = LanguageSummaryCloc{
+				Name:    res.Language,
+				Code:    res.Code,
+				Comment: res.Comment,
+				Blank:   res.Blank,
+				Count:   1,
+			}
+		} else {
+			tmp := languages[res.Language]
+
+			languages[res.Language] = LanguageSummaryCloc{
+				Name:    res.Language,
+				Code:    tmp.Code + res.Code,
+				Comment: tmp.Comment + res.Comment,
+				Blank:   tmp.Blank + res.Blank,
+				Count:   tmp.Count + 1,
+			}
+		}
+	}
+
+	header := HeaderStruct{
+		Version: "1.0.0",
+		N_files: sumFiles,
+		N_lines: sumLines,
+	}
+	summary := SummaryStruct{
+		Blank:   sumBlank,
+		Comment: sumComment,
+		Code:    sumCode,
+		Count:   sumFiles,
+	}
+	report := LanguageReport{
+		Header: header,
+		SUM:    summary,
+	}
+
+	startTime := makeTimestampMilli()
+	report_yaml, _ := yaml.Marshal(report)
+	language_yaml, _ := yaml.Marshal(languages)
+	yamlString := string(report_yaml) + string(language_yaml)
+
+	if Debug {
+		printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
+	}
+
+	return string(yamlString)
 }
 
 func toJSON(input chan *FileJob) string {
@@ -163,6 +256,8 @@ func fileSummarize(input chan *FileJob) string {
 		return fileSummarizeLong(input)
 	case strings.ToLower(Format) == "json":
 		return toJSON(input)
+	case strings.ToLower(Format) == "yaml":
+		return toYAML(input)
 	case strings.ToLower(Format) == "csv":
 		return toCSV(input)
 	}
