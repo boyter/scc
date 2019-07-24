@@ -28,6 +28,30 @@ else
     echo -e "${GREEN}PASSED invalid option test"
 fi
 
+if ./scc "examples/language/" --format yaml -o .tmp_scc_yaml >/dev/null && python <<EOS
+import yaml,sys 
+try:
+    with open('.tmp_scc_yaml','r') as f:
+        data = yaml.load(f.read())
+        if type(data) is dict and data.keys(): 
+            sys.exit(0)
+        else:
+            print('data was {}'.format(type(data)))
+except Exception as e:
+    pass
+sys.exit(1)
+EOS
+
+then
+	echo -e "${GREEN}PASSED yaml format test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "${RED}FAILED Should accept --format yaml and should generate valid output"
+    echo -e "=======================================================${NC}"
+    rm -f .tmp_scc_yaml
+    exit
+fi
+
 if ./scc NOTAREALDIRECTORYORFILE > /dev/null ; then
     echo -e "${RED}================================================="
     echo -e "FAILED Invalid file/directory should produce error code "
@@ -239,6 +263,7 @@ done
 echo -e "${NC}Cleaning up..."
 rm ./scc
 rm ./ignored.xml
+rm .tmp_scc_yaml
 
 echo -e "${GREEN}================================================="
 echo -e "ALL TESTS PASSED"
