@@ -28,7 +28,7 @@ else
     echo -e "${GREEN}PASSED invalid option test"
 fi
 
-if ./scc "examples/language/" --format yaml -o .tmp_scc_yaml >/dev/null && python <<EOS
+if ./scc "examples/language/" --format cloc-yaml -o .tmp_scc_yaml >/dev/null && python <<EOS
 import yaml,sys 
 try:
     with open('.tmp_scc_yaml','r') as f:
@@ -43,16 +43,16 @@ sys.exit(1)
 EOS
 
 then
-	echo -e "${GREEN}PASSED yaml format test"
+	echo -e "${GREEN}PASSED cloc-yaml format test"
 else
     echo -e "${RED}======================================================="
-    echo -e "${RED}FAILED Should accept --format yaml and should generate valid output"
+    echo -e "${RED}FAILED Should accept --format cloc-yaml and should generate valid output"
     echo -e "=======================================================${NC}"
     rm -f .tmp_scc_yaml
     exit
 fi
 
-if ./scc "examples/language/" --format yml -o .tmp_scc_yaml >/dev/null && python <<EOS
+if ./scc "examples/language/" --format cloc-yml -o .tmp_scc_yaml >/dev/null && python <<EOS
 import yaml,sys
 try:
     with open('.tmp_scc_yaml','r') as f:
@@ -67,10 +67,10 @@ sys.exit(1)
 EOS
 
 then
-	echo -e "${GREEN}PASSED yml format test"
+	echo -e "${GREEN}PASSED cloc-yml format test"
 else
     echo -e "${RED}======================================================="
-    echo -e "${RED}FAILED Should accept --format yml and should generate valid output"
+    echo -e "${RED}FAILED Should accept --format cloc-yml and should generate valid output"
     echo -e "=======================================================${NC}"
     rm -f .tmp_scc_yaml
     exit

@@ -94,7 +94,7 @@ type LanguageReport struct {
 	Header HeaderStruct
 }
 
-func toYAML(input chan *FileJob) string {
+func toClocYAML(input chan *FileJob) string {
 	languages := map[string]LanguageSummaryCloc{}
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
 
@@ -255,8 +255,8 @@ func fileSummarize(input chan *FileJob) string {
 		return fileSummarizeLong(input)
 	case strings.ToLower(Format) == "json":
 		return toJSON(input)
-	case strings.ToLower(Format) == "yaml" || strings.ToLower(Format) == "yml":
-		return toYAML(input)
+	case strings.ToLower(Format) == "cloc-yaml" || strings.ToLower(Format) == "cloc-yml":
+		return toClocYAML(input)
 	case strings.ToLower(Format) == "csv":
 		return toCSV(input)
 	}
