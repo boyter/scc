@@ -302,9 +302,27 @@ func walkDirectory(toWalk string, blackList []string, extensionLookup map[string
 						return filepath.SkipDir
 					}
 				}
+
+				for _, i := range ignores {
+					if i.Match(root, true) {
+						if Verbose {
+							printWarn("skipping directory due to ignore: " + root)
+						}
+						return filepath.SkipDir
+					}
+				}
 			}
 
 			if !info.IsDir() {
+				for _, i := range ignores {
+					if i.Match(filepath.Join(root, info.Name()), false) {
+						if Verbose {
+							printWarn("skipping file due to ignore: " + filepath.Join(root, info.Name()))
+						}
+						return nil
+					}
+				}
+
 				// Lookup in case the full name matches
 				language, ok := extensionLookup[strings.ToLower(info.Name())]
 
