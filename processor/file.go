@@ -98,38 +98,11 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 	}
 
 	ignores := []gitignore.IgnoreMatcher{}
-
 	if !GitIgnore {
-		// TODO the gitIgnore should check for further gitignores deeper in the tree
-		ig, err := gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
-
-		if err == nil {
-			ignores = append(ignores, ig)
-		}
-
-		if Verbose {
-			if err == nil {
-				printWarn(fmt.Sprintf("found and loaded gitignore file: %s", filepath.Join(root, ".gitignore")))
-			} else {
-				printWarn(fmt.Sprintf("no gitignore found: %s", filepath.Join(root, ".gitignore")))
-			}
-		}
+		ignores = loadIgnoreFile(root, ".gitignore", ignores)
 	}
-
 	if !Ignore {
-		ig, err := gitignore.NewGitIgnore(filepath.Join(root, ".ignore"))
-
-		if err == nil {
-			ignores = append(ignores, ig)
-		}
-
-		if Verbose {
-			if err == nil {
-				printWarn(fmt.Sprintf("found and loaded ignore file: %s", filepath.Join(root, ".ignore")))
-			} else {
-				printWarn(fmt.Sprintf("no ignore found: %s", filepath.Join(root, ".ignore")))
-			}
-		}
+		ignores = loadIgnoreFile(root, ".ignore", ignores)
 	}
 
 	resetGc := false
@@ -260,6 +233,23 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 	if Debug {
 		printDebug(fmt.Sprintf("milliseconds to walk directory: %d", makeTimestampMilli()-startTime))
 	}
+}
+
+func loadIgnoreFile(root string, filename string, ignores []gitignore.IgnoreMatcher) []gitignore.IgnoreMatcher {
+	ig, err := gitignore.NewGitIgnore(filepath.Join(root, filename))
+
+	if err == nil {
+		ignores = append(ignores, ig)
+	}
+
+	if Verbose {
+		if err == nil {
+			printWarn(fmt.Sprintf("found and loaded ignore file: %s", filepath.Join(root, filename)))
+		} else {
+			printWarn(fmt.Sprintf("no ignore found: %s", filepath.Join(root, filename)))
+		}
+	}
+	return ignores
 }
 
 func walkDirectory(toWalk string, blackList []string, extensionLookup map[string][]string, ignores []gitignore.IgnoreMatcher) []FileJob {
