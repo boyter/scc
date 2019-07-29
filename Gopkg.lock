@@ -15,6 +15,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/minio/blake2b-simd"
+  packages = ["."]
+  revision = "3f5f724cb5b182a5c278d6d3d55b40e7f8c2efb4"
+
+[[projects]]
+  branch = "master"
   name = "github.com/monochromegane/go-gitignore"
   packages = ["."]
   revision = "38717d0a108ca0e5af632cd6845ca77d45b50729"
@@ -56,9 +62,15 @@
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
 
+[[projects]]
+  name = "gopkg.in/yaml.v2"
+  packages = ["."]
+  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
+  version = "v2.2.2"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9d144105a69f02809dbc8994ee559714e3d228e17d49a4624a36f708770ba469"
+  inputs-digest = "a8c9f3e4f44abb3f32a1b4170a7f6bc2add2a9ca38f74b4b1e37cfd1b97aa359"
   solver-name = "gps-cdcl"
   solver-version = 1

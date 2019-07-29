@@ -2,8 +2,8 @@ package processor
 
 import (
 	"bytes"
-	"crypto/md5"
 	"fmt"
+	"github.com/minio/blake2b-simd"
 	"hash"
 	"io/ioutil"
 	"sort"
@@ -366,7 +366,7 @@ func CountStats(fileJob *FileJob) {
 	// hash method
 	var digest hash.Hash
 	if Duplicates {
-		digest = md5.New()
+		digest = blake2b.New256()
 	}
 
 	for index := checkBomSkip(fileJob); index < len(fileJob.Content); index++ {
