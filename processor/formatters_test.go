@@ -223,19 +223,8 @@ func TestToYAMLEmpty(t *testing.T) {
 	close(inputChan)
 	res := toClocYAML(inputChan)
 
-	if res != `sum:
-  code: 0
-  comment: 0
-  blank: 0
-  count: 0
-header:
-  version: 1.0.0
-  elapsed_seconds: 0
-  n_files: 0
-  n_lines: 0
-{}
-` {
-		t.Error("Expected empty YAML return", res)
+	if !strings.Contains(res, "{}") || !strings.Contains(res, "header:") || !strings.Contains(res, "nFiles: 0") {
+		t.Error("Expected empty Cloc YAML return", res)
 	}
 }
 
@@ -260,8 +249,8 @@ func TestToYAMLSingle(t *testing.T) {
 	res := toClocYAML(inputChan)
 	Debug = false
 
-	if !strings.Contains(res, `version: 1.0.0`) || !strings.Contains(res, `n_lines: 1000`) {
-		t.Error("Expected YAML return", res)
+	if !strings.Contains(res, `nLines: 1000`) {
+		t.Error("Expected Cloc YAML return", res)
 	}
 }
 
@@ -300,8 +289,8 @@ func TestToYAMLMultiple(t *testing.T) {
 	res := toClocYAML(inputChan)
 	Debug = false
 
-	if !strings.Contains(res, `code: 2000`) || !strings.Contains(res, `n_lines: 2000`) {
-		t.Error("Expected JSON return", res)
+	if !strings.Contains(res, `code: 2000`) || !strings.Contains(res, `nLines: 2000`) {
+		t.Error("Expected Cloc JSON return", res)
 	}
 }
 

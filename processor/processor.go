@@ -14,6 +14,9 @@ import (
 	"sync"
 )
 
+// The version of the application
+var Version = "2.6.0"
+
 // Flags set via the CLI which control how the output is displayed
 
 // Files indicates if there should be file output or not when formatting
@@ -108,6 +111,9 @@ var LanguageFeatures = map[string]LanguageFeature{}
 // LanguageFeaturesMutex is the shared mutex used to control getting and setting of language features
 // used rather than sync.Map because it turned out to be marginally faster
 var LanguageFeaturesMutex = sync.Mutex{}
+
+// Start time in milli seconds in case we want the total time
+var startTimeMilli = makeTimestampMilli()
 
 // ConfigureGc needs to be set outside of ProcessConstants because it should only be enabled in command line
 // mode https://github.com/boyter/scc/issues/32

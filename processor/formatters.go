@@ -67,35 +67,43 @@ func sortSummaryFiles(summary *LanguageSummary) {
 }
 
 // LanguageSummary to generate output like cloc
-type LanguageSummaryCloc struct {
-	Name    string
-	Code    int64
-	Comment int64
-	Blank   int64
-	Count   int64
+type languageSummaryCloc struct {
+	Name    string `yaml:"name"`
+	Code    int64  `yaml:"code"`
+	Comment int64  `yaml:"comment"`
+	Blank   int64  `yaml:"blank"`
+	Count   int64  `yaml:"nFiles"`
 }
 
-type SummaryStruct struct {
-	Code    int64
-	Comment int64
-	Blank   int64
-	Count   int64
+type summaryStruct struct {
+	Code    int64 `yaml:"code"`
+	Comment int64 `yaml:"comment"`
+	Blank   int64 `yaml:"blank"`
+	Count   int64 `yaml:"nFiles"`
 }
 
-type HeaderStruct struct {
-	Version         string
-	Elapsed_seconds float32
-	N_files         int64
-	N_lines         int64
+type headerStruct struct {
+	Url              string  `yaml:"url"`
+	Version          string  `yaml:"version"`
+	Elapsed_seconds  float64 `yaml:"elapsed_seconds"`
+	N_files          int64   `yaml:"nFiles"`
+	N_lines          int64   `yaml:"nLines"`
+	Files_per_second float64 `yaml:"files_per_second"`
+	Lines_per_second float64 `yaml:"lines_per_second"`
 }
 
-type LanguageReport struct {
-	SUM    SummaryStruct
-	Header HeaderStruct
+type LanguageReportStart struct {
+	Header headerStruct
+}
+
+type LanguageReportEnd struct {
+	Sum summaryStruct `yaml:"SUM"`
 }
 
 func toClocYAML(input chan *FileJob) string {
-	languages := map[string]LanguageSummaryCloc{}
+	startTime := makeTimestampMilli()
+
+	languages := map[string]languageSummaryCloc{}
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
 
 	for res := range input {
@@ -109,7 +117,7 @@ func toClocYAML(input chan *FileJob) string {
 		_, ok := languages[res.Language]
 
 		if !ok {
-			languages[res.Language] = LanguageSummaryCloc{
+			languages[res.Language] = languageSummaryCloc{
 				Name:    res.Language,
 				Code:    res.Code,
 				Comment: res.Comment,
@@ -119,7 +127,7 @@ func toClocYAML(input chan *FileJob) string {
 		} else {
 			tmp := languages[res.Language]
 
-			languages[res.Language] = LanguageSummaryCloc{
+			languages[res.Language] = languageSummaryCloc{
 				Name:    res.Language,
 				Code:    tmp.Code + res.Code,
 				Comment: tmp.Comment + res.Comment,
@@ -129,35 +137,44 @@ func toClocYAML(input chan *FileJob) string {
 		}
 	}
 
-	header := HeaderStruct{
-		Version: "1.0.0",
-		N_files: sumFiles,
-		N_lines: sumLines,
+	es := float64(makeTimestampMilli()-startTimeMilli) * float64(0.001)
+
+	header := headerStruct{
+		Url:              "https://github.com/boyter/scc/",
+		Version:          Version,
+		N_files:          sumFiles,
+		N_lines:          sumLines,
+		Elapsed_seconds:  es,
+		Files_per_second: float64(float64(sumFiles) / es),
+		Lines_per_second: float64(float64(sumLines) / es),
 	}
-	summary := SummaryStruct{
+	summary := summaryStruct{
 		Blank:   sumBlank,
 		Comment: sumComment,
 		Code:    sumCode,
 		Count:   sumFiles,
 	}
-	report := LanguageReport{
+	reportStart := LanguageReportStart{
 		Header: header,
-		SUM:    summary,
+	}
+	reportEnd := LanguageReportEnd{
+		Sum: summary,
 	}
 
-	startTime := makeTimestampMilli()
-	report_yaml, _ := yaml.Marshal(report)
+	report_yaml, _ := yaml.Marshal(reportStart)
+	sum_yaml, _ := yaml.Marshal(reportEnd)
 	language_yaml, _ := yaml.Marshal(languages)
-	yamlString := string(report_yaml) + string(language_yaml)
+	yamlString := "# https://github.com/boyter/scc/\n" + string(report_yaml) + string(language_yaml) + string(sum_yaml)
 
 	if Debug {
 		printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
 	}
 
-	return string(yamlString)
+	return yamlString
 }
 
 func toJSON(input chan *FileJob) string {
+	startTime := makeTimestampMilli()
 	languages := map[string]LanguageSummary{}
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
 
@@ -207,7 +224,6 @@ func toJSON(input chan *FileJob) string {
 		language = append(language, summary)
 	}
 
-	startTime := makeTimestampMilli()
 	jsonString, _ := json.Marshal(language)
 
 	if Debug {
