@@ -273,6 +273,34 @@ else
     echo -e "${GREEN}PASSED ignore filter"
 fi
 
+touch ./examples/ignore/ignorefile.txt
+a=$(./scc --by-file | grep ignorefile)
+b=$(./scc --by-file --no-ignore | grep ignorefile)
+if [ "$a" == "$b" ]; then
+    echo "$a"
+    echo "$b"
+    echo -e "${RED}======================================================="
+    echo -e "FAILED ignore recursive filter"
+    echo -e "=================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED ignore recursive filter"
+fi
+
+touch ./examples/ignore/gitignorefile.txt
+a=$(./scc --by-file | grep gitignorefile)
+b=$(./scc --by-file --no-gitignore | grep gitignorefile)
+if [ "$a" == "$b" ]; then
+    echo "$a"
+    echo "$b"
+    echo -e "${RED}======================================================="
+    echo -e "FAILED gitignore recursive filter"
+    echo -e "=================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED gitignore recursive filter"
+fi
+
 # Try out specific languages
 for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore '
 do
@@ -290,6 +318,8 @@ echo -e "${NC}Cleaning up..."
 rm ./scc
 rm ./ignored.xml
 rm .tmp_scc_yaml
+rm ./examples/ignore/gitignorefile.txt
+rm ./examples/ignore/ignorefile.txt
 
 echo -e "${GREEN}================================================="
 echo -e "ALL TESTS PASSED"
