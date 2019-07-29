@@ -1,7 +1,6 @@
 package processor
 
 import (
-	"errors"
 	"fmt"
 	"github.com/karrick/godirwalk"
 	"github.com/monochromegane/go-gitignore"
@@ -98,14 +97,18 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 		all, _ = ioutil.ReadDir(root)
 	}
 
-	var gitIgnore gitignore.IgnoreMatcher
-	gitIgnoreError := errors.New("")
+	ignores := []gitignore.IgnoreMatcher{}
 
 	if !GitIgnore {
 		// TODO the gitIgnore should check for further gitignores deeper in the tree
-		gitIgnore, gitIgnoreError = gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
+		ig, err := gitignore.NewGitIgnore(filepath.Join(root, ".gitignore"))
+
+		if err == nil {
+			ignores = append(ignores, ig)
+		}
+
 		if Verbose {
-			if gitIgnoreError == nil {
+			if err == nil {
 				printWarn(fmt.Sprintf("found and loaded gitignore file: %s", filepath.Join(root, ".gitignore")))
 			} else {
 				printWarn(fmt.Sprintf("no gitignore found: %s", filepath.Join(root, ".gitignore")))
@@ -113,13 +116,15 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 		}
 	}
 
-	var ignore gitignore.IgnoreMatcher
-	ignoreError := errors.New("")
-
 	if !Ignore {
-		ignore, ignoreError = gitignore.NewGitIgnore(filepath.Join(root, ".ignore"))
+		ig, err := gitignore.NewGitIgnore(filepath.Join(root, ".ignore"))
+
+		if err == nil {
+			ignores = append(ignores, ig)
+		}
+
 		if Verbose {
-			if ignoreError == nil {
+			if err == nil {
 				printWarn(fmt.Sprintf("found and loaded ignore file: %s", filepath.Join(root, ".ignore")))
 			} else {
 				printWarn(fmt.Sprintf("no ignore found: %s", filepath.Join(root, ".ignore")))
@@ -128,7 +133,6 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 	}
 
 	resetGc := false
-
 	var excludes []*regexp.Regexp
 
 	for _, exclude := range Exclude {
@@ -162,24 +166,19 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 				}
 			}
 
-			if gitIgnoreError == nil && gitIgnore.Match(filepath.Join(root, f.Name()), true) {
-				if Verbose {
-					printWarn("skipping directory due to git ignore: " + filepath.Join(root, f.Name()))
+			for _, i := range ignores {
+				if i.Match(filepath.Join(root, f.Name()), true) {
+					if Verbose {
+						printWarn("skipping directory due to ignore: " + filepath.Join(root, f.Name()))
+					}
+					shouldSkip = true
 				}
-				shouldSkip = true
-			}
-
-			if ignoreError == nil && ignore.Match(filepath.Join(root, f.Name()), true) {
-				if Verbose {
-					printWarn("skipping directory due to ignore: " + filepath.Join(root, f.Name()))
-				}
-				shouldSkip = true
 			}
 
 			if !shouldSkip {
 				wg.Add(1)
 				go func(toWalk string) {
-					filejobs := walkDirectory(toWalk, PathBlacklist, extensionLookup)
+					filejobs := walkDirectory(toWalk, PathBlacklist, extensionLookup, ignores)
 					for i := 0; i < len(filejobs); i++ {
 						for _, lan := range filejobs[i].PossibleLanguages {
 							LoadLanguageFeature(lan)
@@ -206,18 +205,13 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 
 			shouldSkip := false
 
-			if gitIgnoreError == nil && gitIgnore.Match(fpath, false) {
-				if Verbose {
-					printWarn("skipping file due to git ignore: " + f.Name())
+			for _, i := range ignores {
+				if i.Match(filepath.Join(root, f.Name()), false) {
+					if Verbose {
+						printWarn("skipping file due to ignore: " + filepath.Join(root, f.Name()))
+					}
+					shouldSkip = true
 				}
-				shouldSkip = true
-			}
-
-			if ignoreError == nil && ignore.Match(fpath, false) {
-				if Verbose {
-					printWarn("skipping file due to ignore: " + f.Name())
-				}
-				shouldSkip = true
 			}
 
 			for _, exclude := range excludes {
@@ -268,7 +262,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 	}
 }
 
-func walkDirectory(toWalk string, blackList []string, extensionLookup map[string][]string) []FileJob {
+func walkDirectory(toWalk string, blackList []string, extensionLookup map[string][]string, ignores []gitignore.IgnoreMatcher) []FileJob {
 	extension := ""
 	var filejobs []FileJob
 
