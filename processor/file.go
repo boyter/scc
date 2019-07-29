@@ -311,9 +311,7 @@ func walkDirectory(toWalk string, blackList []string, extensionLookup map[string
 						return filepath.SkipDir
 					}
 				}
-			}
-
-			if !info.IsDir() {
+			} else {
 				for _, i := range ignores {
 					if i.Match(filepath.Join(root, info.Name()), false) {
 						if Verbose {
