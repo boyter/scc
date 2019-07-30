@@ -86,8 +86,8 @@ type headerStruct struct {
 	Url              string  `yaml:"url"`
 	Version          string  `yaml:"version"`
 	Elapsed_seconds  float64 `yaml:"elapsed_seconds"`
-	N_files          int64   `yaml:"nFiles"`
-	N_lines          int64   `yaml:"nLines"`
+	N_files          int64   `yaml:"n_files"`
+	N_lines          int64   `yaml:"n_lines"`
 	Files_per_second float64 `yaml:"files_per_second"`
 	Lines_per_second float64 `yaml:"lines_per_second"`
 }
