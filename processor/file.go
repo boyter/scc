@@ -145,6 +145,7 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 						printWarn("skipping directory due to ignore: " + filepath.Join(root, f.Name()))
 					}
 					shouldSkip = true
+					break
 				}
 			}
 
@@ -178,8 +179,8 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 
 			shouldSkip := false
 
-			for _, i := range ignores {
-				if i.Match(filepath.Join(root, f.Name()), false) {
+			for _, ignore := range ignores {
+				if ignore.Match(filepath.Join(root, f.Name()), false) {
 					if Verbose {
 						printWarn("skipping file due to ignore: " + filepath.Join(root, f.Name()))
 					}
@@ -236,10 +237,10 @@ func walkDirectoryParallel(root string, output chan *FileJob) {
 }
 
 func loadIgnoreFile(root string, filename string, ignores []gitignore.IgnoreMatcher) []gitignore.IgnoreMatcher {
-	ig, err := gitignore.NewGitIgnore(filepath.Join(root, filename))
+	ignore, err := gitignore.NewGitIgnore(filepath.Join(root, filename))
 
 	if err == nil {
-		ignores = append(ignores, ig)
+		ignores = append(ignores, ignore)
 	}
 
 	if Verbose {
