@@ -101,7 +101,7 @@ Flags:
       --debug                   enable debug output
       --exclude-dir strings     directories to exclude (default [.git,.hg,.svn])
       --file-gc-count int       number of files to parse before turning the GC on (default 10000)
-  -f, --format string           set output format [tabular, wide, json, csv] (default "tabular")
+  -f, --format string           set output format [tabular, wide, json, csv, cloc-yaml] (default "tabular")
   -h, --help                    help for scc
   -i, --include-ext strings     limit to file extensions [comma separated list: e.g. go,java,js]
   -l, --languages               print supported languages and extensions
