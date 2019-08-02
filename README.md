@@ -185,7 +185,7 @@ Lets take a minute to discuss the complexity estimate itself.
 
 The complexity estimate is really just a number that is only comparable to files in the same language. It should not be used to compare languages directly without weighting them. The reason for this is that its calculated by looking for branch and loop statements in the code and incrementing a counter for that file.
 
-Because some languages don't have loops and instead use recursion they can have a lower complexity count. Does this mean they are less complex? Probably not, but the tool cannot see this because it does not build an AST of the code and simple scans through it.
+Because some languages don't have loops and instead use recursion they can have a lower complexity count. Does this mean they are less complex? Probably not, but the tool cannot see this because it does not build an AST of the code as it only scans through it.
 
 Generally though the complexity there is to help estimate between projects written in the same language, or for finding the most complex file in a project `scc --by-file -s complexity` which can be useful when you are estimating on how hard something is to maintain, or when looking for those files that should probably be refactored.
 
@@ -272,12 +272,12 @@ scc is pretty well tested with many unit, integration and benchmarks to ensure t
 Run go build for windows and linux then the following in linux, keep in mind need to update the version
 
 ```
-GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.5.0-x86_64-apple-darwin.zip scc
-GOOS=darwin GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.5.0-i386-apple-darwin.zip scc
-GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.5.0-x86_64-pc-windows.zip scc.exe
-GOOS=windows GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.5.0-i386-pc-windows.zip scc.exe
-GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.5.0-x86_64-unknown-linux.zip scc
-GOOS=linux GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.5.0-i386-unknown-linux.zip scc
+GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.6.0-x86_64-apple-darwin.zip scc
+GOOS=darwin GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.6.0-i386-apple-darwin.zip scc
+GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.6.0-x86_64-pc-windows.zip scc.exe
+GOOS=windows GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.6.0-i386-pc-windows.zip scc.exe
+GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.6.0-x86_64-unknown-linux.zip scc
+GOOS=linux GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.6.0-i386-unknown-linux.zip scc
 ```
 
 ### Badges (beta)
