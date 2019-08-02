@@ -249,7 +249,7 @@ fi
 
 # Turn off gitignore https://github.com/boyter/scc/issues/53
 touch ignored.xml
-a=$(./scc  | grep Total)
+a=$(./scc | grep Total)
 b=$(./scc --no-gitignore | grep Total)
 if [ "$a" == "$b" ]; then
     echo -e "${RED}======================================================="
@@ -260,15 +260,45 @@ else
     echo -e "${GREEN}PASSED git ignore filter"
 fi
 
-a=$(./scc  | grep Total)
+a=$(./scc | grep Total)
 b=$(./scc --no-ignore | grep Total)
 if [ "$a" == "$b" ]; then
+    echo "$a"
+    echo "$b"
     echo -e "${RED}======================================================="
     echo -e "FAILED ignore filter"
     echo -e "=================================================${NC}"
     exit
 else
     echo -e "${GREEN}PASSED ignore filter"
+fi
+
+touch ./examples/ignore/ignorefile.txt
+a=$(./scc --by-file | grep ignorefile)
+b=$(./scc --by-file --no-ignore | grep ignorefile)
+if [ "$a" == "$b" ]; then
+    echo "$a"
+    echo "$b"
+    echo -e "${RED}======================================================="
+    echo -e "FAILED ignore recursive filter"
+    echo -e "=================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED ignore recursive filter"
+fi
+
+touch ./examples/ignore/gitignorefile.txt
+a=$(./scc --by-file | grep gitignorefile)
+b=$(./scc --by-file --no-gitignore | grep gitignorefile)
+if [ "$a" == "$b" ]; then
+    echo "$a"
+    echo "$b"
+    echo -e "${RED}======================================================="
+    echo -e "FAILED gitignore recursive filter"
+    echo -e "=================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED gitignore recursive filter"
 fi
 
 # Try out specific languages
@@ -288,6 +318,8 @@ echo -e "${NC}Cleaning up..."
 rm ./scc
 rm ./ignored.xml
 rm .tmp_scc_yaml
+rm ./examples/ignore/gitignorefile.txt
+rm ./examples/ignore/ignorefile.txt
 
 echo -e "${GREEN}================================================="
 echo -e "ALL TESTS PASSED"

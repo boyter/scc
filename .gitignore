@@ -31,3 +31,4 @@ examples/performance_tests/8
 
 # Ignore test
 ignored.xml
+gitignorefile.txt

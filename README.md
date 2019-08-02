@@ -7,7 +7,9 @@ A tool similar to cloc, sloccount and tokei. For counting physical the lines of 
 
 Goal is to be the fastest code counter possible, but also perform COCOMO calculation like sloccount and to estimate code complexity similar to cyclomatic complexity calculators. In short one tool to rule them all.
 
-Also it has a very short name which is easy to type `scc`.
+Also it has a very short name which is easy to type `scc`. 
+
+If you don't like sloc cloc and code feel free to use the name `Succinct Code Counter`.
 
 [![Build Status](https://travis-ci.org/boyter/scc.svg?branch=master)](https://travis-ci.org/boyter/scc)
 [![Go Report Card](https://goreportcard.com/badge/github.com/boyter/scc)](https://goreportcard.com/report/github.com/boyter/scc)

@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"github.com/monochromegane/go-gitignore"
 	"math/rand"
 	"path/filepath"
 	"strings"
@@ -191,7 +192,7 @@ func TestWalkDirectory(t *testing.T) {
 	Debug = true
 	Exclude = []string{"test"}
 	ProcessConstants()
-	files := walkDirectory(".", []string{}, ExtensionToLanguage)
+	files := walkDirectory(".", []string{}, ExtensionToLanguage, []gitignore.IgnoreMatcher{})
 
 	if len(files) == 0 {
 		t.Error("Expected at least one file")
