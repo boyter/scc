@@ -45,6 +45,7 @@ func getExtension(name string) string {
 }
 
 type DirectoryJob struct {
+	root    string
 	path    string
 	ignores []gitignore.IgnoreMatcher
 }
@@ -106,6 +107,15 @@ DIRENTS:
         path := filepath.Join(job.path, name)
 		isDir := dirent.IsDir()
 
+		for _, black := range PathBlacklist {
+			if strings.HasPrefix(path, filepath.Join(job.root, black)) {
+				if Verbose {
+					printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", path))
+				}
+				continue DIRENTS
+			}
+		}
+
 		for _, exclude := range dw.excludes {
 			if exclude.Match([]byte(name)) {
 				if Verbose {
@@ -126,6 +136,7 @@ DIRENTS:
 
         if isDir {
             direntJob := &DirectoryJob{
+				root: job.root,
                 path: path,
 				ignores: ignores,
             }

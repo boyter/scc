@@ -362,6 +362,7 @@ func Process() {
 
 		for _, f := range DirFilePaths {
 			init := &DirectoryJob{
+				root: f,
 				path: f,
 				ignores: nil,
 			}
