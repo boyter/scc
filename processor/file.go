@@ -51,23 +51,55 @@ type DirectoryJob struct {
 }
 
 type DirectoryWalker struct {
-	output   chan *FileJob
+	stack    *cuba.CubaStack
+	output   chan<- *FileJob
 	excludes []*regexp.Regexp
 }
 
-func (dw *DirectoryWalker) Walk(root string) {
-	stack := cuba.NewStack(dw.Readdir)
+func NewDirectoryWalker(output chan<- *FileJob) *DirectoryWalker {
+	directoryWalker := &DirectoryWalker{
+		output: output,
+	}
+	for _, exclude := range Exclude {
+		directoryWalker.excludes = append(directoryWalker.excludes, regexp.MustCompile(exclude))
+	}
 
-	init := &DirectoryJob{
-		path: root,
+	directoryWalker.stack = cuba.NewStack(directoryWalker.Readdir)
+
+	return directoryWalker
+}
+
+func (dw *DirectoryWalker) Walk(root string) error {
+	root = filepath.Clean(root)
+
+	fileInfo, err := os.Stat(root)
+	if err != nil {
+		return err
+	}
+
+	if !fileInfo.IsDir() {
+		fileJob := newFileJob(root, root)
+		if fileJob != nil {
+			dw.output <- fileJob
+		}
+	}
+
+	job := &DirectoryJob{
+		root:    root,
+		path:    root,
 		ignores: nil,
 	}
-	stack.Push([]interface{}{ init })
-	stack.Run()
+	dw.stack.Push([]interface{}{ job })
+
+	return nil
+}
+
+func (dw *DirectoryWalker) Run() {
+	dw.stack.Run()
+	close(dw.output)
 }
 
 func (dw *DirectoryWalker) Readdir(item interface{}) []interface{} {
-	extensionLookup := ExtensionToLanguage
 	job := item.(*DirectoryJob)
 
 	ignores := job.ignores
@@ -142,40 +174,47 @@ DIRENTS:
             }
             newJobs = append(newJobs, direntJob)
         } else {
-			extension := ""
-			// Lookup in case the full name matches
-			language, ok := extensionLookup[strings.ToLower(name)]
-
-			// If no match check if we have a matching extension
-			if !ok {
-				extension = getExtension(name)
-				language, ok = extensionLookup[extension]
+			fileJob := newFileJob(path, name)
+			if fileJob != nil {
+				dw.output <- fileJob
 			}
-
-			// Convert from d.ts to ts and check that in case of multiple extensions
-			if !ok {
-				language, ok = extensionLookup[getExtension(extension)]
-			}
-
-			if ok {
-				for _, l := range language {
-					LoadLanguageFeature(l)
-				}
-
-				dw.output <- &FileJob{
-					Location:          path,
-					Filename:          name,
-					Extension:         extension,
-					PossibleLanguages: language,
-				}
-			} else if Verbose {
-				printWarn(fmt.Sprintf("skipping file unknown extension: %s", name))
-			}
-
-
-            continue
 		}
     }
 
     return newJobs
+}
+
+func newFileJob(path, name string) *FileJob {
+	extension := ""
+	// Lookup in case the full name matches
+	language, ok := ExtensionToLanguage[strings.ToLower(name)]
+
+	// If no match check if we have a matching extension
+	if !ok {
+		extension = getExtension(name)
+		language, ok = ExtensionToLanguage[extension]
+	}
+
+	// Convert from d.ts to ts and check that in case of multiple extensions
+	if !ok {
+		language, ok = ExtensionToLanguage[getExtension(extension)]
+	}
+
+	if ok {
+		for _, l := range language {
+			LoadLanguageFeature(l)
+		}
+
+		return &FileJob{
+			Location:          path,
+			Filename:          name,
+			Extension:         extension,
+			PossibleLanguages: language,
+		}
+	} else if Verbose {
+		printWarn(fmt.Sprintf("skipping file unknown extension: %s", name))
+
+	}
+
+	return nil
 }

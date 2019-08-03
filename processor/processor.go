@@ -7,14 +7,11 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"runtime/debug"
 	"sort"
 	"strings"
 	"sync"
-
-	"github.com/dbaggerman/cuba"
 )
 
 // The version of the application
@@ -351,25 +348,13 @@ func Process() {
 	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)         // Files ready to be summarised
 
 	go func() {
-		dirwalker := &DirectoryWalker{
-			output: fileListQueue,
-		}
-		for _, exclude := range Exclude {
-			dirwalker.excludes = append(dirwalker.excludes, regexp.MustCompile(exclude))
-		}
-
-		stack := cuba.NewStack(dirwalker.Readdir)
+		directoryWalker := NewDirectoryWalker(fileListQueue)
 
 		for _, f := range DirFilePaths {
-			init := &DirectoryJob{
-				root: f,
-				path: f,
-				ignores: nil,
-			}
-			stack.Push([]interface{}{ init })
+			directoryWalker.Walk(f)
 		}
-		stack.Run()
-		close(fileListQueue)
+
+		directoryWalker.Run()
 	}()
 	go fileReaderWorker(fileListQueue, fileReadContentJobQueue)
 	go fileProcessorWorker(fileReadContentJobQueue, fileSummaryJobQueue)
