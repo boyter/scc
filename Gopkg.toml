@@ -36,3 +36,8 @@
 [[constraint]]
   branch = "master"
   name = "github.com/monochromegane/go-gitignore"
+
+[[constraint]]
+  name = "github.com/dbaggerman/cuba"
+  version = "0.1.0"
+
