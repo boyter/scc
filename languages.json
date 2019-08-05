@@ -6651,7 +6651,8 @@
   "XML Schema": {
     "complexitychecks": [],
     "extensions": [
-      "xsd"
+      "xsd",
+      "xsl"
     ],
     "line_comment": [],
     "multi_line": [],
