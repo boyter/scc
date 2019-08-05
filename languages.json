@@ -6648,6 +6648,24 @@
       }
     ]
   },
+  "Web Services Description Language": {
+    "extensions": [
+      "wsdl"
+    ],
+    "line_comment": [],
+    "multi_line": [
+      [
+        "<!--",
+        "-->"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "XML Schema": {
     "complexitychecks": [],
     "extensions": [
