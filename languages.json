@@ -1825,7 +1825,8 @@
   "Extensible Stylesheet Language Transformations": {
     "complexitychecks": [],
     "extensions": [
-      "xslt"
+      "xslt",
+      "xsl"
     ],
     "line_comment": [],
     "multi_line": [],
@@ -6669,8 +6670,7 @@
   "XML Schema": {
     "complexitychecks": [],
     "extensions": [
-      "xsd",
-      "xsl"
+      "xsd"
     ],
     "line_comment": [],
     "multi_line": [],
