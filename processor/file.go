@@ -51,7 +51,7 @@ type DirectoryJob struct {
 }
 
 type DirectoryWalker struct {
-	stack    *cuba.CubaStack
+	buffer   *cuba.Pool
 	output   chan<- *FileJob
 	excludes []*regexp.Regexp
 }
@@ -64,7 +64,7 @@ func NewDirectoryWalker(output chan<- *FileJob) *DirectoryWalker {
 		directoryWalker.excludes = append(directoryWalker.excludes, regexp.MustCompile(exclude))
 	}
 
-	directoryWalker.stack = cuba.NewStack(directoryWalker.Readdir)
+	directoryWalker.buffer = cuba.New(directoryWalker.Readdir, cuba.NewStack())
 
 	return directoryWalker
 }
@@ -84,39 +84,38 @@ func (dw *DirectoryWalker) Walk(root string) error {
 		}
 	}
 
-	job := &DirectoryJob{
-		root:    root,
-		path:    root,
-		ignores: nil,
-	}
-	dw.stack.Push([]interface{}{ job })
+	dw.buffer.Push(
+		&DirectoryJob{
+			root:    root,
+			path:    root,
+			ignores: nil,
+		},
+	)
 
 	return nil
 }
 
 func (dw *DirectoryWalker) Run() {
-	dw.stack.Run()
+	dw.buffer.Finish()
 	close(dw.output)
 }
 
-func (dw *DirectoryWalker) Readdir(item interface{}) []interface{} {
-	job := item.(*DirectoryJob)
+func (dw *DirectoryWalker) Readdir(handle *cuba.Handle) {
+	job := handle.Item().(*DirectoryJob)
 
 	ignores := job.ignores
 
 	file, err := os.Open(job.path)
     if err != nil {
 		printError(fmt.Sprintf("failed to open %s: %v", job.path, err))
-        return nil
+        return
     }
     defer file.Close()
-
-    var newJobs []interface{}
 
     dirents, err := file.Readdir(-1)
     if err != nil {
 		printError(fmt.Sprintf("failed to read %s: %v", job.path, err))
-        return nil
+        return
     }
 
     for _, dirent := range dirents {
@@ -167,12 +166,13 @@ DIRENTS:
 		}
 
         if isDir {
-            direntJob := &DirectoryJob{
-				root: job.root,
-                path: path,
-				ignores: ignores,
-            }
-            newJobs = append(newJobs, direntJob)
+			handle.Push(
+				&DirectoryJob{
+					root: job.root,
+					path: path,
+					ignores: ignores,
+				},
+			)
         } else {
 			fileJob := newFileJob(path, name)
 			if fileJob != nil {
@@ -180,8 +180,6 @@ DIRENTS:
 			}
 		}
     }
-
-    return newJobs
 }
 
 func newFileJob(path, name string) *FileJob {
