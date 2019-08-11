@@ -239,7 +239,48 @@ If you enable duplicate detection expect performance to fall by about 50%
 
 ### API Support
 
-The core part of `scc` which is the counting engine is exposed publicly to be integrated into other Go applications. See https://github.com/pinpt/ripsrc for an example of how to do this.
+The core part of `scc` which is the counting engine is exposed publicly to be integrated into other Go applications. See https://github.com/pinpt/ripsrc for an example of how to do this. However as a quick start consider the following,
+
+```
+package main
+
+import (
+	"fmt"
+	"io/ioutil"
+
+	"github.com/boyter/scc/processor"
+)
+
+type statsProcessor struct{}
+
+func (p *statsProcessor) ProcessLine(job *processor.FileJob, currentLine int64, lineType processor.LineType) bool {
+	switch lineType {
+	case processor.LINE_BLANK:
+		fmt.Println(currentLine, "lineType", "BLANK")
+	case processor.LINE_CODE:
+		fmt.Println(currentLine, "lineType", "CODE")
+	case processor.LINE_COMMENT:
+		fmt.Println(currentLine, "lineType", "COMMENT")
+	}
+	return true
+}
+
+func main() {
+	bts, _ := ioutil.ReadFile("somefile.go")
+
+	t := &statsProcessor{}
+	filejob := &processor.FileJob{
+		Filename: "test.go",
+		Language: "Go",
+		Content:  bts,
+		Callback: t,
+	}
+
+    processor.ProcessConstants() // Required to load the language information and need only be done once
+	processor.CountStats(filejob)
+}
+```
+
 
 ### Adding/Modifying Languages
 
