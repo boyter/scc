@@ -276,7 +276,7 @@ func main() {
 		Callback: t,
 	}
 
-    processor.ProcessConstants() // Required to load the language information and need only be done once
+	processor.ProcessConstants() // Required to load the language information and need only be done once
 	processor.CountStats(filejob)
 }
 ```
