@@ -80,6 +80,7 @@ Why use `scc`?
 Why not use `scc`?
 
  - You don't like Go for some reason
+ - It cannot count D source with different nested multi-line comments correctly https://github.com/boyter/scc/issues/27
 
 ### Usage
 
