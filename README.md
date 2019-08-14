@@ -239,6 +239,21 @@ polyglot v0.5.19 (downloaded from github)
 
 If you enable duplicate detection expect performance to fall by about 50%
 
+### CI/CD Support
+
+Some CI/CD systems which will remain nameless do not work very well with the box-lines used by `scc`. To support those systems better there is an option `--ci` which will change the default output to ASCII only.
+
+```
+$ scc --ci main.go
+-------------------------------------------------------------------------------
+Language                 Files     Lines     Code  Comments   Blanks Complexity
+-------------------------------------------------------------------------------
+Go                           1       171      161         4        6          2
+-------------------------------------------------------------------------------
+Total                        1       171      161         4        6          2
+-------------------------------------------------------------------------------
+```
+
 ### API Support
 
 The core part of `scc` which is the counting engine is exposed publicly to be integrated into other Go applications. See https://github.com/pinpt/ripsrc for an example of how to do this. However as a quick start consider the following,
