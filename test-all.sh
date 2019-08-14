@@ -267,7 +267,7 @@ touch ignored.xml
 a=$(./scc | grep Total)
 b=$(./scc --no-gitignore | grep Total)
 if [ "$a" == "$b" ]; then
-    echo -e "${RED}======================================================="
+    echo -e "${RED}================================================="
     echo -e "FAILED git ignore filter"
     echo -e "=================================================${NC}"
     exit

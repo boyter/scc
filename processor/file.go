@@ -106,19 +106,19 @@ func (dw *DirectoryWalker) Readdir(handle *cuba.Handle) {
 	ignores := job.ignores
 
 	file, err := os.Open(job.path)
-    if err != nil {
+	if err != nil {
 		printError(fmt.Sprintf("failed to open %s: %v", job.path, err))
-        return
-    }
-    defer file.Close()
+		return
+	}
+	defer file.Close()
 
-    dirents, err := file.Readdir(-1)
-    if err != nil {
+	dirents, err := file.Readdir(-1)
+	if err != nil {
 		printError(fmt.Sprintf("failed to read %s: %v", job.path, err))
-        return
-    }
+		return
+	}
 
-    for _, dirent := range dirents {
+	for _, dirent := range dirents {
 		name := dirent.Name()
 
 		if name == ".gitignore" || name == ".ignore" {
@@ -133,9 +133,9 @@ func (dw *DirectoryWalker) Readdir(handle *cuba.Handle) {
 	}
 
 DIRENTS:
-    for _, dirent := range dirents {
+	for _, dirent := range dirents {
 		name := dirent.Name()
-        path := filepath.Join(job.path, name)
+		path := filepath.Join(job.path, name)
 		isDir := dirent.IsDir()
 
 		for _, black := range PathBlacklist {
@@ -165,21 +165,21 @@ DIRENTS:
 			}
 		}
 
-        if isDir {
+		if isDir {
 			handle.Push(
 				&DirectoryJob{
-					root: job.root,
-					path: path,
+					root:    job.root,
+					path:    path,
 					ignores: ignores,
 				},
 			)
-        } else {
+		} else {
 			fileJob := newFileJob(path, name)
 			if fileJob != nil {
 				dw.output <- fileJob
 			}
 		}
-    }
+	}
 }
 
 func newFileJob(path, name string) *FileJob {
