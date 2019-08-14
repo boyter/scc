@@ -84,7 +84,7 @@ Why not use `scc`?
 ### Usage
 
 Command line usage of `scc` is designed to be as simple as possible.
-Full details can be found in `scc --help`.
+Full details can be found in `scc --help` or `scc -h`.
 
 ```
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
@@ -97,6 +97,7 @@ Flags:
       --avg-wage int            average wage value used for basic COCOMO calculation (default 56286)
       --binary                  disable binary file detection
       --by-file                 display output for every file
+      --ci                      enable CI output settings where stdout is ASCII
       --cocomo                  remove COCOMO calculation output
       --debug                   enable debug output
       --exclude-dir strings     directories to exclude (default [.git,.hg,.svn])
