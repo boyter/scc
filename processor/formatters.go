@@ -15,6 +15,7 @@ import (
 )
 
 var tabularShortBreak = "───────────────────────────────────────────────────────────────────────────────\n"
+var tabularShortBreakCi = "-------------------------------------------------------------------------------\n"
 var tabularShortFormatHead = "%-20s %9s %9s %8s %9s %8s %10s\n"
 var tabularShortFormatBody = "%-20s %9d %9d %8d %9d %8d %10d\n"
 var tabularShortFormatFile = "%-30s %9d %8d %9d %8d %10d\n"
@@ -28,6 +29,7 @@ var shortFormatFileTrucateNoComplexity = 33
 var longNameTruncate = 22
 
 var tabularWideBreak = "─────────────────────────────────────────────────────────────────────────────────────────────────────────────\n"
+var tabularWideBreakCi = "-------------------------------------------------------------------------------------------------------------\n"
 var tabularWideFormatHead = "%-33s %9s %9s %8s %9s %8s %10s %16s\n"
 var tabularWideFormatBody = "%-33s %9d %9d %8d %9d %8d %10d %16.2f\n"
 var tabularWideFormatFile = "%-43s %9d %8d %9d %8d %10d %16.2f\n"
@@ -98,6 +100,22 @@ type LanguageReportStart struct {
 
 type LanguageReportEnd struct {
 	Sum summaryStruct `yaml:"SUM"`
+}
+
+func getTabularShortBreak() string {
+	if Ci {
+		return tabularShortBreakCi
+	}
+
+	return tabularShortBreak
+}
+
+func getTabularWideBreak() string {
+	if Ci {
+		return tabularWideBreakCi
+	}
+
+	return tabularWideBreak
 }
 
 func toClocYAML(input chan *FileJob) string {
@@ -283,11 +301,11 @@ func fileSummarize(input chan *FileJob) string {
 func fileSummarizeLong(input chan *FileJob) string {
 	var str strings.Builder
 
-	str.WriteString(tabularWideBreak)
+	str.WriteString(getTabularWideBreak())
 	str.WriteString(fmt.Sprintf(tabularWideFormatHead, "Language", "Files", "Lines", "Code", "Comments", "Blanks", "Complexity", "Complexity/Lines"))
 
 	if !Files {
-		str.WriteString(tabularWideBreak)
+		str.WriteString(getTabularWideBreak())
 	}
 
 	languages := map[string]LanguageSummary{}
@@ -385,7 +403,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 	startTime := makeTimestampMilli()
 	for _, summary := range language {
 		if Files {
-			str.WriteString(tabularWideBreak)
+			str.WriteString(getTabularWideBreak())
 		}
 
 		trimmedName := summary.Name
@@ -397,7 +415,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 
 		if Files {
 			sortSummaryFiles(&summary)
-			str.WriteString(tabularWideBreak)
+			str.WriteString(getTabularWideBreak())
 
 			for _, res := range summary.Files {
 				tmp := res.Location
@@ -416,9 +434,9 @@ func fileSummarizeLong(input chan *FileJob) string {
 		printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
 	}
 
-	str.WriteString(tabularWideBreak)
+	str.WriteString(getTabularWideBreak())
 	str.WriteString(fmt.Sprintf(tabularWideFormatBody, "Total", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumWeightedComplexity))
-	str.WriteString(tabularWideBreak)
+	str.WriteString(getTabularWideBreak())
 
 	if !Cocomo {
 		estimatedEffort := EstimateEffort(int64(sumCode))
@@ -431,7 +449,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 		str.WriteString(p.Sprintf("Estimated Cost to Develop $%d\n", int64(estimatedCost)))
 		str.WriteString(fmt.Sprintf("Estimated Schedule Effort %f months\n", estimatedScheduleMonths))
 		str.WriteString(fmt.Sprintf("Estimated People Required %f\n", estimatedPeopleRequired))
-		str.WriteString(tabularWideBreak)
+		str.WriteString(getTabularWideBreak())
 	}
 
 	return str.String()
@@ -440,7 +458,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 func fileSummarizeShort(input chan *FileJob) string {
 	var str strings.Builder
 
-	str.WriteString(tabularShortBreak)
+	str.WriteString(getTabularShortBreak())
 	if !Complexity {
 		str.WriteString(fmt.Sprintf(tabularShortFormatHead, "Language", "Files", "Lines", "Code", "Comments", "Blanks", "Complexity"))
 	} else {
@@ -448,7 +466,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 	}
 
 	if !Files {
-		str.WriteString(tabularShortBreak)
+		str.WriteString(getTabularShortBreak())
 	}
 
 	languages := map[string]LanguageSummary{}
@@ -505,7 +523,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 	startTime := makeTimestampMilli()
 	for _, summary := range language {
 		if Files {
-			str.WriteString(tabularShortBreak)
+			str.WriteString(getTabularShortBreak())
 		}
 
 		trimmedName := summary.Name
@@ -519,7 +537,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 		if Files {
 			sortSummaryFiles(&summary)
-			str.WriteString(tabularShortBreak)
+			str.WriteString(getTabularShortBreak())
 
 			for _, res := range summary.Files {
 				tmp := res.Location
@@ -542,13 +560,13 @@ func fileSummarizeShort(input chan *FileJob) string {
 		printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
 	}
 
-	str.WriteString(tabularShortBreak)
+	str.WriteString(getTabularShortBreak())
 	if !Complexity {
 		str.WriteString(fmt.Sprintf(tabularShortFormatBody, "Total", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity))
 	} else {
 		str.WriteString(fmt.Sprintf(tabularShortFormatBodyNoComplexity, "Total", sumFiles, sumLines, sumCode, sumComment, sumBlank))
 	}
-	str.WriteString(tabularShortBreak)
+	str.WriteString(getTabularShortBreak())
 
 	calculateCocomo(sumCode, &str)
 	return str.String()
@@ -573,7 +591,7 @@ func calculateCocomo(sumCode int64, str *strings.Builder) {
 		str.WriteString(p.Sprintf("Estimated Cost to Develop $%d\n", int64(estimatedCost)))
 		str.WriteString(fmt.Sprintf("Estimated Schedule Effort %f months\n", estimatedScheduleMonths))
 		str.WriteString(fmt.Sprintf("Estimated People Required %f\n", estimatedPeopleRequired))
-		str.WriteString(tabularShortBreak)
+		str.WriteString(getTabularShortBreak())
 	}
 }
 

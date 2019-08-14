@@ -52,6 +52,12 @@ func main() {
 		"remove COCOMO calculation output",
 	)
 	flags.BoolVar(
+		&processor.Ci,
+		"ci",
+		false,
+		"enable CI output settings where stdout is ASCII",
+	)
+	flags.BoolVar(
 		&processor.Ignore,
 		"no-ignore",
 		false,

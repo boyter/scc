@@ -46,6 +46,9 @@ var More = false
 // Cocomo toggles the COCOMO calculation
 var Cocomo = false
 
+// Indicates if running inside a CI so to disable box drawing characters
+var Ci = false
+
 // Disables .gitignore checks
 var GitIgnore = false
 
