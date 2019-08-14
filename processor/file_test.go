@@ -1,7 +1,6 @@
 package processor
 
 import (
-	"github.com/monochromegane/go-gitignore"
 	"math/rand"
 	"path/filepath"
 	"strings"
@@ -85,8 +84,14 @@ func TestWalkDirectoryParallel(t *testing.T) {
 	GcFileCount = 10
 
 	inputChan := make(chan *FileJob, 10000)
-	walkDirectoryParallel("../", inputChan)
-	close(inputChan)
+
+	dirwalker := NewDirectoryWalker(inputChan)
+	err := dirwalker.Walk("../")
+	if err != nil {
+		t.Errorf("dirwalker.Walk returned error: %v", err)
+		t.FailNow()
+	}
+	dirwalker.Run()
 
 	count := 0
 	for range inputChan {
@@ -111,8 +116,14 @@ func TestWalkDirectoryParallelWorksWithSingleInputFile(t *testing.T) {
 	GcFileCount = 10
 
 	inputChan := make(chan *FileJob, 10000)
-	walkDirectoryParallel("file_test.go", inputChan)
-	close(inputChan)
+
+	dirwalker := NewDirectoryWalker(inputChan)
+	err := dirwalker.Walk("file_test.go")
+	if err != nil {
+		t.Errorf("dirwalker.Walk returned error: %v", err)
+		t.FailNow()
+	}
+	dirwalker.Run()
 
 	count := 0
 	for range inputChan {
@@ -137,8 +148,14 @@ func TestWalkDirectoryParallelIgnoresRootTrailingSlash(t *testing.T) {
 	GcFileCount = 10
 
 	inputChan := make(chan *FileJob, 10000)
-	walkDirectoryParallel("file_test.go/", inputChan)
-	close(inputChan)
+
+	dirwalker := NewDirectoryWalker(inputChan)
+	err := dirwalker.Walk("file_test.go/")
+	if err != nil {
+		t.Errorf("dirwalker.Walk returned error: %v", err)
+		t.FailNow()
+	}
+	dirwalker.Run()
 
 	count := 0
 	for range inputChan {
@@ -172,8 +189,13 @@ func TestWalkDirectoryParallelIgnoresAbsoluteGitPath(t *testing.T) {
 	absBaseDir, _ := filepath.Abs("../")
 	absGitDir := filepath.Join(absBaseDir, ".git")
 
-	walkDirectoryParallel(absBaseDir, inputChan)
-	close(inputChan)
+	dirwalker := NewDirectoryWalker(inputChan)
+	err := dirwalker.Walk(absBaseDir)
+	if err != nil {
+		t.Errorf("dirwalker.Walk returned error: %v", err)
+		t.FailNow()
+	}
+	dirwalker.Run()
 
 	sawGit := false
 	for fileJob := range inputChan {
@@ -185,17 +207,6 @@ func TestWalkDirectoryParallelIgnoresAbsoluteGitPath(t *testing.T) {
 
 	if sawGit {
 		t.Errorf("Expected .git folder to be ignored")
-	}
-}
-
-func TestWalkDirectory(t *testing.T) {
-	Debug = true
-	Exclude = []string{"test"}
-	ProcessConstants()
-	files := walkDirectory(".", []string{}, ExtensionToLanguage, []gitignore.IgnoreMatcher{})
-
-	if len(files) == 0 {
-		t.Error("Expected at least one file")
 	}
 }
 

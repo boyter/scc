@@ -351,18 +351,13 @@ func Process() {
 	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)         // Files ready to be summarised
 
 	go func() {
-		var wg sync.WaitGroup
-		for _, f := range DirFilePaths {
-			wg.Add(1)
-			fpath := filepath.Clean(f)
+		directoryWalker := NewDirectoryWalker(fileListQueue)
 
-			go func() {
-				walkDirectoryParallel(fpath, fileListQueue)
-				wg.Done()
-			}()
+		for _, f := range DirFilePaths {
+			directoryWalker.Walk(f)
 		}
-		wg.Wait()
-		close(fileListQueue)
+
+		directoryWalker.Run()
 	}()
 	go fileReaderWorker(fileListQueue, fileReadContentJobQueue)
 	go fileProcessorWorker(fileReadContentJobQueue, fileSummaryJobQueue)
