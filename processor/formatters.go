@@ -580,6 +580,8 @@ func calculateCocomo(sumCode int64, str *strings.Builder) {
 func sortLanguageSummary(language []LanguageSummary) []LanguageSummary {
 	// Cater for the common case of adding plural even for those options that don't make sense
 	// as its quite common for those who English is not a first language to make a simple mistake
+	// NB in any non name cases if the values are the same we sort by name to ensure
+	// deterministic output
 	switch {
 	case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "languages":
 		sort.Slice(language, func(i, j int) bool {
@@ -587,26 +589,50 @@ func sortLanguageSummary(language []LanguageSummary) []LanguageSummary {
 		})
 	case SortBy == "line" || SortBy == "lines":
 		sort.Slice(language, func(i, j int) bool {
+			if language[i].Lines == language[j].Lines {
+				return strings.Compare(language[i].Name, language[j].Name) < 0
+			}
+
 			return language[i].Lines > language[j].Lines
 		})
 	case SortBy == "blank" || SortBy == "blanks":
 		sort.Slice(language, func(i, j int) bool {
+			if language[i].Blank == language[j].Blank {
+				return strings.Compare(language[i].Name, language[j].Name) < 0
+			}
+
 			return language[i].Blank > language[j].Blank
 		})
 	case SortBy == "code" || SortBy == "codes":
 		sort.Slice(language, func(i, j int) bool {
+			if language[i].Code == language[j].Code {
+				return strings.Compare(language[i].Name, language[j].Name) < 0
+			}
+
 			return language[i].Code > language[j].Code
 		})
 	case SortBy == "comment" || SortBy == "comments":
 		sort.Slice(language, func(i, j int) bool {
+			if language[i].Comment == language[j].Comment {
+				return strings.Compare(language[i].Name, language[j].Name) < 0
+			}
+
 			return language[i].Comment > language[j].Comment
 		})
 	case SortBy == "complexity" || SortBy == "complexitys":
 		sort.Slice(language, func(i, j int) bool {
+			if language[i].Complexity == language[j].Complexity {
+				return strings.Compare(language[i].Name, language[j].Name) < 0
+			}
+
 			return language[i].Complexity > language[j].Complexity
 		})
-	default:
+	default: // Files IE default falls into this category
 		sort.Slice(language, func(i, j int) bool {
+			if language[i].Count == language[j].Count {
+				return strings.Compare(language[i].Name, language[j].Name) < 0
+			}
+
 			return language[i].Count > language[j].Count
 		})
 	}

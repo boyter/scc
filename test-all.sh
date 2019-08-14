@@ -208,7 +208,6 @@ else
     exit
 fi
 
-
 # Try out duplicates
 for i in {1..100}
 do
@@ -222,6 +221,22 @@ do
     fi
 done
 echo -e "${GREEN}PASSED duplicates test"
+
+# Ensure deterministic output
+a=$(./scc .)
+for i in {1..100}
+do
+    b=$(./scc .)
+    if [ "$a" == "$b" ]; then
+        :
+    else
+        echo -e "${RED}======================================================="
+        echo -e "FAILED Runs should be deterministic"
+        echo -e "=======================================================${NC}"
+        exit
+    fi
+done
+echo -e "${GREEN}PASSED deterministic test"
 
 # Check for multiple regex via https://github.com/andyfitzgerald
 a=$(./scc --not-match="(.*\.hex|.*\.d|.*\.o|.*\.csv|^(./)?[0-9]{8}_.*)" . | grep Estimated | md5sum)
@@ -272,6 +287,7 @@ if [ "$a" == "$b" ]; then
 else
     echo -e "${GREEN}PASSED ignore filter"
 fi
+
 
 touch ./examples/ignore/ignorefile.txt
 a=$(./scc --by-file | grep ignorefile)
