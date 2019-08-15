@@ -82,6 +82,8 @@ func (dw *DirectoryWalker) Walk(root string) error {
 		if fileJob != nil {
 			dw.output <- fileJob
 		}
+
+		return nil
 	}
 
 	dw.buffer.Push(
