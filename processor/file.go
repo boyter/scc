@@ -123,7 +123,7 @@ func (dw *DirectoryWalker) Readdir(handle *cuba.Handle) {
 	for _, dirent := range dirents {
 		name := dirent.Name()
 
-		if name == ".gitignore" || name == ".ignore" {
+		if (!GitIgnore && name == ".gitignore") || (!Ignore && name == ".ignore") {
 			path := filepath.Join(job.path, name)
 
 			ignore, err := gitignore.NewGitIgnore(path)
