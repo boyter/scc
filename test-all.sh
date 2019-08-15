@@ -297,6 +297,14 @@ else
     echo -e "${GREEN}PASSED ignore filter"
 fi
 
+if ./scc "examples/ignore/" | grep -q "Java "; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED multiple gitignore"
+    echo -e "=======================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED multiple gitignore"
+fi
 
 touch ./examples/ignore/ignorefile.txt
 a=$(./scc --by-file | grep ignorefile)
