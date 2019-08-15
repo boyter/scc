@@ -354,7 +354,11 @@ func Process() {
 		directoryWalker := NewDirectoryWalker(fileListQueue)
 
 		for _, f := range DirFilePaths {
-			directoryWalker.Walk(f)
+			err := directoryWalker.Walk(f)
+			if err != nil {
+				fmt.Printf("failed to walk %s: %v", f, err)
+				os.Exit(1)
+			}
 		}
 
 		directoryWalker.Run()
