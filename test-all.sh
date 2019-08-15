@@ -148,6 +148,15 @@ else
     exit
 fi
 
+if ./scc --ci | grep -q "\-\-\-\-"; then
+    echo -e "${GREEN}PASSED ci param test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should be able to work with ci flag"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 # Simple test to see if we get any concurrency issues
 for i in {1..100}
 do
