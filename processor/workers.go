@@ -22,6 +22,7 @@ const (
 	SMulticommentCode  int64 = 6 // Indicates multi comment after code
 	SMulticommentBlank int64 = 7 // Indicates multi comment ended with blank afterwards
 	SString            int64 = 8
+	SDocString         int64 = 9
 )
 
 // LineType what type of line are are processing
@@ -124,6 +125,48 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, en
 		// If we are in a literal string we want to ignore the \ check OR we aren't checking for special ones
 		if ignoreEscape || fileJob.Content[i-1] != '\\' {
 			if ok, _, _ := stringTrie.Match(fileJob.Content[i:]); ok != 0 {
+				return i, SCode
+			}
+		}
+	}
+
+	return index, currentState
+}
+
+// This is a special state check pretty much only ever used by Python codebases
+// but potentially it could be expanded to deal with other types
+func docStringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, endString []byte, currentState int64) (int, int64) {
+	// Its not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
+	// without checking if it is out of bounds first
+	for i := index; i < endPoint; i++ {
+		index = i
+
+		if fileJob.Content[i] == '\n' {
+			return i, currentState
+		}
+
+		if fileJob.Content[i-1] != '\\' {
+			if ok, _, _ := stringTrie.Match(fileJob.Content[i:]); ok != 0 {
+				// So we have hit end of docstring at this point in which case check if only whitespace characters till the next
+				// newline and if so we change to a comment otherwise to code
+				// need to start the loop after ending definition of docstring, therefore adding the length of the string to
+				// the index
+				for j := index + len(endString); j <= endPoint; j++ {
+					if fileJob.Content[j] == '\n' {
+						if Debug {
+							printDebug("Found newline so docstring is comment")
+						}
+						return i, SComment
+					}
+
+					if !isWhitespace(fileJob.Content[j]) {
+						if Debug {
+							printDebug(fmt.Sprintf("Found something not whitespace so is code: %s", string(fileJob.Content[j])))
+						}
+						return i, SCode
+					}
+				}
+
 				return i, SCode
 			}
 		}
@@ -270,6 +313,13 @@ func blankState(
 
 	case TString:
 		index, ignoreEscape := verifyIgnoreEscape(langFeatures, fileJob, index)
+
+		for _, v := range langFeatures.Quotes {
+			if v.End == string(endString) && v.DocString {
+				currentState = SDocString
+				return index, currentState, endString, endComments, ignoreEscape
+			}
+		}
 		currentState = SString
 		return index, currentState, endString, endComments, ignoreEscape
 
@@ -390,6 +440,10 @@ func CountStats(fileJob *FileJob) {
 				)
 			case SString:
 				index, currentState = stringState(fileJob, index, endPoint, langFeatures.Strings, endString, currentState, ignoreEscape)
+			case SDocString:
+				// For a docstring we can either move into blank in which case we count it as a docstring
+				// or back into code in which case it should be counted as code
+				index, currentState = docStringState(fileJob, index, endPoint, langFeatures.Strings, endString, currentState)
 			case SMulticomment, SMulticommentCode:
 				index, currentState, endString, endComments = commentState(
 					fileJob,
@@ -458,6 +512,16 @@ func CountStats(fileJob *FileJob) {
 				}
 				if Trace {
 					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as blank", fileJob.Location, fileJob.Lines, currentState))
+				}
+			case SDocString:
+				fileJob.Comment++
+				if fileJob.Callback != nil {
+					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
+						return
+					}
+				}
+				if Trace {
+					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState))
 				}
 			}
 		}

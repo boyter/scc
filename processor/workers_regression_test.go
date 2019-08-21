@@ -77,3 +77,45 @@ var MyString = ` + "`\\`" + `
 		t.Errorf("Expected 0 lines got %d", fileJob.Blank)
 	}
 }
+
+// https://github.com/boyter/scc/issues/62
+func TestCountStatsIssue62(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Python",
+	}
+
+	fileJob.Content = []byte(`def f():
+	"""
+	This is a docstring
+	"""
+	# A normal comment
+
+	hello_world = "Some string declaration"
+	print(hello_world)
+	pass
+
+	def g():
+	'''
+	This is a not PEP-8 conform docstring'''
+	pass
+`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 14 {
+		t.Errorf("Expected 14 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 6 {
+		t.Errorf("Expected 6 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 6 {
+		t.Errorf("Expected 6 lines got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 2 {
+		t.Errorf("Expected 2 lines got %d", fileJob.Blank)
+	}
+}
