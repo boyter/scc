@@ -99,7 +99,6 @@ Flags:
       --binary                  disable binary file detection
       --by-file                 display output for every file
       --ci                      enable CI output settings where stdout is ASCII
-      --cocomo                  remove COCOMO calculation output
       --debug                   enable debug output
       --exclude-dir strings     directories to exclude (default [.git,.hg,.svn])
       --file-gc-count int       number of files to parse before turning the GC on (default 10000)
@@ -107,6 +106,7 @@ Flags:
   -h, --help                    help for scc
   -i, --include-ext strings     limit to file extensions [comma separated list: e.g. go,java,js]
   -l, --languages               print supported languages and extensions
+      --no-cocomo               remove COCOMO calculation output
   -c, --no-complexity           skip calculation of code complexity
   -d, --no-duplicates           remove duplicate files from stats and output
       --no-gitignore            disables .gitignore file logic
