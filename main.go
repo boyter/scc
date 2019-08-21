@@ -46,12 +46,6 @@ func main() {
 		"display output for every file",
 	)
 	flags.BoolVar(
-		&processor.Cocomo,
-		"cocomo",
-		false,
-		"remove COCOMO calculation output",
-	)
-	flags.BoolVar(
 		&processor.Ci,
 		"ci",
 		false,
@@ -107,6 +101,12 @@ func main() {
 		"l",
 		false,
 		"print supported languages and extensions",
+	)
+	flags.BoolVar(
+		&processor.Cocomo,
+		"no-cocomo",
+		false,
+		"remove COCOMO calculation output",
 	)
 	flags.BoolVarP(
 		&processor.Complexity,
