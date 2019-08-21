@@ -4699,8 +4699,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -4708,8 +4708,8 @@
       },
       {
         "docString": true,
-        "end": "\\\"\\\"\\\"",
-        "start": "\\\"\\\"\\\""
+        "end": "\"\"\"",
+        "start": "\"\"\""
       },
       {
         "docString": true,
