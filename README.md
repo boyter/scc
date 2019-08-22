@@ -125,35 +125,36 @@ Output should look something like the below for the redis project
 ```
 $ scc .
 ───────────────────────────────────────────────────────────────────────────────
-Language                 Files     Lines     Code  Comments   Blanks Complexity
+Language                 Files     Lines   Blanks  Comments     Code Complexity
 ───────────────────────────────────────────────────────────────────────────────
-C                          249    143701   103269     24163    16269      25906
-C Header                   199     27537    18543      5768     3226       1557
-TCL                         98     16865    14098       954     1813       1404
-Shell                       36      1106      775       215      116         89
-Lua                         20       525      387        70       68         65
-Autoconf                    18     10821     8469      1326     1026        951
-gitignore                   11       151      135         0       16          0
-Makefile                     9      1031      722       100      209         50
-Markdown                     8      1886     1363         0      523          0
-Ruby                         8       722      580        69       73        107
-HTML                         5      9658     8791        12      855          0
-C++                          5       311      244        16       51         31
-YAML                         4       273      254         0       19          0
-License                      3        66       55         0       11          0
-CSS                          2       107       91         0       16          0
-Python                       2       219      162        18       39         68
-C++ Header                   1         9        5         3        1          0
-Smarty Template              1        44       43         0        1          5
-m4                           1       562      393        53      116          0
-Plain Text                   1        23       16         0        7          0
-Batch                        1        28       26         0        2          3
+C                          258    153080    17005     26121   109954      27671
+C Header                   200     28794     3252      5877    19665       1557
+TCL                        101     17802     1879       981    14942       1439
+Shell                       36      1109      133       252      724        118
+Lua                         20       525       68        70      387         65
+Autoconf                    18     10821     1026      1326     8469        951
+Makefile                    10      1082      220       103      759         51
+Ruby                        10       778       78        71      629        115
+Markdown                     9      1935      527         0     1408          0
+gitignore                    9       120       16         0      104          0
+HTML                         5      9658     2928        12     6718          0
+C++                          4       286       48        14      224         31
+License                      4       100       20         0       80          0
+YAML                         4       266       20         3      243          0
+CSS                          2       107       16         0       91          0
+Python                       2       219       39        18      162         68
+Batch                        1        28        2         0       26          3
+C++ Header                   1         9        1         3        5          0
+Extensible Styleshe…         1        10        0         0       10          0
+Plain Text                   1        23        7         0       16          0
+Smarty Template              1        44        1         0       43          5
+m4                           1       562      116        53      393          0
 ───────────────────────────────────────────────────────────────────────────────
-Total                      682    215645   158421     32767    24457      30236
+Total                      698    227358    27402     34904   165052      32074
 ───────────────────────────────────────────────────────────────────────────────
-Estimated Cost to Develop $5,513,136
-Estimated Schedule Effort 29.350958 months
-Estimated People Required 22.250054
+Estimated Cost to Develop $5,755,686
+Estimated Schedule Effort 29.835114 months
+Estimated People Required 22.851995
 ───────────────────────────────────────────────────────────────────────────────
 ```
 
@@ -246,11 +247,15 @@ Some CI/CD systems which will remain nameless do not work very well with the box
 ```
 $ scc --ci main.go
 -------------------------------------------------------------------------------
-Language                 Files     Lines     Code  Comments   Blanks Complexity
+Language                 Files     Lines   Blanks  Comments     Code Complexity
 -------------------------------------------------------------------------------
-Go                           1       171      161         4        6          2
+Go                           1       171        6         4      161          2
 -------------------------------------------------------------------------------
-Total                        1       171      161         4        6          2
+Total                        1       171        6         4      161          2
+-------------------------------------------------------------------------------
+Estimated Cost to Develop $3,969
+Estimated Schedule Effort 1.876811 months
+Estimated People Required 0.250551
 -------------------------------------------------------------------------------
 ```
 
