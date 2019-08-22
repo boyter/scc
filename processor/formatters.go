@@ -22,9 +22,9 @@ var tabularShortFormatFile = "%-30s %9d %8d %9d %8d %10d\n"
 var shortFormatFileTrucate = 29
 var shortNameTruncate = 20
 
-var tabularShortFormatHeadNoComplexity = "%-22s %11s %11s %9s %11s %10s\n"
-var tabularShortFormatBodyNoComplexity = "%-22s %11d %11d %9d %11d %10d\n"
-var tabularShortFormatFileNoComplexity = "%-34s %11d %9d %11d %10d\n"
+var tabularShortFormatHeadNoComplexity = "%-22s %11s %11s %10s %11s %9s\n"
+var tabularShortFormatBodyNoComplexity = "%-22s %11d %11d %10d %11d %9d\n"
+var tabularShortFormatFileNoComplexity = "%-34s %11d %10d %11d %9d\n"
 var shortFormatFileTrucateNoComplexity = 33
 var longNameTruncate = 22
 
@@ -302,7 +302,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 	var str strings.Builder
 
 	str.WriteString(getTabularWideBreak())
-	str.WriteString(fmt.Sprintf(tabularWideFormatHead, "Language", "Files", "Lines", "Code", "Comments", "Blanks", "Complexity", "Complexity/Lines"))
+	str.WriteString(fmt.Sprintf(tabularWideFormatHead, "Language", "Files", "Lines", "Blanks", "Comments", "Code", "Complexity", "Complexity/Lines"))
 
 	if !Files {
 		str.WriteString(getTabularWideBreak())
@@ -411,7 +411,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 			trimmedName = summary.Name[:longNameTruncate-1] + "…"
 		}
 
-		str.WriteString(fmt.Sprintf(tabularWideFormatBody, trimmedName, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity, summary.WeightedComplexity))
+		str.WriteString(fmt.Sprintf(tabularWideFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summary.WeightedComplexity))
 
 		if Files {
 			sortSummaryFiles(&summary)
@@ -425,7 +425,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 					tmp = "~" + tmp[totrim:]
 				}
 
-				str.WriteString(fmt.Sprintf(tabularWideFormatFile, tmp, res.Lines, res.Code, res.Comment, res.Blank, res.Complexity, res.WeightedComplexity))
+				str.WriteString(fmt.Sprintf(tabularWideFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.WeightedComplexity))
 			}
 		}
 	}
@@ -435,7 +435,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 	}
 
 	str.WriteString(getTabularWideBreak())
-	str.WriteString(fmt.Sprintf(tabularWideFormatBody, "Total", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumWeightedComplexity))
+	str.WriteString(fmt.Sprintf(tabularWideFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumWeightedComplexity))
 	str.WriteString(getTabularWideBreak())
 
 	if !Cocomo {
@@ -460,9 +460,9 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 	str.WriteString(getTabularShortBreak())
 	if !Complexity {
-		str.WriteString(fmt.Sprintf(tabularShortFormatHead, "Language", "Files", "Lines", "Code", "Comments", "Blanks", "Complexity"))
+		str.WriteString(fmt.Sprintf(tabularShortFormatHead, "Language", "Files", "Lines", "Blanks", "Comments", "Code", "Complexity"))
 	} else {
-		str.WriteString(fmt.Sprintf(tabularShortFormatHeadNoComplexity, "Language", "Files", "Lines", "Code", "Comments", "Blanks"))
+		str.WriteString(fmt.Sprintf(tabularShortFormatHeadNoComplexity, "Language", "Files", "Lines", "Blanks", "Comments", "Code"))
 	}
 
 	if !Files {
@@ -530,9 +530,9 @@ func fileSummarizeShort(input chan *FileJob) string {
 		trimmedName = trimNameShort(summary, trimmedName)
 
 		if !Complexity {
-			str.WriteString(fmt.Sprintf(tabularShortFormatBody, trimmedName, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank, summary.Complexity))
+			str.WriteString(fmt.Sprintf(tabularShortFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity))
 		} else {
-			str.WriteString(fmt.Sprintf(tabularShortFormatBodyNoComplexity, trimmedName, summary.Count, summary.Lines, summary.Code, summary.Comment, summary.Blank))
+			str.WriteString(fmt.Sprintf(tabularShortFormatBodyNoComplexity, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code))
 		}
 
 		if Files {
@@ -548,9 +548,9 @@ func fileSummarizeShort(input chan *FileJob) string {
 				}
 
 				if !Complexity {
-					str.WriteString(fmt.Sprintf(tabularShortFormatFile, tmp, res.Lines, res.Code, res.Comment, res.Blank, res.Complexity))
+					str.WriteString(fmt.Sprintf(tabularShortFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity))
 				} else {
-					str.WriteString(fmt.Sprintf(tabularShortFormatFileNoComplexity, tmp, res.Lines, res.Code, res.Comment, res.Blank))
+					str.WriteString(fmt.Sprintf(tabularShortFormatFileNoComplexity, tmp, res.Lines, res.Blank, res.Comment, res.Code))
 				}
 			}
 		}
@@ -562,9 +562,9 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 	str.WriteString(getTabularShortBreak())
 	if !Complexity {
-		str.WriteString(fmt.Sprintf(tabularShortFormatBody, "Total", sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity))
+		str.WriteString(fmt.Sprintf(tabularShortFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity))
 	} else {
-		str.WriteString(fmt.Sprintf(tabularShortFormatBodyNoComplexity, "Total", sumFiles, sumLines, sumCode, sumComment, sumBlank))
+		str.WriteString(fmt.Sprintf(tabularShortFormatBodyNoComplexity, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode))
 	}
 	str.WriteString(getTabularShortBreak())
 
