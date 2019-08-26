@@ -124,7 +124,7 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, en
 
 		// If we are in a literal string we want to ignore the \ check OR we aren't checking for special ones
 		if ignoreEscape || fileJob.Content[i-1] != '\\' {
-			if ok, _, _ := stringTrie.Match(fileJob.Content[i:]); ok != 0 {
+			if checkForMatchSingle(fileJob.Content[i], index, endPoint, endString, fileJob) {
 				return i, SCode
 			}
 		}
@@ -467,6 +467,13 @@ func CountStats(fileJob *FileJob) {
 					langFeatures,
 				)
 			}
+		}
+
+		// We shouldn't normally need this, but unclosed strings or comments
+		// might leave the index past the end of the file when we reach this
+		// point.
+		if index >= len(fileJob.Content) {
+			return
 		}
 
 		// Only check the first 10000 characters for null bytes indicating a binary file

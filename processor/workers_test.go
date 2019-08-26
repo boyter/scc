@@ -981,6 +981,17 @@ code
 	}
 }
 
+func TestCountStatsIssue106(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Go",
+	}
+
+	fileJob.Content = []byte("foo = `\nabc\"\ndef\n`")
+
+	CountStats(&fileJob)
+}
+
 //////////////////////////////////////////////////
 // Benchmarks Below
 //////////////////////////////////////////////////
