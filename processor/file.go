@@ -201,6 +201,22 @@ func newFileJob(path, name string) *FileJob {
 	}
 
 	if ok {
+		if len(WhiteListExtensions) != 0 {
+			ok = false
+			for _, x := range WhiteListExtensions {
+				if x == extension {
+					ok = true
+				}
+			}
+
+			if !ok {
+				if Verbose {
+					printWarn(fmt.Sprintf("skipping file as not whitelisted: %s", name))
+				}
+				return nil
+			}
+		}
+
 		for _, l := range language {
 			LoadLanguageFeature(l)
 		}
@@ -213,7 +229,6 @@ func newFileJob(path, name string) *FileJob {
 		}
 	} else if Verbose {
 		printWarn(fmt.Sprintf("skipping file unknown extension: %s", name))
-
 	}
 
 	return nil

@@ -334,6 +334,15 @@ else
     echo -e "${GREEN}PASSED gitignore recursive filter"
 fi
 
+if ./scc "examples/language/" --include-ext go | grep -q "Java "; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED include-ext option"
+    echo -e "=======================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED include-ext option"
+fi
+
 # Try out specific languages
 for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java '
 do
