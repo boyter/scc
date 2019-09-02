@@ -19,6 +19,18 @@ If you don't like sloc cloc and code feel free to use the name `Succinct Code Co
 
 Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
 
+### Install
+
+If you are comfortable using Go and have >= 1.10 installed the usual `go get -u github.com/boyter/scc/` will install for you.
+
+If you are looking for binaries see [Releases](https://github.com/boyter/scc/releases) for Windows, GNU/Linux and macOS for both i386 and x86_64 bit machines.
+
+A snap install exists https://snapcraft.io/scc thanks to [Ricardo](https://feliciano.tech/). You can run `sudo snap install scc` to install it.
+
+If you would like to assist with getting `scc` added into apt/homebrew/chocolatey/etc... please submit a PR or at least raise an issue with instructions.
+
+### Background
+
 Read all about how it came to be along with performance benchmarks,
 
  - https://boyter.org/posts/sloc-cloc-code/
@@ -54,16 +66,6 @@ Interesting reading about other code counting projects tokei, loc, polyglot and 
 Further reading about processing files on the disk performance
 
  - https://blog.burntsushi.net/ripgrep/
-
-### Install
-
-If you are comfortable using Go and have >= 1.10 installed the usual `go get -u github.com/boyter/scc/` will install for you.
-
-If you are looking for binaries see [Releases](https://github.com/boyter/scc/releases) for Windows, GNU/Linux and macOS for both i386 and x86_64 bit machines.
-
-A snap install exists https://snapcraft.io/scc thanks to [Ricardo](https://feliciano.tech/). You can run `sudo snap install scc` to install it.
-
-If you would like to assist with getting `scc` added into apt/homebrew/chocolatey/etc... please submit a PR or at least raise an issue with instructions.
 
 ### Pitch
 
