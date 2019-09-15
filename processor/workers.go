@@ -572,7 +572,6 @@ type languageGuess struct {
 
 // Given a filejob which could have multiple language types make a guess to the type
 // based on keywords supplied, which is similar to how https://github.com/vmchale/polyglot does it
-// If however there is only a single language we
 func determineLanguage(fileJob *FileJob) {
 
 	// If being called through an API its possible nothing is set here and as
@@ -592,8 +591,8 @@ func determineLanguage(fileJob *FileJob) {
 	startTime := makeTimestampNano()
 
 	var toCheck string
-	if len(fileJob.Content) > 2000 {
-		toCheck = string(fileJob.Content)[:2000]
+	if len(fileJob.Content) > 20000 {
+		toCheck = string(fileJob.Content)[:20000]
 	} else {
 		toCheck = string(fileJob.Content)
 	}
@@ -616,6 +615,10 @@ func determineLanguage(fileJob *FileJob) {
 	}
 
 	sort.Slice(toSort, func(i, j int) bool {
+		if toSort[i].Count == toSort[j].Count {
+			return strings.Compare(toSort[i].Name, toSort[j].Name) < 0
+		}
+
 		return toSort[i].Count > toSort[j].Count
 	})
 

@@ -1369,7 +1369,16 @@
       "Lemma",
       "Proof",
       "Definition",
-      "Theorem"
+      "Theorem",
+      "Class",
+      "Instance",
+      "Module",
+      "Context",
+      "Section",
+      "Notation",
+      "End",
+      "Fixpoint",
+      "From Coq"
     ],
     "line_comment": [],
     "multi_line": [
@@ -6087,24 +6096,23 @@
     ],
     "keywords": [
       "break",
-      "const",
+      "const ",
       "continue",
       "defer",
-      "else",
+      "else ",
       "enum",
-      "fn",
+      "fn ",
       "goto",
-      "import",
-      "in",
+      "import ",
+      "in ",
       "interface",
       "match",
-      "module",
       "mut",
       "println",
       "pub",
       "return",
-      "struct",
-      "type"
+      "struct ",
+      "type "
     ],
     "line_comment": [
       "//"
