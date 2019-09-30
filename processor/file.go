@@ -186,6 +186,7 @@ DIRENTS:
 
 func newFileJob(path, name string) *FileJob {
 	extension := ""
+
 	// Lookup in case the full name matches
 	language, ok := ExtensionToLanguage[strings.ToLower(name)]
 

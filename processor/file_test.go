@@ -210,6 +210,24 @@ func TestWalkDirectoryParallelIgnoresAbsoluteGitPath(t *testing.T) {
 	}
 }
 
+func TestNewFileJobFullname(t *testing.T) {
+	ProcessConstants()
+	job := newFileJob("./examples/issue114/", "makefile")
+
+	if job.PossibleLanguages[0] != "Makefile" {
+		t.Error("Expected makefile got", job.PossibleLanguages[0])
+	}
+}
+
+func TestNewFileJob(t *testing.T) {
+	ProcessConstants()
+	job := newFileJob("./examples/issue114/", "java")
+
+	if job.PossibleLanguages[0] != "#!" {
+		t.Error("Expected special value #! got", job.PossibleLanguages[0])
+	}
+}
+
 func BenchmarkGetExtensionDifferent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 
