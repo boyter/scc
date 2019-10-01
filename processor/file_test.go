@@ -257,6 +257,15 @@ func TestNewFileJobLicense(t *testing.T) {
 	}
 }
 
+func TestNewFileJobYAML(t *testing.T) {
+	ProcessConstants()
+	job := newFileJob("./examples/issue114/", ".travis.yml")
+
+	if job.PossibleLanguages[0] != "YAML" {
+		t.Error("Expected YAML got", job.PossibleLanguages[0])
+	}
+}
+
 func BenchmarkGetExtensionDifferent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 
