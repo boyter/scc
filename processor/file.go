@@ -187,6 +187,30 @@ DIRENTS:
 func newFileJob(path, name string) *FileJob {
 	extension := ""
 
+	// If there is no . in the filename then return as potential #!
+	if !strings.Contains(name, ".") {
+
+		// Need to check if special type
+		language, ok := FilenameToLanguage[strings.ToLower(name)]
+
+		if ok {
+			return &FileJob{
+				Location:          path,
+				Filename:          name,
+				Extension:         extension,
+				PossibleLanguages: []string{language},
+			}
+		}
+
+		// No extension indicates possible #! so mark as such for processing
+		return &FileJob{
+			Location:          path,
+			Filename:          name,
+			Extension:         extension,
+			PossibleLanguages: []string{"#!"},
+		}
+	}
+
 	// Lookup in case the full name matches
 	language, ok := ExtensionToLanguage[strings.ToLower(name)]
 

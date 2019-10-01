@@ -108,6 +108,9 @@ var languageDatabase = map[string]Language{}
 // ExtensionToLanguage is loaded from the JSON that is in constants.go
 var ExtensionToLanguage = map[string][]string{}
 
+// Similar to ExtensionToLanguage loaded from the JSON in constants.go
+var FilenameToLanguage = map[string]string{}
+
 // LanguageFeatures contains the processed languages from processLanguageFeature
 var LanguageFeatures = map[string]LanguageFeature{}
 
@@ -138,6 +141,10 @@ func ProcessConstants() {
 	for name, value := range languageDatabase {
 		for _, ext := range value.Extensions {
 			ExtensionToLanguage[ext] = append(ExtensionToLanguage[ext], name)
+		}
+
+		for _, fname := range value.FileNames {
+			FilenameToLanguage[fname] = name
 		}
 	}
 
