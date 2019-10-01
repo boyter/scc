@@ -3375,6 +3375,11 @@
   "License": {
     "complexitychecks": [],
     "extensions": [
+    ],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": [],
+    "filenames": [
       "license",
       "licence",
       "copying",
@@ -3384,10 +3389,7 @@
       "license-mit",
       "licence-mit",
       "copyright"
-    ],
-    "line_comment": [],
-    "multi_line": [],
-    "quotes": []
+    ]
   },
   "Lisp": {
     "complexitychecks": [

@@ -228,6 +228,35 @@ func TestNewFileJob(t *testing.T) {
 	}
 }
 
+func TestNewFileJobGitIgnore(t *testing.T) {
+	WhiteListExtensions = []string{}
+	ProcessConstants()
+	job := newFileJob("./examples/issue114/", ".gitignore")
+
+	if job.PossibleLanguages[0] != "gitignore" {
+		t.Error("Expected gitignore got", job.PossibleLanguages[0])
+	}
+}
+
+func TestNewFileJobIgnore(t *testing.T) {
+	WhiteListExtensions = []string{}
+	ProcessConstants()
+	job := newFileJob("./examples/issue114/", ".ignore")
+
+	if job.PossibleLanguages[0] != "ignore" {
+		t.Error("Expected ignore got", job.PossibleLanguages[0])
+	}
+}
+
+func TestNewFileJobLicense(t *testing.T) {
+	ProcessConstants()
+	job := newFileJob("./examples/issue114/", "license")
+
+	if job.PossibleLanguages[0] != "License" {
+		t.Error("Expected License got", job.PossibleLanguages[0])
+	}
+}
+
 func BenchmarkGetExtensionDifferent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 
