@@ -6,13 +6,6 @@ import (
 )
 
 /*
-awk,#!/usr/bin/awk
-awk,#!/usr/bin/gawk
-awk,#!/usr/bin/mawk
-
-csh,#!/bin/csh
-csh,#!/bin/tcsh
-
 d,#!/usr/bin/env rdmd
 
 erlang,#!/usr/bin/env escript
@@ -41,6 +34,8 @@ var SheBangMatches = map[string][]string{
 	"Perl": {"perl"},
 	"PHP": {"php"},
 	"Python": {"python"},
+	"AWK": {"awk", "gawk", "mawk"},
+	"C Shell": {"csh", "tcsh"},
 }
 
 func DetectSheBang(content string) (string, error) {
@@ -50,6 +45,7 @@ func DetectSheBang(content string) (string, error) {
 
 	for k, v := range SheBangMatches {
 		for _, x := range v {
+			// detects both full path and env usage
 			if strings.Contains(content, "/" + x) || strings.Contains(content, " " + x) {
 				return k, nil
 			}

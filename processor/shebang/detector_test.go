@@ -62,3 +62,34 @@ func TestDetectSheBangPython(t *testing.T) {
 		}
 	}
 }
+
+func TestDetectSheBangAWK(t *testing.T) {
+	cases := []string{
+		"#!/usr/bin/awk",
+		"#!/usr/bin/gawk",
+		"#!/usr/bin/mawk",
+	}
+
+	for _, c := range cases {
+		x, y := DetectSheBang(c)
+
+		if x != "AWK" || y != nil {
+			t.Error("Expected AWK match got", x)
+		}
+	}
+}
+
+func TestDetectSheBangCsh(t *testing.T) {
+	cases := []string{
+		"#!/bin/csh",
+		"#!/bin/tcsh",
+	}
+
+	for _, c := range cases {
+		x, y := DetectSheBang(c)
+
+		if x != "C Shell" || y != nil {
+			t.Error("Expected C Shell match got", x)
+		}
+	}
+}
