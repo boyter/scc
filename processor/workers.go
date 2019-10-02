@@ -371,9 +371,6 @@ func verifyIgnoreEscape(langFeatures LanguageFeature, fileJob *FileJob, index in
 // This is the 'hot' path for the application and needs to be as fast as possible
 func CountStats(fileJob *FileJob) {
 
-	// Needs to always run to ensure the language is set
-	determineLanguage(fileJob)
-
 	// If the file has a length of 0 it is is empty then we say it has no lines
 	fileJob.Bytes = int64(len(fileJob.Content))
 	if fileJob.Bytes == 0 {
@@ -692,6 +689,15 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 				atomic.CompareAndSwapInt64(&startTime, 0, makeTimestampMilli())
 
 				fileStartTime := makeTimestampNano()
+
+				// Needs to always run to ensure the language is set
+				determineLanguage(res)
+
+				// If the type is #! we should check to see if we can identify
+				if res.Language == "#!" {
+					fmt.Println("POSSIBLE #!", res.Filename)
+				}
+
 				CountStats(res)
 
 				if Duplicates {
