@@ -82,6 +82,10 @@ Interesting reading about other code counting projects tokei, loc, polyglot and 
 Further reading about processing files on the disk performance
 
  - https://blog.burntsushi.net/ripgrep/
+ 
+Using `scc` to process 40 TB of files from Github/Bitbucket/Gitlab
+
+ - https://boyter.org/posts/an-informal-survey-of-10-million-github-bitbucket-gitlab-projects/
 
 ### Pitch
 
