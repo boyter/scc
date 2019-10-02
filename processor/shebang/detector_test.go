@@ -46,3 +46,19 @@ func TestDetectSheBangPhp(t *testing.T) {
 		}
 	}
 }
+
+func TestDetectSheBangPython(t *testing.T) {
+	cases := []string{
+		"#!/usr/bin/python",
+		"#!/usr/bin/python2",
+		"#!/usr/bin/python3",
+	}
+
+	for _, c := range cases {
+		x, y := DetectSheBang(c)
+
+		if x != "Python" || y != nil {
+			t.Error("Expected Python match got", x)
+		}
+	}
+}

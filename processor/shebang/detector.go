@@ -6,23 +6,6 @@ import (
 )
 
 /*
-perl,#!/usr/bin/perl
-perl,#!  /usr/bin/perl
-perl,#!/usr/bin/perl -w
-perl,#!/usr/bin/env perl
-perl,#!  /usr/bin/env   perl
-perl,#!/usr/bin/env perl -w
-perl,#!  /usr/bin/env   perl   -w
-perl,#!/opt/local/bin/perl
-perl,#!/usr/bin/perl5
-
-php,#!/usr/bin/php
-php,#!/usr/bin/php5
-
-python,#!/usr/bin/python
-python,#!/usr/bin/python2
-python,#!/usr/bin/python3
-
 awk,#!/usr/bin/awk
 awk,#!/usr/bin/gawk
 awk,#!/usr/bin/mawk
@@ -54,17 +37,23 @@ tcl,/usr/bin/env tcl
 zsh,/bin/zsh
  */
 
+var SheBangMatches = map[string][]string{
+	"Perl": {"perl"},
+	"PHP": {"php"},
+	"Python": {"python"},
+}
+
 func DetectSheBang(content string) (string, error) {
 	if !strings.HasPrefix(content, "#!") {
 		return "", errors.New("Missing #!")
 	}
 
-	if strings.Contains(content, "/perl") || strings.Contains(content, " perl") {
-		return "Perl", nil
-	}
-
-	if strings.Contains(content, "/php") || strings.Contains(content, " php") {
-		return "PHP", nil
+	for k, v := range SheBangMatches {
+		for _, x := range v {
+			if strings.Contains(content, "/" + x) || strings.Contains(content, " " + x) {
+				return k, nil
+			}
+		}
 	}
 
 	return "", errors.New("Unknown #!")
