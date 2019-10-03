@@ -15,7 +15,7 @@ import (
 )
 
 // The version of the application
-var Version = "2.8.0"
+var Version = "2.9.0"
 
 // Flags set via the CLI which control how the output is displayed
 
@@ -108,6 +108,9 @@ var languageDatabase = map[string]Language{}
 // ExtensionToLanguage is loaded from the JSON that is in constants.go
 var ExtensionToLanguage = map[string][]string{}
 
+// Loaded from the JSON in constants.go contains shebang lookups
+var ShebangLookup = map[string][]string{}
+
 // Similar to ExtensionToLanguage loaded from the JSON in constants.go
 var FilenameToLanguage = map[string]string{}
 
@@ -145,6 +148,10 @@ func ProcessConstants() {
 
 		for _, fname := range value.FileNames {
 			FilenameToLanguage[fname] = name
+		}
+
+		if len(value.SheBangs) != 0 {
+			ShebangLookup[name] = value.SheBangs
 		}
 	}
 

@@ -139,6 +139,11 @@
         "end": "\"",
         "start": "\""
       }
+    ],
+    "shebangs": [
+      "awk",
+      "gawk",
+      "mawk"
     ]
   },
   "ActionScript": {
@@ -461,6 +466,9 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "bash"
     ]
   },
   "Basic": {
@@ -787,7 +795,11 @@
       "#"
     ],
     "multi_line": [],
-    "quotes": []
+    "quotes": [],
+    "shebangs": [
+      "csh",
+      "tcsh"
+    ]
   },
   "C#": {
     "complexitychecks": [
@@ -1521,6 +1533,9 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "rdmd"
     ]
   },
   "Dart": {
@@ -1802,7 +1817,10 @@
       "%"
     ],
     "multi_line": [],
-    "quotes": []
+    "quotes": [],
+    "shebangs": [
+      "escript"
+    ]
   },
   "Expect": {
     "complexitychecks": [
@@ -2041,6 +2059,9 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "fish"
     ]
   },
   "Flow9": {
@@ -2352,8 +2373,7 @@
   },
   "Gemfile": {
     "complexitychecks": [],
-    "extensions": [
-    ],
+    "extensions": [],
     "filenames": [
       "gemfile"
     ],
@@ -3003,6 +3023,9 @@
         "end": "\"",
         "start": "\""
       }
+    ],
+    "shebangs": [
+      "node"
     ]
   },
   "JavaServer Pages": {
@@ -3224,6 +3247,9 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "ksh"
     ]
   },
   "Kotlin": {
@@ -3447,7 +3473,10 @@
       ]
     ],
     "nestedmultiline": true,
-    "quotes": []
+    "quotes": [],
+    "shebangs": [
+      "sbcl"
+    ]
   },
   "Lua": {
     "complexitychecks": [
@@ -3484,6 +3513,9 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "lua"
     ]
   },
   "Lucius": {
@@ -4249,6 +4281,9 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "php"
     ]
   },
   "PKGBUILD": {
@@ -4425,6 +4460,9 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "perl"
     ]
   },
   "Plain Text": {
@@ -4758,6 +4796,9 @@
         "end": "'''",
         "start": "'''"
       }
+    ],
+    "shebangs": [
+      "python"
     ]
   },
   "Q#": {
@@ -5027,6 +5068,9 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "ruby"
     ]
   },
   "Ruby HTML": {
@@ -5359,7 +5403,10 @@
       ]
     ],
     "nestedmultiline": true,
-    "quotes": []
+    "quotes": [],
+    "shebangs": [
+      "racket"
+    ]
   },
   "Scons": {
     "complexitychecks": [
@@ -5436,6 +5483,9 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "sh"
     ]
   },
   "Smarty Template": {
@@ -5805,6 +5855,9 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "tcl"
     ]
   },
   "TOML": {
@@ -6837,6 +6890,9 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "zsh"
     ]
   },
   "gitignore": {
@@ -6913,6 +6969,9 @@
       "#"
     ],
     "multi_line": [],
-    "quotes": []
+    "quotes": [],
+    "shebangs": [
+      "sed"
+    ]
   }
 }

@@ -3,7 +3,6 @@ package processor
 import (
 	"bytes"
 	"fmt"
-	"github.com/boyter/scc/processor/shebang"
 	"github.com/minio/blake2b-simd"
 	"hash"
 	"io/ioutil"
@@ -703,7 +702,7 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 						cutoff = len(res.Content)
 					}
 
-					l, err := shebang.DetectSheBang(string(res.Content[:cutoff]))
+					l, err := DetectSheBang(string(res.Content[:cutoff]))
 					if err == nil {
 						if Verbose {
 							printWarn(fmt.Sprintf("detected #! %s for %s", l, res.Location))

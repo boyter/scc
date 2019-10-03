@@ -1,4 +1,4 @@
-package shebang
+package processor
 
 import "testing"
 
