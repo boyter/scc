@@ -93,3 +93,31 @@ func TestDetectSheBangCsh(t *testing.T) {
 		}
 	}
 }
+
+func TestDetectSheBangD(t *testing.T) {
+	cases := []string{
+		"#!/usr/bin/env rdmd",
+	}
+
+	for _, c := range cases {
+		x, y := DetectSheBang(c)
+
+		if x != "D" || y != nil {
+			t.Error("Expected D match got", x)
+		}
+	}
+}
+
+func TestDetectSheBangErlang(t *testing.T) {
+	cases := []string{
+		"#!/usr/bin/env escript",
+	}
+
+	for _, c := range cases {
+		x, y := DetectSheBang(c)
+
+		if x != "Erlang" || y != nil {
+			t.Error("Expected Erlang match got", x)
+		}
+	}
+}

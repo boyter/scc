@@ -6,8 +6,6 @@ import (
 )
 
 /*
-d,#!/usr/bin/env rdmd
-
 erlang,#!/usr/bin/env escript
 javascript,#!/usr/bin/env node
 lisp,#!/usr/local/bin/sbcl
@@ -28,14 +26,16 @@ shell,/bin/sh
 swift,/usr/bin/env swift
 tcl,/usr/bin/env tcl
 zsh,/bin/zsh
- */
+*/
 
 var SheBangMatches = map[string][]string{
-	"Perl": {"perl"},
-	"PHP": {"php"},
-	"Python": {"python"},
-	"AWK": {"awk", "gawk", "mawk"},
+	"Perl":    {"perl"},
+	"PHP":     {"php"},
+	"Python":  {"python"},
+	"AWK":     {"awk", "gawk", "mawk"},
 	"C Shell": {"csh", "tcsh"},
+	"D":       {"rdmd"},
+	"Erlang":  {"escript"},
 }
 
 func DetectSheBang(content string) (string, error) {
@@ -46,7 +46,7 @@ func DetectSheBang(content string) (string, error) {
 	for k, v := range SheBangMatches {
 		for _, x := range v {
 			// detects both full path and env usage
-			if strings.Contains(content, "/" + x) || strings.Contains(content, " " + x) {
+			if strings.Contains(content, "/"+x) || strings.Contains(content, " "+x) {
 				return k, nil
 			}
 		}
