@@ -5,13 +5,6 @@ import (
 	"strings"
 )
 
-/*
-scala,/usr/bin/env scala
-swift,/usr/bin/env swift
-tcl,/usr/bin/env tcl
-zsh,/bin/zsh
-*/
-
 var sheBangMatches = map[string][]string{
 	"Perl":       {"perl"},
 	"PHP":        {"php"},
