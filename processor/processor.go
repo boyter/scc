@@ -316,7 +316,7 @@ func printLanguages() {
 	})
 
 	for _, name := range names {
-		fmt.Println(fmt.Sprintf("%s (%s)", name, strings.Join(database[name].Extensions, ",")))
+		fmt.Println(fmt.Sprintf("%s (%s)", name, strings.Join(append(database[name].Extensions, database[name].FileNames...), ",")))
 	}
 }
 

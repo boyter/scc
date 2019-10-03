@@ -2350,6 +2350,28 @@
     "multi_line": [],
     "quotes": []
   },
+  "Gemfile": {
+    "complexitychecks": [],
+    "extensions": [
+    ],
+    "filenames": [
+      "gemfile"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\\\"",
+        "start": "\\\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
   "Gherkin Specification": {
     "complexitychecks": [
       "given",
@@ -3382,9 +3404,6 @@
   "License": {
     "complexitychecks": [],
     "extensions": [],
-    "line_comment": [],
-    "multi_line": [],
-    "quotes": [],
     "filenames": [
       "license",
       "licence",
@@ -3395,7 +3414,10 @@
       "license-mit",
       "licence-mit",
       "copyright"
-    ]
+    ],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": []
   },
   "Lisp": {
     "complexitychecks": [
@@ -3736,14 +3758,14 @@
       "mk",
       "bp"
     ],
+    "filenames": [
+      "makefile"
+    ],
     "line_comment": [
       "#"
     ],
     "multi_line": [],
-    "quotes": [],
-    "filenames": [
-      "makefile"
-    ]
+    "quotes": []
   },
   "Mako": {
     "complexitychecks": [
@@ -4878,7 +4900,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
+    "extensions": [],
+    "filenames": [
       "rake",
       "rakefile"
     ],
@@ -6162,6 +6185,10 @@
       "!= ",
       "== "
     ],
+    "extensions": [
+      "vhd",
+      "vhdl"
+    ],
     "keywords": [
       "abs",
       "access",
@@ -6261,10 +6288,6 @@
       "xnor",
       "xor"
     ],
-    "extensions": [
-      "vhd",
-      "vhdl"
-    ],
     "line_comment": [
       "--"
     ],
@@ -6335,6 +6358,11 @@
       "!= ",
       "== "
     ],
+    "extensions": [
+      "vg",
+      "vh",
+      "v"
+    ],
     "keywords": [
       "module",
       "endmodule",
@@ -6358,11 +6386,6 @@
       "assign",
       "generate",
       "genvar"
-    ],
-    "extensions": [
-      "vg",
-      "vh",
-      "v"
     ],
     "line_comment": [
       "//"
@@ -6544,6 +6567,24 @@
       }
     ]
   },
+  "Web Services Description Language": {
+    "extensions": [
+      "wsdl"
+    ],
+    "line_comment": [],
+    "multi_line": [
+      [
+        "<!--",
+        "-->"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "Wolfram": {
     "complexitychecks": [
       "for ",
@@ -6655,24 +6696,6 @@
   "XML": {
     "extensions": [
       "xml"
-    ],
-    "line_comment": [],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ]
-    ],
-    "quotes": [
-      {
-        "end": "\"",
-        "start": "\""
-      }
-    ]
-  },
-  "Web Services Description Language": {
-    "extensions": [
-      "wsdl"
     ],
     "line_comment": [],
     "multi_line": [
@@ -6819,26 +6842,26 @@
   "gitignore": {
     "complexitychecks": [],
     "extensions": [],
+    "filenames": [
+      ".gitignore"
+    ],
     "line_comment": [
       "#"
     ],
     "multi_line": [],
-    "quotes": [],
-    "filenames": [
-      ".gitignore"
-    ]
+    "quotes": []
   },
   "ignore": {
     "complexitychecks": [],
     "extensions": [],
+    "filenames": [
+      ".ignore"
+    ],
     "line_comment": [
       "#"
     ],
     "multi_line": [],
-    "quotes": [],
-    "filenames": [
-      ".ignore"
-    ]
+    "quotes": []
   },
   "m4": {
     "complexitychecks": [],

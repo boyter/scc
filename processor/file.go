@@ -141,6 +141,7 @@ DIRENTS:
 		isDir := dirent.IsDir()
 
 		for _, black := range PathBlacklist {
+			// Is this logic correct?!?!
 			if strings.HasPrefix(path, filepath.Join(job.root, black)) {
 				if Verbose {
 					printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", path))
