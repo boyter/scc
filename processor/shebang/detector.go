@@ -6,8 +6,6 @@ import (
 )
 
 /*
-erlang,#!/usr/bin/env escript
-javascript,#!/usr/bin/env node
 lisp,#!/usr/local/bin/sbcl
 lisp,#!/usr/bin/env sbcl
 scheme,#!/usr/bin/env racket
@@ -29,13 +27,15 @@ zsh,/bin/zsh
 */
 
 var SheBangMatches = map[string][]string{
-	"Perl":    {"perl"},
-	"PHP":     {"php"},
-	"Python":  {"python"},
-	"AWK":     {"awk", "gawk", "mawk"},
-	"C Shell": {"csh", "tcsh"},
-	"D":       {"rdmd"},
-	"Erlang":  {"escript"},
+	"Perl":       {"perl"},
+	"PHP":        {"php"},
+	"Python":     {"python"},
+	"AWK":        {"awk", "gawk", "mawk"},
+	"C Shell":    {"csh", "tcsh"},
+	"D":          {"rdmd"},
+	"Erlang":     {"escript"},
+	"JavaScript": {"node"},
+	"Lisp":       {"sbcl"},
 }
 
 func DetectSheBang(content string) (string, error) {

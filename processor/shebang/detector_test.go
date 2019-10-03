@@ -108,16 +108,32 @@ func TestDetectSheBangD(t *testing.T) {
 	}
 }
 
-func TestDetectSheBangErlang(t *testing.T) {
+func TestDetectSheBangNode(t *testing.T) {
 	cases := []string{
-		"#!/usr/bin/env escript",
+		"#!/usr/bin/env node",
+		"#!/usr/bin/node",
 	}
 
 	for _, c := range cases {
 		x, y := DetectSheBang(c)
 
-		if x != "Erlang" || y != nil {
-			t.Error("Expected Erlang match got", x)
+		if x != "JavaScript" || y != nil {
+			t.Error("Expected JavaScript match got", x)
+		}
+	}
+}
+
+func TestDetectSheBangLisp(t *testing.T) {
+	cases := []string{
+		"#!/usr/bin/env sbcl",
+		"#!/usr/bin/sbcl",
+	}
+
+	for _, c := range cases {
+		x, y := DetectSheBang(c)
+
+		if x != "Lisp" || y != nil {
+			t.Error("Expected Lisp match got", x)
 		}
 	}
 }
