@@ -98,6 +98,7 @@ Why use `scc`?
  - Can ignore duplicate files
  - Has complexity estimations
  - You need to tell the difference between Coq and Verilog in the same directory
+ - cloc yaml output support so potentially a drop in replacement for some users
 
 Why not use `scc`?
 
