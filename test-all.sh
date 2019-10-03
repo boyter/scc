@@ -1,10 +1,27 @@
 #!/bin/bash
 
+GREEN='\033[1;32m'
+RED='\033[0;31m'
+NC='\033[0m'
+
 echo "Running go fmt..."
 gofmt -s -w ./..
 
 echo "Running unit tests..."
 go test ./... || exit
+
+
+# Race Detection
+echo "Running race detection..."
+if  go run --race . 2>&1 >/dev/null | grep -q "Found" ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED race detection run 'go run --race .' to identify"
+    echo -e "=======================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED race detection${NC}"
+fi
+
 
 echo "Building application..."
 go build -ldflags="-s -w" || exit
@@ -14,10 +31,6 @@ echo '```' > LANGUAGES.md
 echo '```' >> LANGUAGES.md
 
 echo "Running integration tests..."
-
-GREEN='\033[1;32m'
-RED='\033[0;31m'
-NC='\033[0m'
 
 if ./scc --not-a-real-option > /dev/null ; then
     echo -e "${RED}================================================="
