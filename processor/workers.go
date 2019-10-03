@@ -698,7 +698,12 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 
 				// If the type is #! we should check to see if we can identify
 				if res.Language == SheBang {
-					l, err := shebang.DetectSheBang(string(res.Content[:200]))
+					cutoff := 200
+					if len(res.Content) > cutoff {
+						cutoff = len(res.Content)
+					}
+
+					l, err := shebang.DetectSheBang(string(res.Content[:cutoff]))
 					if err == nil {
 						if Verbose {
 							printWarn(fmt.Sprintf("detected #! %s for %s", l, res.Location))
