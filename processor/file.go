@@ -259,6 +259,6 @@ func checkFullName(name string, path string, extension string) *FileJob {
 		Location:          path,
 		Filename:          name,
 		Extension:         extension,
-		PossibleLanguages: []string{"#!"},
+		PossibleLanguages: []string{SheBang},
 	}
 }

@@ -26,6 +26,8 @@ const (
 	SDocString         int64 = 9
 )
 
+const SheBang string = "#!"
+
 // LineType what type of line are are processing
 type LineType int32
 
@@ -695,10 +697,9 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 				determineLanguage(res)
 
 				// If the type is #! we should check to see if we can identify
-				if res.Language == "#!" {
-					l, _ := shebang.DetectSheBang(string(res.Content[:200]))
-
-					if l != "" {
+				if res.Language == SheBang {
+					l, err := shebang.DetectSheBang(string(res.Content[:200]))
+					if err == nil {
 						if Verbose {
 							printWarn(fmt.Sprintf("detected #! %s for %s", l, res.Location))
 						}
@@ -707,7 +708,7 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 						LoadLanguageFeature(l)
 					} else {
 						if Verbose {
-							printWarn(fmt.Sprintf("unable to detect #! for %s", res.Location))
+							printWarn(fmt.Sprintf("unable to determine #! language for %s", res.Location))
 						}
 						continue
 					}
