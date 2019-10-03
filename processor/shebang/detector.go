@@ -37,6 +37,7 @@ var sheBangMatches = map[string][]string{
 	"BASH":       {"bash"},
 	"Shell":      {"sh"},
 	"Ruby":       {"ruby"},
+	"Lua":        {"lua"},
 }
 
 // Given some content attempt to determine if it has a #! that maps to a known language and return the language

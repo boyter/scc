@@ -157,6 +157,15 @@ else
     exit
 fi
 
+if ./scc "examples/denylist/" | grep -q "Java"; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should hit default .git denylist "
+    echo -e "=======================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED denylist test"
+fi
+
 # Simple test to see if we get any concurrency issues
 for i in {1..100}
 do

@@ -183,3 +183,33 @@ func TestDetectSheBangShell(t *testing.T) {
 		}
 	}
 }
+
+func TestDetectSheBangRuby(t *testing.T) {
+	cases := []string{
+		"#!/usr/bin/env ruby",
+		"#!/usr/bin/ruby",
+	}
+
+	for _, c := range cases {
+		x, y := DetectSheBang(c)
+
+		if x != "Ruby" || y != nil {
+			t.Error("Expected Ruby match got", x)
+		}
+	}
+}
+
+func TestDetectSheBangLua(t *testing.T) {
+	cases := []string{
+		"#!/usr/bin/env lua",
+		"#!/usr/bin/lua",
+	}
+
+	for _, c := range cases {
+		x, y := DetectSheBang(c)
+
+		if x != "Lua" || y != nil {
+			t.Error("Expected Lua match got", x)
+		}
+	}
+}
