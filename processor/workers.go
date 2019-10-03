@@ -3,6 +3,7 @@ package processor
 import (
 	"bytes"
 	"fmt"
+	"github.com/boyter/scc/processor/shebang"
 	"github.com/minio/blake2b-simd"
 	"hash"
 	"io/ioutil"
@@ -695,7 +696,21 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 
 				// If the type is #! we should check to see if we can identify
 				if res.Language == "#!" {
-					fmt.Println("POSSIBLE #!", res.Filename)
+					l, _ := shebang.DetectSheBang(string(res.Content[:200]))
+
+					if l != "" {
+						if Verbose {
+							printWarn(fmt.Sprintf("detected #! %s for %s", l, res.Location))
+						}
+
+						res.Language = l
+						LoadLanguageFeature(l)
+					} else {
+						if Verbose {
+							printWarn(fmt.Sprintf("unable to detect #! for %s", res.Location))
+						}
+						continue
+					}
 				}
 
 				CountStats(res)

@@ -6,10 +6,6 @@ import (
 )
 
 /*
-lisp,#!/usr/local/bin/sbcl
-lisp,#!/usr/bin/env sbcl
-scheme,#!/usr/bin/env racket
-
 java,#!/opt/java/jdk-11/bin/java --source 11
 bash,/bin/bash
 dart,/usr/bin/env dart
@@ -26,7 +22,7 @@ tcl,/usr/bin/env tcl
 zsh,/bin/zsh
 */
 
-var SheBangMatches = map[string][]string{
+var sheBangMatches = map[string][]string{
 	"Perl":       {"perl"},
 	"PHP":        {"php"},
 	"Python":     {"python"},
@@ -36,14 +32,18 @@ var SheBangMatches = map[string][]string{
 	"Erlang":     {"escript"},
 	"JavaScript": {"node"},
 	"Lisp":       {"sbcl"},
+	"Scheme":     {"racket"},
+	"Fish":       {"fish"},
+	"BASH":       {"bash"},
 }
 
+// Given some content attempt to determine if it has a #! that maps to a known language and return the language
 func DetectSheBang(content string) (string, error) {
 	if !strings.HasPrefix(content, "#!") {
 		return "", errors.New("Missing #!")
 	}
 
-	for k, v := range SheBangMatches {
+	for k, v := range sheBangMatches {
 		for _, x := range v {
 			// detects both full path and env usage
 			if strings.Contains(content, "/"+x) || strings.Contains(content, " "+x) {

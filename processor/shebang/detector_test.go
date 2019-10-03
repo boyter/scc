@@ -137,3 +137,34 @@ func TestDetectSheBangLisp(t *testing.T) {
 		}
 	}
 }
+
+func TestDetectSheBangScheme(t *testing.T) {
+	cases := []string{
+		"#!/usr/bin/env racket",
+		"#!/usr/bin/racket",
+	}
+
+	for _, c := range cases {
+		x, y := DetectSheBang(c)
+
+		if x != "Scheme" || y != nil {
+			t.Error("Expected Scheme match got", x)
+		}
+	}
+}
+
+func TestDetectSheBangFish(t *testing.T) {
+	cases := []string{
+		"#!/usr/bin/env fish",
+		"#!/usr/bin/fish",
+		"#!/bin/fish",
+	}
+
+	for _, c := range cases {
+		x, y := DetectSheBang(c)
+
+		if x != "Fish" || y != nil {
+			t.Error("Expected Fish match got", x)
+		}
+	}
+}
