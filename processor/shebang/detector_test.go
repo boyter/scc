@@ -168,3 +168,18 @@ func TestDetectSheBangFish(t *testing.T) {
 		}
 	}
 }
+
+func TestDetectSheBangShell(t *testing.T) {
+	cases := []string{
+		"#!/usr/bin/env sh",
+		"#!/bin/sh",
+	}
+
+	for _, c := range cases {
+		x, y := DetectSheBang(c)
+
+		if x != "Shell" || y != nil {
+			t.Error("Expected Shell match got", x)
+		}
+	}
+}
