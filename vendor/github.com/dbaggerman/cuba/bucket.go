@@ -8,7 +8,8 @@ type Bucket interface {
 	Push(interface{})
 	PushAll([]interface{})
 	Pop() interface{}
-	Empty() bool
+	IsEmpty() bool
+	Empty()
 }
 
 type Stack struct {
@@ -33,8 +34,12 @@ func (stack *Stack) Pop() interface{} {
 	return item
 }
 
-func (stack *Stack) Empty() bool {
+func (stack *Stack) IsEmpty() bool {
 	return len(stack.data) == 0
+}
+
+func (stack *Stack) Empty() {
+	stack.data = nil
 }
 
 type Queue struct {
@@ -61,6 +66,10 @@ func (queue *Queue) Pop() interface{} {
 	return queue.data.Remove(queue.data.Front())
 }
 
-func (queue *Queue) Empty() bool {
+func (queue *Queue) IsEmpty() bool {
 	return queue.data.Len() == 0
+}
+
+func (queue *Queue) Empty() {
+	queue.data = list.New().Init()
 }
