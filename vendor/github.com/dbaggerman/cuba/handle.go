@@ -15,6 +15,8 @@ func (handle *Handle) Push(item interface{}) {
 }
 
 func (handle *Handle) Sync() {
+	// PushAll can return PoolAbortedErr, but we deliberately ignore it
+	// silently here.
 	handle.pool.PushAll(handle.items)
 	handle.items = handle.items[:0]
 }
