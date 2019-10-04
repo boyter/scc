@@ -78,7 +78,7 @@ func (dw *DirectoryWalker) Walk(root string) error {
 	}
 
 	if !fileInfo.IsDir() {
-		fileJob := newFileJob(root, root)
+		fileJob := newFileJob(root, filepath.Base(root))
 		if fileJob != nil {
 			dw.output <- fileJob
 		}
@@ -86,7 +86,7 @@ func (dw *DirectoryWalker) Walk(root string) error {
 		return nil
 	}
 
-	dw.buffer.Push(
+	_ = dw.buffer.Push(
 		&DirectoryJob{
 			root:    root,
 			path:    root,
