@@ -30,14 +30,10 @@
   unused-packages = true
 
 [[constraint]]
-  name = "github.com/ryanuber/columnize"
-  version = "2.1.0"
-
-[[constraint]]
   branch = "master"
   name = "github.com/monochromegane/go-gitignore"
 
 [[constraint]]
   name = "github.com/dbaggerman/cuba"
-  version = "0.2.0"
+  version = "0.3.1"
 
