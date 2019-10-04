@@ -10,7 +10,6 @@ gofmt -s -w ./..
 echo "Running unit tests..."
 go test ./... || exit
 
-
 # Race Detection
 echo "Running race detection..."
 if  go run --race . 2>&1 >/dev/null | grep -q "Found" ; then
@@ -21,7 +20,6 @@ if  go run --race . 2>&1 >/dev/null | grep -q "Found" ; then
 else
     echo -e "${GREEN}PASSED race detection${NC}"
 fi
-
 
 echo "Building application..."
 go build -ldflags="-s -w" || exit
@@ -304,6 +302,16 @@ if [ "$a" == "$b" ]; then
     exit
 else
     echo -e "${GREEN}PASSED git ignore filter"
+fi
+
+# Regression issue https://github.com/boyter/scc/issues/115
+if ./scc "examples/issue115/.test/file" 2>&1 >/dev/null | grep -q "Perl" ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED hidden directory issue"
+    echo -e "=======================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED hidden directory${NC}"
 fi
 
 a=$(./scc | grep Total)
