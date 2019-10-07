@@ -187,8 +187,10 @@ DIRENTS:
 func newFileJob(path, name string) *FileJob {
 	extension := ""
 
+	t := strings.Count(name, ".")
+
 	// If there is no . in the filename or it starts with one then check if #! or other
-	if !strings.Contains(name, ".") || (name[0] == '.' && strings.Count(name, ".") == 1) {
+	if t == 0 || (name[0] == '.' && t == 1) {
 		return checkFullName(name, path, extension)
 	}
 

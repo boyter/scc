@@ -200,7 +200,7 @@ func TestWalkDirectoryParallelIgnoresAbsoluteGitPath(t *testing.T) {
 	sawGit := false
 	for fileJob := range inputChan {
 		// We do have .gitignore file to worry about here, so if the suffix is that then ignore
-		if strings.HasPrefix(fileJob.Location, absGitDir) && !strings.HasSuffix(fileJob.Location, ".gitignore") {
+		if strings.HasPrefix(fileJob.Location, absGitDir) && !strings.HasSuffix(fileJob.Location, ".gitignore") && !strings.Contains(fileJob.Location, ".github") {
 			sawGit = true
 			break
 		}
@@ -213,6 +213,7 @@ func TestWalkDirectoryParallelIgnoresAbsoluteGitPath(t *testing.T) {
 
 func TestNewFileJobFullname(t *testing.T) {
 	ProcessConstants()
+	WhiteListExtensions = []string{}
 	job := newFileJob("./examples/issue114/", "makefile")
 
 	if job.PossibleLanguages[0] != "Makefile" {
