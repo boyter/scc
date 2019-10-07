@@ -7,8 +7,6 @@ import (
 
 // Given some content attempt to determine if it has a #! that maps to a known language and return the language
 func DetectSheBang(content string) (string, error) {
-	ProcessConstants()
-
 	if !strings.HasPrefix(content, "#!") {
 		return "", errors.New("Missing #!")
 	}
