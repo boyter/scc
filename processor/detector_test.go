@@ -27,7 +27,7 @@ func TestDetectSheBangPerl(t *testing.T) {
 		x, y := DetectSheBang(c)
 
 		if x != "Perl" || y != nil {
-			t.Error("Expected Perl match got", x)
+			t.Error("Expected Perl match got", x, "for", c)
 		}
 	}
 }
@@ -211,5 +211,22 @@ func TestDetectSheBangLua(t *testing.T) {
 		if x != "Lua" || y != nil {
 			t.Error("Expected Lua match got", x)
 		}
+	}
+}
+
+func TestDetectSheBangMultiple(t *testing.T) {
+	x, y := DetectSheBang(`#!/python/perl/ruby`)
+
+	if x != "Ruby" || y != nil {
+		t.Error("Expected Ruby match got", x)
+	}
+}
+
+func TestDetectSheBangMultipleNewLine(t *testing.T) {
+	x, y := DetectSheBang(`#!/python/perl/ruby
+python perl fish`)
+
+	if x != "Ruby" || y != nil {
+		t.Error("Expected Ruby match got", x)
 	}
 }

@@ -13,10 +13,19 @@ func DetectSheBang(content string) (string, error) {
 		return "", errors.New("Missing #!")
 	}
 
+	index := strings.Index(content, "\n")
+
+	if index != -1 {
+		content = content[:index]
+	}
+
+	cln := strings.Replace(content, " ", "", -1)
+	cln = strings.Replace(cln, "-w", "", -1)
+
 	for k, v := range ShebangLookup {
 		for _, x := range v {
 			// detects both full path and env usage
-			if strings.Contains(content, "/"+x) || strings.Contains(content, " "+x) {
+			if strings.HasSuffix(cln, "/"+x) || strings.Contains(content, " "+x) {
 				return k, nil
 			}
 		}

@@ -4283,7 +4283,8 @@
       }
     ],
     "shebangs": [
-      "php"
+      "php",
+      "php5"
     ]
   },
   "PKGBUILD": {
@@ -4462,7 +4463,9 @@
       }
     ],
     "shebangs": [
-      "perl"
+      "perl",
+      "perl5",
+      "perl6"
     ]
   },
   "Plain Text": {
@@ -4798,7 +4801,9 @@
       }
     ],
     "shebangs": [
-      "python"
+      "python",
+      "python2",
+      "python3"
     ]
   },
   "Q#": {
