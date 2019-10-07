@@ -698,7 +698,9 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 				// If the type is #! we should check to see if we can identify
 				if res.Language == SheBang {
 					cutoff := 200
-					if len(res.Content) > cutoff {
+
+					// To avoid runtime panic check if the content we are cutting is smaller than 200
+					if len(res.Content) < cutoff {
 						cutoff = len(res.Content)
 					}
 
