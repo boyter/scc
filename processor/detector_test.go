@@ -3,6 +3,8 @@ package processor
 import "testing"
 
 func TestDetectSheBangEmpty(t *testing.T) {
+	ProcessConstants()
+
 	x, y := DetectSheBang("")
 
 	if x != "" || y == nil {
@@ -11,6 +13,8 @@ func TestDetectSheBangEmpty(t *testing.T) {
 }
 
 func TestDetectSheBangPerl(t *testing.T) {
+	ProcessConstants()
+
 	cases := []string{
 		"#!/usr/bin/perl",
 		"#!  /usr/bin/perl",
@@ -33,6 +37,8 @@ func TestDetectSheBangPerl(t *testing.T) {
 }
 
 func TestDetectSheBangPhp(t *testing.T) {
+	ProcessConstants()
+
 	cases := []string{
 		"#!/usr/bin/php5",
 		"#!/usr/bin/php",
@@ -48,6 +54,8 @@ func TestDetectSheBangPhp(t *testing.T) {
 }
 
 func TestDetectSheBangPython(t *testing.T) {
+	ProcessConstants()
+
 	cases := []string{
 		"#!/usr/bin/python",
 		"#!/usr/bin/python2",
@@ -64,6 +72,8 @@ func TestDetectSheBangPython(t *testing.T) {
 }
 
 func TestDetectSheBangAWK(t *testing.T) {
+	ProcessConstants()
+
 	cases := []string{
 		"#!/usr/bin/awk",
 		"#!/usr/bin/gawk",
@@ -80,6 +90,8 @@ func TestDetectSheBangAWK(t *testing.T) {
 }
 
 func TestDetectSheBangCsh(t *testing.T) {
+	ProcessConstants()
+
 	cases := []string{
 		"#!/bin/csh",
 		"#!/bin/tcsh",
@@ -95,6 +107,8 @@ func TestDetectSheBangCsh(t *testing.T) {
 }
 
 func TestDetectSheBangD(t *testing.T) {
+	ProcessConstants()
+
 	cases := []string{
 		"#!/usr/bin/env rdmd",
 	}
@@ -109,6 +123,8 @@ func TestDetectSheBangD(t *testing.T) {
 }
 
 func TestDetectSheBangNode(t *testing.T) {
+	ProcessConstants()
+
 	cases := []string{
 		"#!/usr/bin/env node",
 		"#!/usr/bin/node",
@@ -124,6 +140,8 @@ func TestDetectSheBangNode(t *testing.T) {
 }
 
 func TestDetectSheBangLisp(t *testing.T) {
+	ProcessConstants()
+
 	cases := []string{
 		"#!/usr/bin/env sbcl",
 		"#!/usr/bin/sbcl",
@@ -139,6 +157,8 @@ func TestDetectSheBangLisp(t *testing.T) {
 }
 
 func TestDetectSheBangScheme(t *testing.T) {
+	ProcessConstants()
+
 	cases := []string{
 		"#!/usr/bin/env racket",
 		"#!/usr/bin/racket",
@@ -154,6 +174,8 @@ func TestDetectSheBangScheme(t *testing.T) {
 }
 
 func TestDetectSheBangFish(t *testing.T) {
+	ProcessConstants()
+
 	cases := []string{
 		"#!/usr/bin/env fish",
 		"#!/usr/bin/fish",
@@ -170,6 +192,8 @@ func TestDetectSheBangFish(t *testing.T) {
 }
 
 func TestDetectSheBangShell(t *testing.T) {
+	ProcessConstants()
+
 	cases := []string{
 		"#!/usr/bin/env sh",
 		"#!/bin/sh",
@@ -185,6 +209,8 @@ func TestDetectSheBangShell(t *testing.T) {
 }
 
 func TestDetectSheBangRuby(t *testing.T) {
+	ProcessConstants()
+
 	cases := []string{
 		"#!/usr/bin/env ruby",
 		"#!/usr/bin/ruby",
@@ -200,6 +226,8 @@ func TestDetectSheBangRuby(t *testing.T) {
 }
 
 func TestDetectSheBangLua(t *testing.T) {
+	ProcessConstants()
+
 	cases := []string{
 		"#!/usr/bin/env lua",
 		"#!/usr/bin/lua",
@@ -215,6 +243,8 @@ func TestDetectSheBangLua(t *testing.T) {
 }
 
 func TestDetectSheBangMultiple(t *testing.T) {
+	ProcessConstants()
+
 	x, y := DetectSheBang(`#!/python/perl/ruby`)
 
 	if x != "Ruby" || y != nil {
@@ -223,6 +253,8 @@ func TestDetectSheBangMultiple(t *testing.T) {
 }
 
 func TestDetectSheBangMultipleNewLine(t *testing.T) {
+	ProcessConstants()
+
 	x, y := DetectSheBang(`#!/python/perl/ruby
 python perl fish`)
 
