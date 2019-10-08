@@ -2,6 +2,7 @@ package processor
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -30,4 +31,36 @@ func DetectSheBang(content string) (string, error) {
 	}
 
 	return "", errors.New("Unknown #!")
+}
+
+func scanForSheBang(content []byte) (string, error) {
+
+	state := 0
+	lastSlash := 0
+	startPos := 0
+
+	for i := 0; i < len(content); i++ {
+		switch {
+		case state == 0: // Start where we look for / before changing state
+			if content[i] == '/' {
+				lastSlash = i
+				state = 1
+			}
+		case state == 1: // Keep looking for / till we hit whitespace or end
+			if content[i] == '/' {
+				lastSlash = i
+			}
+			if isWhitespace(content[i]) {
+				state = 2
+			}
+		case state == 2:
+			if !isWhitespace(content[i]) {
+				startPos = i
+			}
+		}
+	}
+
+	fmt.Println(startPos, lastSlash)
+
+	return string(content[lastSlash+1:]), nil
 }

@@ -262,3 +262,25 @@ python perl fish`)
 		t.Error("Expected Ruby match got", x)
 	}
 }
+
+func TestScanSheBang(t *testing.T) {
+	cases := []string{
+		"#!/usr/bin/perl",
+		"#!  /usr/bin/perl",
+		"#!/usr/bin/perl -w",
+		"#!/usr/bin/env perl",
+		"#!  /usr/bin/env   perl",
+		"#!/usr/bin/env perl -w",
+		"#!  /usr/bin/env   perl   -w",
+		"#!/opt/local/bin/perl",
+		"#!/usr/bin/perl5",
+	}
+
+	for _, c := range cases {
+		r, _ := scanForSheBang([]byte(c))
+
+		if r != "perl" {
+			t.Error("Expected perl got", r)
+		}
+	}
+}
