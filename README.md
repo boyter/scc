@@ -35,6 +35,8 @@ A [snap install](https://snapcraft.io/scc) exists thanks to [Ricardo](https://fe
 
 #### Homebrew
 
+Of if you have [homebrew](https://brew.sh/) installed
+
 `$ brew install scc`
 
 #### Manual
