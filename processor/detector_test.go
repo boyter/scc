@@ -265,22 +265,21 @@ python perl fish`)
 
 func TestScanSheBang(t *testing.T) {
 	cases := []string{
-		"#!/usr/bin/perl",
-		"#!  /usr/bin/perl",
+		//"#!/usr/bin/perl",
+		//"#!  /usr/bin/perl",
 		"#!/usr/bin/perl -w",
 		"#!/usr/bin/env perl",
 		"#!  /usr/bin/env   perl",
 		"#!/usr/bin/env perl -w",
 		"#!  /usr/bin/env   perl   -w",
 		"#!/opt/local/bin/perl",
-		"#!/usr/bin/perl5",
 	}
 
 	for _, c := range cases {
 		r, _ := scanForSheBang([]byte(c))
 
 		if r != "perl" {
-			t.Error("Expected perl got", r)
+			t.Errorf("Expected 'perl' got '%s' for %s", r, c)
 		}
 	}
 }
