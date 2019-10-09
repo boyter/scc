@@ -223,13 +223,13 @@ Generally `scc` will the fastest code counter compared to any I am aware of and 
 
 However if you want greater performance and you have RAM to spare you can disable the garbage collector like the following on linux `GOGC=-1 scc .` which should speed things up considerably. For some repositories turning off the code complexity calculation via `-c` can reduce runtime as well.
 
-Benchmarks are run on fresh 32 CPU Optimised Digital Ocean Virtual Machine 2019/03/04 all done using [hyperfine](https://github.com/sharkdp/hyperfine) with 3 warm-up runs and 10 timed runs.
+Benchmarks are run on fresh 32 Core CPU Optimised Digital Ocean Virtual Machine 2019/10/10 all done using [hyperfine](https://github.com/sharkdp/hyperfine) with 3 warm-up runs and 10 timed runs.
 
 ```
-scc v2.2.0 (compiled with Go 1.12)
-tokei v9.0.0 (compiled with Rust 1.33)
-loc v0.5.0 (compiled with Rust 1.33)
-polyglot v0.5.19 (downloaded from github)
+scc v2.8.0
+tokei v10.0.1
+loc v0.5.0
+polyglot v0.5.25
 ```
 
 
@@ -237,33 +237,33 @@ polyglot v0.5.19 (downloaded from github)
 
 | Program | Runtime |
 |---|---|
-| scc | 24.0 ms ±   2.7 ms |
-| scc (no complexity) | 18.9 ms ±   2.2 ms |
-| tokei | 26.6 ms ±   3.3 ms |
-| loc | 80.1 ms ±  54.7 ms |
-| polyglot | 15.0 ms ±   1.1 ms |
+| scc | 60.0 ms ±   5.8 ms |
+| scc (no complexity) | 49.1 ms ±   4.7 ms |
+| tokei | 47.1 ms ±   3.9 ms |
+| loc | 66.3 ms ±  25.4 ms |
+| polyglot | 41.8 ms ±   1.3 ms |
 
 #### CPython https://github.com/python/cpython
 
 | Program | Runtime |
 |---|---|
-| scc | 64.3 ms ±   6.3 ms |
-| scc (no complexity) | 53.8 ms ±   6.5 ms |
-| tokei | 74.9 ms ±  11.6 ms |
-| loc | 155.1 ms ±  58.9 ms |
-| polyglot | 83.9 ms ±   9.4 ms |
+| scc | 112.9 ms ±  19.8 ms |
+| scc (no complexity) | 91.7 ms ±  19.2 ms |
+| tokei | 103.6 ms ±  10.3 ms |
+| loc | 177.0 ms ±  44.2 ms |
+| polyglot | 175.8 ms ±   8.0 ms |
 
 #### Linux Kernel https://github.com/torvalds/linux
 
 | Program | Runtime |
 |---|---|
-| scc | 537.3 ms ±  33.1 ms |
-| scc (no complexity) | 438.9 ms ±  30.3 ms |
-| tokei | 525.9 ms ±  32.7 ms |
-| loc | 1.543 s ±  0.059 s |
-| polyglot | 1.022 s ±  0.056 s |
+| scc | 682.2 ms ±  29.6 ms |
+| scc (no complexity) | 538.1 ms ±  26.3 ms |
+| tokei | 782.8 ms ±  30.4 ms |
+| loc | 1.957 s ±  0.031 s |
+| polyglot | 1.736 s ±  0.063 s |
 
-If you enable duplicate detection expect performance to fall by about 50%
+If you enable duplicate detection expect performance to fall by about 20% in `scc`.
 
 ### CI/CD Support
 
