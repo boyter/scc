@@ -37,6 +37,7 @@ func scanForSheBang(content []byte) (string, error) {
 	lastSlash := 0
 
 	candidate1 := ""
+	candidate2 := ""
 
 	for i := 0; i < len(content); i++ {
 		switch {
@@ -63,13 +64,30 @@ func scanForSheBang(content []byte) (string, error) {
 			}
 		case state == 2: // We have the first candidate, see if there is another
 			// go till end of whitespace, mark that spot as new start
-			//if !isWhitespace(content[i])
+			if !isWhitespace(content[i]) {
+				lastSlash = i
+				state = 3
+			}
 		case state == 3:
+			if i == len(content)-1 {
+				candidate2 = string(content[lastSlash:i+1])
+			}
+
+			if isWhitespace(content[i]) {
+				candidate2 = string(content[lastSlash:i])
+				state = 4
+			}
+		case state == 4:
 			break
 		}
 	}
 
-	return candidate1, nil
+	switch {
+	case candidate1 == "env":
+		return candidate2, nil
+	case candidate1 != "":
+		return candidate1, nil
+	}
 
 	return "", errors.New("Count not find")
 }

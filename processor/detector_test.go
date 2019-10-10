@@ -265,8 +265,8 @@ python perl fish`)
 
 func TestScanSheBang(t *testing.T) {
 	cases := []string{
-		//"#!/usr/bin/perl",
-		//"#!  /usr/bin/perl",
+		"#!/usr/bin/perl",
+		"#!  /usr/bin/perl",
 		"#!/usr/bin/perl -w",
 		"#!/usr/bin/env perl",
 		"#!  /usr/bin/env   perl",
