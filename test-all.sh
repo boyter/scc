@@ -357,7 +357,7 @@ else
 fi
 
 # Try out specific languages
-for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java '
+for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java ' 'Boo '
 do
     if ./scc "examples/language/" | grep -q "$i "; then
         echo -e "${GREEN}PASSED $i Language Check"
