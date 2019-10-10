@@ -663,6 +663,42 @@ func TestFileSummarizeLongSort(t *testing.T) {
 	}
 }
 
+func TestGetTabularShortBreak(t *testing.T) {
+	Ci = false
+	r := getTabularShortBreak()
+
+	if !strings.Contains(r, "─") {
+		t.Errorf("Expected to have box line")
+	}
+
+	Ci = true
+	r = getTabularShortBreak()
+
+	if !strings.Contains(r, "-") {
+		t.Errorf("Expected to have hyphen")
+	}
+
+	Ci = false
+}
+
+func TestGetTabularWideBreak(t *testing.T) {
+	Ci = false
+	r := getTabularWideBreak()
+
+	if !strings.Contains(r, "─") {
+		t.Errorf("Expected to have box line")
+	}
+
+	Ci = true
+	r = getTabularWideBreak()
+
+	if !strings.Contains(r, "-") {
+		t.Errorf("Expected to have hyphen")
+	}
+
+	Ci = false
+}
+
 // When using columise  ~28726 ns/op
 // When using optimised ~14293 ns/op
 func BenchmarkFileSummerize(b *testing.B) {
