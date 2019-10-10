@@ -294,3 +294,15 @@ func TestScanSheBangFuzz(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkScanSheBangFuzz(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, _ = scanForSheBang([]byte(randStringBytes(100)))
+	}
+}
+
+func BenchmarkScanSheBangReal(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, _ = scanForSheBang([]byte("#!  /usr/bin/env   perl   -w"))
+	}
+}
