@@ -283,3 +283,14 @@ func TestScanSheBang(t *testing.T) {
 		}
 	}
 }
+
+// Randomly try things to see what happens
+func TestScanSheBangFuzz(t *testing.T) {
+	for i := 0; i < 1000; i++ {
+		x, _ := scanForSheBang([]byte(randStringBytes(100)))
+
+		if x == "NEVERHAPPEN" {
+			t.Errorf("Errr wot?")
+		}
+	}
+}

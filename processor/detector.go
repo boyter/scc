@@ -17,13 +17,16 @@ func DetectSheBang(content string) (string, error) {
 		content = content[:index]
 	}
 
-	cln := strings.Replace(content, " ", "", -1)
-	cln = strings.Replace(cln, "-w", "", -1)
+	cmd, err := scanForSheBang([]byte(content))
+
+	if err != nil {
+		return "", errors.New("Unable to determine #! command")
+	}
 
 	for k, v := range ShebangLookup {
 		for _, x := range v {
 			// detects both full path and env usage
-			if strings.HasSuffix(cln, "/"+x) || strings.Contains(content, " "+x) {
+			if x == cmd {
 				return k, nil
 			}
 		}
@@ -70,7 +73,7 @@ func scanForSheBang(content []byte) (string, error) {
 			}
 		case state == 3:
 			if i == len(content)-1 {
-				candidate2 = string(content[lastSlash:i+1])
+				candidate2 = string(content[lastSlash : i+1])
 			}
 
 			if isWhitespace(content[i]) {
