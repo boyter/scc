@@ -551,6 +551,7 @@ func CountStats(fileJob *FileJob) {
 	if Minified {
 		if avgLineByteCount >= MinifiedLineByteLength {
 			fileJob.Minified = true
+			fileJob.Language = "(min) " + fileJob.Language
 		}
 	}
 
