@@ -20,7 +20,7 @@ func DetectSheBang(content string) (string, error) {
 	cmd, err := scanForSheBang([]byte(content))
 
 	if err != nil {
-		return "", errors.New("Unable to determine #! command")
+		return "", err
 	}
 
 	for k, v := range ShebangLookup {
@@ -42,14 +42,14 @@ func scanForSheBang(content []byte) (string, error) {
 	candidate1 := ""
 	candidate2 := ""
 
-	for i := 0; i < len(content); i++ {
-		switch {
-		case state == 0: // Deals with whitespace after #! and before first /
+	for i := range content {
+		switch state {
+		case 0: // Deals with whitespace after #! and before first /
 			if content[i] == '/' {
 				lastSlash = i
 				state = 1
 			}
-		case state == 1: // Once we found the first / keep going till we hit whitespace
+		case 1: // Once we found the first / keep going till we hit whitespace
 			if content[i] == '/' {
 				lastSlash = i
 			}
@@ -65,13 +65,13 @@ func scanForSheBang(content []byte) (string, error) {
 				candidate1 = string(content[lastSlash+1 : i])
 				state = 2
 			}
-		case state == 2: // We have the first candidate, see if there is another
+		case 2: // We have the first candidate, see if there is another
 			// go till end of whitespace, mark that spot as new start
 			if !isWhitespace(content[i]) {
 				lastSlash = i
 				state = 3
 			}
-		case state == 3:
+		case 3:
 			if i == len(content)-1 {
 				candidate2 = string(content[lastSlash : i+1])
 			}
@@ -80,7 +80,7 @@ func scanForSheBang(content []byte) (string, error) {
 				candidate2 = string(content[lastSlash:i])
 				state = 4
 			}
-		case state == 4:
+		case 4:
 			break
 		}
 	}
@@ -92,5 +92,5 @@ func scanForSheBang(content []byte) (string, error) {
 		return candidate1, nil
 	}
 
-	return "", errors.New("Count not find")
+	return "", errors.New("Unable to determine #! command")
 }
