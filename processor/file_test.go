@@ -199,7 +199,8 @@ func TestWalkDirectoryParallelIgnoresAbsoluteGitPath(t *testing.T) {
 
 	sawGit := false
 	for fileJob := range inputChan {
-		if strings.HasPrefix(fileJob.Location, absGitDir) {
+		// We do have .gitignore file to worry about here, so if the suffix is that then ignore
+		if strings.HasPrefix(fileJob.Location, absGitDir) && !strings.HasSuffix(fileJob.Location, ".gitignore") && !strings.Contains(fileJob.Location, ".github") {
 			sawGit = true
 			break
 		}
@@ -207,6 +208,63 @@ func TestWalkDirectoryParallelIgnoresAbsoluteGitPath(t *testing.T) {
 
 	if sawGit {
 		t.Errorf("Expected .git folder to be ignored")
+	}
+}
+
+func TestNewFileJobFullname(t *testing.T) {
+	ProcessConstants()
+	WhiteListExtensions = []string{}
+	job := newFileJob("./examples/issue114/", "makefile")
+
+	if job.PossibleLanguages[0] != "Makefile" {
+		t.Error("Expected makefile got", job.PossibleLanguages[0])
+	}
+}
+
+func TestNewFileJob(t *testing.T) {
+	ProcessConstants()
+	job := newFileJob("./examples/issue114/", "java")
+
+	if job.PossibleLanguages[0] != "#!" {
+		t.Error("Expected special value #! got", job.PossibleLanguages[0])
+	}
+}
+
+func TestNewFileJobGitIgnore(t *testing.T) {
+	WhiteListExtensions = []string{}
+	ProcessConstants()
+	job := newFileJob("./examples/issue114/", ".gitignore")
+
+	if job.PossibleLanguages[0] != "gitignore" {
+		t.Error("Expected gitignore got", job.PossibleLanguages[0])
+	}
+}
+
+func TestNewFileJobIgnore(t *testing.T) {
+	WhiteListExtensions = []string{}
+	ProcessConstants()
+	job := newFileJob("./examples/issue114/", ".ignore")
+
+	if job.PossibleLanguages[0] != "ignore" {
+		t.Error("Expected ignore got", job.PossibleLanguages[0])
+	}
+}
+
+func TestNewFileJobLicense(t *testing.T) {
+	ProcessConstants()
+	job := newFileJob("./examples/issue114/", "license")
+
+	if job.PossibleLanguages[0] != "License" {
+		t.Error("Expected License got", job.PossibleLanguages[0])
+	}
+}
+
+func TestNewFileJobYAML(t *testing.T) {
+	ProcessConstants()
+	job := newFileJob("./examples/issue114/", ".travis.yml")
+
+	if job.PossibleLanguages[0] != "YAML" {
+		t.Error("Expected YAML got", job.PossibleLanguages[0])
 	}
 }
 

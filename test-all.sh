@@ -10,7 +10,6 @@ gofmt -s -w ./..
 echo "Running unit tests..."
 go test ./... || exit
 
-
 # Race Detection
 echo "Running race detection..."
 if  go run --race . 2>&1 >/dev/null | grep -q "Found" ; then
@@ -21,7 +20,6 @@ if  go run --race . 2>&1 >/dev/null | grep -q "Found" ; then
 else
     echo -e "${GREEN}PASSED race detection${NC}"
 fi
-
 
 echo "Building application..."
 go build -ldflags="-s -w" || exit
@@ -170,6 +168,15 @@ else
     exit
 fi
 
+if ./scc "examples/denylist/" | grep -q "Java"; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should hit default .git denylist "
+    echo -e "=======================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED denylist test"
+fi
+
 # Simple test to see if we get any concurrency issues
 for i in {1..100}
 do
@@ -297,6 +304,16 @@ else
     echo -e "${GREEN}PASSED git ignore filter"
 fi
 
+# Regression issue https://github.com/boyter/scc/issues/115
+if ./scc "examples/issue115/.test/file" 2>&1 >/dev/null | grep -q "Perl" ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED hidden directory issue"
+    echo -e "=======================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED hidden directory${NC}"
+fi
+
 a=$(./scc | grep Total)
 b=$(./scc --no-ignore | grep Total)
 if [ "$a" == "$b" ]; then
@@ -357,7 +374,7 @@ else
 fi
 
 # Try out specific languages
-for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java ' 'Boo '
+for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java ' 'Boo ' 'License ' 'BASH ' 'C Shell ' 'Korn Shell ' 'Makefile ' 'Shell ' 'Zsh ' 'Rakefile ' 'Gemfile '
 do
     if ./scc "examples/language/" | grep -q "$i "; then
         echo -e "${GREEN}PASSED $i Language Check"

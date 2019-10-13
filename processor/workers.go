@@ -25,6 +25,8 @@ const (
 	SDocString         int64 = 9
 )
 
+const SheBang string = "#!"
+
 // LineType what type of line are are processing
 type LineType int32
 
@@ -371,9 +373,6 @@ func verifyIgnoreEscape(langFeatures LanguageFeature, fileJob *FileJob, index in
 // This is the 'hot' path for the application and needs to be as fast as possible
 func CountStats(fileJob *FileJob) {
 
-	// Needs to always run to ensure the language is set
-	determineLanguage(fileJob)
-
 	// If the file has a length of 0 it is is empty then we say it has no lines
 	fileJob.Bytes = int64(len(fileJob.Content))
 	if fileJob.Bytes == 0 {
@@ -692,6 +691,35 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 				atomic.CompareAndSwapInt64(&startTime, 0, makeTimestampMilli())
 
 				fileStartTime := makeTimestampNano()
+
+				// Needs to always run to ensure the language is set
+				determineLanguage(res)
+
+				// If the type is #! we should check to see if we can identify
+				if res.Language == SheBang {
+					cutoff := 200
+
+					// To avoid runtime panic check if the content we are cutting is smaller than 200
+					if len(res.Content) < cutoff {
+						cutoff = len(res.Content)
+					}
+
+					l, err := DetectSheBang(string(res.Content[:cutoff]))
+					if err == nil {
+						if Verbose {
+							printWarn(fmt.Sprintf("detected #! %s for %s", l, res.Location))
+						}
+
+						res.Language = l
+						LoadLanguageFeature(l)
+					} else {
+						if Verbose {
+							printWarn(fmt.Sprintf("unable to determine #! language for %s", res.Location))
+						}
+						continue
+					}
+				}
+
 				CountStats(res)
 
 				if Duplicates {

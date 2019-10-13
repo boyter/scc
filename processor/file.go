@@ -78,7 +78,7 @@ func (dw *DirectoryWalker) Walk(root string) error {
 	}
 
 	if !fileInfo.IsDir() {
-		fileJob := newFileJob(root, root)
+		fileJob := newFileJob(root, filepath.Base(root))
 		if fileJob != nil {
 			dw.output <- fileJob
 		}
@@ -86,7 +86,7 @@ func (dw *DirectoryWalker) Walk(root string) error {
 		return nil
 	}
 
-	dw.buffer.Push(
+	_ = dw.buffer.Push(
 		&DirectoryJob{
 			root:    root,
 			path:    root,
@@ -141,7 +141,7 @@ DIRENTS:
 		isDir := dirent.IsDir()
 
 		for _, black := range PathBlacklist {
-			if strings.HasPrefix(path, filepath.Join(job.root, black)) {
+			if strings.HasSuffix(path, black) {
 				if Verbose {
 					printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", path))
 				}
@@ -186,6 +186,14 @@ DIRENTS:
 
 func newFileJob(path, name string) *FileJob {
 	extension := ""
+
+	t := strings.Count(name, ".")
+
+	// If there is no . in the filename or it starts with one then check if #! or other
+	if t == 0 || (name[0] == '.' && t == 1) {
+		return checkFullName(name, path, extension)
+	}
+
 	// Lookup in case the full name matches
 	language, ok := ExtensionToLanguage[strings.ToLower(name)]
 
@@ -232,4 +240,27 @@ func newFileJob(path, name string) *FileJob {
 	}
 
 	return nil
+}
+
+func checkFullName(name string, path string, extension string) *FileJob {
+	// Need to check if special type
+	language, ok := FilenameToLanguage[strings.ToLower(name)]
+	if ok {
+		return &FileJob{
+			Location:          path,
+			Filename:          name,
+			Extension:         extension,
+			PossibleLanguages: []string{language},
+		}
+	}
+	if Verbose {
+		printWarn(fmt.Sprintf("possible #! file: %s", name))
+	}
+	// No extension indicates possible #! so mark as such for processing
+	return &FileJob{
+		Location:          path,
+		Filename:          name,
+		Extension:         extension,
+		PossibleLanguages: []string{SheBang},
+	}
 }

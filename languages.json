@@ -139,6 +139,11 @@
         "end": "\"",
         "start": "\""
       }
+    ],
+    "shebangs": [
+      "awk",
+      "gawk",
+      "mawk"
     ]
   },
   "ActionScript": {
@@ -437,14 +442,16 @@
     ],
     "extensions": [
       "bash",
-      ".bash_login",
       "bash_login",
-      ".bash_logout",
       "bash_logout",
-      ".bash_profile",
       "bash_profile",
-      ".bashrc",
       "bashrc"
+    ],
+    "filenames": [
+      ".bash_login",
+      ".bash_logout",
+      ".bash_profile",
+      ".bashrc"
     ],
     "line_comment": [
       "#"
@@ -459,6 +466,9 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "bash"
     ]
   },
   "Basic": {
@@ -776,14 +786,20 @@
       "== "
     ],
     "extensions": [
-      "csh",
+      "csh"
+    ],
+    "filenames": [
       ".cshrc"
     ],
     "line_comment": [
       "#"
     ],
     "multi_line": [],
-    "quotes": []
+    "quotes": [],
+    "shebangs": [
+      "csh",
+      "tcsh"
+    ]
   },
   "C#": {
     "complexitychecks": [
@@ -1517,6 +1533,9 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "rdmd"
     ]
   },
   "Dart": {
@@ -1609,7 +1628,8 @@
   },
   "Docker ignore": {
     "complexitychecks": [],
-    "extensions": [
+    "extensions": [],
+    "filenames": [
       ".dockerignore"
     ],
     "line_comment": [
@@ -1797,7 +1817,10 @@
       "%"
     ],
     "multi_line": [],
-    "quotes": []
+    "quotes": [],
+    "shebangs": [
+      "escript"
+    ]
   },
   "Expect": {
     "complexitychecks": [
@@ -2036,6 +2059,9 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "fish"
     ]
   },
   "Flow9": {
@@ -2344,6 +2370,27 @@
     "line_comment": [],
     "multi_line": [],
     "quotes": []
+  },
+  "Gemfile": {
+    "complexitychecks": [],
+    "extensions": [],
+    "filenames": [
+      "gemfile"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\\\"",
+        "start": "\\\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
   },
   "Gherkin Specification": {
     "complexitychecks": [
@@ -2976,6 +3023,9 @@
         "end": "\"",
         "start": "\""
       }
+    ],
+    "shebangs": [
+      "node"
     ]
   },
   "JavaServer Pages": {
@@ -3179,7 +3229,9 @@
       "== "
     ],
     "extensions": [
-      "ksh",
+      "ksh"
+    ],
+    "filenames": [
       ".kshrc"
     ],
     "line_comment": [
@@ -3195,6 +3247,9 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "ksh"
     ]
   },
   "Kotlin": {
@@ -3374,7 +3429,8 @@
   },
   "License": {
     "complexitychecks": [],
-    "extensions": [
+    "extensions": [],
+    "filenames": [
       "license",
       "licence",
       "copying",
@@ -3417,7 +3473,10 @@
       ]
     ],
     "nestedmultiline": true,
-    "quotes": []
+    "quotes": [],
+    "shebangs": [
+      "sbcl"
+    ]
   },
   "Lua": {
     "complexitychecks": [
@@ -3454,6 +3513,9 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "lua"
     ]
   },
   "Lucius": {
@@ -3727,6 +3789,9 @@
       "mak",
       "mk",
       "bp"
+    ],
+    "filenames": [
+      "makefile"
     ],
     "line_comment": [
       "#"
@@ -4216,6 +4281,10 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "php",
+      "php5"
     ]
   },
   "PKGBUILD": {
@@ -4392,6 +4461,11 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "perl",
+      "perl5",
+      "perl6"
     ]
   },
   "Plain Text": {
@@ -4725,6 +4799,11 @@
         "end": "'''",
         "start": "'''"
       }
+    ],
+    "shebangs": [
+      "python",
+      "python2",
+      "python3"
     ]
   },
   "Q#": {
@@ -4867,7 +4946,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
+    "extensions": [],
+    "filenames": [
       "rake",
       "rakefile"
     ],
@@ -4993,6 +5073,9 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "ruby"
     ]
   },
   "Ruby HTML": {
@@ -5325,7 +5408,10 @@
       ]
     ],
     "nestedmultiline": true,
-    "quotes": []
+    "quotes": [],
+    "shebangs": [
+      "racket"
+    ]
   },
   "Scons": {
     "complexitychecks": [
@@ -5384,7 +5470,9 @@
       "== "
     ],
     "extensions": [
-      "sh",
+      "sh"
+    ],
+    "filenames": [
       ".tcshrc"
     ],
     "line_comment": [
@@ -5400,6 +5488,9 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "sh"
     ]
   },
   "Smarty Template": {
@@ -5769,6 +5860,9 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "tcl"
     ]
   },
   "TOML": {
@@ -6149,108 +6243,108 @@
       "!= ",
       "== "
     ],
-    "keywords": [
-        "abs",
-        "access",
-        "after",
-        "alias",
-        "all",
-        "and",
-        "architecture",
-        "array",
-        "assert",
-        "attribute",
-        "begin",
-        "block",
-        "body",
-        "buffer",
-        "bus",
-        "case",
-        "component",
-        "configuration",
-        "constant",
-        "disconnect",
-        "downto",
-        "else",
-        "elsif",
-        "end",
-        "entity",
-        "exit",
-        "file",
-        "for",
-        "function",
-        "generate",
-        "generic",
-        "group",
-        "guarded",
-        "if",
-        "impure",
-        "in",
-        "inertial",
-        "inout",
-        "is",
-        "label",
-        "library",
-        "linkage",
-        "literal",
-        "loop",
-        "map",
-        "mod",
-        "nand",
-        "new",
-        "next",
-        "nor",
-        "not",
-        "null",
-        "of",
-        "on",
-        "open",
-        "or",
-        "others",
-        "out",
-        "package",
-        "port",
-        "postponed",
-        "procedure",
-        "process",
-        "pure",
-        "range",
-        "record",
-        "register",
-        "reject",
-        "rem",
-        "report",
-        "return",
-        "rol",
-        "ror",
-        "select",
-        "severity",
-        "shared",
-        "signal",
-        "sla",
-        "sll",
-        "sra",
-        "srl",
-        "subtype",
-        "then",
-        "to",
-        "transport",
-        "type",
-        "unaffected",
-        "units",
-        "until",
-        "use",
-        "variable",
-        "wait",
-        "when",
-        "while",
-        "with",
-        "xnor",
-        "xor"
-    ],
     "extensions": [
       "vhd",
       "vhdl"
+    ],
+    "keywords": [
+      "abs",
+      "access",
+      "after",
+      "alias",
+      "all",
+      "and",
+      "architecture",
+      "array",
+      "assert",
+      "attribute",
+      "begin",
+      "block",
+      "body",
+      "buffer",
+      "bus",
+      "case",
+      "component",
+      "configuration",
+      "constant",
+      "disconnect",
+      "downto",
+      "else",
+      "elsif",
+      "end",
+      "entity",
+      "exit",
+      "file",
+      "for",
+      "function",
+      "generate",
+      "generic",
+      "group",
+      "guarded",
+      "if",
+      "impure",
+      "in",
+      "inertial",
+      "inout",
+      "is",
+      "label",
+      "library",
+      "linkage",
+      "literal",
+      "loop",
+      "map",
+      "mod",
+      "nand",
+      "new",
+      "next",
+      "nor",
+      "not",
+      "null",
+      "of",
+      "on",
+      "open",
+      "or",
+      "others",
+      "out",
+      "package",
+      "port",
+      "postponed",
+      "procedure",
+      "process",
+      "pure",
+      "range",
+      "record",
+      "register",
+      "reject",
+      "rem",
+      "report",
+      "return",
+      "rol",
+      "ror",
+      "select",
+      "severity",
+      "shared",
+      "signal",
+      "sla",
+      "sll",
+      "sra",
+      "srl",
+      "subtype",
+      "then",
+      "to",
+      "transport",
+      "type",
+      "unaffected",
+      "units",
+      "until",
+      "use",
+      "variable",
+      "wait",
+      "when",
+      "while",
+      "with",
+      "xnor",
+      "xor"
     ],
     "line_comment": [
       "--"
@@ -6322,34 +6416,34 @@
       "!= ",
       "== "
     ],
-    "keywords": [
-        "module",
-        "endmodule",
-        "timescale",
-        "input",
-        "output",
-        "reg",
-        "wire",
-        "posedge",
-        "negedge",
-        "always",
-        "begin",
-        "switch",
-        "case",
-        "end",
-        "endcase",
-        "else",
-        "localparam",
-        "initial",
-        "signed",
-        "assign",
-        "generate",
-        "genvar"
-    ],
     "extensions": [
       "vg",
       "vh",
       "v"
+    ],
+    "keywords": [
+      "module",
+      "endmodule",
+      "timescale",
+      "input",
+      "output",
+      "reg",
+      "wire",
+      "posedge",
+      "negedge",
+      "always",
+      "begin",
+      "switch",
+      "case",
+      "end",
+      "endcase",
+      "else",
+      "localparam",
+      "initial",
+      "signed",
+      "assign",
+      "generate",
+      "genvar"
     ],
     "line_comment": [
       "//"
@@ -6531,6 +6625,24 @@
       }
     ]
   },
+  "Web Services Description Language": {
+    "extensions": [
+      "wsdl"
+    ],
+    "line_comment": [],
+    "multi_line": [
+      [
+        "<!--",
+        "-->"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "Wolfram": {
     "complexitychecks": [
       "for ",
@@ -6657,24 +6769,6 @@
       }
     ]
   },
-  "Web Services Description Language": {
-    "extensions": [
-      "wsdl"
-    ],
-    "line_comment": [],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ]
-    ],
-    "quotes": [
-      {
-        "end": "\"",
-        "start": "\""
-      }
-    ]
-  },
   "XML Schema": {
     "complexitychecks": [],
     "extensions": [
@@ -6775,16 +6869,18 @@
     ],
     "extensions": [
       "zsh",
-      ".zshenv",
       "zshenv",
-      ".zlogin",
       "zlogin",
-      ".zlogout",
       "zlogout",
-      ".zprofile",
       "zprofile",
-      ".zshrc",
       "zshrc"
+    ],
+    "filenames": [
+      ".zshenv",
+      ".zlogin",
+      ".zlogout",
+      ".zprofile",
+      ".zshrc"
     ],
     "line_comment": [
       "#"
@@ -6799,11 +6895,15 @@
         "end": "'",
         "start": "'"
       }
+    ],
+    "shebangs": [
+      "zsh"
     ]
   },
   "gitignore": {
     "complexitychecks": [],
-    "extensions": [
+    "extensions": [],
+    "filenames": [
       ".gitignore"
     ],
     "line_comment": [
@@ -6814,7 +6914,8 @@
   },
   "ignore": {
     "complexitychecks": [],
-    "extensions": [
+    "extensions": [],
+    "filenames": [
       ".ignore"
     ],
     "line_comment": [
@@ -6873,7 +6974,9 @@
       "#"
     ],
     "multi_line": [],
-    "quotes": []
+    "quotes": [],
+    "shebangs": [
+      "sed"
+    ]
   }
 }
-

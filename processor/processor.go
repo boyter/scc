@@ -15,7 +15,7 @@ import (
 )
 
 // The version of the application
-var Version = "2.8.0"
+var Version = "2.9.0"
 
 // Flags set via the CLI which control how the output is displayed
 
@@ -108,6 +108,12 @@ var languageDatabase = map[string]Language{}
 // ExtensionToLanguage is loaded from the JSON that is in constants.go
 var ExtensionToLanguage = map[string][]string{}
 
+// Loaded from the JSON in constants.go contains shebang lookups
+var ShebangLookup = map[string][]string{}
+
+// Similar to ExtensionToLanguage loaded from the JSON in constants.go
+var FilenameToLanguage = map[string]string{}
+
 // LanguageFeatures contains the processed languages from processLanguageFeature
 var LanguageFeatures = map[string]LanguageFeature{}
 
@@ -138,6 +144,14 @@ func ProcessConstants() {
 	for name, value := range languageDatabase {
 		for _, ext := range value.Extensions {
 			ExtensionToLanguage[ext] = append(ExtensionToLanguage[ext], name)
+		}
+
+		for _, fname := range value.FileNames {
+			FilenameToLanguage[fname] = name
+		}
+
+		if len(value.SheBangs) != 0 {
+			ShebangLookup[name] = value.SheBangs
 		}
 	}
 
@@ -309,7 +323,7 @@ func printLanguages() {
 	})
 
 	for _, name := range names {
-		fmt.Println(fmt.Sprintf("%s (%s)", name, strings.Join(database[name].Extensions, ",")))
+		fmt.Println(fmt.Sprintf("%s (%s)", name, strings.Join(append(database[name].Extensions, database[name].FileNames...), ",")))
 	}
 }
 
