@@ -41,7 +41,7 @@ var Duplicates = false
 var Minified = false
 
 // Number of bytes per average line to determine file is minified
-var MinifiedLineByteLength = 500
+var MinifiedLineByteLength = 300
 
 // Complexity toggles complexity calculation
 var Complexity = false

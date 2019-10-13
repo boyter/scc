@@ -132,8 +132,8 @@ func main() {
 	flags.IntVar(
 		&processor.MinifiedLineByteLength,
 		"minified-line-length",
-		500,
-		"number of files to parse before turning the GC on",
+		300,
+		"number of bytes per average line for file to be considered minified",
 	)
 	flags.StringArrayVarP(
 		&processor.Exclude,
