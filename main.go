@@ -122,6 +122,19 @@ func main() {
 		false,
 		"remove duplicate files from stats and output",
 	)
+	flags.BoolVarP(
+		&processor.Minified,
+		"minified",
+		"z",
+		false,
+		"identify minified files",
+	)
+	flags.IntVar(
+		&processor.MinifiedLineByteLength,
+		"minified-line-length",
+		500,
+		"number of files to parse before turning the GC on",
+	)
 	flags.StringArrayVarP(
 		&processor.Exclude,
 		"not-match",

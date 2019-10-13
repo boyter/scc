@@ -418,6 +418,8 @@ func CountStats(fileJob *FileJob) {
 		digest = blake2b.New256()
 	}
 
+	lineOffset := 0
+	avgLineByteCount := 0
 	for index := checkBomSkip(fileJob); index < len(fileJob.Content); index++ {
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
@@ -486,6 +488,15 @@ func CountStats(fileJob *FileJob) {
 		if fileJob.Content[index] == '\n' || index >= endPoint {
 			fileJob.Lines++
 
+			if Minified {
+				if avgLineByteCount == 0 {
+					avgLineByteCount = index - lineOffset
+				} else {
+					avgLineByteCount = (avgLineByteCount + (index - lineOffset)) / 2
+				}
+				lineOffset = index
+			}
+
 			switch currentState {
 			case SCode, SString, SCommentCode, SMulticommentCode:
 				fileJob.Code++
@@ -535,6 +546,12 @@ func CountStats(fileJob *FileJob) {
 
 	if Duplicates {
 		fileJob.Hash = digest.Sum(nil)
+	}
+
+	if Minified {
+		if avgLineByteCount >= MinifiedLineByteLength {
+			fileJob.Minified = true
+		}
 	}
 
 	// Save memory by unsetting the content as we no longer require it

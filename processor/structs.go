@@ -76,6 +76,7 @@ type FileJob struct {
 	Hash               []byte
 	Callback           FileJobCallback
 	Binary             bool
+	Minified           bool
 }
 
 // LanguageSummary is used to hold summarised results for a single language
