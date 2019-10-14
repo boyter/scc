@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/boyter/scc/processor"
 	"github.com/spf13/cobra"
-	"fmt"
 	"os"
 )
 

@@ -418,8 +418,6 @@ func CountStats(fileJob *FileJob) {
 		digest = blake2b.New256()
 	}
 
-	lineOffset := 0
-	avgLineByteCount := 0
 	for index := checkBomSkip(fileJob); index < len(fileJob.Content); index++ {
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
@@ -488,15 +486,6 @@ func CountStats(fileJob *FileJob) {
 		if fileJob.Content[index] == '\n' || index >= endPoint {
 			fileJob.Lines++
 
-			if MinifiedGenerated {
-				if avgLineByteCount == 0 {
-					avgLineByteCount = index - lineOffset
-				} else {
-					avgLineByteCount = (avgLineByteCount + (index - lineOffset)) / 2
-				}
-				lineOffset = index
-			}
-
 			switch currentState {
 			case SCode, SString, SCommentCode, SMulticommentCode:
 				fileJob.Code++
@@ -549,6 +538,7 @@ func CountStats(fileJob *FileJob) {
 	}
 
 	if MinifiedGenerated {
+		avgLineByteCount := len(fileJob.Content) / int(fileJob.Lines)
 		minifiedGeneratedCheck(avgLineByteCount, fileJob)
 	}
 
@@ -767,13 +757,11 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 					duplicates.mux.Unlock()
 				}
 
-				if IgnoreMinifiedGenerate {
-					if res.Minified {
-						if Verbose {
-							printWarn(fmt.Sprintf("skipping minified/generated file: %s", res.Location))
-						}
-						continue
+				if IgnoreMinifiedGenerate && res.Minified {
+					if Verbose {
+						printWarn(fmt.Sprintf("skipping minified/generated file: %s", res.Location))
 					}
+					continue
 				}
 
 				if Trace {
