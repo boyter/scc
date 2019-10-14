@@ -190,7 +190,7 @@ func newFileJob(path, name string) *FileJob {
 	t := strings.Count(name, ".")
 
 	// If there is no . in the filename or it starts with one then check if #! or other
-	if t == 0 || (name[0] == '.' && t == 1) {
+	if (t == 0 || (name[0] == '.' && t == 1)) && len(WhiteListExtensions) == 0 {
 		return checkFullName(name, path, extension)
 	}
 
@@ -253,6 +253,7 @@ func checkFullName(name string, path string, extension string) *FileJob {
 			PossibleLanguages: []string{language},
 		}
 	}
+
 	if Verbose {
 		printWarn(fmt.Sprintf("possible #! file: %s", name))
 	}
