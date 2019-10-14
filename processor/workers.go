@@ -549,18 +549,26 @@ func CountStats(fileJob *FileJob) {
 	}
 
 	if MinifiedGenerated {
-		if avgLineByteCount >= MinifiedGeneratedLineByteLength {
-			fileJob.Minified = true
-			fileJob.Language = fileJob.Language + " (min)"
-
-			if Verbose {
-				printWarn(fmt.Sprintf("%s identified as minified/generated with average line byte length of %d >= %d", fileJob.Filename, avgLineByteCount, MinifiedGeneratedLineByteLength))
-			}
-		}
+		minifiedCheck(avgLineByteCount, fileJob)
 	}
 
 	// Save memory by unsetting the content as we no longer require it
 	fileJob.Content = nil
+}
+
+func minifiedCheck(avgLineByteCount int, fileJob *FileJob) {
+	if avgLineByteCount >= MinifiedGeneratedLineByteLength {
+		fileJob.Minified = true
+		fileJob.Language = fileJob.Language + " (min)"
+
+		if Verbose {
+			printWarn(fmt.Sprintf("%s identified as minified/generated with average line byte length of %d >= %d", fileJob.Filename, avgLineByteCount, MinifiedGeneratedLineByteLength))
+		}
+	} else {
+		if Debug {
+			printDebug(fmt.Sprintf("%s not identified as minified/generated with average line byte length of %d < %d", fileJob.Filename, avgLineByteCount, MinifiedGeneratedLineByteLength))
+		}
+	}
 }
 
 // Check if we have any Byte Order Marks (BOM) in front of the file
@@ -757,6 +765,15 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 
 					duplicates.Add(res.Bytes, res.Hash)
 					duplicates.mux.Unlock()
+				}
+
+				if IgnoreMinifiedGenerate {
+					if res.Minified {
+						if Verbose {
+							printWarn(fmt.Sprintf("skipping minified/generated file: %s", res.Location))
+						}
+						continue
+					}
 				}
 
 				if Trace {

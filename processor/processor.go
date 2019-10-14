@@ -40,8 +40,11 @@ var Duplicates = false
 // MinifiedGenerated enables minified/generated file detection
 var MinifiedGenerated = false
 
+// Ignore printing counts for minified/generated files
+var IgnoreMinifiedGenerate = false
+
 // Number of bytes per average line to determine file is minified/generated
-var MinifiedGeneratedLineByteLength = 300
+var MinifiedGeneratedLineByteLength = 255
 
 // Complexity toggles complexity calculation
 var Complexity = false
@@ -282,6 +285,11 @@ func processFlags() {
 		Complexity = false
 	}
 
+	// If ignore minified/generated is on ensure we turn on the code to calculate that
+	if IgnoreMinifiedGenerate {
+		MinifiedGenerated = true
+	}
+
 	if Debug {
 		printDebug(fmt.Sprintf("Path Black List: %v", PathBlacklist))
 		printDebug(fmt.Sprintf("Sort By: %s", SortBy))
@@ -293,6 +301,8 @@ func processFlags() {
 		printDebug(fmt.Sprintf("Wide: %t", More))
 		printDebug(fmt.Sprintf("Average Wage: %d", AverageWage))
 		printDebug(fmt.Sprintf("Cocomo: %t", !Cocomo))
+		printDebug(fmt.Sprintf("Minified/Generated Detection: %t", MinifiedGenerated))
+		printDebug(fmt.Sprintf("Ignore Minified/Generated: %t", IgnoreMinifiedGenerate))
 	}
 }
 

@@ -992,6 +992,10 @@ func TestCountStatsIssue106(t *testing.T) {
 	CountStats(&fileJob)
 }
 
+func TestMinifiedCheck(t *testing.T) {
+
+}
+
 //////////////////////////////////////////////////
 // Benchmarks Below
 //////////////////////////////////////////////////

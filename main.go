@@ -125,15 +125,21 @@ func main() {
 	)
 	flags.BoolVarP(
 		&processor.MinifiedGenerated,
-		"minified",
+		"min-gen",
 		"z",
 		false,
 		"identify minified or generated files",
 	)
+	flags.BoolVar(
+		&processor.IgnoreMinifiedGenerate,
+		"no-min-gen",
+		false,
+		"ignore minified or generated files in output (implies --min-gen)",
+	)
 	flags.IntVar(
 		&processor.MinifiedGeneratedLineByteLength,
 		"min-gen-line-length",
-		300,
+		255,
 		"number of bytes per average line for file to be considered minified or generated",
 	)
 	flags.StringArrayVarP(
