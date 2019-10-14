@@ -101,6 +101,8 @@ Why use `scc`?
  - Has complexity estimations
  - You need to tell the difference between Coq and Verilog in the same directory
  - cloc yaml output support so potentially a drop in replacement for some users
+ - Can identify or ignore minified files
+ - Able to identify many #! files
 
 Why not use `scc`?
 
@@ -114,35 +116,39 @@ Full details can be found in `scc --help` or `scc -h`.
 
 ```
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
+Version 2.9.0
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
   scc [flags]
 
 Flags:
-      --avg-wage int            average wage value used for basic COCOMO calculation (default 56286)
-      --binary                  disable binary file detection
-      --by-file                 display output for every file
-      --ci                      enable CI output settings where stdout is ASCII
-      --debug                   enable debug output
-      --exclude-dir strings     directories to exclude (default [.git,.hg,.svn])
-      --file-gc-count int       number of files to parse before turning the GC on (default 10000)
-  -f, --format string           set output format [tabular, wide, json, csv, cloc-yaml] (default "tabular")
-  -h, --help                    help for scc
-  -i, --include-ext strings     limit to file extensions [comma separated list: e.g. go,java,js]
-  -l, --languages               print supported languages and extensions
-      --no-cocomo               remove COCOMO calculation output
-  -c, --no-complexity           skip calculation of code complexity
-  -d, --no-duplicates           remove duplicate files from stats and output
-      --no-gitignore            disables .gitignore file logic
-      --no-ignore               disables .ignore file logic
-  -M, --not-match stringArray   ignore files and directories matching regular expression
-  -o, --output string           output filename (default stdout)
-  -s, --sort string             column to sort by [files, name, lines, blanks, code, comments, complexity] (default "files")
-  -t, --trace                   enable trace output. Not recommended when processing multiple files
-  -v, --verbose                 verbose output
-      --version                 version for scc
-  -w, --wide                    wider output with additional statistics (implies --complexity)
+      --avg-wage int              average wage value used for basic COCOMO calculation (default 56286)
+      --binary                    disable binary file detection
+      --by-file                   display output for every file
+      --ci                        enable CI output settings where stdout is ASCII
+      --debug                     enable debug output
+      --exclude-dir strings       directories to exclude (default [.git,.hg,.svn])
+      --file-gc-count int         number of files to parse before turning the GC on (default 10000)
+  -f, --format string             set output format [tabular, wide, json, csv, cloc-yaml] (default "tabular")
+  -h, --help                      help for scc
+  -i, --include-ext strings       limit to file extensions [comma separated list: e.g. go,java,js]
+  -l, --languages                 print supported languages and extensions
+  -z, --min-gen                   identify minified or generated files
+      --min-gen-line-length int   number of bytes per average line for file to be considered minified or generated (default 255)
+      --no-cocomo                 remove COCOMO calculation output
+  -c, --no-complexity             skip calculation of code complexity
+  -d, --no-duplicates             remove duplicate files from stats and output
+      --no-gitignore              disables .gitignore file logic
+      --no-ignore                 disables .ignore file logic
+      --no-min-gen                ignore minified or generated files in output (implies --min-gen)
+  -M, --not-match stringArray     ignore files and directories matching regular expression
+  -o, --output string             output filename (default stdout)
+  -s, --sort string               column to sort by [files, name, lines, blanks, code, comments, complexity] (default "files")
+  -t, --trace                     enable trace output. Not recommended when processing multiple files
+  -v, --verbose                   verbose output
+      --version                   version for scc
+  -w, --wide                      wider output with additional statistics (implies --complexity)
   ```
 
 Output should look something like the below for the redis project
