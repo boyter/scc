@@ -373,6 +373,41 @@ else
     echo -e "${GREEN}PASSED include-ext option"
 fi
 
+a=$(./scc -i js ./examples/minified/)
+b=$(./scc -i js -z ./examples/minified/)
+if [ "$a" == "$b" ]; then
+    echo "$a"
+    echo "$b"
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Minified check"
+    echo -e "=================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED minified check"
+fi
+
+a=$(./scc -i js -z ./examples/minified/)
+b=$(./scc -i js -z --no-min-gen ./examples/minified/)
+if [ "$a" == "$b" ]; then
+    echo "$a"
+    echo "$b"
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Minified ignored check"
+    echo -e "=================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED minified ignored check"
+fi
+
+if ./scc ./examples/minified/ -i js -z | grep -q "JavaScript (min)"; then
+    echo -e "${GREEN}PASSED flagged as min"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED flagged as min"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 # Try out specific languages
 for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java ' 'Boo ' 'License ' 'BASH ' 'C Shell ' 'Korn Shell ' 'Makefile ' 'Shell ' 'Zsh ' 'Rakefile ' 'Gemfile '
 do
