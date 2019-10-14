@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/boyter/scc/processor"
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/errors/fmt"
 	"os"
 )
 
@@ -15,7 +16,7 @@ func main() {
 	rootCmd := &cobra.Command{
 		Use:     "scc",
 		Short:   "scc [FILE or DIRECTORY]",
-		Long:    "Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.\nBen Boyter <ben@boyter.org> + Contributors",
+		Long:    fmt.Sprintf("Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.\nVersion %s\nBen Boyter <ben@boyter.org> + Contributors", processor.Version),
 		Version: processor.Version,
 		Run: func(cmd *cobra.Command, args []string) {
 			processor.DirFilePaths = args
@@ -123,17 +124,17 @@ func main() {
 		"remove duplicate files from stats and output",
 	)
 	flags.BoolVarP(
-		&processor.Minified,
+		&processor.MinifiedGenerated,
 		"minified",
 		"z",
 		false,
-		"identify minified files",
+		"identify minified or generated files",
 	)
 	flags.IntVar(
-		&processor.MinifiedLineByteLength,
-		"minified-line-length",
+		&processor.MinifiedGeneratedLineByteLength,
+		"min-gen-line-length",
 		300,
-		"number of bytes per average line for file to be considered minified",
+		"number of bytes per average line for file to be considered minified or generated",
 	)
 	flags.StringArrayVarP(
 		&processor.Exclude,

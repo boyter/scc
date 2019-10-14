@@ -488,7 +488,7 @@ func CountStats(fileJob *FileJob) {
 		if fileJob.Content[index] == '\n' || index >= endPoint {
 			fileJob.Lines++
 
-			if Minified {
+			if MinifiedGenerated {
 				if avgLineByteCount == 0 {
 					avgLineByteCount = index - lineOffset
 				} else {
@@ -548,10 +548,14 @@ func CountStats(fileJob *FileJob) {
 		fileJob.Hash = digest.Sum(nil)
 	}
 
-	if Minified {
-		if avgLineByteCount >= MinifiedLineByteLength {
+	if MinifiedGenerated {
+		if avgLineByteCount >= MinifiedGeneratedLineByteLength {
 			fileJob.Minified = true
 			fileJob.Language = fileJob.Language + " (min)"
+
+			if Verbose {
+				printWarn(fmt.Sprintf("%s identified as minified/generated with average line byte length of %d >= %d", fileJob.Filename, avgLineByteCount, MinifiedGeneratedLineByteLength))
+			}
 		}
 	}
 

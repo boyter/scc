@@ -37,11 +37,11 @@ var Trace = false
 // Duplicates enables duplicate file detection
 var Duplicates = false
 
-// Minified enables minified file detection
-var Minified = false
+// MinifiedGenerated enables minified/generated file detection
+var MinifiedGenerated = false
 
-// Number of bytes per average line to determine file is minified
-var MinifiedLineByteLength = 300
+// Number of bytes per average line to determine file is minified/generated
+var MinifiedGeneratedLineByteLength = 300
 
 // Complexity toggles complexity calculation
 var Complexity = false
