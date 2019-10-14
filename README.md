@@ -223,6 +223,31 @@ Because some languages don't have loops and instead use recursion they can have 
 
 Generally though the complexity there is to help estimate between projects written in the same language, or for finding the most complex file in a project `scc --by-file -s complexity` which can be useful when you are estimating on how hard something is to maintain, or when looking for those files that should probably be refactored.
 
+### Minified/Generated File Detection
+
+You can have `scc` identify and optionally remove files identified as being minified or generated from the output.
+
+You can do so by enabling the `-z` flag like so `scc -z` which will identify any file with an average line byte size >= 255 (by default) as being minified.
+
+Minified files appear like so in the output.
+
+```
+$ scc --no-cocomo -z ./examples/minified/jquery-3.1.1.min.js
+───────────────────────────────────────────────────────────────────────────────
+Language                 Files     Lines   Blanks  Comments     Code Complexity
+───────────────────────────────────────────────────────────────────────────────
+JavaScript (min)             1         4        0         1        3         17
+───────────────────────────────────────────────────────────────────────────────
+Total                        1         4        0         1        3         17
+───────────────────────────────────────────────────────────────────────────────
+```
+
+Minified files are indicated with the text `(min)` after the language name.
+
+You can control the average line byte size using `--min-gen-line-length` such as `scc -z --min-gen-line-length 1`. Please note you need `-z` as modifying this value does not imply minified detection.
+
+You can exclude minified files from the count totally using the flag `--no-min-gen`. Files which match the minified check will be excluded from the output.
+
 ### Performance
 
 Generally `scc` will the fastest code counter compared to any I am aware of and have compared against. The below comparisons are taken from the fastest alternative counters. See `Other similar projects` above to see all of the other code counters compared against. It is designed to scale to as many CPU's cores as you can provide.
