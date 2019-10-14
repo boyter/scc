@@ -399,6 +399,15 @@ else
     echo -e "${GREEN}PASSED minified ignored check"
 fi
 
+if ./scc ./examples/minified/ --no-min-gen | grep -q "0.000000"; then
+    echo -e "${GREEN}PASSED removed min gen"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED removed min gen"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 if ./scc ./examples/minified/ -i js -z | grep -q "JavaScript (min)"; then
     echo -e "${GREEN}PASSED flagged as min"
 else
