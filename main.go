@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/boyter/scc/processor"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/errors/fmt"
+	"fmt"
 	"os"
 )
 
