@@ -142,6 +142,146 @@ func TestSortSummaryFiles(t *testing.T) {
 	}
 }
 
+func TestSortLanguageSummaryName(t *testing.T) {
+	SortBy = "name"
+	ls := []LanguageSummary{
+		{
+			Name:  "b",
+			Lines: 1,
+		},
+		{
+			Name:  "a",
+			Lines: 1,
+		},
+	}
+
+	ls = sortLanguageSummary(ls)
+
+	if ls[0].Name != "a" {
+		t.Error("Expected a to be first")
+	}
+}
+
+func TestSortLanguageSummaryLine(t *testing.T) {
+	SortBy = "line"
+	ls := []LanguageSummary{
+		{
+			Name:  "a",
+			Lines: 1,
+		},
+		{
+			Name:  "b",
+			Lines: 1,
+		},
+		{
+			Name:  "c",
+			Lines: 2,
+		},
+	}
+
+	ls = sortLanguageSummary(ls)
+
+	if ls[0].Name != "c" || ls[1].Name != "a" {
+		t.Error("Expected c to be first and a second")
+	}
+}
+
+func TestSortLanguageSummaryBlank(t *testing.T) {
+	SortBy = "blank"
+	ls := []LanguageSummary{
+		{
+			Name:  "a",
+			Blank: 1,
+		},
+		{
+			Name:  "b",
+			Blank: 1,
+		},
+		{
+			Name:  "c",
+			Blank: 2,
+		},
+	}
+
+	ls = sortLanguageSummary(ls)
+
+	if ls[0].Name != "c" || ls[1].Name != "a" {
+		t.Error("Expected c to be first and a second")
+	}
+}
+
+func TestSortLanguageSummaryCode(t *testing.T) {
+	SortBy = "code"
+	ls := []LanguageSummary{
+		{
+			Name: "a",
+			Code: 1,
+		},
+		{
+			Name: "b",
+			Code: 1,
+		},
+		{
+			Name: "c",
+			Code: 2,
+		},
+	}
+
+	ls = sortLanguageSummary(ls)
+
+	if ls[0].Name != "c" || ls[1].Name != "a" {
+		t.Error("Expected c to be first and a second")
+	}
+}
+
+func TestSortLanguageSummaryComment(t *testing.T) {
+	SortBy = "comment"
+	ls := []LanguageSummary{
+		{
+			Name:    "a",
+			Comment: 1,
+		},
+		{
+			Name:    "b",
+			Comment: 1,
+		},
+		{
+			Name:    "c",
+			Comment: 2,
+		},
+	}
+
+	ls = sortLanguageSummary(ls)
+
+	if ls[0].Name != "c" || ls[1].Name != "a" {
+		t.Error("Expected c to be first and a second")
+	}
+}
+
+func TestSortLanguageSummaryComplexity(t *testing.T) {
+	SortBy = "complexity"
+	ls := []LanguageSummary{
+		{
+			Name:       "a",
+			Complexity: 1,
+		},
+		{
+			Name:       "b",
+			Complexity: 1,
+		},
+		{
+			Name:       "c",
+			Complexity: 2,
+		},
+	}
+
+	ls = sortLanguageSummary(ls)
+
+	if ls[0].Name != "c" || ls[1].Name != "a" {
+		t.Error("Expected c to be first and a second")
+	}
+}
+
 func TestToJSONEmpty(t *testing.T) {
 	inputChan := make(chan *FileJob, 1000)
 	close(inputChan)
