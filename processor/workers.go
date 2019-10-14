@@ -549,14 +549,14 @@ func CountStats(fileJob *FileJob) {
 	}
 
 	if MinifiedGenerated {
-		minifiedCheck(avgLineByteCount, fileJob)
+		minifiedGeneratedCheck(avgLineByteCount, fileJob)
 	}
 
 	// Save memory by unsetting the content as we no longer require it
 	fileJob.Content = nil
 }
 
-func minifiedCheck(avgLineByteCount int, fileJob *FileJob) {
+func minifiedGeneratedCheck(avgLineByteCount int, fileJob *FileJob) {
 	if avgLineByteCount >= MinifiedGeneratedLineByteLength {
 		fileJob.Minified = true
 		fileJob.Language = fileJob.Language + " (min)"

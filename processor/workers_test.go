@@ -992,8 +992,34 @@ func TestCountStatsIssue106(t *testing.T) {
 	CountStats(&fileJob)
 }
 
-func TestMinifiedCheck(t *testing.T) {
+func TestMinifiedGeneratedCheck(t *testing.T) {
+	fileJob := FileJob{
+		Language: "Go",
+	}
 
+	fileJob.Content = []byte("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890ABCDEF")
+	MinifiedGenerated = true
+	CountStats(&fileJob)
+	MinifiedGenerated = false
+
+	if fileJob.Minified != true {
+		t.Error("Expected minified to come back true")
+	}
+}
+
+func TestMinifiedGeneratedCheckEdge(t *testing.T) {
+	fileJob := FileJob{
+		Language: "Go",
+	}
+
+	fileJob.Content = []byte("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890ABCD")
+	MinifiedGenerated = true
+	CountStats(&fileJob)
+	MinifiedGenerated = false
+
+	if fileJob.Minified != false {
+		t.Error("Expected minified to come back false")
+	}
 }
 
 //////////////////////////////////////////////////
