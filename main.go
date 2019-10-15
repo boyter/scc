@@ -71,7 +71,7 @@ func main() {
 		"enable debug output",
 	)
 	flags.StringSliceVar(
-		&processor.PathBlacklist,
+		&processor.PathDenyList,
 		"exclude-dir",
 		[]string{".git", ".hg", ".svn"},
 		"directories to exclude",
@@ -90,7 +90,7 @@ func main() {
 		"set output format [tabular, wide, json, csv, cloc-yaml]",
 	)
 	flags.StringSliceVarP(
-		&processor.WhiteListExtensions,
+		&processor.AllowListExtensions,
 		"include-ext",
 		"i",
 		[]string{},

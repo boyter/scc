@@ -140,10 +140,10 @@ DIRENTS:
 		path := filepath.Join(job.path, name)
 		isDir := dirent.IsDir()
 
-		for _, black := range PathBlacklist {
-			if strings.HasSuffix(path, black) {
+		for _, deny := range PathDenyList {
+			if strings.HasSuffix(path, deny) {
 				if Verbose {
-					printWarn(fmt.Sprintf("skipping directory due to being in blacklist: %s", path))
+					printWarn(fmt.Sprintf("skipping directory due to being in denylist: %s", path))
 				}
 				continue DIRENTS
 			}
@@ -190,7 +190,7 @@ func newFileJob(path, name string) *FileJob {
 	t := strings.Count(name, ".")
 
 	// If there is no . in the filename or it starts with one then check if #! or other
-	if (t == 0 || (name[0] == '.' && t == 1)) && len(WhiteListExtensions) == 0 {
+	if (t == 0 || (name[0] == '.' && t == 1)) && len(AllowListExtensions) == 0 {
 		return checkFullName(name, path, extension)
 	}
 
@@ -209,9 +209,9 @@ func newFileJob(path, name string) *FileJob {
 	}
 
 	if ok {
-		if len(WhiteListExtensions) != 0 {
+		if len(AllowListExtensions) != 0 {
 			ok = false
-			for _, x := range WhiteListExtensions {
+			for _, x := range AllowListExtensions {
 				if x == extension {
 					ok = true
 				}
@@ -219,7 +219,7 @@ func newFileJob(path, name string) *FileJob {
 
 			if !ok {
 				if Verbose {
-					printWarn(fmt.Sprintf("skipping file as not whitelisted: %s", name))
+					printWarn(fmt.Sprintf("skipping file as not in allow list: %s", name))
 				}
 				return nil
 			}

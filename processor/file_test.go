@@ -75,9 +75,9 @@ func TestWalkDirectoryParallel(t *testing.T) {
 	isLazy = false
 	ProcessConstants()
 
-	WhiteListExtensions = []string{"go"}
+	AllowListExtensions = []string{"go"}
 	Exclude = []string{"vendor"}
-	PathBlacklist = []string{"vendor"}
+	PathDenyList = []string{"vendor"}
 	Verbose = true
 	Trace = true
 	Debug = true
@@ -107,9 +107,9 @@ func TestWalkDirectoryParallelWorksWithSingleInputFile(t *testing.T) {
 	isLazy = false
 	ProcessConstants()
 
-	WhiteListExtensions = []string{"go"}
+	AllowListExtensions = []string{"go"}
 	Exclude = []string{"vendor"}
-	PathBlacklist = []string{"vendor"}
+	PathDenyList = []string{"vendor"}
 	Verbose = true
 	Trace = true
 	Debug = true
@@ -139,9 +139,9 @@ func TestWalkDirectoryParallelIgnoresRootTrailingSlash(t *testing.T) {
 	isLazy = false
 	ProcessConstants()
 
-	WhiteListExtensions = []string{"go"}
+	AllowListExtensions = []string{"go"}
 	Exclude = []string{"vendor"}
-	PathBlacklist = []string{"vendor"}
+	PathDenyList = []string{"vendor"}
 	Verbose = true
 	Trace = true
 	Debug = true
@@ -177,9 +177,9 @@ func TestWalkDirectoryParallelIgnoresAbsoluteGitPath(t *testing.T) {
 	// certain to appear in the .git directory.
 	// This test also relies on the behaviour of treating `master` as a file
 	// with the `master` file extension.
-	WhiteListExtensions = []string{"master", "go"}
+	AllowListExtensions = []string{"master", "go"}
 	Exclude = []string{"vendor"}
-	PathBlacklist = []string{".git", "vendor"}
+	PathDenyList = []string{".git", "vendor"}
 	Verbose = true
 	Trace = true
 	Debug = true
@@ -213,7 +213,7 @@ func TestWalkDirectoryParallelIgnoresAbsoluteGitPath(t *testing.T) {
 
 func TestNewFileJobFullname(t *testing.T) {
 	ProcessConstants()
-	WhiteListExtensions = []string{}
+	AllowListExtensions = []string{}
 	job := newFileJob("./examples/issue114/", "makefile")
 
 	if job.PossibleLanguages[0] != "Makefile" {
@@ -231,7 +231,7 @@ func TestNewFileJob(t *testing.T) {
 }
 
 func TestNewFileJobGitIgnore(t *testing.T) {
-	WhiteListExtensions = []string{}
+	AllowListExtensions = []string{}
 	ProcessConstants()
 	job := newFileJob("./examples/issue114/", ".gitignore")
 
@@ -241,7 +241,7 @@ func TestNewFileJobGitIgnore(t *testing.T) {
 }
 
 func TestNewFileJobIgnore(t *testing.T) {
-	WhiteListExtensions = []string{}
+	AllowListExtensions = []string{}
 	ProcessConstants()
 	job := newFileJob("./examples/issue114/", ".ignore")
 

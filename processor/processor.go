@@ -79,8 +79,8 @@ var Format = ""
 // FileOutput sets the file that output should be written to
 var FileOutput = ""
 
-// PathBlacklist sets the paths that should be skipped
-var PathBlacklist = []string{}
+// PathDenyList sets the paths that should be skipped
+var PathDenyList = []string{}
 
 // FileListQueueSize is the queue of files found and ready to be read into memory
 var FileListQueueSize = runtime.NumCPU()
@@ -97,8 +97,8 @@ var FileProcessJobWorkers = runtime.NumCPU() * 4
 // FileSummaryJobQueueSize is the queue used to hold processed file statistics before formatting
 var FileSummaryJobQueueSize = runtime.NumCPU()
 
-// WhiteListExtensions is a list of extensions which are whitelisted to be processed
-var WhiteListExtensions = []string{}
+// AllowListExtensions is a list of extensions which are allowed to be processed
+var AllowListExtensions = []string{}
 
 // AverageWage is the average wage in dollars used for the COCOMO cost estimate
 var AverageWage int64 = 56286
@@ -291,9 +291,9 @@ func processFlags() {
 	}
 
 	if Debug {
-		printDebug(fmt.Sprintf("Path Black List: %v", PathBlacklist))
+		printDebug(fmt.Sprintf("Path Deny List: %v", PathDenyList))
 		printDebug(fmt.Sprintf("Sort By: %s", SortBy))
-		printDebug(fmt.Sprintf("White List: %v", WhiteListExtensions))
+		printDebug(fmt.Sprintf("White List: %v", AllowListExtensions))
 		printDebug(fmt.Sprintf("Files Output: %t", Files))
 		printDebug(fmt.Sprintf("Verbose: %t", Verbose))
 		printDebug(fmt.Sprintf("Duplicates Detection: %t", Duplicates))
@@ -373,7 +373,7 @@ func Process() {
 	if Debug {
 		printDebug(fmt.Sprintf("NumCPU: %d", runtime.NumCPU()))
 		printDebug(fmt.Sprintf("SortBy: %s", SortBy))
-		printDebug(fmt.Sprintf("PathBlacklist: %v", PathBlacklist))
+		printDebug(fmt.Sprintf("PathDenyList: %v", PathDenyList))
 	}
 
 	fileListQueue := make(chan *FileJob, FileListQueueSize)                     // Files ready to be read from disk
