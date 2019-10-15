@@ -119,3 +119,32 @@ func TestCountStatsIssue62(t *testing.T) {
 		t.Errorf("Expected 2 lines got %d", fileJob.Blank)
 	}
 }
+
+func TestCountStatsIssue123(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Python",
+	}
+
+	fileJob.Content = []byte(`"""
+hello there! how's it going?
+"""`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 2 {
+		t.Errorf("Expected 2 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Blank)
+	}
+}

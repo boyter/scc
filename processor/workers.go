@@ -3,13 +3,14 @@ package processor
 import (
 	"bytes"
 	"fmt"
-	"github.com/minio/blake2b-simd"
 	"hash"
 	"io/ioutil"
 	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
+
+	"github.com/minio/blake2b-simd"
 )
 
 // The below are used as identifiers for the code state machine
@@ -349,7 +350,7 @@ func verifyIgnoreEscape(langFeatures LanguageFeature, fileJob *FileJob, index in
 			// If so we need to check if where we are falls into these conditions
 			isMatch := true
 			for j := 0; j < len(langFeatures.Quotes[i].Start); j++ {
-				if fileJob.Content[index+j] != langFeatures.Quotes[i].Start[j] {
+				if len(fileJob.Content) <= index+j || fileJob.Content[index+j] != langFeatures.Quotes[i].Start[j] {
 					isMatch = false
 					break
 				}
