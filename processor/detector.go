@@ -2,8 +2,52 @@ package processor
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
+
+// Detects a language based on the filename returns the language extension and error
+func DetectLanguage(name string) ([]string, string) {
+	extension := ""
+
+	t := strings.Count(name, ".")
+
+	// If there is no . in the filename or it starts with one then check if #! or other
+	if (t == 0 || (name[0] == '.' && t == 1)) && len(AllowListExtensions) == 0 {
+		return checkFullName(name)
+	}
+
+	// Lookup in case the full name matches
+	language, ok := ExtensionToLanguage[strings.ToLower(name)]
+
+	// If no match check if we have a matching extension
+	if !ok {
+		extension = getExtension(name)
+		language, ok = ExtensionToLanguage[extension]
+	}
+
+	// Convert from d.ts to ts and check that in case of multiple extensions
+	if !ok {
+		language, ok = ExtensionToLanguage[getExtension(extension)]
+	}
+
+	return language, extension
+}
+
+func checkFullName(name string) ([]string, string) {
+	// Need to check if special type
+	language, ok := FilenameToLanguage[strings.ToLower(name)]
+	if ok {
+		return []string{language}, name
+	}
+
+	if Verbose {
+		printWarn(fmt.Sprintf("possible #! file: %s", name))
+	}
+
+	// No extension indicates possible #! so mark as such for processing
+	return []string{SheBang}, name
+}
 
 // Given some content attempt to determine if it has a #! that maps to a known language and return the language
 func DetectSheBang(content string) (string, error) {

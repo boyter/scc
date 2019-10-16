@@ -185,32 +185,11 @@ DIRENTS:
 }
 
 func newFileJob(path, name string) *FileJob {
-	extension := ""
+	language, extension := DetectLanguage(name)
 
-	t := strings.Count(name, ".")
-
-	// If there is no . in the filename or it starts with one then check if #! or other
-	if (t == 0 || (name[0] == '.' && t == 1)) && len(AllowListExtensions) == 0 {
-		return checkFullName(name, path, extension)
-	}
-
-	// Lookup in case the full name matches
-	language, ok := ExtensionToLanguage[strings.ToLower(name)]
-
-	// If no match check if we have a matching extension
-	if !ok {
-		extension = getExtension(name)
-		language, ok = ExtensionToLanguage[extension]
-	}
-
-	// Convert from d.ts to ts and check that in case of multiple extensions
-	if !ok {
-		language, ok = ExtensionToLanguage[getExtension(extension)]
-	}
-
-	if ok {
+	if len(language) != 0 {
 		if len(AllowListExtensions) != 0 {
-			ok = false
+			ok := false
 			for _, x := range AllowListExtensions {
 				if x == extension {
 					ok = true
@@ -240,28 +219,4 @@ func newFileJob(path, name string) *FileJob {
 	}
 
 	return nil
-}
-
-func checkFullName(name string, path string, extension string) *FileJob {
-	// Need to check if special type
-	language, ok := FilenameToLanguage[strings.ToLower(name)]
-	if ok {
-		return &FileJob{
-			Location:          path,
-			Filename:          name,
-			Extension:         extension,
-			PossibleLanguages: []string{language},
-		}
-	}
-
-	if Verbose {
-		printWarn(fmt.Sprintf("possible #! file: %s", name))
-	}
-	// No extension indicates possible #! so mark as such for processing
-	return &FileJob{
-		Location:          path,
-		Filename:          name,
-		Extension:         extension,
-		PossibleLanguages: []string{SheBang},
-	}
 }

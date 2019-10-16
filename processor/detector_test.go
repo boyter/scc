@@ -295,6 +295,36 @@ func TestScanSheBangFuzz(t *testing.T) {
 	}
 }
 
+func TestCheckFullNameSheBang(t *testing.T) {
+	ProcessConstants()
+
+	r, n := checkFullName("name")
+
+	if n != "name" {
+		t.Error("Expected name to return")
+	}
+
+	if r[0] != "#!" {
+		t.Error("Expected #! return")
+	}
+}
+
+func TestCheckFullNameLicense(t *testing.T) {
+	ProcessConstants()
+
+	r, n := checkFullName("license")
+
+	if n != "license" {
+		t.Error("Expected name to return")
+	}
+
+	if r[0] != "License" {
+		t.Error("Expected License return")
+	}
+}
+
+// Benchmarks below
+
 func BenchmarkScanSheBangFuzz(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, _ = scanForSheBang([]byte(randStringBytes(100)))
