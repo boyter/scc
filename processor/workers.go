@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"hash"
 	"io/ioutil"
-	"sort"
-	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -585,76 +583,6 @@ func checkBomSkip(fileJob *FileJob) int {
 	return 0
 }
 
-type languageGuess struct {
-	Name  string
-	Count int
-}
-
-// Given a filejob which could have multiple language types make a guess to the type
-// based on keywords supplied, which is similar to how https://github.com/vmchale/polyglot does it
-func determineLanguage(fileJob *FileJob) {
-
-	// If being called through an API its possible nothing is set here and as
-	// such should just return as the Language value should have already been set
-	if len(fileJob.PossibleLanguages) == 0 {
-		return
-	}
-
-	// There should only be two possibilities now, either we have a single language
-	// in which case we set it and return
-	// or we have multiple in which case we try to determine it heuristically
-	if len(fileJob.PossibleLanguages) == 1 {
-		fileJob.Language = fileJob.PossibleLanguages[0]
-		return
-	}
-
-	startTime := makeTimestampNano()
-
-	var toCheck string
-	if len(fileJob.Content) > 20000 {
-		toCheck = string(fileJob.Content)[:20000]
-	} else {
-		toCheck = string(fileJob.Content)
-	}
-
-	toSort := []languageGuess{}
-	for _, lan := range fileJob.PossibleLanguages {
-		LanguageFeaturesMutex.Lock()
-		langFeatures := LanguageFeatures[lan]
-		LanguageFeaturesMutex.Unlock()
-
-		count := 0
-		for _, key := range langFeatures.Keywords {
-			if strings.Contains(toCheck, key) {
-				fileJob.Language = lan
-				count++
-			}
-		}
-
-		toSort = append(toSort, languageGuess{Name: lan, Count: count})
-	}
-
-	sort.Slice(toSort, func(i, j int) bool {
-		if toSort[i].Count == toSort[j].Count {
-			return strings.Compare(toSort[i].Name, toSort[j].Name) < 0
-		}
-
-		return toSort[i].Count > toSort[j].Count
-	})
-
-	if Verbose {
-		printWarn(fmt.Sprintf("guessing language %s for file %s", toSort[0].Name, fileJob.Filename))
-	}
-
-	if Trace {
-		printTrace(fmt.Sprintf("nanoseconds to guess language: %s: %d", fileJob.Filename, makeTimestampNano()-startTime))
-	}
-
-	if len(toSort) != 0 {
-		fileJob.Language = toSort[0].Name
-	}
-}
-
 // Reads entire file into memory and then pushes it onto the next queue
 func fileReaderWorker(input chan *FileJob, output chan *FileJob) {
 	var startTime int64
@@ -714,7 +642,7 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 				fileStartTime := makeTimestampNano()
 
 				// Needs to always run to ensure the language is set
-				determineLanguage(res)
+				DetermineLanguage(res)
 
 				// If the type is #! we should check to see if we can identify
 				if res.Language == SheBang {

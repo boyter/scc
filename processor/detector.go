@@ -2,8 +2,53 @@ package processor
 
 import (
 	"errors"
+	"fmt"
+	"sort"
 	"strings"
 )
+
+// Detects a language based on the filename returns the language extension and error
+func DetectLanguage(name string) ([]string, string) {
+	extension := ""
+
+	t := strings.Count(name, ".")
+
+	// If there is no . in the filename or it starts with one then check if #! or other
+	if (t == 0 || (name[0] == '.' && t == 1)) && len(AllowListExtensions) == 0 {
+		return checkFullName(name)
+	}
+
+	// Lookup in case the full name matches
+	language, ok := ExtensionToLanguage[strings.ToLower(name)]
+
+	// If no match check if we have a matching extension
+	if !ok {
+		extension = getExtension(name)
+		language, ok = ExtensionToLanguage[extension]
+	}
+
+	// Convert from d.ts to ts and check that in case of multiple extensions
+	if !ok {
+		language, ok = ExtensionToLanguage[getExtension(extension)]
+	}
+
+	return language, extension
+}
+
+func checkFullName(name string) ([]string, string) {
+	// Need to check if special type
+	language, ok := FilenameToLanguage[strings.ToLower(name)]
+	if ok {
+		return []string{language}, name
+	}
+
+	if Verbose {
+		printWarn(fmt.Sprintf("possible #! file: %s", name))
+	}
+
+	// No extension indicates possible #! so mark as such for processing
+	return []string{SheBang}, name
+}
 
 // Given some content attempt to determine if it has a #! that maps to a known language and return the language
 func DetectSheBang(content string) (string, error) {
@@ -93,4 +138,74 @@ func scanForSheBang(content []byte) (string, error) {
 	}
 
 	return "", errors.New("Unable to determine #! command")
+}
+
+type languageGuess struct {
+	Name  string
+	Count int
+}
+
+// Given a filejob which could have multiple language types make a guess to the type
+// based on keywords supplied, which is similar to how https://github.com/vmchale/polyglot does it
+func DetermineLanguage(fileJob *FileJob) {
+
+	// If being called through an API its possible nothing is set here and as
+	// such should just return as the Language value should have already been set
+	if len(fileJob.PossibleLanguages) == 0 {
+		return
+	}
+
+	// There should only be two possibilities now, either we have a single language
+	// in which case we set it and return
+	// or we have multiple in which case we try to determine it heuristically
+	if len(fileJob.PossibleLanguages) == 1 {
+		fileJob.Language = fileJob.PossibleLanguages[0]
+		return
+	}
+
+	startTime := makeTimestampNano()
+
+	var toCheck string
+	if len(fileJob.Content) > 20000 {
+		toCheck = string(fileJob.Content)[:20000]
+	} else {
+		toCheck = string(fileJob.Content)
+	}
+
+	toSort := []languageGuess{}
+	for _, lan := range fileJob.PossibleLanguages {
+		LanguageFeaturesMutex.Lock()
+		langFeatures := LanguageFeatures[lan]
+		LanguageFeaturesMutex.Unlock()
+
+		count := 0
+		for _, key := range langFeatures.Keywords {
+			if strings.Contains(toCheck, key) {
+				fileJob.Language = lan
+				count++
+			}
+		}
+
+		toSort = append(toSort, languageGuess{Name: lan, Count: count})
+	}
+
+	sort.Slice(toSort, func(i, j int) bool {
+		if toSort[i].Count == toSort[j].Count {
+			return strings.Compare(toSort[i].Name, toSort[j].Name) < 0
+		}
+
+		return toSort[i].Count > toSort[j].Count
+	})
+
+	if Verbose {
+		printWarn(fmt.Sprintf("guessing language %s for file %s", toSort[0].Name, fileJob.Filename))
+	}
+
+	if Trace {
+		printTrace(fmt.Sprintf("nanoseconds to guess language: %s: %d", fileJob.Filename, makeTimestampNano()-startTime))
+	}
+
+	if len(toSort) != 0 {
+		fileJob.Language = toSort[0].Name
+	}
 }
