@@ -323,6 +323,72 @@ func TestCheckFullNameLicense(t *testing.T) {
 	}
 }
 
+func TestGuessLanguageCoq(t *testing.T) {
+	fileJob := &FileJob{
+		PossibleLanguages: []string{"Coq", "SystemVerilog"},
+		Content:           []byte(`Require Hypothesis Inductive`),
+	}
+
+	DetermineLanguage(fileJob)
+
+	if fileJob.Language != "Coq" {
+		t.Error("Expected guessed language to have been Coq got", fileJob.Language)
+	}
+}
+
+func TestGuessLanguageSystemVerilog(t *testing.T) {
+	fileJob := &FileJob{
+		PossibleLanguages: []string{"Coq", "SystemVerilog"},
+		Content:           []byte(`endmodule posedge edge always wire`),
+	}
+
+	DetermineLanguage(fileJob)
+
+	if fileJob.Language != "SystemVerilog" {
+		t.Error("Expected guessed language to have been SystemVerilog got", fileJob.Language)
+	}
+}
+
+func TestGuessLanguageLanguageSetNoPossible(t *testing.T) {
+	fileJob := &FileJob{
+		Language: "Java",
+		Content:  []byte(`endmodule posedge edge always wire`),
+	}
+
+	DetermineLanguage(fileJob)
+
+	if fileJob.Language != "Java" {
+		t.Error("Expected guessed language to have been Java got", fileJob.Language)
+	}
+}
+
+func TestGuessLanguageSingleLanguageSet(t *testing.T) {
+	fileJob := &FileJob{
+		Language:          "Java",
+		PossibleLanguages: []string{"Rust"},
+		Content:           []byte(`endmodule posedge edge always wire`),
+	}
+
+	DetermineLanguage(fileJob)
+
+	if fileJob.Language != "Rust" {
+		t.Error("Expected guessed language to have been Rust got", fileJob.Language)
+	}
+}
+
+func TestGuessLanguageLanguageEmptyContent(t *testing.T) {
+	fileJob := &FileJob{
+		PossibleLanguages: []string{"Rust"},
+		Content:           []byte(``),
+	}
+
+	DetermineLanguage(fileJob)
+
+	if fileJob.Language != "Rust" {
+		t.Error("Expected guessed language to have been Rust got", fileJob.Language)
+	}
+}
+
 // Benchmarks below
 
 func BenchmarkScanSheBangFuzz(b *testing.B) {

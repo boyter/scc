@@ -642,7 +642,7 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 				fileStartTime := makeTimestampNano()
 
 				// Needs to always run to ensure the language is set
-				determineLanguage(res)
+				DetermineLanguage(res)
 
 				// If the type is #! we should check to see if we can identify
 				if res.Language == SheBang {

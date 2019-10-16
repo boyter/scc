@@ -147,7 +147,7 @@ type languageGuess struct {
 
 // Given a filejob which could have multiple language types make a guess to the type
 // based on keywords supplied, which is similar to how https://github.com/vmchale/polyglot does it
-func determineLanguage(fileJob *FileJob) {
+func DetermineLanguage(fileJob *FileJob) {
 
 	// If being called through an API its possible nothing is set here and as
 	// such should just return as the Language value should have already been set
