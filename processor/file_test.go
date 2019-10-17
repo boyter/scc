@@ -268,6 +268,21 @@ func TestNewFileJobYAML(t *testing.T) {
 	}
 }
 
+func TestNewFileJobSize(t *testing.T) {
+	ProcessConstants()
+	NoLarge = true
+	LargeByteCount = 1
+
+	job := newFileJob("file_test.go", "file_test.go")
+
+	if job != nil {
+		t.Error("Expected nil got", job)
+	}
+
+	NoLarge = false
+	LargeByteCount = 1000000
+}
+
 func BenchmarkGetExtensionDifferent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 

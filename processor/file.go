@@ -185,6 +185,17 @@ DIRENTS:
 }
 
 func newFileJob(path, name string) *FileJob {
+	if NoLarge {
+		fi, err := os.Stat(path)
+
+		if err == nil && fi.Size() >= LargeByteCount {
+			if Verbose {
+				printWarn(fmt.Sprintf("skipping large file due to byte size: %s", path))
+			}
+			return nil
+		}
+	}
+
 	language, extension := DetectLanguage(name)
 
 	if len(language) != 0 {

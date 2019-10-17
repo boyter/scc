@@ -693,9 +693,9 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 					continue
 				}
 
-				if NoLarge && (res.Lines >= LargeLineCount || res.Bytes >= LargeByteCount) {
+				if NoLarge && res.Lines >= LargeLineCount {
 					if Verbose {
-						printWarn(fmt.Sprintf("skipping large file: %s", res.Location))
+						printWarn(fmt.Sprintf("skipping large file due to line length: %s", res.Location))
 					}
 					continue
 				}
