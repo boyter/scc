@@ -145,16 +145,16 @@ type languageGuess struct {
 	Count int
 }
 
-// Given a filename, language, possible language and content make a guess to the type
-// based on keywords supplied, which is similar to how https://github.com/vmchale/polyglot does it
-func DetermineLanguage(filename string, language string, possibleLanguages []string, content []byte) string {
+// Given a filename, fallback language, possible languages and content make a guess to the type.
+// If multiple possible it will guess based on keywords similar to how https://github.com/vmchale/polyglot does
+func DetermineLanguage(filename string, fallbackLanguage string, possibleLanguages []string, content []byte) string {
 	// If being called through an API its possible nothing is set here and as
 	// such should just return as the Language value should have already been set
 	if len(possibleLanguages) == 0 {
-		return language
+		return fallbackLanguage
 	}
 
-	// There should only be two possibilities now, either we have a single language
+	// There should only be two possibilities now, either we have a single fallbackLanguage
 	// in which case we set it and return
 	// or we have multiple in which case we try to determine it heuristically
 	if len(possibleLanguages) == 1 {
@@ -206,5 +206,5 @@ func DetermineLanguage(filename string, language string, possibleLanguages []str
 		return toSort[0].Name
 	}
 
-	return language
+	return fallbackLanguage
 }
