@@ -108,6 +108,15 @@ var GcFileCount = 10000
 var gcPercent = -1
 var isLazy = false
 
+// If set true will ignore files over a certain number of lines or bytes
+var NoLarge = false
+
+// Number of lines before being counted as a large file based on https://github.com/pinpt/ripsrc/blob/master/ripsrc/fileinfo/fileinfo.go#L44
+var LargeLineCount int64 = 40000
+
+// Number of bytes before being counted as a large file based on https://github.com/pinpt/ripsrc/blob/master/ripsrc/fileinfo/fileinfo.go#L44
+var LargeByteCount int64 = 1000000
+
 // DirFilePaths is not set via flags but by arguments following the flags for file or directory to process
 var DirFilePaths = []string{}
 

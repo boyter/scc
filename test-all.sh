@@ -435,6 +435,24 @@ else
     exit
 fi
 
+if ./scc --no-large --large-byte-count 0 ./examples/language | grep -q "0.000000"; then
+    echo -e "${GREEN}PASSED no large byte test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED no large byte test"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc --no-large --large-line-count 0 ./examples/language | grep -q "0.000000"; then
+    echo -e "${GREEN}PASSED no large line test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED no large line test"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 # Try out specific languages
 for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java ' 'Boo ' 'License ' 'BASH ' 'C Shell ' 'Korn Shell ' 'Makefile ' 'Shell ' 'Zsh ' 'Rakefile ' 'Gemfile '
 do

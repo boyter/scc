@@ -693,6 +693,13 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 					continue
 				}
 
+				if NoLarge && (res.Lines >= LargeLineCount || res.Bytes >= LargeByteCount) {
+					if Verbose {
+						printWarn(fmt.Sprintf("skipping large file: %s", res.Location))
+					}
+					continue
+				}
+
 				if Trace {
 					printTrace(fmt.Sprintf("nanoseconds process: %s: %d", res.Location, makeTimestampNano()-fileStartTime))
 				}
