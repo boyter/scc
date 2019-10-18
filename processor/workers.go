@@ -485,6 +485,12 @@ func CountStats(fileJob *FileJob) {
 		if fileJob.Content[index] == '\n' || index >= endPoint {
 			fileJob.Lines++
 
+			if NoLarge && fileJob.Lines >= LargeLineCount {
+				// Save memory by unsetting the content as we no longer require it
+				fileJob.Content = nil
+				return
+			}
+
 			switch currentState {
 			case SCode, SString, SCommentCode, SMulticommentCode:
 				fileJob.Code++
