@@ -78,7 +78,7 @@ func (dw *DirectoryWalker) Walk(root string) error {
 	}
 
 	if !fileInfo.IsDir() {
-		fileJob := newFileJob(root, filepath.Base(root))
+		fileJob := newFileJob(root, filepath.Base(root), fileInfo)
 		if fileJob != nil {
 			dw.output <- fileJob
 		}
@@ -176,7 +176,7 @@ DIRENTS:
 				},
 			)
 		} else {
-			fileJob := newFileJob(path, name)
+			fileJob := newFileJob(path, name, nil)
 			if fileJob != nil {
 				dw.output <- fileJob
 			}
@@ -184,11 +184,19 @@ DIRENTS:
 	}
 }
 
-func newFileJob(path, name string) *FileJob {
+func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 	if NoLarge {
-		fi, err := os.Stat(path)
+		if fileInfo == nil {
+			fi, err := os.Stat(path)
 
-		if err == nil && fi.Size() >= LargeByteCount {
+			if err != nil {
+				return nil
+			}
+
+			fileInfo = fi
+		}
+
+		if fileInfo.Size() >= LargeByteCount {
 			if Verbose {
 				printWarn(fmt.Sprintf("skipping large file due to byte size: %s", path))
 			}
