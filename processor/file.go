@@ -176,7 +176,7 @@ DIRENTS:
 				},
 			)
 		} else {
-			fileJob := newFileJob(path, name, nil)
+			fileJob := newFileJob(path, name, dirent)
 			if fileJob != nil {
 				dw.output <- fileJob
 			}
@@ -186,16 +186,6 @@ DIRENTS:
 
 func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 	if NoLarge {
-		if fileInfo == nil {
-			fi, err := os.Stat(path)
-
-			if err != nil {
-				return nil
-			}
-
-			fileInfo = fi
-		}
-
 		if fileInfo.Size() >= LargeByteCount {
 			if Verbose {
 				printWarn(fmt.Sprintf("skipping large file due to byte size: %s", path))
