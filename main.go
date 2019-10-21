@@ -171,7 +171,7 @@ func main() {
 		"trace",
 		"t",
 		false,
-		"enable trace output. Not recommended when processing multiple files",
+		"enable trace output (not recommended when processing multiple files)",
 	)
 	flags.BoolVarP(
 		&processor.Verbose,
