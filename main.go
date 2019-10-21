@@ -187,6 +187,24 @@ func main() {
 		false,
 		"wider output with additional statistics (implies --complexity)",
 	)
+	flags.BoolVar(
+		&processor.NoLarge,
+		"no-large",
+		false,
+		"ignore files over certain byte and line size set by max-line-count and max-byte-count",
+	)
+	flags.Int64Var(
+		&processor.LargeLineCount,
+		"large-line-count",
+		40000,
+		"number of lines a file can contain before being removed from output",
+	)
+	flags.Int64Var(
+		&processor.LargeByteCount,
+		"large-byte-count",
+		1000000,
+		"number of bytes a file can contain before being removed from output",
+	)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

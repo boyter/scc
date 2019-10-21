@@ -485,6 +485,12 @@ func CountStats(fileJob *FileJob) {
 		if fileJob.Content[index] == '\n' || index >= endPoint {
 			fileJob.Lines++
 
+			if NoLarge && fileJob.Lines >= LargeLineCount {
+				// Save memory by unsetting the content as we no longer require it
+				fileJob.Content = nil
+				return
+			}
+
 			switch currentState {
 			case SCode, SString, SCommentCode, SMulticommentCode:
 				fileJob.Code++
@@ -689,6 +695,13 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 				if IgnoreMinifiedGenerate && res.Minified {
 					if Verbose {
 						printWarn(fmt.Sprintf("skipping minified/generated file: %s", res.Location))
+					}
+					continue
+				}
+
+				if NoLarge && res.Lines >= LargeLineCount {
+					if Verbose {
+						printWarn(fmt.Sprintf("skipping large file due to line length: %s", res.Location))
 					}
 					continue
 				}
