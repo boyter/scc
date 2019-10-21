@@ -116,7 +116,7 @@ Full details can be found in `scc --help` or `scc -h`.
 
 ```
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 2.9.0
+Version 2.10.0
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
@@ -134,6 +134,8 @@ Flags:
   -h, --help                      help for scc
   -i, --include-ext strings       limit to file extensions [comma separated list: e.g. go,java,js]
   -l, --languages                 print supported languages and extensions
+      --large-byte-count int      number of bytes a file can contain before being removed from output (default 1000000)
+      --large-line-count int      number of lines a file can contain before being removed from output (default 40000)
   -z, --min-gen                   identify minified or generated files
       --min-gen-line-length int   number of bytes per average line for file to be considered minified or generated (default 255)
       --no-cocomo                 remove COCOMO calculation output
@@ -141,6 +143,7 @@ Flags:
   -d, --no-duplicates             remove duplicate files from stats and output
       --no-gitignore              disables .gitignore file logic
       --no-ignore                 disables .ignore file logic
+      --no-large                  ignore files over certain byte and line size set by max-line-count and max-byte-count
       --no-min-gen                ignore minified or generated files in output (implies --min-gen)
   -M, --not-match stringArray     ignore files and directories matching regular expression
   -o, --output string             output filename (default stdout)
@@ -222,6 +225,18 @@ The complexity estimate is really just a number that is only comparable to files
 Because some languages don't have loops and instead use recursion they can have a lower complexity count. Does this mean they are less complex? Probably not, but the tool cannot see this because it does not build an AST of the code as it only scans through it.
 
 Generally though the complexity there is to help estimate between projects written in the same language, or for finding the most complex file in a project `scc --by-file -s complexity` which can be useful when you are estimating on how hard something is to maintain, or when looking for those files that should probably be refactored.
+
+### Large File Detection
+
+You can have `scc` exclude large files from the output. 
+
+The option to do so is `--no-large` which by default will exclude files over 1,000,000 bytes or 40,000 lines.
+
+You can control the size of either value using `--large-byte-count` or `--large-line-count`.
+
+For example to exclude files over 1,000 lines and 50kb you could use the following,
+
+`scc --no-large --large-byte-count 50000 --large-line-count 1000`
 
 ### Minified/Generated File Detection
 
