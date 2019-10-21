@@ -103,6 +103,7 @@ Why use `scc`?
  - cloc yaml output support so potentially a drop in replacement for some users
  - Can identify or ignore minified files
  - Able to identify many #! files
+ - Can ignore large files by lines or bytes
 
 Why not use `scc`?
 
