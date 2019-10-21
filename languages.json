@@ -1659,6 +1659,9 @@
     "line_comment": [
       "#"
     ],
+    "filenames": [
+      "dockerfile"
+    ],
     "multi_line": [],
     "quotes": [
       {
