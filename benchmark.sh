@@ -121,6 +121,7 @@ cargo install hyperfine tokei loc
 
 wget https://github.com/vmchale/polyglot/releases/download/0.5.24/poly-x86_64-unknown-linux-icc
 mv poly-x86_64-unknown-linux-icc /usr/local/bin/polyglot
+chmod +x /usr/local/bin/polyglot
 
 wget https://github.com/hhatto/gocloc/releases/download/v0.3.0/gocloc_0.3.0_Linux_x86_64.tar.gz
 tar zxvf gocloc_0.3.0_Linux_x86_64.tar.gz
