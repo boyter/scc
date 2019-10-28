@@ -3,8 +3,10 @@
 # Assumes we need to install everything from scratch on a box for benchmarking
 # Also assumes we have copied the ./examples/performance_tests/create_performance_test.py file to where this is run
 
-apt-get install build-essential unzip cloc sloccount
+apt-get update
+apt-get install --assume-yes build-essential unzip cloc sloccount tmux python
 
+rm *.zip
 wget https://github.com/boyter/scc/releases/download/v1.0.0/scc-1.0.0-x86_64-unknown-linux.zip
 unzip scc-1.0.0-x86_64-unknown-linux.zip
 mv scc /usr/local/bin/scc1.0.0
@@ -45,6 +47,7 @@ wget https://github.com/boyter/scc/releases/download/v1.9.0/scc-1.9.0-x86_64-unk
 unzip scc-1.9.0-x86_64-unknown-linux.zip
 mv scc /usr/local/bin/scc1.9.0
 
+rm scc-1.0.0-x86_64-unknown-linux.zip
 wget https://github.com/boyter/scc/releases/download/v1.10.0/scc-1.0.0-x86_64-unknown-linux.zip
 unzip scc-1.0.0-x86_64-unknown-linux.zip
 mv scc /usr/local/bin/scc1.10.0
@@ -110,9 +113,11 @@ unzip scc-2.10.0-x86_64-unknown-linux.zip
 cp scc /usr/local/bin/scc2.10.0
 mv scc /usr/local/bin/scc
 
+echo "Setting up rust toolchain"
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source $HOME/.cargo/env
 
-cargo install ripgrep hyperfine tokei loc
+cargo install hyperfine tokei loc
 
 wget https://github.com/vmchale/polyglot/releases/download/0.5.24/poly-x86_64-unknown-linux-icc
 mv poly-x86_64-unknown-linux-icc /usr/local/bin/polyglot
@@ -125,6 +130,7 @@ mv gocloc /usr/local/bin/
 
 # Now setup all of the benchmarks
 
+rm -rf artifical
 mkdir artifical
 cp create_performance_test.py artifical
 cd artifical
@@ -133,6 +139,9 @@ cd ..
 rm artifical/create_performance_test.py
 
 # Clone the stuff we want to test
+rm -rf redis
+rm -rf cpython
+rm -rf linux
 
 git clone --depth=1 https://github.com/antirez/redis.git
 git clone --depth=1 https://github.com/python/cpython.git
@@ -140,6 +149,8 @@ git clone --depth=1 https://github.com/torvalds/linux.git
 
 # Setup torture test
 
+echo "Copying 10 linuxes"
+rm -rf linux10
 mkdir linux10
 cp -R linux linux10/0
 cp -R linux linux10/1
@@ -154,6 +165,8 @@ cp -R linux linux10/9
 
 # Setup uber torture test
 
+echo "Copying 100 linuxes"
+rm -rf linux100
 mkdir linux100
 cp -R linux10 linux100/linux0
 cp -R linux10 linux100/linux1
@@ -168,15 +181,15 @@ cp -R linux10 linux100/linux9
 
 # Regression test all versions of scc
 
-hyperfine 'scc-1.0.0 linux' 'scc-1.1.0 linux' 'scc-1.2.0 linux' 'scc-1.3.0 linux' 'scc-1.4.0 linux' 'scc-1.5.0 linux' 'scc-1.6.0 linux' 'scc-1.7.0 linux' 'scc-1.8.0 linux' 'scc-1.9.0 linux' 'scc-1.10.0 linux' 'scc-1.11.0 linux' 'scc-1.12.0 linux' 'scc-1.12.1 linux' 'scc-2.0.0 linux' 'scc-2.1.0 linux' 'scc-2.2.0 linux' 'scc-2.3.0 linux' 'scc-2.4.0 linux' 'scc-2.5.0 linux' 'scc-2.6.0 linux' 'scc-2.7.0 linux' 'scc-2.8.0 linux' 'scc-2.9.0 linux' 'scc-2.9.1 linux' 'scc-2.10.0 linux'
+hyperfine 'scc1.0.0 linux' 'scc1.1.0 linux' 'scc1.2.0 linux' 'scc1.3.0 linux' 'scc1.4.0 linux' 'scc1.5.0 linux' 'scc1.6.0 linux' 'scc1.7.0 linux' 'scc1.8.0 linux' 'scc1.9.0 linux' 'scc1.10.0 linux' 'scc1.11.0 linux' 'scc1.12.0 linux' 'scc1.12.1 linux' 'scc2.0.0 linux' 'scc2.1.0 linux' 'scc2.2.0 linux' 'scc2.3.0 linux' 'scc2.4.0 linux' 'scc2.5.0 linux' 'scc2.6.0 linux' 'scc2.7.0 linux' 'scc2.8.0 linux' 'scc2.9.0 linux' 'scc2.9.1 linux' 'scc2.10.0 linux'
 
 # Benchmark against everything
 
-hyperfine 'scc artifical' 'scc -c artifical' 'tokei artifical' 'loc artifical' 'pologlot artifical' 'gocloc artifical' 'cloc artifical' 'sloccount artifical'
-hyperfine 'scc redis' 'scc -c redis' 'tokei redis' 'loc redis' 'pologlot redis' 'gocloc redis' 'cloc redis' 'sloccount redis'
-hyperfine 'scc cypthon' 'scc -c cypthon' 'tokei cypthon' 'loc cypthon' 'pologlot cypthon' 'gocloc cypthon' 'cloc cypthon' 'sloccount cypthon'
-hyperfine 'scc linux' 'scc -c linux' 'tokei linux' 'loc linux' 'pologlot linux' 'gocloc linux' 'cloc linux' 'sloccount linux'
-hyperfine 'scc linux10' 'scc -c linux10' 'tokei linux10' 'loc linux10' 'pologlot linux10' 'gocloc linux10' 'cloc linux10' 'sloccount linux10'
-hyperfine 'scc linux100' 'scc -c linux100' 'tokei linux100' 'loc linux100' 'pologlot linux100' 'gocloc linux100' 'cloc linux100' 'sloccount linux100'
+hyperfine 'scc artifical' 'scc -c artifical' 'scc --file-gc-count 10000000000 artifical' 'tokei artifical' 'loc artifical' 'polyglot artifical' 'gocloc artifical' 'cloc artifical' 'sloccount artifical'
+hyperfine 'scc redis' 'scc -c redis' 'scc --file-gc-count 10000000000 redis' 'tokei redis' 'loc redis' 'polyglot redis' 'gocloc redis' 'cloc redis' 'sloccount redis'
+hyperfine 'scc cypthon' 'scc -c cypthon' 'scc --file-gc-count 10000000000 cpython' 'tokei cypthon' 'loc cypthon' 'polyglot cypthon' 'gocloc cypthon' 'cloc cypthon' 'sloccount cypthon'
+hyperfine 'scc linux' 'scc -c linux' 'scc --file-gc-count 10000000000 linux' 'tokei linux' 'loc linux' 'polyglot linux' 'gocloc linux' 'cloc linux' 'sloccount linux'
+hyperfine 'scc linux10' 'scc -c linux10' 'scc --file-gc-count 10000000000 linux10' 'tokei linux10' 'loc linux10' 'polyglot linux10' 'gocloc linux10' 'cloc linux10' 'sloccount linux10'
+hyperfine 'scc linux100' 'scc -c linux100' 'scc --file-gc-count 10000000000 linux100' 'tokei linux100' 'loc linux100' 'polyglot linux100' 'gocloc linux100' 'cloc linux100' 'sloccount linux100'
 
 echo "All done!"
