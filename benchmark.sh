@@ -4,7 +4,7 @@
 # Also assumes we have copied the ./examples/performance_tests/create_performance_test.py file to where this is run
 
 apt-get update
-apt-get install --assume-yes build-essential unzip cloc sloccount tmux python
+apt-get install --assume-yes build-essential unzip cloc sloccount tmux python htop
 
 rm *.zip
 wget https://github.com/boyter/scc/releases/download/v1.0.0/scc-1.0.0-x86_64-unknown-linux.zip
@@ -151,8 +151,7 @@ git clone --depth=1 https://github.com/torvalds/linux.git
 # Setup torture test
 
 echo "Copying 10 linuxes"
-rm -rf linux10
-mkdir linux10
+mkdir -p linux10
 cp -R linux linux10/0
 cp -R linux linux10/1
 cp -R linux linux10/2
@@ -166,31 +165,35 @@ cp -R linux linux10/9
 
 # Setup uber torture test
 
-echo "Copying 100 linuxes"
-rm -rf linux100
-mkdir linux100
-cp -R linux10 linux100/linux0
-cp -R linux10 linux100/linux1
-cp -R linux10 linux100/linux2
-cp -R linux10 linux100/linux3
-cp -R linux10 linux100/linux4
-cp -R linux10 linux100/linux5
-cp -R linux10 linux100/linux6
-cp -R linux10 linux100/linux7
-cp -R linux10 linux100/linux8
-cp -R linux10 linux100/linux9
+echo "Copying 50 linuxes"
+mkdir -p linux50
+cp -R linux10 linux50/linux0
+cp -R linux10 linux50/linux1
+cp -R linux10 linux50/linux2
+cp -R linux10 linux50/linux3
+cp -R linux10 linux50/linux4
 
 # Regression test all versions of scc
-
-hyperfine 'scc1.0.0 linux' 'scc1.1.0 linux' 'scc1.2.0 linux' 'scc1.3.0 linux' 'scc1.4.0 linux' 'scc1.5.0 linux' 'scc1.6.0 linux' 'scc1.7.0 linux' 'scc1.8.0 linux' 'scc1.9.0 linux' 'scc1.10.0 linux' 'scc1.11.0 linux' 'scc1.12.0 linux' 'scc1.12.1 linux' 'scc2.0.0 linux' 'scc2.1.0 linux' 'scc2.2.0 linux' 'scc2.3.0 linux' 'scc2.4.0 linux' 'scc2.5.0 linux' 'scc2.6.0 linux' 'scc2.7.0 linux' 'scc2.8.0 linux' 'scc2.9.0 linux' 'scc2.9.1 linux' 'scc2.10.0 linux'
+echo "Running regression benchmark"
+hyperfine 'scc1.0.0 linux' 'scc1.1.0 linux' 'scc1.2.0 linux' 'scc1.3.0 linux' 'scc1.4.0 linux' 'scc1.5.0 linux' 'scc1.6.0 linux' 'scc1.7.0 linux' 'scc1.8.0 linux' 'scc1.9.0 linux' 'scc1.10.0 linux' 'scc1.11.0 linux' 'scc1.12.0 linux' 'scc1.12.1 linux' 'scc2.0.0 linux' 'scc2.1.0 linux' 'scc2.2.0 linux' 'scc2.3.0 linux' 'scc2.4.0 linux' 'scc2.5.0 linux' 'scc2.6.0 linux' 'scc2.7.0 linux' 'scc2.8.0 linux' 'scc2.9.0 linux' 'scc2.9.1 linux' 'scc2.10.0 linux' > benchmark_regression.txt
 
 # Benchmark against everything
+echo "Running artifical benchmark"
+hyperfine 'scc artifical' 'scc -c artifical' 'tokei artifical' 'loc artifical' 'polyglot artifical' 'gocloc artifical' > benchmark_artifical.txt
 
-hyperfine 'scc artifical' 'scc -c artifical' 'scc --file-gc-count 10000000000 artifical' 'tokei artifical' 'loc artifical' 'polyglot artifical' 'gocloc artifical' 'cloc artifical' 'sloccount artifical'
-hyperfine 'scc redis' 'scc -c redis' 'scc --file-gc-count 10000000000 redis' 'tokei redis' 'loc redis' 'polyglot redis' 'gocloc redis' 'cloc redis' 'sloccount redis'
-hyperfine 'scc cypthon' 'scc -c cypthon' 'scc --file-gc-count 10000000000 cpython' 'tokei cypthon' 'loc cypthon' 'polyglot cypthon' 'gocloc cypthon' 'cloc cypthon' 'sloccount cypthon'
-hyperfine 'scc linux' 'scc -c linux' 'scc --file-gc-count 10000000000 linux' 'tokei linux' 'loc linux' 'polyglot linux' 'gocloc linux' 'cloc linux' 'sloccount linux'
-hyperfine 'scc linux10' 'scc -c linux10' 'scc --file-gc-count 10000000000 linux10' 'tokei linux10' 'loc linux10' 'polyglot linux10' 'gocloc linux10' 'cloc linux10' 'sloccount linux10'
-hyperfine 'scc linux100' 'scc -c linux100' 'scc --file-gc-count 10000000000 linux100' 'tokei linux100' 'loc linux100' 'polyglot linux100' 'gocloc linux100' 'cloc linux100' 'sloccount linux100'
+echo "Running redis benchmark"
+hyperfine 'scc redis' 'scc -c redis' 'tokei redis' 'loc redis' 'polyglot redis' 'gocloc redis' 'cloc redis' 'sloccount redis' > benchmark_redis.txt
+
+echo "Running cpython benchmark"
+hyperfine 'scc cpython' 'scc -c cpython' 'tokei cpython' 'loc cpython' 'polyglot cpython' 'gocloc cpython' > benchmark_cpython.txt
+
+echo "Running linux benchmark"
+hyperfine 'scc linux' 'scc -c linux' 'tokei linux' 'loc linux' 'polyglot linux' 'gocloc linux' > benchmark_linux.txt
+
+echo "Running linux10 benchmark"
+hyperfine 'scc linux10' 'scc -c linux10' 'tokei linux10' 'loc linux10' 'polyglot linux10' > benchmark_linux10.txt
+
+echo "Running linux50 benchmark"
+hyperfine 'scc linux50' 'scc -c linux50' 'tokei linux50' 'loc linux50' 'polyglot linux50' > benchmark_linux50.txt
 
 echo "All done!"
