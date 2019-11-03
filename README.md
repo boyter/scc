@@ -312,6 +312,10 @@ polyglot v0.5.25
 
 If you enable duplicate detection expect performance to fall by about 20% in `scc`.
 
+Performance is tracked over each release and presented below.
+
+<img alt="scc" src=https://github.com/boyter/scc/raw/master/performance-over-time.png>
+
 ### CI/CD Support
 
 Some CI/CD systems which will remain nameless do not work very well with the box-lines used by `scc`. To support those systems better there is an option `--ci` which will change the default output to ASCII only.
