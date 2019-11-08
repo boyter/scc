@@ -64,12 +64,12 @@ func NewDirectoryWalker(output chan<- *FileJob) *DirectoryWalker {
 		directoryWalker.excludes = append(directoryWalker.excludes, regexp.MustCompile(exclude))
 	}
 
-	directoryWalker.buffer = cuba.New(directoryWalker.Readdir, cuba.NewStack())
+	directoryWalker.buffer = cuba.New(directoryWalker.Walk, cuba.NewStack())
 
 	return directoryWalker
 }
 
-func (dw *DirectoryWalker) Walk(root string) error {
+func (dw *DirectoryWalker) Start(root string) error {
 	root = filepath.Clean(root)
 
 	fileInfo, err := os.Stat(root)
@@ -102,21 +102,14 @@ func (dw *DirectoryWalker) Run() {
 	close(dw.output)
 }
 
-func (dw *DirectoryWalker) Readdir(handle *cuba.Handle) {
+func (dw *DirectoryWalker) Walk(handle *cuba.Handle) {
 	job := handle.Item().(*DirectoryJob)
 
 	ignores := job.ignores
 
-	file, err := os.Open(job.path)
+	dirents, err := dw.Readdir(job.path)
 	if err != nil {
-		printError(fmt.Sprintf("failed to open %s: %v", job.path, err))
-		return
-	}
-	defer file.Close()
-
-	dirents, err := file.Readdir(-1)
-	if err != nil {
-		printError(fmt.Sprintf("failed to read %s: %v", job.path, err))
+		printError(err.Error())
 		return
 	}
 
@@ -182,6 +175,21 @@ DIRENTS:
 			}
 		}
 	}
+}
+
+func (dw *DirectoryWalker) Readdir(path string) ([]os.FileInfo, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return []os.FileInfo{}, fmt.Errorf("failed to open %s: %v", path, err)
+	}
+	defer file.Close()
+
+	dirents, err := file.Readdir(-1)
+	if err != nil {
+		return []os.FileInfo{}, fmt.Errorf("failed to read %s: %v", path, err)
+	}
+
+	return dirents, nil
 }
 
 func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {

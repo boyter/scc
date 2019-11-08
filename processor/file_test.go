@@ -87,9 +87,9 @@ func TestWalkDirectoryParallel(t *testing.T) {
 	inputChan := make(chan *FileJob, 10000)
 
 	dirwalker := NewDirectoryWalker(inputChan)
-	err := dirwalker.Walk("../")
+	err := dirwalker.Start("../")
 	if err != nil {
-		t.Errorf("dirwalker.Walk returned error: %v", err)
+		t.Errorf("dirwalker.Start returned error: %v", err)
 		t.FailNow()
 	}
 	dirwalker.Run()
@@ -119,9 +119,9 @@ func TestWalkDirectoryParallelWorksWithSingleInputFile(t *testing.T) {
 	inputChan := make(chan *FileJob, 10000)
 
 	dirwalker := NewDirectoryWalker(inputChan)
-	err := dirwalker.Walk("file_test.go")
+	err := dirwalker.Start("file_test.go")
 	if err != nil {
-		t.Errorf("dirwalker.Walk returned error: %v", err)
+		t.Errorf("dirwalker.Start returned error: %v", err)
 		t.FailNow()
 	}
 	dirwalker.Run()
@@ -151,9 +151,9 @@ func TestWalkDirectoryParallelIgnoresRootTrailingSlash(t *testing.T) {
 	inputChan := make(chan *FileJob, 10000)
 
 	dirwalker := NewDirectoryWalker(inputChan)
-	err := dirwalker.Walk("file_test.go/")
+	err := dirwalker.Start("file_test.go/")
 	if err != nil {
-		t.Errorf("dirwalker.Walk returned error: %v", err)
+		t.Errorf("dirwalker.Start returned error: %v", err)
 		t.FailNow()
 	}
 	dirwalker.Run()
@@ -191,9 +191,9 @@ func TestWalkDirectoryParallelIgnoresAbsoluteGitPath(t *testing.T) {
 	absGitDir := filepath.Join(absBaseDir, ".git")
 
 	dirwalker := NewDirectoryWalker(inputChan)
-	err := dirwalker.Walk(absBaseDir)
+	err := dirwalker.Start(absBaseDir)
 	if err != nil {
-		t.Errorf("dirwalker.Walk returned error: %v", err)
+		t.Errorf("dirwalker.Start returned error: %v", err)
 		t.FailNow()
 	}
 	dirwalker.Run()
