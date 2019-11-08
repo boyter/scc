@@ -4,8 +4,8 @@
 [[projects]]
   name = "github.com/dbaggerman/cuba"
   packages = ["."]
-  revision = "5acd70297eb479db756c8e2314f8ac896be61f8d"
-  version = "v0.3.1"
+  revision = "eea065551ffcf98105d83bfc624d5ecbf4dd0ea9"
+  version = "v0.3.2"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -65,6 +65,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5490b7099ab27ebb1836a10b2288c5815ffae5b55369038d899a8e3642a0d48d"
+  inputs-digest = "73ffb2cf1749b60052c384c47e69ba298d082a556c596996a0eaf425b63eebad"
   solver-name = "gps-cdcl"
   solver-version = 1
