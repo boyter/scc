@@ -35,5 +35,5 @@
 
 [[constraint]]
   name = "github.com/dbaggerman/cuba"
-  version = "0.3.1"
+  version = "0.3.2"
 

@@ -72,8 +72,8 @@ func (pool *Pool) Push(item interface{}) error {
 	// Having a floating pool means we can restart workers as we discover more
 	// work to be done, which solves this problem at the cost of a little
 	// inefficiency.
-	numWorkers := atomic.LoadInt32(&pool.numWorkers)
-	if numWorkers < pool.maxWorkers {
+	if atomic.LoadInt32(&pool.numWorkers) < pool.maxWorkers {
+		atomic.AddInt32(&pool.numWorkers, 1)
 		pool.wg.Add(1)
 		go pool.runWorker()
 	}
@@ -96,11 +96,11 @@ func (pool *Pool) PushAll(items []interface{}) error {
 		return PoolAbortedErr
 	}
 
-	numWorkers := atomic.LoadInt32(&pool.numWorkers)
 	for i := 0; i < len(items); i++ {
-		if numWorkers >= pool.maxWorkers {
+		if atomic.LoadInt32(&pool.numWorkers) >= pool.maxWorkers {
 			break
 		}
+		atomic.AddInt32(&pool.numWorkers, 1)
 		pool.wg.Add(1)
 		go pool.runWorker()
 	}
@@ -150,7 +150,6 @@ func (pool *Pool) next() (interface{}, bool) {
 }
 
 func (pool *Pool) runWorker() {
-	atomic.AddInt32(&pool.numWorkers, 1)
 	handle := Handle{
 		pool: pool,
 	}
