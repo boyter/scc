@@ -62,6 +62,10 @@ Some reviews of `scc`
  - https://nickmchardy.com/2018/10/counting-lines-of-code-in-koi-cms.html
  - https://www.feliciano.tech/blog/determine-source-code-size-and-complexity-with-scc/
 
+A talk given at the first GopherCon AU about `scc` (press S to see speaker notes)
+
+ - https://boyter.org/static/gophercon-syd-presentation/
+
 For performance see the [Performance](https://github.com/boyter/scc#performance) section
 
 Other similar projects,
