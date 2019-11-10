@@ -453,6 +453,13 @@ Valid values include `code, blanks, lines, comments, cocomo` and examples of the
 [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/?category=cocomo)](https://github.com/boyter/scc/)
 
 
+For `cocomo` you can also set the `avg-wage` value similar to `scc` itself. For example,
+
+https://sloc.xyz/github/boyter/scc/?category=cocomo&avg-wage=1
+https://sloc.xyz/github/boyter/scc/?category=cocomo&avg-wage=100000 
+
+Note that the avg-wage value must be a positive integer otherwise it will revert back to the default value of 56286.
+
 *NB* it may not work for VERY large repositories (has been tested on Apache hadoop/spark without issue).
 
 ### Languages
