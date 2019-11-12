@@ -15,7 +15,7 @@ import (
 )
 
 // The version of the application
-var Version = "2.11.0"
+var Version = "2.10.1"
 
 // Flags set via the CLI which control how the output is displayed
 
