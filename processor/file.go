@@ -65,6 +65,7 @@ func NewDirectoryWalker(output chan<- *FileJob) *DirectoryWalker {
 	}
 
 	directoryWalker.buffer = cuba.New(directoryWalker.Walk, cuba.NewStack())
+	directoryWalker.buffer.SetMaxWorkers(int32(DirectoryWalkerJobWorkers))
 
 	return directoryWalker
 }
