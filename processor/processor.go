@@ -386,7 +386,6 @@ func Process() {
 	}
 
 	fileListQueue := make(chan *FileJob, FileListQueueSize)                     // Files ready to be read from disk
-	fileReadContentJobQueue := make(chan *FileJob, FileReadContentJobQueueSize) // Files ready to be processed
 	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)         // Files ready to be summarised
 
 	go func() {
@@ -402,8 +401,7 @@ func Process() {
 
 		directoryWalker.Run()
 	}()
-	go fileReaderWorker(fileListQueue, fileReadContentJobQueue)
-	go fileProcessorWorker(fileReadContentJobQueue, fileSummaryJobQueue)
+	go fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
 
 	result := fileSummarize(fileSummaryJobQueue)
 
