@@ -216,8 +216,15 @@ func TestNewFileJobFullname(t *testing.T) {
 	ProcessConstants()
 	AllowListExtensions = []string{}
 
-	fi, _ := os.Stat("./examples/issue114/makefile")
-	job := newFileJob("./examples/issue114/", "makefile", fi)
+	fi, err := os.Stat("../examples/issue114/makefile")
+	if err != nil {
+		dir, _ := os.Getwd()
+		t.Logf("os.Getwd: %s", dir)
+
+		t.Errorf("os.Stat ./examples/issue114/makefile: %v", err)
+		t.FailNow()
+	}
+	job := newFileJob("../examples/issue114/", "makefile", fi)
 
 	if job.PossibleLanguages[0] != "Makefile" {
 		t.Error("Expected makefile got", job.PossibleLanguages[0])
@@ -227,8 +234,8 @@ func TestNewFileJobFullname(t *testing.T) {
 func TestNewFileJob(t *testing.T) {
 	ProcessConstants()
 
-	fi, _ := os.Stat("./examples/issue114/java")
-	job := newFileJob("./examples/issue114/", "java", fi)
+	fi, _ := os.Stat("../examples/issue114/java")
+	job := newFileJob("../examples/issue114/", "java", fi)
 
 	if job.PossibleLanguages[0] != "#!" {
 		t.Error("Expected special value #! got", job.PossibleLanguages[0])
@@ -239,8 +246,8 @@ func TestNewFileJobGitIgnore(t *testing.T) {
 	AllowListExtensions = []string{}
 	ProcessConstants()
 
-	fi, _ := os.Stat("./examples/issue114/.gitignore")
-	job := newFileJob("./examples/issue114/", ".gitignore", fi)
+	fi, _ := os.Stat("../examples/issue114/.gitignore")
+	job := newFileJob("../examples/issue114/", ".gitignore", fi)
 
 	if job.PossibleLanguages[0] != "gitignore" {
 		t.Error("Expected gitignore got", job.PossibleLanguages[0])
@@ -251,8 +258,8 @@ func TestNewFileJobIgnore(t *testing.T) {
 	AllowListExtensions = []string{}
 	ProcessConstants()
 
-	fi, _ := os.Stat("./examples/issue114/.ignore")
-	job := newFileJob("./examples/issue114/", ".ignore", fi)
+	fi, _ := os.Stat("../examples/issue114/.ignore")
+	job := newFileJob("../examples/issue114/", ".ignore", fi)
 
 	if job.PossibleLanguages[0] != "ignore" {
 		t.Error("Expected ignore got", job.PossibleLanguages[0])
@@ -262,8 +269,8 @@ func TestNewFileJobIgnore(t *testing.T) {
 func TestNewFileJobLicense(t *testing.T) {
 	ProcessConstants()
 
-	fi, _ := os.Stat("./examples/issue114/license")
-	job := newFileJob("./examples/issue114/", "license", fi)
+	fi, _ := os.Stat("../examples/issue114/license")
+	job := newFileJob("../examples/issue114/", "license", fi)
 
 	if job.PossibleLanguages[0] != "License" {
 		t.Error("Expected License got", job.PossibleLanguages[0])
@@ -273,8 +280,8 @@ func TestNewFileJobLicense(t *testing.T) {
 func TestNewFileJobYAML(t *testing.T) {
 	ProcessConstants()
 
-	fi, _ := os.Stat("./examples/issue114/.travis.yml")
-	job := newFileJob("./examples/issue114/", ".travis.yml", fi)
+	fi, _ := os.Stat("../examples/issue114/.travis.yml")
+	job := newFileJob("../examples/issue114/", ".travis.yml", fi)
 
 	if job.PossibleLanguages[0] != "YAML" {
 		t.Error("Expected YAML got", job.PossibleLanguages[0])

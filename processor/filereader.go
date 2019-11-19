@@ -2,12 +2,12 @@ package processor
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
-	"fmt"
 )
 
-type FileReader struct{
+type FileReader struct {
 	Buffer *bytes.Buffer
 }
 
@@ -43,4 +43,3 @@ func (reader *FileReader) ReadFile(path string, size int) ([]byte, error) {
 
 	return reader.Buffer.Bytes(), nil
 }
-

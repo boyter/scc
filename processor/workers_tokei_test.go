@@ -10,7 +10,7 @@ func TestCountStatsJava(t *testing.T) {
 		Language: "Java",
 	}
 
-	fileJob.Content = []byte(`/* 23 lines 16 code 4 comments 3 blanks */
+	fileJob.SetContent(`/* 23 lines 16 code 4 comments 3 blanks */
 
 /*
 * Simple test class
@@ -59,7 +59,7 @@ func TestCountStatsAccuracyCPlusPlus(t *testing.T) {
 		Language: "C++",
 	}
 
-	fileJob.Content = []byte(`/* 15 lines 7 code 4 comments 4 blanks */
+	fileJob.SetContent(`/* 15 lines 7 code 4 comments 4 blanks */
 
 #include <iostream>
 
@@ -101,7 +101,7 @@ func TestCountStatsAccuracyRakefile(t *testing.T) {
 		Language: "Rakefile",
 	}
 
-	fileJob.Content = []byte(`# 10 lines 4 code 2 comments 4 blanks
+	fileJob.SetContent(`# 10 lines 4 code 2 comments 4 blanks
 
 # this is a rakefile
 
@@ -138,7 +138,7 @@ func TestCountStatsAccuracyRuby(t *testing.T) {
 		Language: "Ruby",
 	}
 
-	fileJob.Content = []byte(`# 20 lines 9 code 8 comments 3 blanks
+	fileJob.SetContent(`# 20 lines 9 code 8 comments 3 blanks
 x = 3
 if x < 2
   p = "Smaller"
@@ -185,7 +185,7 @@ func TestCountStatsAccuracyTokeiTest(t *testing.T) {
 		Language: "Rust",
 	}
 
-	fileJob.Content = []byte(`// 39 lines 32 code 2 comments 5 blanks
+	fileJob.SetContent(`// 39 lines 32 code 2 comments 5 blanks
 
 /* /**/ */
 fn main() {

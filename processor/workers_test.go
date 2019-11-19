@@ -7,6 +7,11 @@ import (
 	"testing"
 )
 
+func (job *FileJob) SetContent(content string) {
+	job.Content = []byte(content)
+	job.Bytes = int64(len(job.Content))
+}
+
 func TestIsWhitespace(t *testing.T) {
 	if !isWhitespace(' ') {
 		t.Errorf("Expected to be true")
@@ -49,14 +54,14 @@ func TestCountStatsLines(t *testing.T) {
 	// Interestingly this file would be 0 lines in "wc -l" because it only counts newlines
 	// all others count this as 1
 	fileJob.Lines = 0
-	fileJob.Content = []byte("a")
+	fileJob.SetContent("a")
 	CountStats(&fileJob)
 	if fileJob.Lines != 1 {
 		t.Errorf("One line expected got %d", fileJob.Lines)
 	}
 
 	fileJob.Lines = 0
-	fileJob.Content = []byte("a\n")
+	fileJob.SetContent("a\n")
 	CountStats(&fileJob)
 	if fileJob.Lines != 1 {
 		t.Errorf("One line expected got %d", fileJob.Lines)
@@ -65,21 +70,21 @@ func TestCountStatsLines(t *testing.T) {
 	// tokei counts this as 1 because its still on a single line unless something follows
 	// the newline its still 1 line
 	fileJob.Lines = 0
-	fileJob.Content = []byte("1\n")
+	fileJob.SetContent("1\n")
 	CountStats(&fileJob)
 	if fileJob.Lines != 1 {
 		t.Errorf("One line expected got %d", fileJob.Lines)
 	}
 
 	fileJob.Lines = 0
-	fileJob.Content = []byte("1\n2\n")
+	fileJob.SetContent("1\n2\n")
 	CountStats(&fileJob)
 	if fileJob.Lines != 2 {
 		t.Errorf("Two lines expected got %d", fileJob.Lines)
 	}
 
 	fileJob.Lines = 0
-	fileJob.Content = []byte("1\n2\n3")
+	fileJob.SetContent("1\n2\n3")
 	CountStats(&fileJob)
 	if fileJob.Lines != 3 {
 		t.Errorf("Three lines expected got %d", fileJob.Lines)
@@ -89,7 +94,7 @@ func TestCountStatsLines(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		content += "a\n"
 		fileJob.Lines = 0
-		fileJob.Content = []byte(content)
+		fileJob.SetContent(content)
 		CountStats(&fileJob)
 		if fileJob.Lines != int64(i+1) {
 			t.Errorf("Expected %d got %d", i+1, fileJob.Lines)
@@ -113,28 +118,28 @@ func TestCountStatsCode(t *testing.T) {
 	// Interestingly this file would be 0 lines in "wc -l" because it only counts newlines
 	// all others count this as 1
 	fileJob.Code = 0
-	fileJob.Content = []byte("a")
+	fileJob.SetContent("a")
 	CountStats(&fileJob)
 	if fileJob.Code != 1 {
 		t.Errorf("One line expected got %d", fileJob.Code)
 	}
 
 	fileJob.Code = 0
-	fileJob.Content = []byte("i++ # comment")
+	fileJob.SetContent("i++ # comment")
 	CountStats(&fileJob)
 	if fileJob.Code != 1 {
 		t.Errorf("One line expected got %d", fileJob.Code)
 	}
 
 	fileJob.Code = 0
-	fileJob.Content = []byte("i++ // comment")
+	fileJob.SetContent("i++ // comment")
 	CountStats(&fileJob)
 	if fileJob.Code != 1 {
 		t.Errorf("One line expected got %d", fileJob.Code)
 	}
 
 	fileJob.Code = 0
-	fileJob.Content = []byte("a\n")
+	fileJob.SetContent("a\n")
 	CountStats(&fileJob)
 	if fileJob.Code != 1 {
 		t.Errorf("One line expected got %d", fileJob.Code)
@@ -143,21 +148,21 @@ func TestCountStatsCode(t *testing.T) {
 	// tokei counts this as 1 because its still on a single line unless something follows
 	// the newline its still 1 line
 	fileJob.Code = 0
-	fileJob.Content = []byte("1\n")
+	fileJob.SetContent("1\n")
 	CountStats(&fileJob)
 	if fileJob.Code != 1 {
 		t.Errorf("One line expected got %d", fileJob.Code)
 	}
 
 	fileJob.Code = 0
-	fileJob.Content = []byte("1\n2\n")
+	fileJob.SetContent("1\n2\n")
 	CountStats(&fileJob)
 	if fileJob.Code != 2 {
 		t.Errorf("Two lines expected got %d", fileJob.Code)
 	}
 
 	fileJob.Code = 0
-	fileJob.Content = []byte("1\n2\n3")
+	fileJob.SetContent("1\n2\n3")
 	CountStats(&fileJob)
 	if fileJob.Code != 3 {
 		t.Errorf("Three lines expected got %d", fileJob.Code)
@@ -167,7 +172,7 @@ func TestCountStatsCode(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		content += "a\n"
 		fileJob.Code = 0
-		fileJob.Content = []byte(content)
+		fileJob.SetContent(content)
 		CountStats(&fileJob)
 		if fileJob.Code != int64(i+1) {
 			t.Errorf("Expected %d got %d", i+1, fileJob.Code)
@@ -181,7 +186,7 @@ func TestCountStatsWithQuotes(t *testing.T) {
 	fileJob.Code = 0
 	fileJob.Comment = 0
 	fileJob.Complexity = 0
-	fileJob.Content = []byte(`var test = "/*";`)
+	fileJob.SetContent(`var test = "/*";`)
 	CountStats(&fileJob)
 	if fileJob.Code != 1 {
 		t.Errorf("One line expected got %d", fileJob.Code)
@@ -193,7 +198,7 @@ func TestCountStatsWithQuotes(t *testing.T) {
 	fileJob.Code = 0
 	fileJob.Comment = 0
 	fileJob.Complexity = 0
-	fileJob.Content = []byte(`t = " if ";`)
+	fileJob.SetContent(`t = " if ";`)
 	CountStats(&fileJob)
 	if fileJob.Code != 1 {
 		t.Errorf("One line expected got %d", fileJob.Code)
@@ -208,7 +213,7 @@ func TestCountStatsWithQuotes(t *testing.T) {
 	fileJob.Code = 0
 	fileJob.Comment = 0
 	fileJob.Complexity = 0
-	fileJob.Content = []byte(`t = " if switch for while do loop != == && || ";`)
+	fileJob.SetContent(`t = " if switch for while do loop != == && || ";`)
 	CountStats(&fileJob)
 	if fileJob.Code != 1 {
 		t.Errorf("One line expected got %d", fileJob.Code)
@@ -233,49 +238,49 @@ func TestCountStatsBlankLines(t *testing.T) {
 	}
 
 	fileJob.Blank = 0
-	fileJob.Content = []byte(" ")
+	fileJob.SetContent(" ")
 	CountStats(&fileJob)
 	if fileJob.Blank != 1 {
 		t.Errorf("One line expected got %d", fileJob.Blank)
 	}
 
 	fileJob.Blank = 0
-	fileJob.Content = []byte("\n")
+	fileJob.SetContent("\n")
 	CountStats(&fileJob)
 	if fileJob.Blank != 1 {
 		t.Errorf("One line expected got %d", fileJob.Blank)
 	}
 
 	fileJob.Blank = 0
-	fileJob.Content = []byte("\n ")
+	fileJob.SetContent("\n ")
 	CountStats(&fileJob)
 	if fileJob.Blank != 2 {
 		t.Errorf("Two line expected got %d", fileJob.Blank)
 	}
 
 	fileJob.Blank = 0
-	fileJob.Content = []byte("            ")
+	fileJob.SetContent("            ")
 	CountStats(&fileJob)
 	if fileJob.Blank != 1 {
 		t.Errorf("One line expected got %d", fileJob.Blank)
 	}
 
 	fileJob.Blank = 0
-	fileJob.Content = []byte("            \n             ")
+	fileJob.SetContent("            \n             ")
 	CountStats(&fileJob)
 	if fileJob.Blank != 2 {
 		t.Errorf("Two lines expected got %d", fileJob.Blank)
 	}
 
 	fileJob.Blank = 0
-	fileJob.Content = []byte("\r\n\r\n")
+	fileJob.SetContent("\r\n\r\n")
 	CountStats(&fileJob)
 	if fileJob.Blank != 2 {
 		t.Errorf("Two lines expected got %d", fileJob.Blank)
 	}
 
 	fileJob.Blank = 0
-	fileJob.Content = []byte("\r\n")
+	fileJob.SetContent("\r\n")
 	CountStats(&fileJob)
 	if fileJob.Blank != 1 {
 		t.Errorf("One line expected got %d", fileJob.Blank)
@@ -298,7 +303,7 @@ func TestCountStatsComplexityCount(t *testing.T) {
 
 	for _, check := range checks {
 		fileJob.Complexity = 0
-		fileJob.Content = []byte(check)
+		fileJob.SetContent(check)
 		fileJob.Language = "Java"
 		CountStats(&fileJob)
 		if fileJob.Complexity != 1 {
@@ -319,7 +324,7 @@ func TestCountStatsComplexityCountFalse(t *testing.T) {
 
 	for _, check := range checks {
 		fileJob.Complexity = 0
-		fileJob.Content = []byte(check)
+		fileJob.SetContent(check)
 		fileJob.Language = "Java"
 		CountStats(&fileJob)
 		if fileJob.Complexity != 0 {
@@ -354,7 +359,7 @@ func TestCountStatsCallback(t *testing.T) {
 	ProcessConstants()
 	fileJob := FileJob{}
 
-	fileJob.Content = []byte(`package foo
+	fileJob.SetContent(`package foo
 
 import com.foo.bar;
 
@@ -383,7 +388,7 @@ func TestCountStatsCallbackInterrupt(t *testing.T) {
 	ProcessConstants()
 	fileJob := FileJob{}
 
-	fileJob.Content = []byte(`package foo
+	fileJob.SetContent(`package foo
 
 import com.foo.bar;
 
@@ -408,7 +413,7 @@ func TestCountStatsEdgeCase1(t *testing.T) {
 		Language: "Java",
 	}
 
-	fileJob.Content = []byte(`/**/
+	fileJob.SetContent(`/**/
 `)
 
 	CountStats(&fileJob)
@@ -430,7 +435,7 @@ func TestCountStatsNestedComments(t *testing.T) {
 		Language: "Rust",
 	}
 
-	fileJob.Content = []byte(`/*/**/*/`)
+	fileJob.SetContent(`/*/**/*/`)
 
 	CountStats(&fileJob)
 
@@ -458,7 +463,7 @@ func TestCountStatsNestedCommentsJava(t *testing.T) {
 		Language: "Java",
 	}
 
-	fileJob.Content = []byte(`/*/**/*/`)
+	fileJob.SetContent(`/*/**/*/`)
 
 	CountStats(&fileJob)
 
@@ -485,7 +490,7 @@ func TestCountStatsNestedCommentsRegression(t *testing.T) {
 		Language: "Rust",
 	}
 
-	fileJob.Content = []byte(`t/*/**/*/`)
+	fileJob.SetContent(`t/*/**/*/`)
 
 	CountStats(&fileJob)
 
@@ -512,7 +517,7 @@ func TestCountStatsSingleCommentRegression(t *testing.T) {
 		Language: "Rust",
 	}
 
-	fileJob.Content = []byte(`t = "
+	fileJob.SetContent(`t = "
 /*
 ";`)
 
@@ -541,7 +546,7 @@ func TestCountStatsStringCheck(t *testing.T) {
 		Language: "Rust",
 	}
 
-	fileJob.Content = []byte(`let does_not_start = // "
+	fileJob.SetContent(`let does_not_start = // "
 "until here,
 test/*
 test"; // a quote: "`)
@@ -571,7 +576,7 @@ func TestCountStatsBosque(t *testing.T) {
 		Language: "Bosque",
 	}
 
-	fileJob.Content = []byte(`//This is a bosque test
+	fileJob.SetContent(`//This is a bosque test
 method offsetMomentum(px: Float, py: Float, pz: Float): Body {
       return this<~(vx=Float::div(px->negate(), Body::solar_mass), vy=Float::div(py->negate(), Body::solar_mass), vz=Float::div(pz->negate(), Body::solar_mass));
 }`)
@@ -711,7 +716,7 @@ func TestCountStatsRubyRegression(t *testing.T) {
 		Language: "Ruby",
 	}
 
-	fileJob.Content = []byte(`=begin
+	fileJob.SetContent(`=begin
 =end
 t`)
 
@@ -767,7 +772,7 @@ func TestEdgeCase(t *testing.T) {
 	// For C# we can enter a string using @" or " but if we do the former,
 	// and we don't skip over the full length we exit the string in this case
 	// which means we pick up the /* and the count is incorrect
-	fileJob.Content = []byte(`@"\ /*"
+	fileJob.SetContent(`@"\ /*"
 a`)
 
 	CountStats(&fileJob)
@@ -794,7 +799,7 @@ func TestEdgeCaseOther(t *testing.T) {
 	// For C# we can enter a string using @" or " but if we do the former,
 	// and we don't skip over the full length we exit the string in this case
 	// which means we pick up the /* and the count is incorrect
-	fileJob.Content = []byte(`@"C:\" /*
+	fileJob.SetContent(`@"C:\" /*
 a */`)
 
 	CountStats(&fileJob)
@@ -818,7 +823,7 @@ func TestCountStatsCSharpIgnoreEscape(t *testing.T) {
 		Language: "C#",
 	}
 
-	fileJob.Content = []byte(`namespace Ns
+	fileJob.SetContent(`namespace Ns
 {
    public class Cls
    {
@@ -891,10 +896,11 @@ func TestCountStatsIssue73(t *testing.T) {
 		Language: "Java",
 	}
 
-	fileJob.Content = []byte(`'\"'{
+	fileJob.SetContent(`'\"'{
 code
 
 `)
+	fileJob.Bytes = int64(len(fileJob.Content))
 
 	CountStats(&fileJob)
 
@@ -921,7 +927,7 @@ func TestCountStatsIssue106(t *testing.T) {
 		Language: "Go",
 	}
 
-	fileJob.Content = []byte("foo = `\nabc\"\ndef\n`")
+	fileJob.SetContent("foo = `\nabc\"\ndef\n`")
 
 	CountStats(&fileJob)
 }
@@ -931,7 +937,7 @@ func TestMinifiedGeneratedCheck(t *testing.T) {
 		Language: "Go",
 	}
 
-	fileJob.Content = []byte("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890ABCDEF")
+	fileJob.SetContent("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890ABCDEF")
 	MinifiedGenerated = true
 	CountStats(&fileJob)
 	MinifiedGenerated = false
@@ -946,7 +952,7 @@ func TestMinifiedGeneratedCheckTwoLines(t *testing.T) {
 		Language: "Go",
 	}
 
-	fileJob.Content = []byte("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890ABCDEF\n1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890ABCDEF")
+	fileJob.SetContent("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890ABCDEF\n1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890ABCDEF")
 	MinifiedGenerated = true
 	CountStats(&fileJob)
 	MinifiedGenerated = false
@@ -961,7 +967,7 @@ func TestMinifiedGeneratedCheckEdge(t *testing.T) {
 		Language: "Go",
 	}
 
-	fileJob.Content = []byte("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890ABCD")
+	fileJob.SetContent("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890ABCD")
 	MinifiedGenerated = true
 	CountStats(&fileJob)
 	MinifiedGenerated = false

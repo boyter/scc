@@ -385,8 +385,8 @@ func Process() {
 		printDebug(fmt.Sprintf("PathDenyList: %v", PathDenyList))
 	}
 
-	fileListQueue := make(chan *FileJob, FileListQueueSize)                     // Files ready to be read from disk
-	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)         // Files ready to be summarised
+	fileListQueue := make(chan *FileJob, FileListQueueSize)             // Files ready to be read from disk
+	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize) // Files ready to be summarised
 
 	go func() {
 		directoryWalker := NewDirectoryWalker(fileListQueue)

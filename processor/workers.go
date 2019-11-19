@@ -374,7 +374,6 @@ func verifyIgnoreEscape(langFeatures LanguageFeature, fileJob *FileJob, index in
 // Newlines belong to the line they started on so a file of \n means only 1 line
 // This is the 'hot' path for the application and needs to be as fast as possible
 func CountStats(fileJob *FileJob) {
-
 	// If the file has a length of 0 it is is empty then we say it has no lines
 	if fileJob.Bytes == 0 {
 		fileJob.Lines = 0
