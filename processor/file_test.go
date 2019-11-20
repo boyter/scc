@@ -216,14 +216,7 @@ func TestNewFileJobFullname(t *testing.T) {
 	ProcessConstants()
 	AllowListExtensions = []string{}
 
-	fi, err := os.Stat("../examples/issue114/makefile")
-	if err != nil {
-		dir, _ := os.Getwd()
-		t.Logf("os.Getwd: %s", dir)
-
-		t.Errorf("os.Stat ./examples/issue114/makefile: %v", err)
-		t.FailNow()
-	}
+	fi, _ := os.Stat("../examples/issue114/makefile")
 	job := newFileJob("../examples/issue114/", "makefile", fi)
 
 	if job.PossibleLanguages[0] != "Makefile" {
