@@ -24,16 +24,18 @@ func (reader *FileReader) ReadFile(path string, size int) ([]byte, error) {
 	}
 	defer fd.Close()
 
+	// Generally, re-using the buffer is best. But, if we end up reading a huge
+	// file we would allocate an equally huge buffer. Rather than keep the huge
+	// buffer around forever, it's probably worth eating the GC cost of
+	// replacing it so that we can release the memory.
+	if reader.Buffer.Cap() > LargeByteCount {
+		reader.Buffer = &bytes.Buffer{}
+	}
+
 	// Reset contents, but retain the underlying memory that's already been
 	// allocated
 	reader.Buffer.Reset()
 
-	// stat, err := fd.Stat()
-	// if err != nil {
-	// 	return nil, fmt.Errorf("error opening %s: %v", path, err)
-	// }
-
-	//reader.Buffer.Grow(int(stat.Size()))
 	reader.Buffer.Grow(size)
 
 	_, err = io.Copy(reader.Buffer, fd)
