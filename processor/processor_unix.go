@@ -43,12 +43,14 @@ func ConfigureLimitsUnix() {
 			scaleWorkersToLimit(int(limit.Max), margin)
 		}
 
-		err = syscall.Setrlimit(syscall.RLIMIT_NOFILE, &limit)
-		if err != nil {
-			printWarnf("Adjusting file limit failed: %v", err)
-			scaleWorkersToLimit(int(originalLimit), margin)
-		} else {
-			printDebugf("Adjusted open file limit to %d", limit.Cur)
+		if originalLimit < limit.Max {
+			err = syscall.Setrlimit(syscall.RLIMIT_NOFILE, &limit)
+			if err != nil {
+				printWarnf("Adjusting file limit failed: %v", err)
+				scaleWorkersToLimit(int(originalLimit), margin)
+			} else {
+				printDebugf("Adjusted open file limit to %d", limit.Cur)
+			}
 		}
 	}
 }
