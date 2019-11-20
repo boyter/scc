@@ -142,6 +142,8 @@ var LanguageFeaturesMutex = sync.Mutex{}
 // Start time in milli seconds in case we want the total time
 var startTimeMilli = makeTimestampMilli()
 
+var ConfigureLimits func() = nil
+
 // ConfigureGc needs to be set outside of ProcessConstants because it should only be enabled in command line
 // mode https://github.com/boyter/scc/issues/32
 func ConfigureGc() {
