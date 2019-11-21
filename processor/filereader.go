@@ -28,7 +28,7 @@ func (reader *FileReader) ReadFile(path string, size int) ([]byte, error) {
 	// file we would allocate an equally huge buffer. Rather than keep the huge
 	// buffer around forever, it's probably worth eating the GC cost of
 	// replacing it so that we can release the memory.
-	if reader.Buffer.Cap() > LargeByteCount {
+	if int64(reader.Buffer.Cap()) > LargeByteCount {
 		reader.Buffer = &bytes.Buffer{}
 	}
 
