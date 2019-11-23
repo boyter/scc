@@ -675,21 +675,42 @@ func getFormattedTime() string {
 // Prints a message to stdout if flag to enable warning output is set
 func printWarn(msg string) {
 	if Verbose {
-		fmt.Println(fmt.Sprintf(" WARN %s: %s", getFormattedTime(), msg))
+		fmt.Printf(" WARN %s: %s\n", getFormattedTime(), msg)
+	}
+}
+
+// Prints a message to stdout if flag to enable warning output is set
+func printWarnf(msg string, args ...interface{}) {
+	if Verbose {
+		printWarn(fmt.Sprintf(msg, args...))
 	}
 }
 
 // Prints a message to stdout if flag to enable debug output is set
 func printDebug(msg string) {
 	if Debug {
-		fmt.Println(fmt.Sprintf("DEBUG %s: %s", getFormattedTime(), msg))
+		fmt.Printf("DEBUG %s: %s\n", getFormattedTime(), msg)
+	}
+}
+
+// Prints a message to stdout if flag to enable debug output is set
+func printDebugf(msg string, args ...interface{}) {
+	if Debug {
+		printDebug(fmt.Sprintf(msg, args...))
 	}
 }
 
 // Prints a message to stdout if flag to enable trace output is set
 func printTrace(msg string) {
 	if Trace {
-		fmt.Println(fmt.Sprintf("TRACE %s: %s", getFormattedTime(), msg))
+		fmt.Printf("TRACE %s: %s\n", getFormattedTime(), msg)
+	}
+}
+
+// Prints a message to stdout if flag to enable trace output is set
+func printTracef(msg string, args ...interface{}) {
+	if Trace {
+		printTrace(fmt.Sprintf(msg, args...))
 	}
 }
 

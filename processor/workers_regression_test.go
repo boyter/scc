@@ -10,7 +10,7 @@ func TestCountStatsIssue72(t *testing.T) {
 		Language: "C#",
 	}
 
-	fileJob.Content = []byte(`   // Comment 1
+	fileJob.SetContent(`   // Comment 1
 namespace Baz
 {
     using System;
@@ -55,7 +55,7 @@ func TestCountStatsPr76(t *testing.T) {
 		Language: "Go",
 	}
 
-	fileJob.Content = []byte(`package main
+	fileJob.SetContent(`package main
 var MyString = ` + "`\\`" + `
 // Comment`)
 
@@ -85,7 +85,7 @@ func TestCountStatsIssue62(t *testing.T) {
 		Language: "Python",
 	}
 
-	fileJob.Content = []byte(`def f():
+	fileJob.SetContent(`def f():
 	"""
 	This is a docstring
 	"""
@@ -126,7 +126,7 @@ func TestCountStatsIssue123(t *testing.T) {
 		Language: "Python",
 	}
 
-	fileJob.Content = []byte(`"""
+	fileJob.SetContent(`"""
 hello there! how's it going?
 """`)
 

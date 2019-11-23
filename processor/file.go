@@ -65,6 +65,7 @@ func NewDirectoryWalker(output chan<- *FileJob) *DirectoryWalker {
 	}
 
 	directoryWalker.buffer = cuba.New(directoryWalker.Walk, cuba.NewStack())
+	directoryWalker.buffer.SetMaxWorkers(int32(DirectoryWalkerJobWorkers))
 
 	return directoryWalker
 }
@@ -230,6 +231,7 @@ func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 			Filename:          name,
 			Extension:         extension,
 			PossibleLanguages: language,
+			Bytes:             fileInfo.Size(),
 		}
 	} else if Verbose {
 		printWarn(fmt.Sprintf("skipping file unknown extension: %s", name))

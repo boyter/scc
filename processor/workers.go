@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"hash"
-	"io/ioutil"
 	"sync"
 	"sync/atomic"
 
@@ -53,6 +52,10 @@ var ByteOrderMarks = [][]byte{
 	{14, 254, 255},        // SCSU
 	{251, 238, 40},        // BOCU-1
 	{132, 49, 149, 51},    // GB-18030
+}
+
+var duplicates = CheckDuplicates{
+	hashes: make(map[int64][][]byte),
 }
 
 func checkForMatchSingle(currentByte byte, index int, endPoint int, matches []byte, fileJob *FileJob) bool {
@@ -371,9 +374,7 @@ func verifyIgnoreEscape(langFeatures LanguageFeature, fileJob *FileJob, index in
 // Newlines belong to the line they started on so a file of \n means only 1 line
 // This is the 'hot' path for the application and needs to be as fast as possible
 func CountStats(fileJob *FileJob) {
-
 	// If the file has a length of 0 it is is empty then we say it has no lines
-	fileJob.Bytes = int64(len(fileJob.Content))
 	if fileJob.Bytes == 0 {
 		fileJob.Lines = 0
 		return
@@ -546,9 +547,6 @@ func CountStats(fileJob *FileJob) {
 		avgLineByteCount := len(fileJob.Content) / int(fileJob.Lines)
 		minifiedGeneratedCheck(avgLineByteCount, fileJob)
 	}
-
-	// Save memory by unsetting the content as we no longer require it
-	fileJob.Content = nil
 }
 
 func minifiedGeneratedCheck(avgLineByteCount int, fileJob *FileJob) {
@@ -589,30 +587,36 @@ func checkBomSkip(fileJob *FileJob) int {
 	return 0
 }
 
-// Reads entire file into memory and then pushes it onto the next queue
-func fileReaderWorker(input chan *FileJob, output chan *FileJob) {
+// Reads and processes files from input chan in parallel, and sends results to
+// output chan
+func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 	var startTime int64
 	var wg sync.WaitGroup
 
-	for i := 0; i < FileReadJobWorkers; i++ {
+	for i := 0; i < FileProcessJobWorkers; i++ {
 		wg.Add(1)
 		go func() {
-			for res := range input {
+			reader := NewFileReader()
+
+			for job := range input {
 				atomic.CompareAndSwapInt64(&startTime, 0, makeTimestampMilli())
 
 				fileStartTime := makeTimestampNano()
-				content, err := ioutil.ReadFile(res.Location)
+
+				content, err := reader.ReadFile(job.Location, int(job.Bytes))
 
 				if Trace {
-					printTrace(fmt.Sprintf("nanoseconds read into memory: %s: %d", res.Location, makeTimestampNano()-fileStartTime))
+					printTrace(fmt.Sprintf("nanoseconds read into memory: %s: %d", job.Location, makeTimestampNano()-fileStartTime))
 				}
 
 				if err == nil {
-					res.Content = content
-					output <- res
+					job.Content = content
+					if processFile(job) {
+						output <- job
+					}
 				} else {
 					if Verbose {
-						printWarn(fmt.Sprintf("error reading: %s %s", res.Location, err))
+						printWarn(fmt.Sprintf("error reading: %s %s", job.Location, err))
 					}
 				}
 			}
@@ -629,106 +633,84 @@ func fileReaderWorker(input chan *FileJob, output chan *FileJob) {
 			printDebug(fmt.Sprintf("milliseconds reading files into memory: %d", makeTimestampMilli()-startTime))
 		}
 	}()
+
 }
 
-var duplicates = CheckDuplicates{
-	hashes: make(map[int64][][]byte),
-}
+// Process a single file
+// File must have been read to job.Content already
+func processFile(job *FileJob) bool {
+	fileStartTime := makeTimestampNano()
 
-// Does the actual processing of stats and as such contains the hot path CPU call
-func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
-	var startTime int64
-	var wg sync.WaitGroup
-	for i := 0; i < FileProcessJobWorkers; i++ {
-		wg.Add(1)
-		go func() {
-			for res := range input {
-				atomic.CompareAndSwapInt64(&startTime, 0, makeTimestampMilli())
+	contents := job.Content
 
-				fileStartTime := makeTimestampNano()
+	// Needs to always run to ensure the language is set
+	job.Language = DetermineLanguage(job.Filename, job.Language, job.PossibleLanguages, job.Content)
 
-				// Needs to always run to ensure the language is set
-				res.Language = DetermineLanguage(res.Filename, res.Language, res.PossibleLanguages, res.Content)
+	// If the type is #! we should check to see if we can identify
+	if job.Language == SheBang {
+		cutoff := 200
 
-				// If the type is #! we should check to see if we can identify
-				if res.Language == SheBang {
-					cutoff := 200
+		// To avoid runtime panic check if the content we are cutting is smaller than 200
+		if len(contents) < cutoff {
+			cutoff = len(contents)
+		}
 
-					// To avoid runtime panic check if the content we are cutting is smaller than 200
-					if len(res.Content) < cutoff {
-						cutoff = len(res.Content)
-					}
-
-					l, err := DetectSheBang(string(res.Content[:cutoff]))
-					if err == nil {
-						if Verbose {
-							printWarn(fmt.Sprintf("detected #! %s for %s", l, res.Location))
-						}
-
-						res.Language = l
-						LoadLanguageFeature(l)
-					} else {
-						if Verbose {
-							printWarn(fmt.Sprintf("unable to determine #! language for %s", res.Location))
-						}
-						continue
-					}
-				}
-
-				CountStats(res)
-
-				if Duplicates {
-					duplicates.mux.Lock()
-					if duplicates.Check(res.Bytes, res.Hash) {
-						if Verbose {
-							printWarn(fmt.Sprintf("skipping duplicate file: %s", res.Location))
-						}
-
-						duplicates.mux.Unlock()
-						continue
-					}
-
-					duplicates.Add(res.Bytes, res.Hash)
-					duplicates.mux.Unlock()
-				}
-
-				if IgnoreMinifiedGenerate && res.Minified {
-					if Verbose {
-						printWarn(fmt.Sprintf("skipping minified/generated file: %s", res.Location))
-					}
-					continue
-				}
-
-				if NoLarge && res.Lines >= LargeLineCount {
-					if Verbose {
-						printWarn(fmt.Sprintf("skipping large file due to line length: %s", res.Location))
-					}
-					continue
-				}
-
-				if Trace {
-					printTrace(fmt.Sprintf("nanoseconds process: %s: %d", res.Location, makeTimestampNano()-fileStartTime))
-				}
-
-				if !res.Binary {
-					output <- res
-				} else {
-					if Verbose {
-						printWarn(fmt.Sprintf("skipping file identified as binary: %s", res.Location))
-					}
-				}
+		lang, err := DetectSheBang(string(contents[:cutoff]))
+		if err != nil {
+			if Verbose {
+				printWarn(fmt.Sprintf("unable to determine #! language for %s", job.Location))
 			}
+			return false
+		}
+		if Verbose {
+			printWarn(fmt.Sprintf("detected #! %s for %s", lang, job.Location))
+		}
 
-			wg.Done()
-		}()
+		job.Language = lang
+		LoadLanguageFeature(lang)
 	}
 
-	go func() {
-		wg.Wait()
-		close(output)
-	}()
+	CountStats(job)
 
-	if Debug {
-		printDebug(fmt.Sprintf("milliseconds processing files: %d", makeTimestampMilli()-startTime))
+	if Duplicates {
+		duplicates.mux.Lock()
+		if duplicates.Check(job.Bytes, job.Hash) {
+			if Verbose {
+				printWarn(fmt.Sprintf("skipping duplicate file: %s", job.Location))
+			}
+
+			duplicates.mux.Unlock()
+			return false
+		}
+
+		duplicates.Add(job.Bytes, job.Hash)
+		duplicates.mux.Unlock()
+	}
+
+	if IgnoreMinifiedGenerate && job.Minified {
+		if Verbose {
+			printWarn(fmt.Sprintf("skipping minified/generated file: %s", job.Location))
+		}
+		return false
+	}
+
+	if NoLarge && job.Lines >= LargeLineCount {
+		if Verbose {
+			printWarn(fmt.Sprintf("skipping large file due to line length: %s", job.Location))
+		}
+		return false
+	}
+
+	if Trace {
+		printTrace(fmt.Sprintf("nanoseconds process: %s: %d", job.Location, makeTimestampNano()-fileStartTime))
+	}
+
+	if !job.Binary {
+		return true
+	} else {
+		if Verbose {
+			printWarn(fmt.Sprintf("skipping file identified as binary: %s", job.Location))
+		}
+		return false
 	}
 }

@@ -82,11 +82,11 @@ var FileOutput = ""
 // PathDenyList sets the paths that should be skipped
 var PathDenyList = []string{}
 
+// DirectoryWalkerJobWorkers is the number of workers which will walk the directory tree
+var DirectoryWalkerJobWorkers = runtime.NumCPU()
+
 // FileListQueueSize is the queue of files found and ready to be read into memory
 var FileListQueueSize = runtime.NumCPU()
-
-// FileReadJobWorkers is the number of processes that read files off disk into memory
-var FileReadJobWorkers = runtime.NumCPU() * 4
 
 // FileReadContentJobQueueSize is a queue of files ready to be processed
 var FileReadContentJobQueueSize = runtime.NumCPU()
@@ -141,6 +141,8 @@ var LanguageFeaturesMutex = sync.Mutex{}
 
 // Start time in milli seconds in case we want the total time
 var startTimeMilli = makeTimestampMilli()
+
+var ConfigureLimits func() = nil
 
 // ConfigureGc needs to be set outside of ProcessConstants because it should only be enabled in command line
 // mode https://github.com/boyter/scc/issues/32
@@ -385,9 +387,8 @@ func Process() {
 		printDebug(fmt.Sprintf("PathDenyList: %v", PathDenyList))
 	}
 
-	fileListQueue := make(chan *FileJob, FileListQueueSize)                     // Files ready to be read from disk
-	fileReadContentJobQueue := make(chan *FileJob, FileReadContentJobQueueSize) // Files ready to be processed
-	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)         // Files ready to be summarised
+	fileListQueue := make(chan *FileJob, FileListQueueSize)             // Files ready to be read from disk
+	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize) // Files ready to be summarised
 
 	go func() {
 		directoryWalker := NewDirectoryWalker(fileListQueue)
@@ -402,8 +403,7 @@ func Process() {
 
 		directoryWalker.Run()
 	}()
-	go fileReaderWorker(fileListQueue, fileReadContentJobQueue)
-	go fileProcessorWorker(fileReadContentJobQueue, fileSummaryJobQueue)
+	go fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
 
 	result := fileSummarize(fileSummaryJobQueue)
 
