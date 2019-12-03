@@ -617,7 +617,7 @@ func fileReaderWorker(input chan *FileJob, output chan *FileJob) {
 				}
 			}
 
-			wg.Done()
+			//wg.Done()
 		}()
 	}
 
