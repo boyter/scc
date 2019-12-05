@@ -65,6 +65,7 @@ Some reviews of `scc`
 A talk given at the first GopherCon AU about `scc` (press S to see speaker notes)
 
  - https://boyter.org/static/gophercon-syd-presentation/
+ - https://www.youtube.com/watch?v=jd-sjoy3GZo
 
 For performance see the [Performance](https://github.com/boyter/scc#performance) section
 
