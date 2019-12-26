@@ -1,0 +1,14 @@
+pkgname=scc
+pkgver=2.10.1
+pkgrel=1
+pkgdesc="Sloc, Cloc and Code: scc is a very fast accurate code counter with complexity calculations and COCOMO estimates written in pure Go"
+arch=('x86_64' 'i386')
+url="https://github.com/boyter/scc"
+license=('MIT' 'UNLICENSE')
+source=(https://github.com/boyter/scc/releases/download/v$pkgver/scc-$pkgver-$arch-unknown-linux.zip)
+sha256sums=('663da4a750fd4f0f3d9328dd58f6850c46f458f94258c04b78b630e47d667ff8')
+
+package() {
+          mkdir -p $pkgdir/usr/bin
+          cp $srcdir/scc $pkgdir/usr/bin
+}
