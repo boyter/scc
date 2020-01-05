@@ -26,7 +26,6 @@ var shortNameTruncate = 20
 var tabularShortFormatHeadNoComplexity = "%-22s %11s %11s %10s %11s %9s\n"
 var tabularShortFormatBodyNoComplexity = "%-22s %11d %11d %10d %11d %9d\n"
 var tabularShortFormatFileNoComplexity = "%-34s %11d %10d %11d %9d\n"
-var shortFormatFileTrucateNoComplexity = 33
 var longNameTruncate = 22
 
 var tabularWideBreak = "─────────────────────────────────────────────────────────────────────────────────────────────────────────────\n"
@@ -284,6 +283,35 @@ func toCSV(input chan *FileJob) string {
 	return b.String()
 }
 
+func toHtmlTable(input chan *FileJob) string {
+	var str strings.Builder
+
+	str.WriteString(`<table id="scc-table"><tr>
+<th>Language</th>
+<th>Filename</th>
+<th>Lines</th>
+<th>Code</th>
+<th>Comment</th>
+<th>Blank</th>
+<th>Complexity</th>
+</tr>`)
+
+	for result := range input {
+		str.WriteString(fmt.Sprintf(`<tr>
+<td>%s</td>
+<td>%s</td>
+<td>%d</td>
+<td>%d</td>
+<td>%d</td>
+<td>%d</td>
+<td>%d</td>
+</tr>`, result.Language, result.Filename, result.Lines, result.Code, result.Comment, result.Blank, result.Complexity))
+	}
+
+	str.WriteString(`</table>`)
+	return str.String()
+}
+
 func fileSummarize(input chan *FileJob) string {
 	switch {
 	case More || strings.ToLower(Format) == "wide":
@@ -294,6 +322,9 @@ func fileSummarize(input chan *FileJob) string {
 		return toClocYAML(input)
 	case strings.ToLower(Format) == "csv":
 		return toCSV(input)
+	case strings.ToLower(Format) == "html":
+	case strings.ToLower(Format) == "html-table":
+		return toHtmlTable(input)
 	}
 
 	return fileSummarizeShort(input)
