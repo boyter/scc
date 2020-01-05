@@ -284,31 +284,83 @@ func toCSV(input chan *FileJob) string {
 }
 
 func toHtmlTable(input chan *FileJob) string {
+	languages := map[string]LanguageSummary{}
+	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
+
+	for res := range input {
+		sumFiles++
+		sumLines += res.Lines
+		sumCode += res.Code
+		sumComment += res.Comment
+		sumBlank += res.Blank
+		sumComplexity += res.Complexity
+
+		_, ok := languages[res.Language]
+
+		if !ok {
+			files := []*FileJob{}
+			files = append(files, res)
+
+			languages[res.Language] = LanguageSummary{
+				Name:       res.Language,
+				Lines:      res.Lines,
+				Code:       res.Code,
+				Comment:    res.Comment,
+				Blank:      res.Blank,
+				Complexity: res.Complexity,
+				Count:      1,
+				Files:      files,
+			}
+		} else {
+			tmp := languages[res.Language]
+			files := append(tmp.Files, res)
+
+			languages[res.Language] = LanguageSummary{
+				Name:       res.Language,
+				Lines:      tmp.Lines + res.Lines,
+				Code:       tmp.Code + res.Code,
+				Comment:    tmp.Comment + res.Comment,
+				Blank:      tmp.Blank + res.Blank,
+				Complexity: tmp.Complexity + res.Complexity,
+				Count:      tmp.Count + 1,
+				Files:      files,
+			}
+		}
+	}
+
+	language := []LanguageSummary{}
+	for _, summary := range languages {
+		language = append(language, summary)
+	}
+
+	language = sortLanguageSummary(language)
+
 	var str strings.Builder
 
 	str.WriteString(`<table id="scc-table"><tr>
-<th>Language</th>
-<th>Filename</th>
-<th>Lines</th>
-<th>Code</th>
-<th>Comment</th>
-<th>Blank</th>
-<th>Complexity</th>
-</tr>`)
+	<th>Language</th>
+	<th>Files</th>
+	<th>Lines</th>
+	<th>Blank</th>
+	<th>Comment</th>
+	<th>Code</th>
+	<th>Complexity</th>
+	</tr>`)
 
-	for result := range input {
+	for _, r := range language {
 		str.WriteString(fmt.Sprintf(`<tr>
-<td>%s</td>
-<td>%s</td>
-<td>%d</td>
-<td>%d</td>
-<td>%d</td>
-<td>%d</td>
-<td>%d</td>
-</tr>`, result.Language, result.Filename, result.Lines, result.Code, result.Comment, result.Blank, result.Complexity))
+	<td>%s</td>
+	<td>%d</td>
+	<td>%d</td>
+	<td>%d</td>
+	<td>%d</td>
+	<td>%d</td>
+	<td>%d</td>
+	</tr>`, r.Name, len(r.Files), r.Lines, r.Blank, r.Comment, r.Code, r.Complexity))
 	}
 
 	str.WriteString(`</table>`)
+
 	return str.String()
 }
 
