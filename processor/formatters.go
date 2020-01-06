@@ -284,7 +284,9 @@ func toCSV(input chan *FileJob) string {
 }
 
 func toHtml(input chan *FileJob) string {
-	return `<html lang="en"><head><meta charset="utf-8" /><title>scc html output</title></head><body>` + toHtmlTable(input) + `</body></html>`
+	return `<html lang="en"><head><meta charset="utf-8" /><title>scc html output</title><style>table { border-collapse: collapse; }td, th { border: 1px solid #999; padding: 0.5rem; text-align: left;}</style></head><body>` +
+		toHtmlTable(input) +
+		`</body></html>`
 }
 
 func toHtmlTable(input chan *FileJob) string {
@@ -355,25 +357,42 @@ func toHtmlTable(input chan *FileJob) string {
 
 	for _, r := range language {
 		str.WriteString(fmt.Sprintf(`<tr>
-		<td>%s</td>
-		<td>%d</td>
-		<td>%d</td>
-		<td>%d</td>
-		<td>%d</td>
-		<td>%d</td>
-		<td>%d</td>
+		<th>%s</th>
+		<th>%d</th>
+		<th>%d</th>
+		<th>%d</th>
+		<th>%d</th>
+		<th>%d</th>
+		<th>%d</th>
 	</tr>`, r.Name, len(r.Files), r.Lines, r.Blank, r.Comment, r.Code, r.Complexity))
+
+		if Files {
+			sortSummaryFiles(&r)
+
+			for _, res := range r.Files {
+				str.WriteString(fmt.Sprintf(`<tr>
+		<td>%s</td>
+		<td></td>
+		<td>%d</td>
+		<td>%d</td>
+		<td>%d</td>
+		<td>%d</td>
+		<td>%d</td>
+	</tr>`, res.Location, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity))
+			}
+		}
+
 	}
 
 	str.WriteString(fmt.Sprintf(`</tbody>
 	<tfoot><tr>
-		<td>Total</td>
-		<td>%d</td>
-		<td>%d</td>
-		<td>%d</td>
-		<td>%d</td>
-		<td>%d</td>
-		<td>%d</td>
+		<th>Total</th>
+		<th>%d</th>
+		<th>%d</th>
+		<th>%d</th>
+		<th>%d</th>
+		<th>%d</th>
+		<th>%d</th>
 	</tr></tfoot>
 	</table>`, sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity))
 
