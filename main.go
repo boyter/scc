@@ -208,6 +208,12 @@ func main() {
 		1000000,
 		"number of bytes a file can contain before being removed from output",
 	)
+	flags.StringVar(
+		&processor.CountAs,
+		"count-as",
+		"",
+		"count extension as another [e.g. jsp,html:new,java counts JSP using HTML rules and new using Java rules]",
+	)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

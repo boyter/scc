@@ -73,6 +73,9 @@ var SortBy = ""
 // Exclude is a regular expression which is used to exclude files from being processed
 var Exclude = []string{}
 
+// CountAs is a rule for mapping known or new extensions to other rules
+var CountAs = ""
+
 // Format sets the output format of the formatter
 var Format = ""
 
