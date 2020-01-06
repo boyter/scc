@@ -283,6 +283,10 @@ func toCSV(input chan *FileJob) string {
 	return b.String()
 }
 
+func toHtml(input chan *FileJob) string {
+	return `<html lang="en"><head><meta charset="utf-8" /><title>scc html output</title></head><body>` + toHtmlTable(input) + `</body></html>`
+}
+
 func toHtmlTable(input chan *FileJob) string {
 	languages := map[string]LanguageSummary{}
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
@@ -337,29 +341,41 @@ func toHtmlTable(input chan *FileJob) string {
 
 	var str strings.Builder
 
-	str.WriteString(`<table id="scc-table"><tr>
-	<th>Language</th>
-	<th>Files</th>
-	<th>Lines</th>
-	<th>Blank</th>
-	<th>Comment</th>
-	<th>Code</th>
-	<th>Complexity</th>
-	</tr>`)
+	str.WriteString(`<table id="scc-table">
+	<thead><tr>
+		<th>Language</th>
+		<th>Files</th>
+		<th>Lines</th>
+		<th>Blank</th>
+		<th>Comment</th>
+		<th>Code</th>
+		<th>Complexity</th>
+	</tr></thead>
+	<tbody>`)
 
 	for _, r := range language {
 		str.WriteString(fmt.Sprintf(`<tr>
-	<td>%s</td>
-	<td>%d</td>
-	<td>%d</td>
-	<td>%d</td>
-	<td>%d</td>
-	<td>%d</td>
-	<td>%d</td>
+		<td>%s</td>
+		<td>%d</td>
+		<td>%d</td>
+		<td>%d</td>
+		<td>%d</td>
+		<td>%d</td>
+		<td>%d</td>
 	</tr>`, r.Name, len(r.Files), r.Lines, r.Blank, r.Comment, r.Code, r.Complexity))
 	}
 
-	str.WriteString(`</table>`)
+	str.WriteString(fmt.Sprintf(`</tbody>
+	<tfoot><tr>
+		<td>Total</td>
+		<td>%d</td>
+		<td>%d</td>
+		<td>%d</td>
+		<td>%d</td>
+		<td>%d</td>
+		<td>%d</td>
+	</tr></tfoot>
+	</table>`, sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity))
 
 	return str.String()
 }
@@ -375,6 +391,7 @@ func fileSummarize(input chan *FileJob) string {
 	case strings.ToLower(Format) == "csv":
 		return toCSV(input)
 	case strings.ToLower(Format) == "html":
+		return toHtml(input)
 	case strings.ToLower(Format) == "html-table":
 		return toHtmlTable(input)
 	}
