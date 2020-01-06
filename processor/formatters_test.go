@@ -839,6 +839,58 @@ func TestGetTabularWideBreak(t *testing.T) {
 	Ci = false
 }
 
+func TestToHTML(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	close(inputChan)
+	res := toHtml(inputChan)
+
+	if !strings.Contains(res, `<html lang="en">`) {
+		t.Error("Expected to have HTML wrapper")
+	}
+}
+
+func TestToHTMLTable(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	close(inputChan)
+	res := toHtmlTable(inputChan)
+
+	if strings.Contains(res, `<html lang="en">`) {
+		t.Error("Expected to not have wrapper")
+	}
+
+	if !strings.Contains(res, `<table id="scc-table">`) {
+		t.Error("Expected to have table element")
+	}
+}
+
 // When using columise  ~28726 ns/op
 // When using optimised ~14293 ns/op
 func BenchmarkFileSummerize(b *testing.B) {
