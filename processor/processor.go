@@ -230,20 +230,22 @@ func setupCountAs() {
 						printDebug(fmt.Sprintf("set to count extension: %s as language %s by language", t[0], name))
 					}
 				}
+
+				if !identified {
+
+				}
 			}
 
 			// If the above did not work, its a matter of extension match
 			// note that this is less reliable as some languages share extensions
 			if !identified {
-				for name, value := range languageDatabase {
-					for _, ext := range value.Extensions {
-						if strings.ToLower(ext) == strings.ToLower(t[1]) {
-							ExtensionToLanguage[t[0]] = []string{name}
+				target, ok := ExtensionToLanguage[strings.ToLower(t[1])]
 
-							if Debug {
-								printDebug(fmt.Sprintf("set to count extension: %s as language %s by extension", t[0], name))
-							}
-						}
+				if ok {
+					ExtensionToLanguage[t[0]] = target
+
+					if Debug {
+						printDebug(fmt.Sprintf("set to count extension: %s as language %s by extension", t[0], target))
 					}
 				}
 			}
