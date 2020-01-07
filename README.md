@@ -361,6 +361,9 @@ html head and body tags with minimal styling.
 The markup is designed to allow your own custom styles to be applied. An example report
 [is here to view](SCC-OUTPUT-REPORT.html).
 
+Note that the HTML options follow the command line options, so you can use  `scc --by-file -f html` to produce a report with every
+file and not just the summary.
+
 ### Performance
 
 Generally `scc` will the fastest code counter compared to any I am aware of and have compared against. The below comparisons are taken from the fastest alternative counters. See `Other similar projects` above to see all of the other code counters compared against. It is designed to scale to as many CPU's cores as you can provide.
