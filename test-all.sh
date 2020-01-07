@@ -453,6 +453,24 @@ else
     exit
 fi
 
+if ./scc --format html | grep -q "html"; then
+    echo -e "${GREEN}PASSED html output test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should be able to output to html"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc --format html-table | grep -q "table"; then
+    echo -e "${GREEN}PASSED html-table output test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should be able to output to html-table"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 if ./scc ./examples/countas/ --count-as jsp,html | grep -q "HTML"; then
     echo -e "${GREEN}PASSED counted JSP as HTML"
 else

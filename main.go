@@ -93,7 +93,7 @@ func main() {
 		"format",
 		"f",
 		"tabular",
-		"set output format [tabular, wide, json, csv, cloc-yaml]",
+		"set output format [tabular, wide, json, csv, cloc-yaml, html, html-table]",
 	)
 	flags.StringSliceVarP(
 		&processor.AllowListExtensions,
