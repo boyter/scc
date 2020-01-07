@@ -270,6 +270,97 @@ You can control the average line byte size using `--min-gen-line-length` such as
 
 You can exclude minified files from the count totally using the flag `--no-min-gen`. Files which match the minified check will be excluded from the output.
 
+### Output Formats
+
+By default `scc` will output to the console. However you can produce output in other formats if you require.
+
+The different options are `tabular, wide, json, csv, cloc-yaml, html, html-table`. 
+
+Note that you can write `scc` output to disk using the `-o, --output` option. This allows you to specify a file to
+write your output to. For example `scc -f html -o output.html` will run `scc` against the current directory, and output
+the results in html to the file `output.html`.
+
+#### Tabular 
+
+This is the default output format when scc is run.
+
+#### Wide 
+
+Wide produces some additional information which is the complexity/lines metric. This can be useful when trying to
+identify the most complex file inside a project based on the complexity estimate.
+
+#### JSON
+
+JSON produces JSON output. Mostly designed to allow `scc` to feed into other programs.
+
+#### CSV
+
+CSV as an option is good for importing into a spreadsheet for analysis. 
+
+#### cloc-yaml 
+
+Is a drop in replacement for cloc using its yaml output option. This is quite often used for passing into other 
+build systems and can help with replacing cloc if required.
+
+```
+$ scc -f cloc-yml processor
+# https://github.com/boyter/scc/
+header:
+  url: https://github.com/boyter/scc/
+  version: 2.11.0
+  elapsed_seconds: 0.008
+  n_files: 21
+  n_lines: 6562
+  files_per_second: 2625
+  lines_per_second: 820250
+Go:
+  name: Go
+  code: 5186
+  comment: 273
+  blank: 1103
+  nFiles: 21
+SUM:
+  code: 5186
+  comment: 273
+  blank: 1103
+  nFiles: 21
+
+$ cloc --yaml processor
+      21 text files.
+      21 unique files.
+       0 files ignored.
+
+---
+# http://cloc.sourceforge.net
+header :
+  cloc_url           : http://cloc.sourceforge.net
+  cloc_version       : 1.60
+  elapsed_seconds    : 0.196972846984863
+  n_files            : 21
+  n_lines            : 6562
+  files_per_second   : 106.613679608407
+  lines_per_second   : 33314.2364566841
+Go:
+  nFiles: 21
+  blank: 1137
+  comment: 606
+  code: 4819
+SUM:
+  blank: 1137
+  code: 4819
+  comment: 606
+  nFiles: 21
+```
+
+#### HTML and HTML-TABLE
+
+The HTML output options produce a minimal html report using a table that is either standalone `html` or as just a table `html-table`
+which can be injected into your own HTML pages. The only difference between the two is that the `html` option includes 
+html head and body tags with minimal styling.
+
+The markup is designed to allow your own custom styles to be applied. An example report
+[is here to view](SCC-OUTPUT-REPORT.html).
+
 ### Performance
 
 Generally `scc` will the fastest code counter compared to any I am aware of and have compared against. The below comparisons are taken from the fastest alternative counters. See `Other similar projects` above to see all of the other code counters compared against. It is designed to scale to as many CPU's cores as you can provide.

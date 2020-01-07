@@ -28,6 +28,10 @@ echo '```' > LANGUAGES.md
 ./scc --languages >> LANGUAGES.md
 echo '```' >> LANGUAGES.md
 
+echo "Building HTML report..."
+
+./scc --format html -o SCC-OUTPUT-REPORT.html
+
 echo "Running integration tests..."
 
 if ./scc --not-a-real-option > /dev/null ; then
