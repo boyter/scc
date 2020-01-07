@@ -453,6 +453,24 @@ else
     exit
 fi
 
+if ./scc --format html | grep -q "html"; then
+    echo -e "${GREEN}PASSED html output test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should be able to output to html"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc --format html-table | grep -q "table"; then
+    echo -e "${GREEN}PASSED html-table output test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should be able to output to html-table"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 # Try out specific languages
 for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java ' 'Boo ' 'License ' 'BASH ' 'C Shell ' 'Korn Shell ' 'Makefile ' 'Shell ' 'Zsh ' 'Rakefile ' 'Gemfile ' 'Dockerfile '
 do

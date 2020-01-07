@@ -30,6 +30,18 @@ func TestPrintError(t *testing.T) {
 	printError("Testing print error")
 }
 
+func TestPrintWarnF(t *testing.T) {
+	printWarnf("Testing print error")
+}
+
+func TestPrintDebugF(t *testing.T) {
+	printDebugf("Testing print error")
+}
+
+func TestPrintTraceF(t *testing.T) {
+	printTracef("Testing print error")
+}
+
 func TestGetFormattedTime(t *testing.T) {
 	res := getFormattedTime()
 
@@ -610,6 +622,60 @@ func TestFileSummarizeYml(t *testing.T) {
 	}
 }
 
+func TestFileSummarizeHtml(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+
+	close(inputChan)
+	Format = "html"
+	More = false
+	res := fileSummarize(inputChan)
+
+	if !strings.Contains(res, `<th>1000`) {
+		t.Error("Expected HTML return", res)
+	}
+}
+
+func TestFileSummarizeHtmlTable(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+
+	close(inputChan)
+	Format = "html-table"
+	More = false
+	res := fileSummarize(inputChan)
+
+	if !strings.Contains(res, `<th>1000`) {
+		t.Error("Expected HTML-table return", res)
+	}
+}
+
 func TestFileSummarizeDefault(t *testing.T) {
 	inputChan := make(chan *FileJob, 1000)
 	inputChan <- &FileJob{
@@ -837,6 +903,58 @@ func TestGetTabularWideBreak(t *testing.T) {
 	}
 
 	Ci = false
+}
+
+func TestToHTML(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	close(inputChan)
+	res := toHtml(inputChan)
+
+	if !strings.Contains(res, `<html lang="en">`) {
+		t.Error("Expected to have HTML wrapper")
+	}
+}
+
+func TestToHTMLTable(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	close(inputChan)
+	res := toHtmlTable(inputChan)
+
+	if strings.Contains(res, `<html lang="en">`) {
+		t.Error("Expected to not have wrapper")
+	}
+
+	if !strings.Contains(res, `<table id="scc-table">`) {
+		t.Error("Expected to have table element")
+	}
 }
 
 // When using columise  ~28726 ns/op

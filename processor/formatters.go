@@ -26,7 +26,6 @@ var shortNameTruncate = 20
 var tabularShortFormatHeadNoComplexity = "%-22s %11s %11s %10s %11s %9s\n"
 var tabularShortFormatBodyNoComplexity = "%-22s %11d %11d %10d %11d %9d\n"
 var tabularShortFormatFileNoComplexity = "%-34s %11d %10d %11d %9d\n"
-var shortFormatFileTrucateNoComplexity = 33
 var longNameTruncate = 22
 
 var tabularWideBreak = "─────────────────────────────────────────────────────────────────────────────────────────────────────────────\n"
@@ -284,6 +283,122 @@ func toCSV(input chan *FileJob) string {
 	return b.String()
 }
 
+func toHtml(input chan *FileJob) string {
+	return `<html lang="en"><head><meta charset="utf-8" /><title>scc html output</title><style>table { border-collapse: collapse; }td, th { border: 1px solid #999; padding: 0.5rem; text-align: left;}</style></head><body>` +
+		toHtmlTable(input) +
+		`</body></html>`
+}
+
+func toHtmlTable(input chan *FileJob) string {
+	languages := map[string]LanguageSummary{}
+	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
+
+	for res := range input {
+		sumFiles++
+		sumLines += res.Lines
+		sumCode += res.Code
+		sumComment += res.Comment
+		sumBlank += res.Blank
+		sumComplexity += res.Complexity
+
+		_, ok := languages[res.Language]
+
+		if !ok {
+			files := []*FileJob{}
+			files = append(files, res)
+
+			languages[res.Language] = LanguageSummary{
+				Name:       res.Language,
+				Lines:      res.Lines,
+				Code:       res.Code,
+				Comment:    res.Comment,
+				Blank:      res.Blank,
+				Complexity: res.Complexity,
+				Count:      1,
+				Files:      files,
+			}
+		} else {
+			tmp := languages[res.Language]
+			files := append(tmp.Files, res)
+
+			languages[res.Language] = LanguageSummary{
+				Name:       res.Language,
+				Lines:      tmp.Lines + res.Lines,
+				Code:       tmp.Code + res.Code,
+				Comment:    tmp.Comment + res.Comment,
+				Blank:      tmp.Blank + res.Blank,
+				Complexity: tmp.Complexity + res.Complexity,
+				Count:      tmp.Count + 1,
+				Files:      files,
+			}
+		}
+	}
+
+	language := []LanguageSummary{}
+	for _, summary := range languages {
+		language = append(language, summary)
+	}
+
+	language = sortLanguageSummary(language)
+
+	var str strings.Builder
+
+	str.WriteString(`<table id="scc-table">
+	<thead><tr>
+		<th>Language</th>
+		<th>Files</th>
+		<th>Lines</th>
+		<th>Blank</th>
+		<th>Comment</th>
+		<th>Code</th>
+		<th>Complexity</th>
+	</tr></thead>
+	<tbody>`)
+
+	for _, r := range language {
+		str.WriteString(fmt.Sprintf(`<tr>
+		<th>%s</th>
+		<th>%d</th>
+		<th>%d</th>
+		<th>%d</th>
+		<th>%d</th>
+		<th>%d</th>
+		<th>%d</th>
+	</tr>`, r.Name, len(r.Files), r.Lines, r.Blank, r.Comment, r.Code, r.Complexity))
+
+		if Files {
+			sortSummaryFiles(&r)
+
+			for _, res := range r.Files {
+				str.WriteString(fmt.Sprintf(`<tr>
+		<td>%s</td>
+		<td></td>
+		<td>%d</td>
+		<td>%d</td>
+		<td>%d</td>
+		<td>%d</td>
+		<td>%d</td>
+	</tr>`, res.Location, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity))
+			}
+		}
+
+	}
+
+	str.WriteString(fmt.Sprintf(`</tbody>
+	<tfoot><tr>
+		<th>Total</th>
+		<th>%d</th>
+		<th>%d</th>
+		<th>%d</th>
+		<th>%d</th>
+		<th>%d</th>
+		<th>%d</th>
+	</tr></tfoot>
+	</table>`, sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity))
+
+	return str.String()
+}
+
 func fileSummarize(input chan *FileJob) string {
 	switch {
 	case More || strings.ToLower(Format) == "wide":
@@ -294,6 +409,10 @@ func fileSummarize(input chan *FileJob) string {
 		return toClocYAML(input)
 	case strings.ToLower(Format) == "csv":
 		return toCSV(input)
+	case strings.ToLower(Format) == "html":
+		return toHtml(input)
+	case strings.ToLower(Format) == "html-table":
+		return toHtmlTable(input)
 	}
 
 	return fileSummarizeShort(input)
