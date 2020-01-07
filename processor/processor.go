@@ -207,8 +207,8 @@ func ProcessConstants() {
 
 // Configure and setup any count-as params the use has supplied
 func setupCountAs() {
-	for _, s := range strings.Split(CountAs, ":") {
-		t := strings.Split(s, ",")
+	for _, s := range strings.Split(CountAs, ",") {
+		t := strings.Split(s, ":")
 		if len(t) == 2 {
 
 			identified := false

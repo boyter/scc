@@ -80,7 +80,7 @@ func TestProcess(t *testing.T) {
 }
 
 func TestSetupCountAsLanguage(t *testing.T) {
-	CountAs = "boyter,C Header"
+	CountAs = "boyter:C Header"
 	setupCountAs()
 	v, _ := ExtensionToLanguage["boyter"]
 
@@ -92,7 +92,7 @@ func TestSetupCountAsLanguage(t *testing.T) {
 }
 
 func TestSetupCountAsExtension(t *testing.T) {
-	CountAs = "boyter,j2"
+	CountAs = "boyter:j2"
 	setupCountAs()
 	v, _ := ExtensionToLanguage["boyter"]
 
@@ -104,7 +104,7 @@ func TestSetupCountAsExtension(t *testing.T) {
 }
 
 func TestSetupCountAsMultiple(t *testing.T) {
-	CountAs = "boyter,j2:retyob,JAVA"
+	CountAs = "boyter:j2,retyob:JAVA"
 	setupCountAs()
 	v, _ := ExtensionToLanguage["boyter"]
 

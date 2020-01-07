@@ -471,7 +471,7 @@ else
     exit
 fi
 
-if ./scc ./examples/countas/ --count-as jsp,html | grep -q "HTML"; then
+if ./scc ./examples/countas/ --count-as jsp:html | grep -q "HTML"; then
     echo -e "${GREEN}PASSED counted JSP as HTML"
 else
     echo -e "${RED}======================================================="
@@ -480,7 +480,7 @@ else
     exit
 fi
 
-if ./scc ./examples/countas/ --count-as jsp,j2 | grep -q "Jinja"; then
+if ./scc ./examples/countas/ --count-as jsp:j2 | grep -q "Jinja"; then
     echo -e "${GREEN}PASSED counted JSP as Jinja"
 else
     echo -e "${RED}======================================================="
@@ -489,7 +489,7 @@ else
     exit
 fi
 
-if ./scc ./examples/countas/ --count-as jsp,html:new,java | grep -q "Java"; then
+if ./scc ./examples/countas/ --count-as jsp:html,new:java | grep -q "Java"; then
     echo -e "${GREEN}PASSED counted new as Java"
 else
     echo -e "${RED}======================================================="
@@ -498,7 +498,7 @@ else
     exit
 fi
 
-if ./scc ./examples/countas/ --count-as jsp,html:new,"C Header" | grep -q "C Header"; then
+if ./scc ./examples/countas/ --count-as jsp:html,new:"C Header" | grep -q "C Header"; then
     echo -e "${GREEN}PASSED counted new as C Header"
 else
     echo -e "${RED}======================================================="
