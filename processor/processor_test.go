@@ -78,3 +78,45 @@ func TestPrintLanguages(t *testing.T) {
 func TestProcess(t *testing.T) {
 	Process()
 }
+
+func TestSetupCountAsLanguage(t *testing.T) {
+	CountAs = "boyter,C Header"
+	setupCountAs()
+	v, _ := ExtensionToLanguage["boyter"]
+
+	if v[0] != "C Header" {
+		t.Error("Expected boyter to map to C Header")
+	}
+
+	CountAs = ""
+}
+
+func TestSetupCountAsExtension(t *testing.T) {
+	CountAs = "boyter,j2"
+	setupCountAs()
+	v, _ := ExtensionToLanguage["boyter"]
+
+	if v[0] != "Jinja" {
+		t.Error("Expected boyter to map to Jinja")
+	}
+
+	CountAs = ""
+}
+
+func TestSetupCountAsMultiple(t *testing.T) {
+	CountAs = "boyter,j2:retyob,JAVA"
+	setupCountAs()
+	v, _ := ExtensionToLanguage["boyter"]
+
+	if v[0] != "Jinja" {
+		t.Error("Expected boyter to map to Jinja")
+	}
+
+	v, _ = ExtensionToLanguage["retyob"]
+
+	if v[0] != "Java" {
+		t.Error("Expected retyob to map to Java")
+	}
+
+	CountAs = ""
+}

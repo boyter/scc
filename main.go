@@ -212,7 +212,7 @@ func main() {
 		&processor.CountAs,
 		"count-as",
 		"",
-		"count extension as another [e.g. jsp,html:new,java counts JSP using HTML rules and new using Java rules]",
+		"count extension as language [e.g. jsp,htm:chead,\"C Header\" maps extension jsp to html and chead to C Header]",
 	)
 
 	if err := rootCmd.Execute(); err != nil {
