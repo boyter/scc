@@ -1,0 +1,1 @@
+this should be counted as HTML using countas rules

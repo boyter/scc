@@ -73,6 +73,9 @@ var SortBy = ""
 // Exclude is a regular expression which is used to exclude files from being processed
 var Exclude = []string{}
 
+// CountAs is a rule for mapping known or new extensions to other rules
+var CountAs = ""
+
 // Format sets the output format of the formatter
 var Format = ""
 
@@ -175,6 +178,11 @@ func ProcessConstants() {
 		}
 	}
 
+	// If we have anything in CountAs set it up now
+	if len(CountAs) != 0 {
+		setupCountAs()
+	}
+
 	if Trace {
 		printTrace(fmt.Sprintf("nanoseconds build extension to language: %d", makeTimestampNano()-startTime))
 	}
@@ -191,7 +199,53 @@ func ProcessConstants() {
 			printTrace(fmt.Sprintf("milliseconds build language features: %d", makeTimestampMilli()-startTime))
 		}
 	} else {
-		printTrace("configured to lazy load language features")
+		if Trace {
+			printTrace("configured to lazy load language features")
+		}
+	}
+}
+
+// Configure and setup any count-as params the use has supplied
+func setupCountAs() {
+	for _, s := range strings.Split(CountAs, ",") {
+		t := strings.Split(s, ":")
+		if len(t) == 2 {
+
+			identified := false
+
+			// There are two cases here.
+			// first is they provide the name e.g. "Cargo Lock"
+			// second is that the user supplies the extension EG wsdl
+			// we should support BOTH cases
+			// always remember we only need to validate t[1] as that's the one
+			// that tells us where we are trying to map
+
+			// See if we can identify based on language name which is the most
+			// reliable as the name should be unique
+			for name := range languageDatabase {
+				if strings.ToLower(name) == strings.ToLower(t[1]) {
+					ExtensionToLanguage[t[0]] = []string{name}
+					identified = true
+					if Debug {
+						printDebug(fmt.Sprintf("set to count extension: %s as language %s by language", t[0], name))
+					}
+				}
+			}
+
+			// If the above did not work, its a matter of extension match
+			// note that this is less reliable as some languages share extensions
+			if !identified {
+				target, ok := ExtensionToLanguage[strings.ToLower(t[1])]
+
+				if ok {
+					ExtensionToLanguage[t[0]] = target
+
+					if Debug {
+						printDebug(fmt.Sprintf("set to count extension: %s as language %s by extension", t[0], target))
+					}
+				}
+			}
+		}
 	}
 }
 

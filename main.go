@@ -208,6 +208,12 @@ func main() {
 		1000000,
 		"number of bytes a file can contain before being removed from output",
 	)
+	flags.StringVar(
+		&processor.CountAs,
+		"count-as",
+		"",
+		"count extension as language [e.g. jsp:htm,chead:\"C Header\" maps extension jsp to html and chead to C Header]",
+	)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
