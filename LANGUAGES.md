@@ -237,6 +237,7 @@ XML (xml)
 XML Schema (xsd)
 Xtend (xtend)
 YAML (yaml,yml)
+Yarn (yarn)
 Zig (zig)
 Zsh (zsh,zshenv,zlogin,zlogout,zprofile,zshrc,.zshenv,.zlogin,.zlogout,.zprofile,.zshrc)
 ```

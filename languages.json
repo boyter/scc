@@ -6814,6 +6814,38 @@
       }
     ]
   },
+  "Yarn": {
+    "complexitychecks": [
+      "if ",
+      "elseif ",
+      "else ",
+      " eq ",
+      " == ",
+      " neq ",
+      " ! ",
+      " gt ",
+      " > ",
+      " lt ",
+      " < ",
+      " lte ",
+      " <= ",
+      " gte ",
+      " >= ",
+      " xor ",
+      " ^ ",
+      " and ",
+      " && ",
+      " || ",
+      " or "
+    ],
+    "extensions": [
+      "yarn"
+    ],
+    "line_comment": [
+    ],
+    "quotes": [
+    ]
+  },
   "YAML": {
     "complexitychecks": [],
     "extensions": [
