@@ -214,10 +214,10 @@ func setupCountAs() {
 			identified := false
 
 			// There are two cases here.
-			// first is they provide the name "Cargo Lock"
+			// first is they provide the name e.g. "Cargo Lock"
 			// second is that the user supplies the extension EG wsdl
 			// we should support BOTH cases
-			// always remember we only need to validate t[1] as thats the one
+			// always remember we only need to validate t[1] as that's the one
 			// that tells us where we are trying to map
 
 			// See if we can identify based on language name which is the most
@@ -229,10 +229,6 @@ func setupCountAs() {
 					if Debug {
 						printDebug(fmt.Sprintf("set to count extension: %s as language %s by language", t[0], name))
 					}
-				}
-
-				if !identified {
-
 				}
 			}
 
