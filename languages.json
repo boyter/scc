@@ -6816,9 +6816,9 @@
   },
   "Yarn": {
     "complexitychecks": [
-      "if ",
-      "elseif ",
-      "else ",
+      "<<if ",
+      "<<elseif ",
+      "<<else ",
       " eq ",
       " == ",
       " neq ",
