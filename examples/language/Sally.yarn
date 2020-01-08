@@ -16,3 +16,15 @@
     [[Sorry about the console.|Sally.Sorry]] #line:0a7e39
 <<endif>>
 [[See you later.|Sally.Exit]] #line:0facf7
+
+
+<<if ($counter + 1) >= ($max - 2)>>
+	I would like a horse please.
+	<<set $money to $money - 2>>
+	<<set $hasHorse to true>>
+<<elseif $money eq 1 >>
+	Just a drink thanks.
+	<<set $money to $money - 1>>
+<<else>>
+	Drat, I can't afford anything.
+<<endif>>
