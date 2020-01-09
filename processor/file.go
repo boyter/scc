@@ -123,8 +123,9 @@ func (dw *DirectoryWalker) Walk(handle *cuba.Handle) {
 			ignore, err := gitignore.NewGitIgnore(path)
 			if err != nil {
 				printError(fmt.Sprintf("failed to load gitignore %s: %v", job.path, err))
+			} else {
+				ignores = append(ignores, ignore)
 			}
-			ignores = append(ignores, ignore)
 		}
 	}
 
