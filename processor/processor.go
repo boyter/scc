@@ -55,6 +55,10 @@ var More = false
 // Cocomo toggles the COCOMO calculation
 var Cocomo = false
 
+// IgnoreFirstComment toggles the ignoring of the first comment if it starts at index 0
+// and is intended to be used for ignoring licensing information
+var IgnoreFirstComment = false
+
 // Indicates if running inside a CI so to disable box drawing characters
 var Ci = false
 

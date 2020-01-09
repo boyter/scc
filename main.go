@@ -214,6 +214,12 @@ func main() {
 		"",
 		"count extension as language [e.g. jsp:htm,chead:\"C Header\" maps extension jsp to html and chead to C Header]",
 	)
+	flags.BoolVar(
+		&processor.IgnoreFirstComment,
+		"ignore-first-comment",
+		false,
+		"ignore the comment if it starts as the first character in a file",
+	)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

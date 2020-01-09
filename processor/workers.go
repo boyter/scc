@@ -304,6 +304,7 @@ func blankState(
 ) (int, int64, []byte, [][]byte, bool) {
 	switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[index:]); tokenType {
 	case TMlcomment:
+
 		if langFeatures.Nested || len(endComments) == 0 {
 			endComments = append(endComments, endString)
 			currentState = SMulticomment
@@ -408,6 +409,8 @@ func CountStats(fileJob *FileJob) {
 	// TODO needs to be set via langFeatures.Quotes[0].IgnoreEscape for the matching feature
 	ignoreEscape := false
 
+	ignoreFirstComment := false
+
 	// For determining duplicates we need the below. The reason for creating
 	// the byte array here is to avoid GC pressure. MD5 is in the standard library
 	// and is fast enough to not warrant murmur3 hashing. No need to be
@@ -465,6 +468,10 @@ func CountStats(fileJob *FileJob) {
 					endString,
 					langFeatures,
 				)
+
+				if index == 0 && IgnoreFirstComment {
+					ignoreFirstComment = true
+				}
 			}
 		}
 
@@ -484,7 +491,9 @@ func CountStats(fileJob *FileJob) {
 		// This means the end of processing the line so calculate the stats according to what state
 		// we are currently in
 		if fileJob.Content[index] == '\n' || index >= endPoint {
-			fileJob.Lines++
+			if !ignoreFirstComment {
+				fileJob.Lines++
+			}
 
 			if NoLarge && fileJob.Lines >= LargeLineCount {
 				// Save memory by unsetting the content as we no longer require it
@@ -505,7 +514,13 @@ func CountStats(fileJob *FileJob) {
 					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as code", fileJob.Location, fileJob.Lines, currentState))
 				}
 			case SComment, SMulticomment, SMulticommentBlank:
-				fileJob.Comment++
+				if !ignoreFirstComment {
+					fileJob.Comment++
+				} else {
+					// If we are here then we ignored the first comment
+					ignoreFirstComment = false
+				}
+
 				currentState = resetState(currentState)
 				if fileJob.Callback != nil {
 					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {

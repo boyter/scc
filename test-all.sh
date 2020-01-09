@@ -511,6 +511,15 @@ else
     exit
 fi
 
+if ./scc ./examples/ignorefirstcomment/sample.java --ignore-first-comment | grep -q "Java                         1         0        0         0        0          0"; then
+    echo -e "${GREEN}PASSED ignore first comment single line"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED ignore first comment single line"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 # Try out specific languages
 for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java ' 'Boo ' 'License ' 'BASH ' 'C Shell ' 'Korn Shell ' 'Makefile ' 'Shell ' 'Zsh ' 'Rakefile ' 'Gemfile ' 'Dockerfile ' 'Yarn '
 do
