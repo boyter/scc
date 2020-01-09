@@ -91,9 +91,6 @@ var DirectoryWalkerJobWorkers = runtime.NumCPU()
 // FileListQueueSize is the queue of files found and ready to be read into memory
 var FileListQueueSize = runtime.NumCPU()
 
-// FileReadContentJobQueueSize is a queue of files ready to be processed
-var FileReadContentJobQueueSize = runtime.NumCPU()
-
 // FileProcessJobWorkers is the number of workers that process the file collecting stats
 var FileProcessJobWorkers = runtime.NumCPU() * 4
 
