@@ -13,3 +13,9 @@ func TestScaleWorkersToLimit(t *testing.T) {
 func TestConfigureLimitsUnix(t *testing.T) {
 	ConfigureLimitsUnix()
 }
+
+func TestConfigureLimitsUnixHighWater(t *testing.T) {
+	FileProcessJobWorkers = 1
+	DirectoryWalkerJobWorkers = 1
+	ConfigureLimitsUnix()
+}
