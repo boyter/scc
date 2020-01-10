@@ -524,7 +524,7 @@ do
     fi
 done
 
-echo "Checking compile targets..."
+echo -e  "${NC}Checking compile targets..."
 
 echo "   darwin..."
 GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w"
