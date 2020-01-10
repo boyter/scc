@@ -524,8 +524,21 @@ do
     fi
 done
 
+echo "Checking compile targets..."
+
+echo "   darwin..."
+GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w"
+GOOS=darwin GOARCH=386 go build -ldflags="-s -w"
+echo "   windows..."
+GOOS=windows GOARCH=amd64 go build -ldflags="-s -w"
+GOOS=windows GOARCH=386 go build -ldflags="-s -w"
+echo "   linux..."
+GOOS=linux GOARCH=amd64 go build -ldflags="-s -w"
+GOOS=linux GOARCH=386 go build -ldflags="-s -w"
+
 echo -e "${NC}Cleaning up..."
 rm ./scc
+rm ./scc.exe
 rm ./ignored.xml
 rm .tmp_scc_yaml
 rm ./examples/ignore/gitignorefile.txt
