@@ -80,6 +80,7 @@ func TestProcess(t *testing.T) {
 }
 
 func TestSetupCountAsLanguage(t *testing.T) {
+	ProcessConstants()
 	CountAs = "boyter:C Header"
 	setupCountAs()
 	v, _ := ExtensionToLanguage["boyter"]
@@ -91,7 +92,21 @@ func TestSetupCountAsLanguage(t *testing.T) {
 	CountAs = ""
 }
 
+func TestSetupCountAsLanguageCase(t *testing.T) {
+	ProcessConstants()
+	CountAs = "BoYtER:C Header"
+	setupCountAs()
+	v, _ := ExtensionToLanguage["boyter"]
+
+	if v[0] != "C Header" {
+		t.Error("Expected boyter to map to C Header")
+	}
+
+	CountAs = ""
+}
+
 func TestSetupCountAsExtension(t *testing.T) {
+	ProcessConstants()
 	CountAs = "boyter:j2"
 	setupCountAs()
 	v, _ := ExtensionToLanguage["boyter"]
@@ -104,6 +119,7 @@ func TestSetupCountAsExtension(t *testing.T) {
 }
 
 func TestSetupCountAsMultiple(t *testing.T) {
+	ProcessConstants()
 	CountAs = "boyter:j2,retyob:JAVA"
 	setupCountAs()
 	v, _ := ExtensionToLanguage["boyter"]

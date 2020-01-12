@@ -484,6 +484,15 @@ else
     exit
 fi
 
+if ./scc ./examples/countas/ --count-as JsP:html | grep -q "HTML"; then
+    echo -e "${GREEN}PASSED counted JSP as HTML case"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED counted JSP as HTML case"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 if ./scc ./examples/countas/ --count-as jsp:j2 | grep -q "Jinja"; then
     echo -e "${GREEN}PASSED counted JSP as Jinja"
 else
