@@ -520,6 +520,15 @@ else
     exit
 fi
 
+if ./scc ./examples/issue149/ | grep -q "gitignore"; then
+    echo -e "${GREEN}PASSED empty gitignore"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED empty gitignore"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 # Try out specific languages
 for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java ' 'Boo ' 'License ' 'BASH ' 'C Shell ' 'Korn Shell ' 'Makefile ' 'Shell ' 'Zsh ' 'Rakefile ' 'Gemfile ' 'Dockerfile ' 'Yarn ' 'Sieve '
 do
