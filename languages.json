@@ -7017,10 +7017,13 @@
   "Sieve": {
     "complexitychecks": [
       "if",
+      "if ",
       "elsif",
-      "elsif",
+      "elsif ",
       "allof",
+      "allof ",
       "anyof",
+      "anyof ",
       "allof(",
       "anyof("
     ],
