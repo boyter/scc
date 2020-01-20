@@ -1,6 +1,16 @@
 package processor
 
-import "testing"
+import (
+	"testing"
+)
+
+func TestDetectLanguage(t *testing.T) {
+	_, ext := DetectLanguage("example.black.css")
+
+	if ext != "css" {
+		t.Error("Expected css got", ext)
+	}
+}
 
 func TestDetectSheBangEmpty(t *testing.T) {
 	ProcessConstants()

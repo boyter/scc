@@ -529,6 +529,15 @@ else
     exit
 fi
 
+if ./scc -i css ./examples/issue152/ | grep -q "css"; then
+    echo -e "${GREEN}PASSED -i extension check"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED -i extension check"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 # Try out specific languages
 for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java ' 'Boo ' 'License ' 'BASH ' 'C Shell ' 'Korn Shell ' 'Makefile ' 'Shell ' 'Zsh ' 'Rakefile ' 'Gemfile ' 'Dockerfile ' 'Yarn ' 'Sieve '
 do
