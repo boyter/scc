@@ -529,7 +529,7 @@ else
     exit
 fi
 
-if ./scc -i css ./examples/issue152/ | grep -q "css"; then
+if ./scc -i css ./examples/issue152/ | grep -q "CSS"; then
     echo -e "${GREEN}PASSED -i extension check"
 else
     echo -e "${RED}======================================================="
