@@ -15,7 +15,7 @@ import (
 )
 
 // The version of the application
-var Version = "2.11.0"
+var Version = "2.12.0 (alpha)"
 
 // Flags set via the CLI which control how the output is displayed
 
@@ -55,9 +55,9 @@ var More = false
 // Cocomo toggles the COCOMO calculation
 var Cocomo = false
 
-// IgnoreFirstComment toggles the ignoring of the first comment if it starts at index 0
+// IgnoreHeaderComment toggles the ignoring of the first comment if it starts at index 0
 // and is intended to be used for ignoring licensing information
-var IgnoreFirstComment = false
+var IgnoreHeaderComment = false
 
 // Indicates if running inside a CI so to disable box drawing characters
 var Ci = false
@@ -225,7 +225,7 @@ func setupCountAs() {
 			// reliable as the name should be unique
 			for name := range languageDatabase {
 				if strings.ToLower(name) == strings.ToLower(t[1]) {
-					ExtensionToLanguage[t[0]] = []string{name}
+					ExtensionToLanguage[strings.ToLower(t[0])] = []string{name}
 					identified = true
 					if Debug {
 						printDebug(fmt.Sprintf("set to count extension: %s as language %s by language", t[0], name))
@@ -239,7 +239,7 @@ func setupCountAs() {
 				target, ok := ExtensionToLanguage[strings.ToLower(t[1])]
 
 				if ok {
-					ExtensionToLanguage[t[0]] = target
+					ExtensionToLanguage[strings.ToLower(t[0])] = target
 
 					if Debug {
 						printDebug(fmt.Sprintf("set to count extension: %s as language %s by extension", t[0], target))

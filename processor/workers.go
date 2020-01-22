@@ -469,7 +469,7 @@ func CountStats(fileJob *FileJob) {
 					langFeatures,
 				)
 
-				if index == 0 && IgnoreFirstComment {
+				if index == 0 && IgnoreHeaderComment {
 					ignoreFirstComment = true
 				}
 			}

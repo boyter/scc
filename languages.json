@@ -7013,5 +7013,37 @@
     "shebangs": [
       "sed"
     ]
+  },
+  "Sieve": {
+    "complexitychecks": [
+      "if",
+      "if ",
+      "elsif",
+      "elsif ",
+      "allof",
+      "allof ",
+      "anyof",
+      "anyof ",
+      "allof(",
+      "anyof("
+    ],
+    "extensions": [
+      "sieve"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
   }
 }

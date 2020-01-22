@@ -484,6 +484,15 @@ else
     exit
 fi
 
+if ./scc ./examples/countas/ --count-as JsP:html | grep -q "HTML"; then
+    echo -e "${GREEN}PASSED counted JSP as HTML case"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED counted JSP as HTML case"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 if ./scc ./examples/countas/ --count-as jsp:j2 | grep -q "Jinja"; then
     echo -e "${GREEN}PASSED counted JSP as Jinja"
 else
@@ -511,17 +520,35 @@ else
     exit
 fi
 
-if ./scc ./examples/ignorefirstcomment/sample.java --ignore-first-comment | grep -q "Java                         1         0        0         0        0          0"; then
-    echo -e "${GREEN}PASSED ignore first comment single line"
+if ./scc ./examples/ignorefirstcomment/sample.java --ignore-header-comment | grep -q "Java                         1         0        0         0        0          0"; then
+    echo -e "${GREEN}PASSED ignore header comment single line"
 else
     echo -e "${RED}======================================================="
-    echo -e "FAILED ignore first comment single line"
+    echo -e "FAILED ignore header comment single line"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc ./examples/issue149/ | grep -q "gitignore"; then
+    echo -e "${GREEN}PASSED empty gitignore"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED empty gitignore"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc -i css ./examples/issue152/ | grep -q "CSS"; then
+    echo -e "${GREEN}PASSED -i extension check"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED -i extension check"
     echo -e "=======================================================${NC}"
     exit
 fi
 
 # Try out specific languages
-for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java ' 'Boo ' 'License ' 'BASH ' 'C Shell ' 'Korn Shell ' 'Makefile ' 'Shell ' 'Zsh ' 'Rakefile ' 'Gemfile ' 'Dockerfile ' 'Yarn '
+for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java ' 'Boo ' 'License ' 'BASH ' 'C Shell ' 'Korn Shell ' 'Makefile ' 'Shell ' 'Zsh ' 'Rakefile ' 'Gemfile ' 'Dockerfile ' 'Yarn ' 'Sieve '
 do
     if ./scc "examples/language/" | grep -q "$i "; then
         echo -e "${GREEN}PASSED $i Language Check"
@@ -533,8 +560,21 @@ do
     fi
 done
 
+echo -e  "${NC}Checking compile targets..."
+
+echo "   darwin..."
+GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w"
+GOOS=darwin GOARCH=386 go build -ldflags="-s -w"
+echo "   windows..."
+GOOS=windows GOARCH=amd64 go build -ldflags="-s -w"
+GOOS=windows GOARCH=386 go build -ldflags="-s -w"
+echo "   linux..."
+GOOS=linux GOARCH=amd64 go build -ldflags="-s -w"
+GOOS=linux GOARCH=386 go build -ldflags="-s -w"
+
 echo -e "${NC}Cleaning up..."
 rm ./scc
+rm ./scc.exe
 rm ./ignored.xml
 rm .tmp_scc_yaml
 rm ./examples/ignore/gitignorefile.txt
