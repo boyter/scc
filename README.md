@@ -504,7 +504,7 @@ To help identify this issue run scc like so `scc -v .` and look for the message 
 
 ### Low Memory
 
-If you are running `scc` in a low memory environment < 512 MB of RAM you may need to set `--filegccount` or `--fgc` to a lower value such as `0` to force the garbage collector to be on at all times.
+If you are running `scc` in a low memory environment < 512 MB of RAM you may need to set `--file-gc-count` to a lower value such as `0` to force the garbage collector to be on at all times.
 
 A sign that this is required will be `scc` crashing with panic errors.
 
