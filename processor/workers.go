@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"hash"
+	"runtime/debug"
 	"sync"
 	"sync/atomic"
 
@@ -591,6 +592,7 @@ func checkBomSkip(fileJob *FileJob) int {
 // output chan
 func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 	var startTime int64
+	var fileCount int64
 	var wg sync.WaitGroup
 
 	for i := 0; i < FileProcessJobWorkers; i++ {
@@ -602,8 +604,15 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 				atomic.CompareAndSwapInt64(&startTime, 0, makeTimestampMilli())
 
 				fileStartTime := makeTimestampNano()
-
 				content, err := reader.ReadFile(job.Location, int(job.Bytes))
+				atomic.AddInt64(&fileCount, 1)
+
+				if atomic.LoadInt64(&fileCount) >= int64(GcFileCount) {
+					debug.SetGCPercent(gcPercent)
+					if Verbose {
+						printWarn("read file limit exceeded GC re-enabled")
+					}
+				}
 
 				if Trace {
 					printTrace(fmt.Sprintf("nanoseconds read into memory: %s: %d", job.Location, makeTimestampNano()-fileStartTime))
