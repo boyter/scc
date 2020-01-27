@@ -593,6 +593,7 @@ func checkBomSkip(fileJob *FileJob) int {
 func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 	var startTime int64
 	var fileCount int64
+	var gcEnabled int64
 	var wg sync.WaitGroup
 
 	for i := 0; i < FileProcessJobWorkers; i++ {
@@ -607,8 +608,9 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 				content, err := reader.ReadFile(job.Location, int(job.Bytes))
 				atomic.AddInt64(&fileCount, 1)
 
-				if atomic.LoadInt64(&fileCount) >= int64(GcFileCount) {
+				if atomic.LoadInt64(&gcEnabled) == 0 && atomic.LoadInt64(&fileCount) >= int64(GcFileCount) {
 					debug.SetGCPercent(gcPercent)
+					atomic.AddInt64(&gcEnabled, 1)
 					if Verbose {
 						printWarn("read file limit exceeded GC re-enabled")
 					}
