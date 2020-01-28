@@ -538,6 +538,15 @@ else
     exit
 fi
 
+if ./scc --file-gc-count 10 ./examples/duplicates/ -v | grep -q "read file limit exceeded GC re-enabled"; then
+    echo -e "${GREEN}PASSED gc file count"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED gc file count"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 # Try out specific languages
 for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java ' 'Boo ' 'License ' 'BASH ' 'C Shell ' 'Korn Shell ' 'Makefile ' 'Shell ' 'Zsh ' 'Rakefile ' 'Gemfile ' 'Dockerfile ' 'Yarn ' 'Sieve '
 do
