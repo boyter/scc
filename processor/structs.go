@@ -77,6 +77,7 @@ type FileJob struct {
 	Callback           FileJobCallback
 	Binary             bool
 	Minified           bool
+	Generated          bool
 }
 
 // LanguageSummary is used to hold summarised results for a single language
