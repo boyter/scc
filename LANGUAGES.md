@@ -209,6 +209,7 @@ Systemd (automount,device,link,mount,path,scope,service,slice,socket,swap,target
 SystemVerilog (sv,svh)
 TaskPaper (taskpaper)
 TCL (tcl)
+Terraform (tf,tf.json)
 TeX (tex,sty)
 Thrift (thrift)
 TOML (toml)

@@ -5917,6 +5917,39 @@
     "multi_line": [],
     "quotes": []
   },
+  "Terraform": {
+    "complexitychecks": [
+      "count",
+      "for",
+      "for_each",
+      "if",
+      ": ",
+      "? ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "> ",
+      ">= ",
+      "< ",
+      "<= ",
+      "== "
+    ],
+    "extensions": [
+      "tf",
+      "tf.json"
+    ],
+    "line_comment": [
+      "#",
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": []
+  },
   "TeX": {
     "complexitychecks": [
       "for ",
