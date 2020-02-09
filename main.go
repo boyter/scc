@@ -136,11 +136,44 @@ func main() {
 		false,
 		"identify minified or generated files",
 	)
+	flags.BoolVarP(
+		&processor.Minified,
+		"min",
+		"",
+		false,
+		"identify minified files",
+	)
+	flags.BoolVarP(
+		&processor.Generated,
+		"gen",
+		"",
+		false,
+		"identify generated files",
+	)
+	flags.StringSliceVarP(
+		&processor.GeneratedMarkers,
+		"generated-markers",
+		"",
+		[]string{"do not edit"},
+		"string markers in head of generated files",
+	)
 	flags.BoolVar(
 		&processor.IgnoreMinifiedGenerate,
 		"no-min-gen",
 		false,
 		"ignore minified or generated files in output (implies --min-gen)",
+	)
+	flags.BoolVar(
+		&processor.IgnoreMinified,
+		"no-min",
+		false,
+		"ignore minified files in output (implies --min)",
+	)
+	flags.BoolVar(
+		&processor.IgnoreGenerated,
+		"no-gen",
+		false,
+		"ignore generated files in output (implies --gen)",
 	)
 	flags.IntVar(
 		&processor.MinifiedGeneratedLineByteLength,

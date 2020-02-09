@@ -544,7 +544,30 @@ func CountStats(fileJob *FileJob) {
 		fileJob.Hash = digest.Sum(nil)
 	}
 
-	if MinifiedGenerated {
+	isGenerated := false
+
+	if Generated {
+		headLen := 1000
+		if headLen >= len(fileJob.Content) {
+			headLen = len(fileJob.Content) - 1
+		}
+		head := bytes.ToLower(fileJob.Content[0:headLen])
+		for _, marker := range GeneratedMarkers {
+			if bytes.Contains(head, bytes.ToLower([]byte(marker))) {
+				fileJob.Generated = true
+				fileJob.Language = fileJob.Language + " (gen)"
+				isGenerated = true
+
+				if Verbose {
+					printWarn(fmt.Sprintf("%s identified as isGenerated with heading comment", fileJob.Filename))
+				}
+
+				break
+			}
+		}
+	}
+
+	if !isGenerated && Minified {
 		avgLineByteCount := len(fileJob.Content) / int(fileJob.Lines)
 		minifiedGeneratedCheck(avgLineByteCount, fileJob)
 	}
@@ -698,9 +721,16 @@ func processFile(job *FileJob) bool {
 		duplicates.mux.Unlock()
 	}
 
-	if IgnoreMinifiedGenerate && job.Minified {
+	if IgnoreMinified && job.Minified {
 		if Verbose {
-			printWarn(fmt.Sprintf("skipping minified/generated file: %s", job.Location))
+			printWarn(fmt.Sprintf("skipping minified file: %s", job.Location))
+		}
+		return false
+	}
+
+	if IgnoreGenerated && job.Generated {
+		if Verbose {
+			printWarn(fmt.Sprintf("skipping generated file: %s", job.Location))
 		}
 		return false
 	}

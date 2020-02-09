@@ -46,6 +46,21 @@ var IgnoreMinifiedGenerate = false
 // Number of bytes per average line to determine file is minified/generated
 var MinifiedGeneratedLineByteLength = 255
 
+// Minified enables minified file detection
+var Minified = false
+
+// Ignore printing counts for minified files
+var IgnoreMinified = false
+
+// Generated enables generated file detection
+var Generated = false
+
+// GeneratedMarkers defines head markers for generated file detection
+var GeneratedMarkers []string
+
+// Ignore printing counts for generated files
+var IgnoreGenerated = false
+
 // Complexity toggles complexity calculation
 var Complexity = false
 
@@ -350,6 +365,21 @@ func processFlags() {
 	// If ignore minified/generated is on ensure we turn on the code to calculate that
 	if IgnoreMinifiedGenerate {
 		MinifiedGenerated = true
+		IgnoreMinified = true
+		IgnoreGenerated = true
+	}
+
+	if MinifiedGenerated {
+		Minified = true
+		Generated = true
+	}
+
+	if IgnoreMinified {
+		Minified = true
+	}
+
+	if IgnoreGenerated {
+		Generated = true
 	}
 
 	if Debug {
@@ -363,8 +393,8 @@ func processFlags() {
 		printDebug(fmt.Sprintf("Wide: %t", More))
 		printDebug(fmt.Sprintf("Average Wage: %d", AverageWage))
 		printDebug(fmt.Sprintf("Cocomo: %t", !Cocomo))
-		printDebug(fmt.Sprintf("Minified/Generated Detection: %t", MinifiedGenerated))
-		printDebug(fmt.Sprintf("Ignore Minified/Generated: %t", IgnoreMinifiedGenerate))
+		printDebug(fmt.Sprintf("Minified/Generated Detection: %t/%t", Minified, Generated))
+		printDebug(fmt.Sprintf("Ignore Minified/Generated: %t/%t", IgnoreMinified, IgnoreGenerated))
 	}
 }
 
