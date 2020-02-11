@@ -65,7 +65,7 @@ func TestSortSummaryFiles(t *testing.T) {
 		Language:           "Go",
 		Filename:           "bbbb.go",
 		Extension:          "go",
-		Location:           "./",
+		Location:           "./bbbb.go",
 		Bytes:              1000,
 		Lines:              1000,
 		Code:               1000,
@@ -79,7 +79,7 @@ func TestSortSummaryFiles(t *testing.T) {
 		Language:           "Go",
 		Filename:           "aaaa.go",
 		Extension:          "go",
-		Location:           "./",
+		Location:           "./aaaa.go",
 		Bytes:              2000,
 		Lines:              2000,
 		Code:               2000,
@@ -152,6 +152,40 @@ func TestSortSummaryFiles(t *testing.T) {
 			t.Error("Sorting on complexity failed", val)
 		}
 	}
+}
+
+func TestSortSummaryFilesName(t *testing.T) {
+	goFiles := []*FileJob{}
+	goFiles = append(goFiles, &FileJob{
+		Language: "Go",
+		Location: "bbbb.go",
+	})
+
+	goFiles = append(goFiles, &FileJob{
+		Language: "Go",
+		Location: "aaaa.go",
+	})
+
+	goFiles = append(goFiles, &FileJob{
+		Language: "Go",
+		Location: "cccc.go",
+	})
+
+	summary := LanguageSummary{
+		Name:  "Go",
+		Files: goFiles,
+	}
+
+	lineSort := []string{"name", "names", "language", "languages"}
+	for _, val := range lineSort {
+		SortBy = val
+		sortSummaryFiles(&summary)
+
+		if summary.Files[0].Location != "aaaa.go" {
+			t.Error("Sorting on lines failed", val)
+		}
+	}
+	SortBy = ""
 }
 
 func TestSortLanguageSummaryName(t *testing.T) {
@@ -291,6 +325,30 @@ func TestSortLanguageSummaryComplexity(t *testing.T) {
 
 	if ls[0].Name != "c" || ls[1].Name != "a" {
 		t.Error("Expected c to be first and a second")
+	}
+}
+
+func TestSortSummaryNames(t *testing.T) {
+	SortBy = "name"
+	ls := []LanguageSummary{
+		{
+			Name:       "a",
+			Complexity: 1,
+		},
+		{
+			Name:       "b",
+			Complexity: 1,
+		},
+		{
+			Name:       "c",
+			Complexity: 2,
+		},
+	}
+
+	ls = sortLanguageSummary(ls)
+
+	if ls[0].Name != "a" || ls[1].Name != "b" || ls[2].Name != "c" {
+		t.Error("Expected a to be first and b second and c third")
 	}
 }
 

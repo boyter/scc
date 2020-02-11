@@ -39,7 +39,7 @@ func sortSummaryFiles(summary *LanguageSummary) {
 	switch {
 	case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "languages":
 		sort.Slice(summary.Files, func(i, j int) bool {
-			return summary.Files[i].Lines > summary.Files[j].Lines
+			return strings.Compare(summary.Files[i].Location, summary.Files[j].Location) < 0
 		})
 	case SortBy == "line" || SortBy == "lines":
 		sort.Slice(summary.Files, func(i, j int) bool {
