@@ -1160,7 +1160,8 @@
       "== "
     ],
     "extensions": [
-      "clj"
+      "clj",
+      "cljc"
     ],
     "line_comment": [
       ";"
