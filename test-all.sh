@@ -404,10 +404,28 @@ else
 fi
 
 if ./scc ./examples/minified/ --no-min-gen | grep -q "0.000000"; then
-    echo -e "${GREEN}PASSED removed min gen"
+    echo -e "${GREEN}PASSED removed min"
 else
     echo -e "${RED}======================================================="
-    echo -e "FAILED removed min gen"
+    echo -e "FAILED removed min"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc ./examples/generated/ --no-min-gen | grep -q "0.000000"; then
+    echo -e "${GREEN}PASSED removed gen"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED removed gen"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc -z ./examples/generated/ | grep -q "C Header (gen)"; then
+    echo -e "${GREEN}PASSED flagged as gen"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED flagged as gen"
     echo -e "=======================================================${NC}"
     exit
 fi
