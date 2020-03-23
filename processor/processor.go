@@ -2,8 +2,8 @@ package processor
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
+	jsoniter "github.com/json-iterator/go"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -407,6 +407,7 @@ func loadDatabase() map[string]Language {
 		panic(fmt.Sprintf("failed to base64 decode languages: %v", err))
 	}
 
+	var json = jsoniter.ConfigCompatibleWithStandardLibrary
 	if err := json.Unmarshal(data, &database); err != nil {
 		panic(fmt.Sprintf("languages json invalid: %v", err))
 	}

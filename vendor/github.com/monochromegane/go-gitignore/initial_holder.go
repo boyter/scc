@@ -18,12 +18,6 @@ func newInitialPatternHolder() initialPatternHolder {
 
 func (h *initialPatternHolder) add(pattern string) {
 	trimedPattern := strings.TrimPrefix(pattern, "/")
-
-	// https://github.com/boyter/scc/issues/149
-	if trimedPattern == "" {
-		return
-	}
-
 	if strings.IndexAny(trimedPattern[0:1], initials) != -1 {
 		h.patterns.set(trimedPattern[0], newPatternForEqualizedPath(pattern))
 	} else {

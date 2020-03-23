@@ -116,6 +116,36 @@ Why not use `scc`?
  - You don't like Go for some reason
  - It cannot count D source with different nested multi-line comments correctly https://github.com/boyter/scc/issues/27
 
+### Differences
+
+There are some important differences between `scc` and other tools that are out there. Here are a few important ones for you to consider.
+
+Blank lines inside comments are counted as comments. While the line is technically blank the decision was made that 
+once in a comment everything there should be considered a comment until that comment is ended. As such the following,
+ 
+```
+/* blank lines follow
+
+
+*/
+```
+
+Would be counted as 4 lines of comments. This is noticeable when comparing scc's output to other tools on large
+repositories.
+
+`scc` is also able count verbatim strings correctly. For example in C# the following,
+
+```
+private const string BasePath = @"a:\";
+// The below is returned to the user as a version
+private const string Version = "1.0.0";
+```
+
+Because of the prefixed @ this string ends at the trailing " by ignoring the escape character \ and as such should be 
+counted as 2 code lines and 1 comment. Some tools are unable to
+deal with this and instead count up to the "1.0.0" as a string which can cause the middle comment to be counted as
+code rather than a comment.
+
 ### Usage
 
 Command line usage of `scc` is designed to be as simple as possible.
