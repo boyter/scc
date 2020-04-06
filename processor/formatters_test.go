@@ -380,10 +380,44 @@ func TestToJSONSingle(t *testing.T) {
 	}
 	close(inputChan)
 	Debug = true // Increase coverage slightly
+	Files = true
+	res := toJSON(inputChan)
+	Debug = false
+
+	if !strings.Contains(res, `"Name":"Go"`) || !strings.Contains(res, `"Code":1000`) || !strings.Contains(res, `"Filename":"bbbb.go"`) {
+		t.Error("Expected JSON return", res)
+	}
+	if strings.Contains(res, `"Content":`) {
+		t.Error("Expected JSON return", res)
+	}
+}
+
+func TestToJSONSingleWithoutFiles(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	close(inputChan)
+	Debug = true // Increase coverage slightly
+	Files = false
 	res := toJSON(inputChan)
 	Debug = false
 
 	if !strings.Contains(res, `"Name":"Go"`) || !strings.Contains(res, `"Code":1000`) {
+		t.Error("Expected JSON return", res)
+	}
+	if strings.Contains(res, `"Filename":"bbbb.go"`) {
 		t.Error("Expected JSON return", res)
 	}
 }
@@ -420,6 +454,7 @@ func TestToJSONMultiple(t *testing.T) {
 	}
 	close(inputChan)
 	Debug = true // Increase coverage slightly
+	Files = true
 	res := toJSON(inputChan)
 	Debug = false
 
@@ -592,6 +627,7 @@ func TestFileSummarizeJson(t *testing.T) {
 	close(inputChan)
 	Format = "JSON"
 	More = false
+	Files = true
 	res := fileSummarize(inputChan)
 
 	if !strings.Contains(res, `bbbb.go`) || !strings.HasPrefix(res, "[") {
