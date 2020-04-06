@@ -5,14 +5,15 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	glang "golang.org/x/text/language"
-	gmessage "golang.org/x/text/message"
-	"gopkg.in/yaml.v2"
 	"math"
 	"os"
 	"sort"
 	"strings"
 	"time"
+
+	glang "golang.org/x/text/language"
+	gmessage "golang.org/x/text/message"
+	"gopkg.in/yaml.v2"
 )
 
 var tabularShortBreak = "───────────────────────────────────────────────────────────────────────────────\n"
@@ -208,7 +209,9 @@ func toJSON(input chan *FileJob) string {
 
 		if !ok {
 			files := []*FileJob{}
-			files = append(files, res)
+			if Files {
+				files = append(files, res)
+			}
 
 			languages[res.Language] = LanguageSummary{
 				Name:       res.Language,
@@ -222,7 +225,10 @@ func toJSON(input chan *FileJob) string {
 			}
 		} else {
 			tmp := languages[res.Language]
-			files := append(tmp.Files, res)
+			files := tmp.Files
+			if Files {
+				files = append(files, res)
+			}
 
 			languages[res.Language] = LanguageSummary{
 				Name:       res.Language,
