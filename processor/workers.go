@@ -24,6 +24,7 @@ const (
 	SDocString         int64 = 9
 )
 
+// SheBang is a global constant for indicating a shebang file header
 const SheBang string = "#!"
 
 // LineType what type of line are are processing
@@ -36,7 +37,7 @@ const (
 	LINE_COMMENT
 )
 
-// Taken from https://en.wikipedia.org/wiki/Byte_order_mark#Byte_order_marks_by_encoding
+// ByteOrderMarks are taken from https://en.wikipedia.org/wiki/Byte_order_mark#Byte_order_marks_by_encoding
 // These indicate that we cannot count the file correctly so we can at least warn the user
 var ByteOrderMarks = [][]byte{
 	{254, 255},            // UTF-16 BE
@@ -746,12 +747,12 @@ func processFile(job *FileJob) bool {
 		printTrace(fmt.Sprintf("nanoseconds process: %s: %d", job.Location, makeTimestampNano()-fileStartTime))
 	}
 
-	if !job.Binary {
-		return true
-	} else {
+	if job.Binary {
 		if Verbose {
 			printWarn(fmt.Sprintf("skipping file identified as binary: %s", job.Location))
 		}
 		return false
 	}
+
+	return true
 }
