@@ -14,7 +14,7 @@ import (
 	"sync"
 )
 
-// The version of the application
+// Version indicates the version of the application
 var Version = "2.12.0"
 
 // Flags set via the CLI which control how the output is displayed
@@ -40,10 +40,10 @@ var Duplicates = false
 // MinifiedGenerated enables minified/generated file detection
 var MinifiedGenerated = false
 
-// Ignore printing counts for minified/generated files
+// IgnoreMinifiedGenerate printing counts for minified/generated files
 var IgnoreMinifiedGenerate = false
 
-// Number of bytes per average line to determine file is minified/generated
+// MinifiedGeneratedLineByteLength number of bytes per average line to determine file is minified/generated
 var MinifiedGeneratedLineByteLength = 255
 
 // Minified enables minified file detection
@@ -70,13 +70,13 @@ var More = false
 // Cocomo toggles the COCOMO calculation
 var Cocomo = false
 
-// Indicates if running inside a CI so to disable box drawing characters
+// Ci indicates if running inside a CI so to disable box drawing characters
 var Ci = false
 
-// Disables .gitignore checks
+// GitIgnore disables .gitignore checks
 var GitIgnore = false
 
-// Disables ignore file checks
+// Ignore disables ignore file checks
 var Ignore = false
 
 // DisableCheckBinary toggles checking for binary files using NUL bytes
@@ -123,13 +123,13 @@ var GcFileCount = 10000
 var gcPercent = -1
 var isLazy = false
 
-// If set true will ignore files over a certain number of lines or bytes
+// NoLarge if set true will ignore files over a certain number of lines or bytes
 var NoLarge = false
 
-// Number of lines before being counted as a large file based on https://github.com/pinpt/ripsrc/blob/master/ripsrc/fileinfo/fileinfo.go#L44
+// LargeLineCount number of lines before being counted as a large file based on https://github.com/pinpt/ripsrc/blob/master/ripsrc/fileinfo/fileinfo.go#L44
 var LargeLineCount int64 = 40000
 
-// Number of bytes before being counted as a large file based on https://github.com/pinpt/ripsrc/blob/master/ripsrc/fileinfo/fileinfo.go#L44
+// LargeByteCount number of bytes before being counted as a large file based on https://github.com/pinpt/ripsrc/blob/master/ripsrc/fileinfo/fileinfo.go#L44
 var LargeByteCount int64 = 1000000
 
 // DirFilePaths is not set via flags but by arguments following the flags for file or directory to process
@@ -141,10 +141,10 @@ var languageDatabase = map[string]Language{}
 // ExtensionToLanguage is loaded from the JSON that is in constants.go
 var ExtensionToLanguage = map[string][]string{}
 
-// Loaded from the JSON in constants.go contains shebang lookups
+// ShebangLookup loaded from the JSON in constants.go contains shebang lookups
 var ShebangLookup = map[string][]string{}
 
-// Similar to ExtensionToLanguage loaded from the JSON in constants.go
+// FilenameToLanguage similar to ExtensionToLanguage loaded from the JSON in constants.go
 var FilenameToLanguage = map[string]string{}
 
 // LanguageFeatures contains the processed languages from processLanguageFeature
@@ -157,6 +157,7 @@ var LanguageFeaturesMutex = sync.Mutex{}
 // Start time in milli seconds in case we want the total time
 var startTimeMilli = makeTimestampMilli()
 
+// ConfigureLimits configures ulimits where possible
 var ConfigureLimits func() = nil
 
 // ConfigureGc needs to be set outside of ProcessConstants because it should only be enabled in command line
