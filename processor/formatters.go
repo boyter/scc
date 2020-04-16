@@ -86,20 +86,20 @@ type summaryStruct struct {
 }
 
 type headerStruct struct {
-	Url              string  `yaml:"url"`
-	Version          string  `yaml:"version"`
-	Elapsed_seconds  float64 `yaml:"elapsed_seconds"`
-	N_files          int64   `yaml:"n_files"`
-	N_lines          int64   `yaml:"n_lines"`
-	Files_per_second float64 `yaml:"files_per_second"`
-	Lines_per_second float64 `yaml:"lines_per_second"`
+	Url            string  `yaml:"url"`
+	Version        string  `yaml:"version"`
+	ElapsedSeconds float64 `yaml:"elapsed_seconds"`
+	NFiles         int64   `yaml:"n_files"`
+	NLines         int64   `yaml:"n_lines"`
+	FilesPerSecond float64 `yaml:"files_per_second"`
+	LinesPerSecond float64 `yaml:"lines_per_second"`
 }
 
-type LanguageReportStart struct {
+type languageReportStart struct {
 	Header headerStruct
 }
 
-type LanguageReportEnd struct {
+type languageReportEnd struct {
 	Sum summaryStruct `yaml:"SUM"`
 }
 
@@ -159,13 +159,13 @@ func toClocYAML(input chan *FileJob) string {
 	es := float64(makeTimestampMilli()-startTimeMilli) * float64(0.001)
 
 	header := headerStruct{
-		Url:              "https://github.com/boyter/scc/",
-		Version:          Version,
-		N_files:          sumFiles,
-		N_lines:          sumLines,
-		Elapsed_seconds:  es,
-		Files_per_second: float64(float64(sumFiles) / es),
-		Lines_per_second: float64(float64(sumLines) / es),
+		Url:            "https://github.com/boyter/scc/",
+		Version:        Version,
+		NFiles:         sumFiles,
+		NLines:         sumLines,
+		ElapsedSeconds: es,
+		FilesPerSecond: float64(float64(sumFiles) / es),
+		LinesPerSecond: float64(float64(sumLines) / es),
 	}
 	summary := summaryStruct{
 		Blank:   sumBlank,
@@ -173,10 +173,10 @@ func toClocYAML(input chan *FileJob) string {
 		Code:    sumCode,
 		Count:   sumFiles,
 	}
-	reportStart := LanguageReportStart{
+	reportStart := languageReportStart{
 		Header: header,
 	}
-	reportEnd := LanguageReportEnd{
+	reportEnd := languageReportEnd{
 		Sum: summary,
 	}
 

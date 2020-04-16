@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+// FileReader is a struct responsible for reading files into its buffer
 type FileReader struct {
 	Buffer *bytes.Buffer
 }
