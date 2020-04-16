@@ -30,7 +30,7 @@ func DetectLanguage(name string) ([]string, string) {
 	// Convert from d.ts to ts and check that in case of multiple extensions
 	if !ok {
 		extension = getExtension(extension)
-		language, ok = ExtensionToLanguage[extension]
+		language, _ = ExtensionToLanguage[extension]
 	}
 
 	return language, extension
