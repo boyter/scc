@@ -44,18 +44,21 @@ func getExtension(name string) string {
 	return extension.(string)
 }
 
+// DirectoryJob is a struct for dealing with directories we want to walk
 type DirectoryJob struct {
 	root    string
 	path    string
 	ignores []gitignore.IgnoreMatcher
 }
 
+// DirectoryWalker is responsible for actually walking directories using cuba
 type DirectoryWalker struct {
 	buffer   *cuba.Pool
 	output   chan<- *FileJob
 	excludes []*regexp.Regexp
 }
 
+// NewDirectoryWalker create the new directory walker
 func NewDirectoryWalker(output chan<- *FileJob) *DirectoryWalker {
 	directoryWalker := &DirectoryWalker{
 		output: output,
@@ -70,6 +73,7 @@ func NewDirectoryWalker(output chan<- *FileJob) *DirectoryWalker {
 	return directoryWalker
 }
 
+// Start actually starts directory traversal
 func (dw *DirectoryWalker) Start(root string) error {
 	root = filepath.Clean(root)
 
@@ -98,11 +102,13 @@ func (dw *DirectoryWalker) Start(root string) error {
 	return nil
 }
 
+// Run continues to run everything
 func (dw *DirectoryWalker) Run() {
 	dw.buffer.Finish()
 	close(dw.output)
 }
 
+// Walk walks the directory as quickly as it can
 func (dw *DirectoryWalker) Walk(handle *cuba.Handle) {
 	job := handle.Item().(*DirectoryJob)
 
@@ -179,6 +185,7 @@ DIRENTS:
 	}
 }
 
+// Readdir reads a directory such that we know what files are in there
 func (dw *DirectoryWalker) Readdir(path string) ([]os.FileInfo, error) {
 	file, err := os.Open(path)
 	if err != nil {

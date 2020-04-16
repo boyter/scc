@@ -11,12 +11,14 @@ type FileReader struct {
 	Buffer *bytes.Buffer
 }
 
+// NewFileReader creates a new file reader responsible for reading a file
 func NewFileReader() FileReader {
 	return FileReader{
 		Buffer: &bytes.Buffer{},
 	}
 }
 
+// ReadFile actually reads the file into a buffer size controlled by LargeByteCount
 func (reader *FileReader) ReadFile(path string, size int) ([]byte, error) {
 	fd, err := os.Open(path)
 	if err != nil {

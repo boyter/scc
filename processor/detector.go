@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// Detects a language based on the filename returns the language extension and error
+// DetectLanguage detects a language based on the filename returns the language extension and error
 func DetectLanguage(name string) ([]string, string) {
 	extension := ""
 
@@ -51,7 +51,7 @@ func checkFullName(name string) ([]string, string) {
 	return []string{SheBang}, name
 }
 
-// Given some content attempt to determine if it has a #! that maps to a known language and return the language
+// DetectSheBang given some content attempt to determine if it has a #! that maps to a known language and return the language
 func DetectSheBang(content string) (string, error) {
 	if !strings.HasPrefix(content, "#!") {
 		return "", errors.New("Missing #!")
@@ -146,7 +146,7 @@ type languageGuess struct {
 	Count int
 }
 
-// Given a filename, fallback language, possible languages and content make a guess to the type.
+// DetermineLanguage given a filename, fallback language, possible languages and content make a guess to the type.
 // If multiple possible it will guess based on keywords similar to how https://github.com/vmchale/polyglot does
 func DetermineLanguage(filename string, fallbackLanguage string, possibleLanguages []string, content []byte) string {
 	// If being called through an API its possible nothing is set here and as
