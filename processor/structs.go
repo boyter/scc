@@ -107,7 +107,7 @@ type CheckDuplicates struct {
 	mux    sync.Mutex
 }
 
-// Non thread safe add a key into the duplicates check need to use mutex inside struct before calling this
+//Add is a non thread safe add a key into the duplicates check need to use mutex inside struct before calling this
 func (c *CheckDuplicates) Add(key int64, hash []byte) {
 	hashes, ok := c.hashes[key]
 	if ok {
@@ -117,7 +117,7 @@ func (c *CheckDuplicates) Add(key int64, hash []byte) {
 	}
 }
 
-// Non thread safe check to see if the key exists already need to use mutex inside struct before calling this
+// Check is a non thread safe check to see if the key exists already need to use mutex inside struct before calling this
 func (c *CheckDuplicates) Check(key int64, hash []byte) bool {
 	hashes, ok := c.hashes[key]
 	if ok {

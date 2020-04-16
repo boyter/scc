@@ -12,6 +12,7 @@ func init() {
 	ConfigureLimits = ConfigureLimitsUnix
 }
 
+// ConfigureLimitsUnix attempts to control ulimits on unix like OS
 func ConfigureLimitsUnix() {
 	margin := 16
 

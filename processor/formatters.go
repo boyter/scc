@@ -180,10 +180,10 @@ func toClocYAML(input chan *FileJob) string {
 		Sum: summary,
 	}
 
-	report_yaml, _ := yaml.Marshal(reportStart)
-	sum_yaml, _ := yaml.Marshal(reportEnd)
-	language_yaml, _ := yaml.Marshal(languages)
-	yamlString := "# https://github.com/boyter/scc/\n" + string(report_yaml) + string(language_yaml) + string(sum_yaml)
+	reportYaml, _ := yaml.Marshal(reportStart)
+	sumYaml, _ := yaml.Marshal(reportEnd)
+	languageYaml, _ := yaml.Marshal(languages)
+	yamlString := "# https://github.com/boyter/scc/\n" + string(reportYaml) + string(languageYaml) + string(sumYaml)
 
 	if Debug {
 		printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))

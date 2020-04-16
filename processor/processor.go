@@ -49,7 +49,7 @@ var MinifiedGeneratedLineByteLength = 255
 // Minified enables minified file detection
 var Minified = false
 
-// Ignore printing counts for minified files
+// IgnoreMinified ignore printing counts for minified files
 var IgnoreMinified = false
 
 // Generated enables generated file detection
@@ -58,7 +58,7 @@ var Generated = false
 // GeneratedMarkers defines head markers for generated file detection
 var GeneratedMarkers []string
 
-// Ignore printing counts for generated files
+// IgnoreGenerated ignore printing counts for generated files
 var IgnoreGenerated = false
 
 // Complexity toggles complexity calculation
@@ -158,7 +158,7 @@ var LanguageFeaturesMutex = sync.Mutex{}
 var startTimeMilli = makeTimestampMilli()
 
 // ConfigureLimits configures ulimits where possible
-var ConfigureLimits func() = nil
+var ConfigureLimits func()
 
 // ConfigureGc needs to be set outside of ProcessConstants because it should only be enabled in command line
 // mode https://github.com/boyter/scc/issues/32
