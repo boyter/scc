@@ -5097,7 +5097,8 @@
       "== "
     ],
     "extensions": [
-      "rhtml"
+      "rhtml",
+      "erb"
     ],
     "line_comment": [],
     "multi_line": [
