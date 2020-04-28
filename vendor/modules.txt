@@ -1,0 +1,42 @@
+# github.com/dbaggerman/cuba v0.3.2
+## explicit
+github.com/dbaggerman/cuba
+# github.com/inconshreveable/mousetrap v1.0.0
+## explicit
+github.com/inconshreveable/mousetrap
+# github.com/json-iterator/go v1.1.9
+## explicit
+github.com/json-iterator/go
+# github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1
+## explicit
+github.com/minio/blake2b-simd
+# github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
+## explicit
+github.com/modern-go/concurrent
+# github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742
+## explicit
+github.com/modern-go/reflect2
+# github.com/monochromegane/go-gitignore v0.0.0-20160105113617-38717d0a108c
+## explicit
+github.com/monochromegane/go-gitignore
+# github.com/spf13/cobra v0.0.3
+## explicit
+github.com/spf13/cobra
+# github.com/spf13/pflag v1.0.3
+## explicit
+github.com/spf13/pflag
+# golang.org/x/text v0.3.0
+## explicit
+golang.org/x/text/feature/plural
+golang.org/x/text/internal
+golang.org/x/text/internal/catmsg
+golang.org/x/text/internal/format
+golang.org/x/text/internal/number
+golang.org/x/text/internal/stringset
+golang.org/x/text/internal/tag
+golang.org/x/text/language
+golang.org/x/text/message
+golang.org/x/text/message/catalog
+# gopkg.in/yaml.v2 v2.2.2
+## explicit
+gopkg.in/yaml.v2
