@@ -177,7 +177,18 @@ DIRENTS:
 				},
 			)
 		} else {
-			fileJob := newFileJob(path, name, dirent)
+			fileInfo := dirent
+			if dirent.Mode()&os.ModeSymlink != 0 {
+				linkName, err := os.Readlink(path)
+				if err != nil {
+					continue DIRENTS
+				}
+				fileInfo, err = os.Lstat(linkName)
+				if err != nil {
+					continue DIRENTS
+				}
+			}
+			fileJob := newFileJob(path, name, fileInfo)
 			if fileJob != nil {
 				dw.output <- fileJob
 			}
