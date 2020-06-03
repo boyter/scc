@@ -43,6 +43,7 @@ else
     echo -e "${GREEN}PASSED invalid option test"
 fi
 
+# NB you need to have pyyaml installed via pip install pyyaml for this to work
 if ./scc "examples/language/" --format cloc-yaml -o .tmp_scc_yaml >/dev/null && python <<EOS
 import yaml,sys
 try:
