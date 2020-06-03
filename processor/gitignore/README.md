@@ -1,3 +1,9 @@
+# NB 
+
+This has been patched in from https://github.com/monochromegane/go-gitignore due to this issue https://github.com/monochromegane/go-gitignore/issues/5
+
+Long term goal is to split it out into a reusable component everyone can take advantage of.
+
 # go-gitignore [![Build Status](https://travis-ci.org/monochromegane/go-gitignore.svg)](https://travis-ci.org/monochromegane/go-gitignore)
 
 A fast gitignore matching library for Go.
