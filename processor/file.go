@@ -8,8 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/boyter/scc/processor/gitignore"
 	"github.com/dbaggerman/cuba"
-	"github.com/monochromegane/go-gitignore"
 )
 
 // Used as quick lookup for files with the same name to avoid some processing

@@ -87,7 +87,7 @@ func TestWalkDirectoryParallel(t *testing.T) {
 	inputChan := make(chan *FileJob, 10000)
 
 	dirwalker := NewDirectoryWalker(inputChan)
-	err := dirwalker.Start("../vendor/")
+	err := dirwalker.Start("../")
 	if err != nil {
 		t.Errorf("dirwalker.Start returned error: %v", err)
 		t.FailNow()
