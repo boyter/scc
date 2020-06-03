@@ -816,7 +816,8 @@
       "== "
     ],
     "extensions": [
-      "cs"
+      "cs",
+      "csx"
     ],
     "line_comment": [
       "//"
