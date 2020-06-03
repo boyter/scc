@@ -77,8 +77,8 @@ func TestWalkDirectoryParallel(t *testing.T) {
 	ProcessConstants()
 
 	AllowListExtensions = []string{"go"}
-	Exclude = []string{"vendor"}
-	PathDenyList = []string{"vendor"}
+	Exclude = []string{}
+	PathDenyList = []string{}
 	Verbose = true
 	Trace = true
 	Debug = true
@@ -87,7 +87,7 @@ func TestWalkDirectoryParallel(t *testing.T) {
 	inputChan := make(chan *FileJob, 10000)
 
 	dirwalker := NewDirectoryWalker(inputChan)
-	err := dirwalker.Start("../examples/")
+	err := dirwalker.Start("../vendor/")
 	if err != nil {
 		t.Errorf("dirwalker.Start returned error: %v", err)
 		t.FailNow()
