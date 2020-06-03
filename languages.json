@@ -3483,6 +3483,40 @@
       "sbcl"
     ]
   },
+  "LLVM IR": {
+    "complexitychecks": [
+      "llvm.loop",
+      "br ",
+      "switch ",
+      "indirectbr ",
+      "invoke ",
+      "callbr ",
+      "resume ",
+      "catchswitch ",
+      "catchret ",
+      "cleanupret ",
+      "shl ",
+      "lshr ",
+      "ashr ",
+      "and ",
+      "or ",
+      "xor "
+    ],
+    "extensions": [
+      "ll"
+    ],
+    "line_comment": [
+      ";"
+    ],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ],
+    "shebangs": []
+  },
   "Lua": {
     "complexitychecks": [
       "for ",
