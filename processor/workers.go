@@ -386,6 +386,16 @@ func CountStats(fileJob *FileJob) {
 	langFeatures := LanguageFeatures[fileJob.Language]
 	LanguageFeaturesMutex.Unlock()
 
+
+	if  len(langFeatures.ComplexityChecks) == 0 &&
+		len(langFeatures.LineComment) == 0 &&
+		len(langFeatures.MultiLine) == 0 &&
+		len(langFeatures.Quotes) == 0 {
+		t := NewTextEngine()
+		t.Process(fileJob)
+		return
+	}
+
 	if langFeatures.Complexity == nil {
 		langFeatures.Complexity = &Trie{}
 	}

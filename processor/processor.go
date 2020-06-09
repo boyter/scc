@@ -346,12 +346,15 @@ func processLanguageFeature(name string, value Language) {
 		Tokens:                tokenTrie,
 		Nested:                value.NestedMultiLine,
 		ComplexityCheckMask:   complexityMask,
-		MultiLineCommentMask:  multiLineCommentMask,
 		SingleLineCommentMask: singleLineCommentMask,
+		MultiLineCommentMask:  multiLineCommentMask,
 		StringCheckMask:       stringMask,
 		ProcessMask:           processMask,
 		Keywords:              value.Keywords,
 		Quotes:                value.Quotes,
+		LineComment:           value.LineComment,
+		ComplexityChecks:      value.ComplexityChecks,
+		MultiLine:             value.MultiLine,
 	}
 	LanguageFeaturesMutex.Unlock()
 }
