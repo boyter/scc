@@ -248,6 +248,8 @@ func toJSON(input chan *FileJob) string {
 		language = append(language, summary)
 	}
 
+	language = sortLanguageSummary(language)
+
 	jsonString, _ := json.Marshal(language)
 
 	if Debug {
