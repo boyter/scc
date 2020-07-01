@@ -481,7 +481,11 @@ For all other changes ensure you run all tests before submitting. You can do so 
 
 ### API Support
 
-The core part of `scc` which is the counting engine is exposed publicly to be integrated into other Go applications. See https://github.com/pinpt/ripsrc for an example of how to do this. However as a quick start consider the following,
+The core part of `scc` which is the counting engine is exposed publicly to be integrated into other Go applications. See https://github.com/pinpt/ripsrc for an example of how to do this. 
+
+It also powers all of the code calculations displayed in https://searchcode.com/ such as https://searchcode.com/file/169350674/main.go/ making it one of the more used code counters in the world.
+
+However as a quick start consider the following,
 
 ```
 package main
