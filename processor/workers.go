@@ -370,6 +370,8 @@ func verifyIgnoreEscape(langFeatures LanguageFeature, fileJob *FileJob, index in
 	return index, ignoreEscape
 }
 
+var textEngine = NewTextEngine()
+
 // CountStats will process the fileJob
 // If the file contains anything even just a newline its line count should be >= 1.
 // If the file has a size of 0 its line count should be 0.
@@ -391,8 +393,7 @@ func CountStats(fileJob *FileJob) {
 		len(langFeatures.LineComment) == 0 &&
 		len(langFeatures.MultiLine) == 0 &&
 		len(langFeatures.Quotes) == 0 {
-		t := NewTextEngine()
-		t.Process(fileJob)
+		textEngine.Process(fileJob)
 		return
 	}
 

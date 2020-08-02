@@ -37,7 +37,7 @@ func (c *TextEngine) Process(fileJob *FileJob) {
 				// if the previous is \r check to see if its at the start in which case increment
 				if fileJob.Content[b[0]-1] == '\r' && b[0]-1 == 0 {
 					fileJob.Blank++
-				} else if fileJob.Content[b[0]-2] == '\n' {
+				} else if b[0]-2 > 0 && fileJob.Content[b[0]-2] == '\n' {
 					fileJob.Blank++
 				}
 			}
