@@ -246,6 +246,8 @@ Appears to also be used inside both http://codescoop.com/ and https://pinpoint.c
 
 It also is used to count code and guess language types in https://searchcode.com/ which makes it one of the most frequently run code counters in the world. 
 
+You can also hook scc into your gitlab pipeline https://gitlab.com/guided-explorations/ci-cd-plugin-extensions/ci-cd-plugin-extension-scc
+
 ### Features
 
 `scc` uses a small state machine in order to determine what state the code is when it reaches a newline `\n`. As such it is aware of and able to count
