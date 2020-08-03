@@ -1002,6 +1002,67 @@ package some
 	}
 }
 
+func TestCountStatsIssue182(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Pascal",
+	}
+
+	fileJob.SetContent(`uses
+    someunit;
+
+{This is a comment}
+procedure Something
+var
+    avar: String;
+begin
+    Println('Oho');
+end;
+{This is a comment}
+procedure Nothing
+begin
+end.
+`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Code != 11 {
+		t.Errorf("Expected 11 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 2 {
+		t.Errorf("Expected 2 lines got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Blank)
+	}
+}
+
+func TestCountStatsIssue182Delphi(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Pascal",
+	}
+
+	fileJob.SetContent(`// this isnt a comment in pascal but is in delphi
+`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Code != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 lines got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Blank)
+	}
+}
+
 //////////////////////////////////////////////////
 // Benchmarks Below
 //////////////////////////////////////////////////
