@@ -295,7 +295,7 @@ func toHtml(input chan *FileJob) string {
 
 func toHtmlTable(input chan *FileJob) string {
 	languages := map[string]LanguageSummary{}
-	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
+	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumBytes int64 = 0, 0, 0, 0, 0, 0, 0
 
 	for res := range input {
 		sumFiles++
@@ -304,6 +304,7 @@ func toHtmlTable(input chan *FileJob) string {
 		sumComment += res.Comment
 		sumBlank += res.Blank
 		sumComplexity += res.Complexity
+		sumBytes += res.Bytes
 
 		_, ok := languages[res.Language]
 
@@ -320,6 +321,7 @@ func toHtmlTable(input chan *FileJob) string {
 				Complexity: res.Complexity,
 				Count:      1,
 				Files:      files,
+				Bytes:      res.Bytes,
 			}
 		} else {
 			tmp := languages[res.Language]
@@ -334,6 +336,7 @@ func toHtmlTable(input chan *FileJob) string {
 				Complexity: tmp.Complexity + res.Complexity,
 				Count:      tmp.Count + 1,
 				Files:      files,
+				Bytes:      tmp.Bytes + res.Bytes,
 			}
 		}
 	}
@@ -356,6 +359,7 @@ func toHtmlTable(input chan *FileJob) string {
 		<th>Comment</th>
 		<th>Code</th>
 		<th>Complexity</th>
+		<th>Bytes</th>
 	</tr></thead>
 	<tbody>`)
 
@@ -368,7 +372,8 @@ func toHtmlTable(input chan *FileJob) string {
 		<th>%d</th>
 		<th>%d</th>
 		<th>%d</th>
-	</tr>`, r.Name, len(r.Files), r.Lines, r.Blank, r.Comment, r.Code, r.Complexity))
+		<th>%d</th>
+	</tr>`, r.Name, len(r.Files), r.Lines, r.Blank, r.Comment, r.Code, r.Complexity, r.Bytes))
 
 		if Files {
 			sortSummaryFiles(&r)
@@ -382,7 +387,8 @@ func toHtmlTable(input chan *FileJob) string {
 		<td>%d</td>
 		<td>%d</td>
 		<td>%d</td>
-	</tr>`, res.Location, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity))
+	    <td>%d</td>
+	</tr>`, res.Location, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.Bytes))
 			}
 		}
 
@@ -397,8 +403,9 @@ func toHtmlTable(input chan *FileJob) string {
 		<th>%d</th>
 		<th>%d</th>
 		<th>%d</th>
+    	<th>%d</th>
 	</tr></tfoot>
-	</table>`, sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity))
+	</table>`, sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumBytes))
 
 	return str.String()
 }
