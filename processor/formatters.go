@@ -195,16 +195,8 @@ func toClocYAML(input chan *FileJob) string {
 func toJSON(input chan *FileJob) string {
 	startTime := makeTimestampMilli()
 	languages := map[string]LanguageSummary{}
-	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
 
 	for res := range input {
-		sumFiles++
-		sumLines += res.Lines
-		sumCode += res.Code
-		sumComment += res.Comment
-		sumBlank += res.Blank
-		sumComplexity += res.Complexity
-
 		_, ok := languages[res.Language]
 
 		if !ok {
@@ -222,6 +214,7 @@ func toJSON(input chan *FileJob) string {
 				Complexity: res.Complexity,
 				Count:      1,
 				Files:      files,
+				Bytes:      res.Bytes,
 			}
 		} else {
 			tmp := languages[res.Language]
@@ -239,6 +232,7 @@ func toJSON(input chan *FileJob) string {
 				Complexity: tmp.Complexity + res.Complexity,
 				Count:      tmp.Count + 1,
 				Files:      files,
+				Bytes:      res.Bytes + tmp.Bytes,
 			}
 		}
 	}
