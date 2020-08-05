@@ -215,6 +215,7 @@ func toJSON(input chan *FileJob) string {
 				Count:      1,
 				Files:      files,
 				Bytes:      res.Bytes,
+				CodeBytes:  res.CodeBytes,
 			}
 		} else {
 			tmp := languages[res.Language]
@@ -233,6 +234,7 @@ func toJSON(input chan *FileJob) string {
 				Count:      tmp.Count + 1,
 				Files:      files,
 				Bytes:      res.Bytes + tmp.Bytes,
+				CodeBytes:  res.CodeBytes + tmp.CodeBytes,
 			}
 		}
 	}
