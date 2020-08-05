@@ -566,6 +566,33 @@ else
     exit
 fi
 
+if ./scc -f csv | grep -q "Bytes"; then
+    echo -e "${GREEN}PASSED csv bytes check"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED csv bytes check"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc -f html | grep -q "Bytes"; then
+    echo -e "${GREEN}PASSED html bytes check"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED html bytes check"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc -f json | grep -q "Bytes"; then
+    echo -e "${GREEN}PASSED json bytes check"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED json bytes check"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 # Try out specific languages
 for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java ' 'Boo ' 'License ' 'BASH ' 'C Shell ' 'Korn Shell ' 'Makefile ' 'Shell ' 'Zsh ' 'Rakefile ' 'Gemfile ' 'Dockerfile ' 'Yarn ' 'Sieve ' 'F# ' 'Elm ' 'Terraform ' 'Clojure ' 'C# ' 'LLVM IR '
 do
