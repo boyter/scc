@@ -262,7 +262,8 @@ func toCSV(input chan *FileJob) string {
 		"Code",
 		"Comments",
 		"Blanks",
-		"Complexity"},
+		"Complexity",
+		"Bytes"},
 	}
 
 	for result := range input {
@@ -274,7 +275,8 @@ func toCSV(input chan *FileJob) string {
 			fmt.Sprint(result.Code),
 			fmt.Sprint(result.Comment),
 			fmt.Sprint(result.Blank),
-			fmt.Sprint(result.Complexity)})
+			fmt.Sprint(result.Complexity),
+			fmt.Sprint(result.Bytes)})
 	}
 
 	b := &bytes.Buffer{}
