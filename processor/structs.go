@@ -67,7 +67,6 @@ type FileJob struct {
 	Location           string
 	Content            []byte `json:"-"`
 	Bytes              int64
-	CodeBytes          int64 // Used to hold a count of the number of bytes that are not in comments
 	Lines              int64
 	Code               int64
 	Comment            int64

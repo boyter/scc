@@ -119,7 +119,6 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, en
 	// Its not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
 	// without checking if it is out of bounds first
 	for i := index; i < endPoint; i++ {
-		fileJob.CodeBytes++
 		index = i
 
 		// If we hit a newline, return because we want to count the stats but keep
@@ -193,7 +192,6 @@ func codeState(
 	digest *hash.Hash,
 ) (int, int64, []byte, [][]byte, bool) {
 	for i := index; i < endPoint; i++ {
-		fileJob.CodeBytes++
 		curByte := fileJob.Content[i]
 		index = i
 
