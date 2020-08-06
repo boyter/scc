@@ -84,6 +84,7 @@ type FileJob struct {
 type LanguageSummary struct {
 	Name               string
 	Bytes              int64
+	CodeBytes          int64
 	Lines              int64
 	Code               int64
 	Comment            int64
