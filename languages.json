@@ -2558,6 +2558,16 @@
       }
     ]
   },
+  "HAML": {
+    "extensions": [
+      "haml"
+    ],
+    "line_comment": [
+      "-#"
+    ],
+    "multi_line": [],
+    "quotes": []
+  },
   "Hamlet": {
     "complexitychecks": [
       "for ",

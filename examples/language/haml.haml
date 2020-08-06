@@ -1,0 +1,14 @@
+# file: app/controllers/movies_controller.rb
+
+class MoviesController < ApplicationController
+  def index
+    @title = "Teen Wolf"
+  end
+end
+
+-# file: app/views/movies/index.html.haml
+
+#content
+ .title
+   %h1= @title
+   = link_to 'Home', home_url
