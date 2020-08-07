@@ -152,8 +152,9 @@ Command line usage of `scc` is designed to be as simple as possible.
 Full details can be found in `scc --help` or `scc -h`.
 
 ```
+$ scc --help
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 2.12.0
+Version 2.13.0
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
@@ -188,8 +189,10 @@ Flags:
       --no-large                    ignore files over certain byte and line size set by max-line-count and max-byte-count
       --no-min                      ignore minified files in output (implies --min)
       --no-min-gen                  ignore minified or generated files in output (implies --min-gen)
+      --no-size                     remove size calculation output
   -M, --not-match stringArray       ignore files and directories matching regular expression
   -o, --output string               output filename (default stdout)
+      --size-unit string            set size unit [si, binary, mixed, xkcd-kb, xkcd-kelly, xkcd-imaginary, xkcd-intel, xkcd-drive, xkcd-bakers] (default "si")
   -s, --sort string                 column to sort by [files, name, lines, blanks, code, comments, complexity] (default "files")
   -t, --trace                       enable trace output (not recommended when processing multiple files)
   -v, --verbose                     verbose output
