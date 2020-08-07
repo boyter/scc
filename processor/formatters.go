@@ -738,9 +738,69 @@ func calculateCocomo(sumCode int64, str *strings.Builder) {
 
 func calculateSize(sumBytes int64, str *strings.Builder) {
 	if !Size {
-		str.WriteString(fmt.Sprintf("Processed %d bytes, %.3f megabytes (SI)\n", sumBytes, float64(sumBytes)/1_000_000))
+		var size float64
+
+		switch strings.ToLower(SizeUnit) {
+		case "binary":
+			size = float64(sumBytes) / 1_048_576
+		case "mixed":
+			size = float64(sumBytes) / 1_024_000
+		case "xkcd-kb":
+			str.WriteString("1000 bytes during leap years, 1024 otherwise\n")
+			tim := time.Now()
+			if isLeapYear(tim.Year()) {
+				size = float64(sumBytes) / 1_000_000
+			}
+		case "xkcd-kelly":
+			str.WriteString("compromise between 1000 and 1024 bytes\n")
+			size = float64(sumBytes) / (1012 * 1012)
+		case "xkcd-imaginary":
+			str.WriteString("used in quantum computing\n")
+			str.WriteString(fmt.Sprintf("Processed %d bytes, %s megabytes (%s)\n", sumBytes, `¯\_(ツ)_/¯`, strings.ToUpper(SizeUnit)))
+		case "xkcd-intel":
+			str.WriteString("calculated on pentium F.P.U.\n")
+			size = float64(sumBytes) / (1023.937528 * 1023.937528)
+		case "xkcd-drive":
+			str.WriteString("shrinks by 4 bytes every year for marketing reasons\n")
+			tim := time.Now()
+
+			s := 908 - ((tim.Year() - 2013) * 4) // comic starts with 908 in 2013 hence hardcoded values
+			s = min(s, 908)                      // just in case the clock is stupidly set
+
+			size = float64(sumBytes) / float64(s*s)
+		case "xkcd-bakers":
+			str.WriteString("9 bits to the byte since you're such a good customer\n")
+			size = float64(sumBytes) / (1152 * 1152)
+		default:
+			// SI value of 1000 bytes
+			size = float64(sumBytes) / 1_000_000
+			SizeUnit = "SI"
+		}
+
+		if strings.ToLower(SizeUnit) != "xkcd-imaginary" {
+			str.WriteString(fmt.Sprintf("Processed %d bytes, %.3f megabytes (%s)\n", sumBytes, size, strings.ToUpper(SizeUnit)))
+		}
+
 		str.WriteString(getTabularShortBreak())
 	}
+}
+
+func isLeapYear(year int) bool {
+	leapFlag := false
+	if year%4 == 0 {
+		if year%100 == 0 {
+			if year%400 == 0 {
+				leapFlag = true
+			} else {
+				leapFlag = false
+			}
+		} else {
+			leapFlag = true
+		}
+	} else {
+		leapFlag = false
+	}
+	return leapFlag
 }
 
 func sortLanguageSummary(language []LanguageSummary) []LanguageSummary {

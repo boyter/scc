@@ -119,7 +119,7 @@ else
     exit
 fi
 
-if ./scc --avg-wage 10000 --binary --by-file --no-cocomo --no-size --debug --exclude-dir .git -f tabular -i go -c -d -M something -s name -w processor > /dev/null ; then
+if ./scc --avg-wage 10000 --binary --by-file --no-cocomo --no-size --size-unit si --debug --exclude-dir .git -f tabular -i go -c -d -M something -s name -w processor > /dev/null ; then
     echo -e "${GREEN}PASSED multiple options test"
 else
     echo -e "${RED}======================================================="

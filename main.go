@@ -121,6 +121,12 @@ func main() {
 		false,
 		"remove size calculation output",
 	)
+	flags.StringVar(
+		&processor.SizeUnit,
+		"size-unit",
+		"si",
+		"set size unit [si, binary, mixed, xkcd-kb, xkcd-kelly, xkcd-imaginary, xkcd-intel, xkcd-drive, xkcd-bakers]",
+	)
 	flags.BoolVarP(
 		&processor.Complexity,
 		"no-complexity",

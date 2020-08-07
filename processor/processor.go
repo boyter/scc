@@ -73,6 +73,9 @@ var Cocomo = false
 // Size toggles the Size calculation
 var Size = false
 
+// SizeUnit determines what size calculation is used for megabytes
+var SizeUnit = "si"
+
 // Ci indicates if running inside a CI so to disable box drawing characters
 var Ci = false
 
