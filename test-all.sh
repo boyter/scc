@@ -119,7 +119,7 @@ else
     exit
 fi
 
-if ./scc --avg-wage 10000 --binary --by-file --no-cocomo --debug --exclude-dir .git -f tabular -i go -c -d -M something -s name -w processor > /dev/null ; then
+if ./scc --avg-wage 10000 --binary --by-file --no-cocomo --no-size --debug --exclude-dir .git -f tabular -i go -c -d -M something -s name -w processor > /dev/null ; then
     echo -e "${GREEN}PASSED multiple options test"
 else
     echo -e "${RED}======================================================="
@@ -589,6 +589,15 @@ if ./scc -f json | grep -q "Bytes"; then
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED json bytes check"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc | grep -q "megabytes"; then
+    echo -e "${GREEN}PASSED bytes check"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED bytes check"
     echo -e "=======================================================${NC}"
     exit
 fi

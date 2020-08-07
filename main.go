@@ -115,6 +115,12 @@ func main() {
 		false,
 		"remove COCOMO calculation output",
 	)
+	flags.BoolVar(
+		&processor.Size,
+		"no-size",
+		false,
+		"remove size calculation output",
+	)
 	flags.BoolVarP(
 		&processor.Complexity,
 		"no-complexity",

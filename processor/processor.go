@@ -70,6 +70,9 @@ var More = false
 // Cocomo toggles the COCOMO calculation
 var Cocomo = false
 
+// Size toggles the Size calculation
+var Size = false
+
 // Ci indicates if running inside a CI so to disable box drawing characters
 var Ci = false
 

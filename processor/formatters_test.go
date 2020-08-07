@@ -54,6 +54,33 @@ func TestGetFormattedTime(t *testing.T) {
 	}
 }
 
+func TestCalculateCocomo(t *testing.T) {
+	var str strings.Builder
+	calculateCocomo(1, &str)
+
+	if !strings.Contains(str.String(), "Estimated Schedule Effort 0.247114 months") {
+		t.Error("expected to match got", str.String())
+	}
+}
+
+func TestCalculateSizeSingleByte(t *testing.T) {
+	var str strings.Builder
+	calculateSize(1, &str)
+
+	if !strings.Contains(str.String(), "Processed 1 bytes, 0.000 megabytes (SI)") {
+		t.Error("expected to match got", str.String())
+	}
+}
+
+func TestCalculateSize(t *testing.T) {
+	var str strings.Builder
+	calculateSize(1000000, &str)
+
+	if !strings.Contains(str.String(), "Processed 1000000 bytes, 1.000 megabytes (SI)") {
+		t.Error("expected to match got", str.String())
+	}
+}
+
 func TestSortSummaryFilesEmpty(t *testing.T) {
 	summary := LanguageSummary{}
 	sortSummaryFiles(&summary)

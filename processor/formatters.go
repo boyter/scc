@@ -605,7 +605,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 	}
 
 	languages := map[string]LanguageSummary{}
-	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
+	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumBytes int64 = 0, 0, 0, 0, 0, 0, 0
 
 	for res := range input {
 		sumFiles++
@@ -614,6 +614,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 		sumComment += res.Comment
 		sumBlank += res.Blank
 		sumComplexity += res.Complexity
+		sumBytes += res.Bytes
 
 		_, ok := languages[res.Language]
 
@@ -704,6 +705,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 	str.WriteString(getTabularShortBreak())
 
 	calculateCocomo(sumCode, &str)
+	calculateSize(sumBytes, &str)
 	return str.String()
 }
 
@@ -730,6 +732,13 @@ func calculateCocomo(sumCode int64, str *strings.Builder) {
 		} else {
 			str.WriteString(fmt.Sprintf("Estimated People Required %f\n", estimatedPeopleRequired))
 		}
+		str.WriteString(getTabularShortBreak())
+	}
+}
+
+func calculateSize(sumBytes int64, str *strings.Builder) {
+	if !Size {
+		str.WriteString(fmt.Sprintf("Processed %d bytes, %.3f megabytes (SI)\n", sumBytes, float64(sumBytes)/1_000_000))
 		str.WriteString(getTabularShortBreak())
 	}
 }
