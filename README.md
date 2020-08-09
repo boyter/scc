@@ -342,9 +342,15 @@ identify the most complex file inside a project based on the complexity estimate
 
 JSON produces JSON output. Mostly designed to allow `scc` to feed into other programs.
 
+Note that this format will give you the byte size of every file it `scc` reads allowing you to get a breakdown of the
+number of bytes processed.
+
 #### CSV
 
 CSV as an option is good for importing into a spreadsheet for analysis. 
+
+Note that this format will give you the byte size of every file it `scc` reads allowing you to get a breakdown of the
+number of bytes processed.
 
 #### cloc-yaml 
 
@@ -410,8 +416,11 @@ html head and body tags with minimal styling.
 The markup is designed to allow your own custom styles to be applied. An example report
 [is here to view](SCC-OUTPUT-REPORT.html).
 
-Note that the HTML options follow the command line options, so you can use  `scc --by-file -f html` to produce a report with every
+Note that the HTML options follow the command line options, so you can use `scc --by-file -f html` to produce a report with every
 file and not just the summary.
+
+Note that this format if it has the `--by-file` option will give you the byte size of every file it `scc` reads allowing you to get a breakdown of the
+number of bytes processed.
 
 ### Performance
 
