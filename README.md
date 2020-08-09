@@ -146,6 +146,9 @@ counted as 2 code lines and 1 comment. Some tools are unable to
 deal with this and instead count up to the "1.0.0" as a string which can cause the middle comment to be counted as
 code rather than a comment.
 
+`scc` will also tell you the number of bytes it has processed (for most output formats) allowing you to estimate the
+cost of running some static analysis tools. 
+
 ### Usage
 
 Command line usage of `scc` is designed to be as simple as possible.
