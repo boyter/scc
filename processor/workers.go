@@ -191,6 +191,11 @@ func codeState(
 	langFeatures LanguageFeature,
 	digest *hash.Hash,
 ) (int, int64, []byte, [][]byte, bool) {
+	// Hacky fix to https://github.com/boyter/scc/issues/181
+	if endPoint > len(fileJob.Content) {
+		endPoint--
+	}
+
 	for i := index; i < endPoint; i++ {
 		curByte := fileJob.Content[i]
 		index = i
