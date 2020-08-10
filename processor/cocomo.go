@@ -4,13 +4,13 @@ import (
 	"math"
 )
 
-// EstimateCost calculates the cost in dollars applied using generic COCOMO2 weighted values based
+// EstimateCost calculates the cost in dollars applied using generic COCOMO weighted values based
 // on the average yearly wage
 func EstimateCost(effortApplied float64, averageWage int64) float64 {
 	return effortApplied * float64(averageWage/12) * float64(1.8)
 }
 
-// EstimateEffort calculate the effort applied using generic COCOMO2 weighted values
+// EstimateEffort calculate the effort applied using generic COCOMO weighted values
 func EstimateEffort(sloc int64) float64 {
 	var eaf float64 = 1
 
