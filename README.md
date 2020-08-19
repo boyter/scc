@@ -452,8 +452,8 @@ However if you want greater performance and you have RAM to spare you can disabl
 Benchmarks are run on fresh 32 Core CPU Optimised Digital Ocean Virtual Machine 2019/10/10 all done using [hyperfine](https://github.com/sharkdp/hyperfine) with 3 warm-up runs and 10 timed runs.
 
 ```
-scc v2.8.0
-tokei v10.0.1
+scc v2.13.0
+tokei v12.0.4
 loc v0.5.0
 polyglot v0.5.25
 ```
@@ -463,37 +463,39 @@ polyglot v0.5.25
 
 | Program | Runtime |
 |---|---|
-| scc | 60.0 ms ±   5.8 ms |
-| scc (no complexity) | 49.1 ms ±   4.7 ms |
-| tokei | 47.1 ms ±   3.9 ms |
-| loc | 66.3 ms ±  25.4 ms |
-| polyglot | 41.8 ms ±   1.3 ms |
+| scc | 17.9 ms ±   1.8 ms |
+| scc (no complexity) | 14.6 ms ±   1.3 ms |
+| tokei | 29.3 ms ±   6.8 ms |
+| loc | 50.7 ms ±  21.8 ms |
+| polyglot | 19.6 ms ±   0.7 ms |
 
 #### CPython https://github.com/python/cpython
 
 | Program | Runtime |
 |---|---|
-| scc | 112.9 ms ±  19.8 ms |
-| scc (no complexity) | 91.7 ms ±  19.2 ms |
-| tokei | 103.6 ms ±  10.3 ms |
-| loc | 177.0 ms ±  44.2 ms |
-| polyglot | 175.8 ms ±   8.0 ms |
+| scc | 52.3 ms ±   4.9 ms |
+| scc (no complexity) | 45.2 ms ±   4.4 ms |
+| tokei | 92.2 ms ±   7.4 ms |
+| loc | 132.7 ms ±  17.7 ms |
+| polyglot | 88.0 ms ±   1.6 ms |
 
 #### Linux Kernel https://github.com/torvalds/linux
 
 | Program | Runtime |
 |---|---|
-| scc | 682.2 ms ±  29.6 ms |
-| scc (no complexity) | 538.1 ms ±  26.3 ms |
-| tokei | 782.8 ms ±  30.4 ms |
-| loc | 1.957 s ±  0.031 s |
-| polyglot | 1.736 s ±  0.063 s |
+| scc | 584.8 ms ±  15.8 ms |
+| scc (no complexity) | 420.7 ms ±  11.3 ms |
+| tokei | 871.9 ms ±  23.1 ms |
+| loc | 1.999 s ±  0.057 s |
+| polyglot | 1.171 s ±  0.043 s |
 
 If you enable duplicate detection expect performance to fall by about 20% in `scc`.
 
 Performance is tracked over each release and presented below.
 
 <img alt="scc" src=https://github.com/boyter/scc/raw/master/performance-over-time.png>
+
+https://jsfiddle.net/0ardq2g7/
 
 ### CI/CD Support
 

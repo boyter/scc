@@ -112,6 +112,19 @@ mv scc /usr/local/bin/scc2.9.1
 wget https://github.com/boyter/scc/releases/download/v2.10.0/scc-2.10.0-x86_64-unknown-linux.zip
 unzip scc-2.10.0-x86_64-unknown-linux.zip
 cp scc /usr/local/bin/scc2.10.0
+
+wget https://github.com/boyter/scc/releases/download/v2.10.0/scc-2.11.0-x86_64-unknown-linux.zip
+unzip scc-2.11.0-x86_64-unknown-linux.zip
+cp scc /usr/local/bin/scc2.11.0
+
+wget https://github.com/boyter/scc/releases/download/v2.10.0/scc-2.12.0-x86_64-unknown-linux.zip
+unzip scc-2.12.0-x86_64-unknown-linux.zip
+cp scc /usr/local/bin/scc2.12.0
+
+wget https://github.com/boyter/scc/releases/download/v2.10.0/scc-2.13.0-x86_64-unknown-linux.zip
+unzip scc-2.13.0-x86_64-unknown-linux.zip
+cp scc /usr/local/bin/scc2.13.0
+
 # Now setup as the default
 mv scc /usr/local/bin/scc
 
@@ -167,7 +180,7 @@ cp -R linux linux10/9
 
 # Regression test all versions of scc
 echo "Running regression benchmark"
-hyperfine 'scc1.0.0 linux' 'scc1.1.0 linux' 'scc1.2.0 linux' 'scc1.3.0 linux' 'scc1.4.0 linux' 'scc1.5.0 linux' 'scc1.6.0 linux' 'scc1.7.0 linux' 'scc1.8.0 linux' 'scc1.9.0 linux' 'scc1.10.0 linux' 'scc1.11.0 linux' 'scc1.12.0 linux' 'scc1.12.1 linux' 'scc2.0.0 linux' 'scc2.1.0 linux' 'scc2.2.0 linux' 'scc2.3.0 linux' 'scc2.4.0 linux' 'scc2.5.0 linux' 'scc2.6.0 linux' 'scc2.7.0 linux' 'scc2.8.0 linux' 'scc2.9.0 linux' 'scc2.9.1 linux' 'scc2.10.0 linux' > benchmark_regression.txt
+hyperfine 'scc1.0.0 linux' 'scc1.1.0 linux' 'scc1.2.0 linux' 'scc1.3.0 linux' 'scc1.4.0 linux' 'scc1.5.0 linux' 'scc1.6.0 linux' 'scc1.7.0 linux' 'scc1.8.0 linux' 'scc1.9.0 linux' 'scc1.10.0 linux' 'scc1.11.0 linux' 'scc1.12.0 linux' 'scc1.12.1 linux' 'scc2.0.0 linux' 'scc2.1.0 linux' 'scc2.2.0 linux' 'scc2.3.0 linux' 'scc2.4.0 linux' 'scc2.5.0 linux' 'scc2.6.0 linux' 'scc2.7.0 linux' 'scc2.8.0 linux' 'scc2.9.0 linux' 'scc2.9.1 linux' 'scc2.10.0 linux' 'scc2.11.0 linux' 'scc2.12.0 linux' 'scc2.13.0 linux' > benchmark_regression.txt
 
 # Benchmark against everything
 echo "Running artifical benchmark"
