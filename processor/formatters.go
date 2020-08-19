@@ -481,6 +481,7 @@ func fileSummarizeMulti(input chan *FileJob) string {
 			if t[1] == "stdout" {
 				// return details appended
 				str.WriteString(val)
+				str.WriteString("\n")
 			} else {
 				_ = ioutil.WriteFile(t[1], []byte(val), 0600)
 			}

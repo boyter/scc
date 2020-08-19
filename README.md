@@ -173,6 +173,7 @@ Flags:
       --exclude-dir strings         directories to exclude (default [.git,.hg,.svn])
       --file-gc-count int           number of files to parse before turning the GC on (default 10000)
   -f, --format string               set output format [tabular, wide, json, csv, cloc-yaml, html, html-table] (default "tabular")
+      --format-multi string         have multiple format output overriding --format [e.g. tabular:stdout,csv:file.csv,json:file.json]
       --gen                         identify generated files
       --generated-markers strings   string markers in head of generated files (default [do not edit])
   -h, --help                        help for scc
@@ -210,22 +211,25 @@ $ scc .
 ───────────────────────────────────────────────────────────────────────────────
 Language                 Files     Lines   Blanks  Comments     Code Complexity
 ───────────────────────────────────────────────────────────────────────────────
-C                          258    153080    17005     26121   109954      27671
-C Header                   200     28794     3252      5877    19665       1557
-TCL                        101     17802     1879       981    14942       1439
-Shell                       36      1109      133       252      724        118
+C                          283    166827    18769     29163   118895      29840
+C Header                   210     30851     3474      6471    20906       1621
+TCL                        118     21404     2296      1235    17873       1827
+Shell                       44      1614      213       319     1082        183
+Autoconf                    22     10871     1038      1326     8507        953
 Lua                         20       525       68        70      387         65
-Autoconf                    18     10821     1026      1326     8469        951
-Makefile                    10      1082      220       103      759         51
+Markdown                    15      2564      671         0     1893          0
+Makefile                    10      1276      247       113      916         55
 Ruby                        10       778       78        71      629        115
-Markdown                     9      1935      527         0     1408          0
-gitignore                    9       120       16         0      104          0
+gitignore                   10       157       16         0      141          0
+YAML                         6       572       40         6      526          0
 HTML                         5      9658     2928        12     6718          0
 C++                          4       286       48        14      224         31
 License                      4       100       20         0       80          0
-YAML                         4       266       20         3      243          0
+CMake                        2       214       43         3      168          4
 CSS                          2       107       16         0       91          0
-Python                       2       219       39        18      162         68
+Python                       2       219       12         6      201         34
+Systemd                      2        80        6         0       74          0
+BASH                         1       118       14         5       99         31
 Batch                        1        28        2         0       26          3
 C++ Header                   1         9        1         3        5          0
 Extensible Styleshe…         1        10        0         0       10          0
@@ -233,11 +237,13 @@ Plain Text                   1        23        7         0       16          0
 Smarty Template              1        44        1         0       43          5
 m4                           1       562      116        53      393          0
 ───────────────────────────────────────────────────────────────────────────────
-Total                      698    227358    27402     34904   165052      32074
+Total                      776    248897    30124     38870   179903      34767
 ───────────────────────────────────────────────────────────────────────────────
-Estimated Cost to Develop $5,755,686
-Estimated Schedule Effort 29.835114 months
-Estimated People Required 22.851995
+Estimated Cost to Develop $6,300,654
+Estimated Schedule Effort 30.878580 months
+Estimated People Required 24.170352
+───────────────────────────────────────────────────────────────────────────────
+Processed 8559425 bytes, 8.559 megabytes (SI)
 ───────────────────────────────────────────────────────────────────────────────
 ```
 
@@ -312,6 +318,8 @@ JavaScript (min)             1         4        0         1        3         17
 ───────────────────────────────────────────────────────────────────────────────
 Total                        1         4        0         1        3         17
 ───────────────────────────────────────────────────────────────────────────────
+Processed 86709 bytes, 0.087 megabytes (SI)
+───────────────────────────────────────────────────────────────────────────────
 ```
 
 Minified files are indicated with the text `(min)` after the language name.
@@ -331,6 +339,16 @@ The different options are `tabular, wide, json, csv, cloc-yaml, html, html-table
 Note that you can write `scc` output to disk using the `-o, --output` option. This allows you to specify a file to
 write your output to. For example `scc -f html -o output.html` will run `scc` against the current directory, and output
 the results in html to the file `output.html`.
+
+You can also write to multiple output files, or multiple types to stdout if you want using the `--format-multi` option. This is 
+most useful when working in CI/CD systems where you want HTML reports as an artefact while also displaying the counts in stdout. 
+
+```
+scc --format-multi "tabular:stdout,html:output.html,csv:output.csv"
+```
+
+The above will run against the current directory, outputting to standard output the the default output, as well as writing
+to output.html and output.csv with the appropiate formats.
 
 #### Tabular 
 
@@ -486,15 +504,19 @@ $ scc --ci main.go
 -------------------------------------------------------------------------------
 Language                 Files     Lines   Blanks  Comments     Code Complexity
 -------------------------------------------------------------------------------
-Go                           1       171        6         4      161          2
+Go                           1       272        7         6      259          4
 -------------------------------------------------------------------------------
-Total                        1       171        6         4      161          2
+Total                        1       272        7         6      259          4
 -------------------------------------------------------------------------------
-Estimated Cost to Develop $3,969
-Estimated Schedule Effort 1.876811 months
-Estimated People Required 0.250551
+Estimated Cost to Develop $6,539
+Estimated Schedule Effort 2.268839 months
+Estimated People Required 0.341437
+-------------------------------------------------------------------------------
+Processed 5674 bytes, 0.006 megabytes (SI)
 -------------------------------------------------------------------------------
 ```
+
+The `--format-multi` option is especially useful in CI/CD where you want to get multiple output formats useful for storage or reporting.
 
 ### Development
 
