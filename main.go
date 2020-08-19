@@ -259,6 +259,12 @@ func main() {
 		"",
 		"count extension as language [e.g. jsp:htm,chead:\"C Header\" maps extension jsp to html and chead to C Header]",
 	)
+	flags.StringVar(
+		&processor.FormatMulti,
+		"format-multi",
+		"",
+		"have multiple format output overriding --format [e.g. tabular:stdout,csv:file.csv,json:file.json]",
+	)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

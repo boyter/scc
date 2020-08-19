@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"os"
 	"sort"
@@ -411,6 +412,10 @@ func toHtmlTable(input chan *FileJob) string {
 }
 
 func fileSummarize(input chan *FileJob) string {
+	if FormatMulti != "" {
+		return fileSummarizeMulti(input)
+	}
+
 	switch {
 	case More || strings.ToLower(Format) == "wide":
 		return fileSummarizeLong(input)
@@ -427,6 +432,63 @@ func fileSummarize(input chan *FileJob) string {
 	}
 
 	return fileSummarizeShort(input)
+}
+
+// Deals with the case of CI/CD where you might want to run with multiple outputs
+// both to files and to stdout. Not the most efficient way to do it in terms of memory
+// but seeing as the files are just summaries by this point it shouldn't be too bad
+func fileSummarizeMulti(input chan *FileJob) string {
+	// collect all the results
+	var results []*FileJob
+	for res := range input {
+		results = append(results, res)
+	}
+
+	var str strings.Builder
+
+	// for each output pump the results into
+	for _, s := range strings.Split(FormatMulti, ",") {
+		t := strings.Split(s, ":")
+		if len(t) == 2 {
+			i := make(chan *FileJob, len(results))
+
+			for _, r := range results {
+				i <- r
+			}
+			close(i)
+
+			var val = ""
+
+			switch t[0] {
+			case "tabular":
+				val = fileSummarizeShort(i)
+			case "wide":
+				val = fileSummarizeLong(i)
+			case "json":
+				val = toJSON(i)
+			case "cloc-yaml":
+				val = toClocYAML(i)
+			case "cloc-yml":
+				val = toClocYAML(i)
+			case "csv":
+				val = toCSV(i)
+			case "html":
+				val = toHtml(i)
+			case "html-table":
+				val = toHtmlTable(i)
+			}
+
+			if t[1] == "stdout" {
+				// return details appended
+				str.WriteString(val)
+			} else {
+				_ = ioutil.WriteFile(t[1], []byte(val), 0600)
+			}
+
+		}
+	}
+
+	return str.String()
 }
 
 func fileSummarizeLong(input chan *FileJob) string {

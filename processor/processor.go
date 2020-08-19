@@ -100,6 +100,9 @@ var CountAs = ""
 // Format sets the output format of the formatter
 var Format = ""
 
+// FormatMulti is a rule for defining multiple output formats
+var FormatMulti = ""
+
 // FileOutput sets the file that output should be written to
 var FileOutput = ""
 
