@@ -458,6 +458,8 @@ loc v0.5.0
 polyglot v0.5.25
 ```
 
+See https://github.com/boyter/scc/blob/master/benchmark.sh to see how the benchmarks are run.
+
 
 #### Redis https://github.com/antirez/redis/
 

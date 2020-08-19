@@ -4,7 +4,7 @@
 # Also assumes we have copied the ./examples/performance_tests/create_performance_test.py file to where this is run
 
 apt-get update
-apt-get install --assume-yes build-essential unzip cloc sloccount tmux python htop
+apt-get install --assume-yes build-essential unzip tmux python htop
 
 rm *.zip
 wget https://github.com/boyter/scc/releases/download/v1.0.0/scc-1.0.0-x86_64-unknown-linux.zip
@@ -136,13 +136,7 @@ cargo install hyperfine tokei loc
 
 wget https://github.com/vmchale/polyglot/releases/download/0.5.24/poly-x86_64-unknown-linux-icc
 mv poly-x86_64-unknown-linux-icc /usr/local/bin/polyglot
-chmod +x /usr/local/bin/polyglot
-
-wget https://github.com/hhatto/gocloc/releases/download/v0.3.0/gocloc_0.3.0_Linux_x86_64.tar.gz
-tar zxvf gocloc_0.3.0_Linux_x86_64.tar.gz
-mv gocloc /usr/local/bin/
-
-# TODO want to get a build for loccount here at some point
+chmod +x /usr/local/bin/polyglot/
 
 # Now setup all of the benchmarks
 
@@ -164,19 +158,19 @@ git clone --depth=1 https://github.com/python/cpython.git
 git clone --depth=1 https://github.com/torvalds/linux.git
 
 # Setup torture test
-
-echo "Copying 10 linuxes"
-mkdir -p linux10
-cp -R linux linux10/0
-cp -R linux linux10/1
-cp -R linux linux10/2
-cp -R linux linux10/3
-cp -R linux linux10/4
-cp -R linux linux10/5
-cp -R linux linux10/6
-cp -R linux linux10/7
-cp -R linux linux10/8
-cp -R linux linux10/9
+#
+#echo "Copying 10 linuxes"
+#mkdir -p linux10
+#cp -R linux linux10/0
+#cp -R linux linux10/1
+#cp -R linux linux10/2
+#cp -R linux linux10/3
+#cp -R linux linux10/4
+#cp -R linux linux10/5
+#cp -R linux linux10/6
+#cp -R linux linux10/7
+#cp -R linux linux10/8
+#cp -R linux linux10/9
 
 # Regression test all versions of scc
 echo "Running regression benchmark"
@@ -184,10 +178,10 @@ hyperfine 'scc1.0.0 linux' 'scc1.1.0 linux' 'scc1.2.0 linux' 'scc1.3.0 linux' 's
 
 # Benchmark against everything
 echo "Running artifical benchmark"
-hyperfine 'scc artifical' 'scc -c artifical' 'tokei artifical' 'loc artifical' 'polyglot artifical' 'gocloc artifical' > benchmark_artifical.txt
+hyperfine 'scc artifical' 'scc -c artifical' 'tokei artifical' 'loc artifical' 'polyglot artifical' > benchmark_artifical.txt
 
 echo "Running redis benchmark"
-hyperfine 'scc redis' 'scc -c redis' 'tokei redis' 'loc redis' 'polyglot redis' 'gocloc redis' 'cloc redis' 'sloccount redis' > benchmark_redis.txt
+hyperfine 'scc redis' 'scc -c redis' 'tokei redis' 'loc redis' 'polyglot redis' 'gocloc redis' > benchmark_redis.txt
 
 echo "Running cpython benchmark"
 hyperfine 'scc cpython' 'scc -c cpython' 'tokei cpython' 'loc cpython' 'polyglot cpython' 'gocloc cpython' > benchmark_cpython.txt
@@ -195,7 +189,7 @@ hyperfine 'scc cpython' 'scc -c cpython' 'tokei cpython' 'loc cpython' 'polyglot
 echo "Running linux benchmark"
 hyperfine 'scc linux' 'scc -c linux' 'tokei linux' 'loc linux' 'polyglot linux' 'gocloc linux' > benchmark_linux.txt
 
-echo "Running linux10 benchmark"
-hyperfine 'scc linux10' 'scc -c linux10' 'tokei linux10' 'loc linux10' 'polyglot linux10' > benchmark_linux10.txt
+#echo "Running linux10 benchmark"
+#hyperfine 'scc linux10' 'scc -c linux10' 'tokei linux10' 'loc linux10' 'polyglot linux10' > benchmark_linux10.txt
 
 echo "All done!"
