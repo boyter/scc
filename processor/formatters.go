@@ -459,7 +459,7 @@ func fileSummarizeMulti(input chan *FileJob) string {
 
 			var val = ""
 
-			switch t[0] {
+			switch strings.ToLower(t[0]) {
 			case "tabular":
 				val = fileSummarizeShort(i)
 			case "wide":
@@ -479,7 +479,6 @@ func fileSummarizeMulti(input chan *FileJob) string {
 			}
 
 			if t[1] == "stdout" {
-				// return details appended
 				str.WriteString(val)
 				str.WriteString("\n")
 			} else {
