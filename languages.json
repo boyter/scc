@@ -4734,7 +4734,12 @@
     "line_comment": [
       "//"
     ],
-    "multi_line": [],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
     "quotes": []
   },
   "Puppet": {
