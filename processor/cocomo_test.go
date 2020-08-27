@@ -28,8 +28,8 @@ func TestEstimateScheduleMonths(t *testing.T) {
 	eff := EstimateEffort(537)
 	got := EstimateScheduleMonths(eff)
 
-	// Should be around 3.03
-	if got < 3 || got > 3.1 {
+	// Should be around 2.7
+	if got < 2.6 || got > 2.8 {
 		t.Errorf("Got %f", got)
 	}
 }
