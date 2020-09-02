@@ -536,6 +536,8 @@ It also powers all of the code calculations displayed in https://searchcode.com/
 
 However as a quick start consider the following,
 
+Note that you must pass in the number of bytes in the content in order to ensure it is counted!
+
 ```
 package main
 
@@ -569,6 +571,7 @@ func main() {
 		Language: "Go",
 		Content:  bts,
 		Callback: t,
+		Bytes:    int64(len(bts)),
 	}
 
 	processor.ProcessConstants() // Required to load the language information and need only be done once
