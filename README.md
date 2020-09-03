@@ -155,9 +155,9 @@ Command line usage of `scc` is designed to be as simple as possible.
 Full details can be found in `scc --help` or `scc -h`.
 
 ```
-$ scc --help
+$ scc -h
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 2.13.0
+Version 2.13.0 (beta)
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
@@ -178,6 +178,7 @@ Flags:
       --generated-markers strings   string markers in head of generated files (default [do not edit])
   -h, --help                        help for scc
   -i, --include-ext strings         limit to file extensions [comma separated list: e.g. go,java,js]
+      --include-symlink             if set will count symlink files
   -l, --languages                   print supported languages and extensions
       --large-byte-count int        number of bytes a file can contain before being removed from output (default 1000000)
       --large-line-count int        number of lines a file can contain before being removed from output (default 40000)
