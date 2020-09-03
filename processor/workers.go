@@ -425,7 +425,7 @@ func CountStats(fileJob *FileJob) {
 		digest = blake2b.New256()
 	}
 
-	for index := checkBomSkip(fileJob); index < len(fileJob.Content); index++ {
+	for index := checkBomSkip(fileJob); index < int(fileJob.Bytes); index++ {
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
 		// changing anything in here and profile/measure afterwards!
@@ -633,8 +633,13 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 			for job := range input {
 				atomic.CompareAndSwapInt64(&startTime, 0, makeTimestampMilli())
 
+				loc := job.Location
+				if job.Symlocation != "" {
+					loc = job.Symlocation
+				}
+
 				fileStartTime := makeTimestampNano()
-				content, err := reader.ReadFile(job.Location, int(job.Bytes))
+				content, err := reader.ReadFile(loc, int(job.Bytes))
 				atomic.AddInt64(&fileCount, 1)
 
 				if atomic.LoadInt64(&gcEnabled) == 0 && atomic.LoadInt64(&fileCount) >= int64(GcFileCount) {

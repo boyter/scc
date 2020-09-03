@@ -404,6 +404,19 @@ else
     echo -e "${GREEN}PASSED minified ignored check"
 fi
 
+a=$(./scc ./examples/symlink/)
+b=$(./scc --include-symlink ./examples/symlink/)
+if [ "$a" == "$b" ]; then
+    echo "$a"
+    echo "$b"
+    echo -e "${RED}======================================================="
+    echo -e "FAILED symlink check"
+    echo -e "=================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED minified ignored check"
+fi
+
 if ./scc ./examples/minified/ --no-min-gen | grep -q "0.000000"; then
     echo -e "${GREEN}PASSED removed min"
 else

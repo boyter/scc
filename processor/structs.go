@@ -65,6 +65,7 @@ type FileJob struct {
 	Filename           string
 	Extension          string
 	Location           string
+	Symlocation        string
 	Content            []byte `json:"-"`
 	Bytes              int64
 	Lines              int64

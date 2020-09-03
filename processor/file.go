@@ -77,7 +77,7 @@ func NewDirectoryWalker(output chan<- *FileJob) *DirectoryWalker {
 func (dw *DirectoryWalker) Start(root string) error {
 	root = filepath.Clean(root)
 
-	fileInfo, err := os.Stat(root)
+	fileInfo, err := os.Lstat(root)
 	if err != nil {
 		return err
 	}
@@ -177,18 +177,7 @@ DIRENTS:
 				},
 			)
 		} else {
-			fileInfo := dirent
-			if dirent.Mode()&os.ModeSymlink != 0 {
-				linkName, err := os.Readlink(path)
-				if err != nil {
-					continue DIRENTS
-				}
-				fileInfo, err = os.Lstat(linkName)
-				if err != nil {
-					continue DIRENTS
-				}
-			}
-			fileJob := newFileJob(path, name, fileInfo)
+			fileJob := newFileJob(path, name, dirent)
 			if fileJob != nil {
 				dw.output <- fileJob
 			}
@@ -222,6 +211,22 @@ func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 		}
 	}
 
+	var symPath = ""
+	// Check if the file is a symlink and if we want to count those then work out its path and rejig
+	// everything so we can count the real file to ensure the counts are correct
+	if fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
+		if !IncludeSymLink {
+			if Verbose {
+				printWarn(fmt.Sprintf("skipping symlink file: %s", name))
+			}
+
+			return nil
+		}
+
+		symPath, _ = filepath.EvalSymlinks(path)
+		fileInfo, _ = os.Lstat(symPath)
+	}
+
 	language, extension := DetectLanguage(name)
 
 	if len(language) != 0 {
@@ -247,6 +252,7 @@ func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 
 		return &FileJob{
 			Location:          path,
+			Symlocation:       symPath,
 			Filename:          name,
 			Extension:         extension,
 			PossibleLanguages: language,
