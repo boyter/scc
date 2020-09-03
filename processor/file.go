@@ -215,7 +215,7 @@ func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 	// Check if the file is a symlink and if we want to count those then work out its path and rejig
 	// everything so we can count the real file to ensure the counts are correct
 	if fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
-		if !IncludeSymLink {
+		if !IncludeSymLinks {
 			if Verbose {
 				printWarn(fmt.Sprintf("skipping symlink file: %s", name))
 			}

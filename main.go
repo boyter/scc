@@ -242,8 +242,8 @@ func main() {
 		"ignore files over certain byte and line size set by max-line-count and max-byte-count",
 	)
 	flags.BoolVar(
-		&processor.IncludeSymLink,
-		"include-symlink",
+		&processor.IncludeSymLinks,
+		"include-symlinks",
 		false,
 		"if set will count symlink files",
 	)

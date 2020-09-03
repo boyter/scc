@@ -135,8 +135,8 @@ var isLazy = false
 // NoLarge if set true will ignore files over a certain number of lines or bytes
 var NoLarge = false
 
-// IncludeSymLink if set true will count symlink files
-var IncludeSymLink = false
+// IncludeSymLinks if set true will count symlink files
+var IncludeSymLinks = false
 
 // LargeLineCount number of lines before being counted as a large file based on https://github.com/pinpt/ripsrc/blob/master/ripsrc/fileinfo/fileinfo.go#L44
 var LargeLineCount int64 = 40000
@@ -408,7 +408,7 @@ func processFlags() {
 		printDebug(fmt.Sprintf("Cocomo: %t", !Cocomo))
 		printDebug(fmt.Sprintf("Minified/Generated Detection: %t/%t", Minified, Generated))
 		printDebug(fmt.Sprintf("Ignore Minified/Generated: %t/%t", IgnoreMinified, IgnoreGenerated))
-		printDebug(fmt.Sprintf("IncludeSymLink: %t", IncludeSymLink))
+		printDebug(fmt.Sprintf("IncludeSymLinks: %t", IncludeSymLinks))
 	}
 }
 
