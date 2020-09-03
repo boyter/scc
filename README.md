@@ -178,7 +178,7 @@ Flags:
       --generated-markers strings   string markers in head of generated files (default [do not edit])
   -h, --help                        help for scc
   -i, --include-ext strings         limit to file extensions [comma separated list: e.g. go,java,js]
-      --include-symlink             if set will count symlink files
+      --include-symlinks            if set will count symlink files
   -l, --languages                   print supported languages and extensions
       --large-byte-count int        number of bytes a file can contain before being removed from output (default 1000000)
       --large-line-count int        number of lines a file can contain before being removed from output (default 40000)
