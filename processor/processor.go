@@ -103,6 +103,12 @@ var Format = ""
 // FormatMulti is a rule for defining multiple output formats
 var FormatMulti = ""
 
+// UnknownRemap allows remapping of unknown files with a string to search the content for
+var UnknownRemap = ""
+
+// HardRemap allows remapping of all files with a string to search the content for
+var HardRemap = ""
+
 // FileOutput sets the file that output should be written to
 var FileOutput = ""
 
