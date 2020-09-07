@@ -15,7 +15,7 @@ import (
 )
 
 // Version indicates the version of the application
-var Version = "2.13.0 (beta)"
+var Version = "2.13.0"
 
 // Flags set via the CLI which control how the output is displayed
 
@@ -103,11 +103,11 @@ var Format = ""
 // FormatMulti is a rule for defining multiple output formats
 var FormatMulti = ""
 
-// UnknownRemap allows remapping of unknown files with a string to search the content for
-var UnknownRemap = ""
+// RemapUnknown allows remapping of unknown files with a string to search the content for
+var RemapUnknown = ""
 
-// HardRemap allows remapping of all files with a string to search the content for
-var HardRemap = ""
+// RemapAll allows remapping of all files with a string to search the content for
+var RemapAll = ""
 
 // FileOutput sets the file that output should be written to
 var FileOutput = ""

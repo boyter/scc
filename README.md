@@ -331,6 +331,28 @@ You can control the average line byte size using `--min-gen-line-length` such as
 
 You can exclude minified files from the count totally using the flag `--no-min-gen`. Files which match the minified check will be excluded from the output.
 
+### Remapping
+
+Some files may not have an extension. They will be checked to see if they are a #! file. If they are then the language will be remapped to the 
+correct language. Otherwise, it will not process.
+
+However, you may have the situation where you want to remap such files based on a string inside it. To do so you can use `--remap-unknown`
+
+```
+ scc --remap-unknown "-*- C++ -*-":"C Header"
+```
+
+The above will inspect any file with no extension looking for the string `-*- C++ -*-` and if found remap the file to be counted using the C Header rules. 
+You can have multiple remap rules if required,
+
+```
+ scc --remap-unknown "-*- C++ -*-":"C Header","other":"Java"
+```
+
+There is als the `--remap-all` parameter which will remap all files.
+
+Note that in all cases if the remap rule does not apply normal #! rules will apply.
+
 ### Output Formats
 
 By default `scc` will output to the console. However you can produce output in other formats if you require.

@@ -693,13 +693,13 @@ func processFile(job *FileJob) bool {
 	job.Language = DetermineLanguage(job.Filename, job.Language, job.PossibleLanguages, job.Content)
 
 	remapped := false
-	if HardRemap != "" {
+	if RemapAll != "" {
 		hardRemapLanguage(job)
 	}
 
 	// If the type is #! we should check to see if we can identify
 	if job.Language == SheBang {
-		if UnknownRemap != "" {
+		if RemapUnknown != "" {
 			remapped = unknownRemapLanguage(job)
 		}
 
@@ -782,7 +782,7 @@ func processFile(job *FileJob) bool {
 
 func hardRemapLanguage(job *FileJob) bool {
 	remapped := false
-	for _, s := range strings.Split(HardRemap, ",") {
+	for _, s := range strings.Split(RemapAll, ",") {
 		t := strings.Split(s, ":")
 		if len(t) == 2 {
 			cutoff := 1000 // 1000 bytes into the file to look
@@ -808,7 +808,7 @@ func hardRemapLanguage(job *FileJob) bool {
 
 func unknownRemapLanguage(job *FileJob) bool {
 	remapped := false
-	for _, s := range strings.Split(UnknownRemap, ",") {
+	for _, s := range strings.Split(RemapUnknown, ",") {
 		t := strings.Split(s, ":")
 		if len(t) == 2 {
 			cutoff := 1000 // 1000 bytes into the file to look

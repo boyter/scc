@@ -271,15 +271,14 @@ func main() {
 		"",
 		"have multiple format output overriding --format [e.g. tabular:stdout,csv:file.csv,json:file.json]",
 	)
-
 	flags.StringVar(
-		&processor.UnknownRemap,
+		&processor.RemapUnknown,
 		"remap-unknown",
 		"",
 		"inspect files of unknown type and remap by checking for a string and remapping the language [e.g. \"-*- C++ -*-\":\"C Header\"]",
 	)
 	flags.StringVar(
-		&processor.HardRemap,
+		&processor.RemapAll,
 		"remap-all",
 		"",
 		"inspect every file and remap by checking for a string and remapping the language [e.g. \"-*- C++ -*-\":\"C Header\"]",
