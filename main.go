@@ -274,13 +274,13 @@ func main() {
 
 	flags.StringVar(
 		&processor.UnknownRemap,
-		"unknown-remap",
+		"remap-unknown",
 		"",
 		"inspect files of unknown type and remap by checking for a string and remapping the language [e.g. \"-*- C++ -*-\":\"C Header\"]",
 	)
 	flags.StringVar(
 		&processor.HardRemap,
-		"hard-remap",
+		"remap-all",
 		"",
 		"inspect every file and remap by checking for a string and remapping the language [e.g. \"-*- C++ -*-\":\"C Header\"]",
 	)

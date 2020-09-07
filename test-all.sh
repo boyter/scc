@@ -633,6 +633,24 @@ else
     exit
 fi
 
+if ./scc --remap-unknown "-*- C++ -*-":"C Header" ./examples/remap/unknown | grep -q "C Header"; then
+    echo -e "${GREEN}PASSED remap unknown"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED remap unknown"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc --remap-all "-*- C++ -*-":"C Header" ./examples/remap/java.java | grep -q "C Header"; then
+    echo -e "${GREEN}PASSED remap all"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED remap all"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 ./scc --format-multi "tabular:output.tab,wide:output.wide,json:output.json,csv:output.csv,cloc-yaml:output.yaml,html:output.html,html-table:output.html2"
 
 if test -f output.tab; then
