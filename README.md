@@ -157,7 +157,7 @@ Full details can be found in `scc --help` or `scc -h`.
 ```
 $ scc -h
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 2.13.0 (beta)
+Version 2.13.0
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
@@ -197,6 +197,8 @@ Flags:
       --no-size                     remove size calculation output
   -M, --not-match stringArray       ignore files and directories matching regular expression
   -o, --output string               output filename (default stdout)
+      --remap-all string            inspect every file and remap by checking for a string and remapping the language [e.g. "-*- C++ -*-":"C Header"]
+      --remap-unknown string        inspect files of unknown type and remap by checking for a string and remapping the language [e.g. "-*- C++ -*-":"C Header"]
       --size-unit string            set size unit [si, binary, mixed, xkcd-kb, xkcd-kelly, xkcd-imaginary, xkcd-intel, xkcd-drive, xkcd-bakers] (default "si")
   -s, --sort string                 column to sort by [files, name, lines, blanks, code, comments, complexity] (default "files")
   -t, --trace                       enable trace output (not recommended when processing multiple files)
@@ -208,24 +210,25 @@ Flags:
 Output should look something like the below for the redis project
 
 ```
-$ scc .
+$ scc
 ───────────────────────────────────────────────────────────────────────────────
 Language                 Files     Lines   Blanks  Comments     Code Complexity
 ───────────────────────────────────────────────────────────────────────────────
-C                          283    166827    18769     29163   118895      29840
-C Header                   210     30851     3474      6471    20906       1621
-TCL                        118     21404     2296      1235    17873       1827
+C                          285    168526    19069     29354   120103      30054
+C Header                   213     31573     3569      6804    21200       1627
+TCL                        118     21776     2346      1290    18140       1870
 Shell                       44      1614      213       319     1082        183
 Autoconf                    22     10871     1038      1326     8507        953
 Lua                         20       525       68        70      387         65
-Markdown                    15      2564      671         0     1893          0
-Makefile                    10      1276      247       113      916         55
+Markdown                    16      2591      681         0     1910          0
+Makefile                    11      1305      256       113      936         58
 Ruby                        10       778       78        71      629        115
-gitignore                   10       157       16         0      141          0
+gitignore                   10       161       16         0      145          0
 YAML                         6       572       40         6      526          0
 HTML                         5      9658     2928        12     6718          0
 C++                          4       286       48        14      224         31
 License                      4       100       20         0       80          0
+Plain Text                   3       185       26         0      159          0
 CMake                        2       214       43         3      168          4
 CSS                          2       107       16         0       91          0
 Python                       2       219       12         6      201         34
@@ -234,17 +237,16 @@ BASH                         1       118       14         5       99         31
 Batch                        1        28        2         0       26          3
 C++ Header                   1         9        1         3        5          0
 Extensible Styleshe…         1        10        0         0       10          0
-Plain Text                   1        23        7         0       16          0
 Smarty Template              1        44        1         0       43          5
 m4                           1       562      116        53      393          0
 ───────────────────────────────────────────────────────────────────────────────
-Total                      776    248897    30124     38870   179903      34767
+Total                      785    251912    30607     39449   181856      35033
 ───────────────────────────────────────────────────────────────────────────────
-Estimated Cost to Develop $6,300,654
-Estimated Schedule Effort 30.878580 months
-Estimated People Required 24.170352
+Estimated Cost to Develop $6,372,492
+Estimated Schedule Effort 27.800436 months
+Estimated People Required 20.364495
 ───────────────────────────────────────────────────────────────────────────────
-Processed 8559425 bytes, 8.559 megabytes (SI)
+Processed 8665286 bytes, 8.665 megabytes (SI)
 ───────────────────────────────────────────────────────────────────────────────
 ```
 
