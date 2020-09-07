@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hash"
 	"runtime/debug"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -691,28 +692,40 @@ func processFile(job *FileJob) bool {
 	// Needs to always run to ensure the language is set
 	job.Language = DetermineLanguage(job.Filename, job.Language, job.PossibleLanguages, job.Content)
 
+	remapped := false
+	if HardRemap != "" {
+		hardRemapLanguage(job)
+	}
+
 	// If the type is #! we should check to see if we can identify
 	if job.Language == SheBang {
-		cutoff := 200
-
-		// To avoid runtime panic check if the content we are cutting is smaller than 200
-		if len(contents) < cutoff {
-			cutoff = len(contents)
+		if UnknownRemap != "" {
+			remapped = unknownRemapLanguage(job)
 		}
 
-		lang, err := DetectSheBang(string(contents[:cutoff]))
-		if err != nil {
-			if Verbose {
-				printWarn(fmt.Sprintf("unable to determine #! language for %s", job.Location))
+		// if we didn't remap we then want to see if its a #! map
+		if remapped == false {
+			cutoff := 200
+
+			// To avoid runtime panic check if the content we are cutting is smaller than 200
+			if len(contents) < cutoff {
+				cutoff = len(contents)
 			}
-			return false
-		}
-		if Verbose {
-			printWarn(fmt.Sprintf("detected #! %s for %s", lang, job.Location))
-		}
 
-		job.Language = lang
-		LoadLanguageFeature(lang)
+			lang, err := DetectSheBang(string(contents[:cutoff]))
+			if err != nil {
+				if Verbose {
+					printWarn(fmt.Sprintf("unable to determine #! language for %s", job.Location))
+				}
+				return false
+			}
+			if Verbose {
+				printWarn(fmt.Sprintf("detected #! %s for %s", lang, job.Location))
+			}
+
+			job.Language = lang
+			LoadLanguageFeature(lang)
+		}
 	}
 
 	CountStats(job)
@@ -765,4 +778,56 @@ func processFile(job *FileJob) bool {
 	}
 
 	return true
+}
+
+func hardRemapLanguage(job *FileJob) bool {
+	remapped := false
+	for _, s := range strings.Split(HardRemap, ",") {
+		t := strings.Split(s, ":")
+		if len(t) == 2 {
+			cutoff := 1000 // 1000 bytes into the file to look
+
+			// To avoid runtime panic check if the content we are cutting is smaller than 1000
+			if len(job.Content) < cutoff {
+				cutoff = len(job.Content)
+			}
+
+			if strings.Contains(string(job.Content[:cutoff]), t[0]) {
+				job.Language = t[1]
+				remapped = true
+
+				if Verbose {
+					printWarn(fmt.Sprintf("hard remapping: %s to %s", job.Location, job.Language))
+				}
+			}
+		}
+	}
+
+	return remapped
+}
+
+func unknownRemapLanguage(job *FileJob) bool {
+	remapped := false
+	for _, s := range strings.Split(UnknownRemap, ",") {
+		t := strings.Split(s, ":")
+		if len(t) == 2 {
+			cutoff := 1000 // 1000 bytes into the file to look
+
+			// To avoid runtime panic check if the content we are cutting is smaller than 1000
+			if len(job.Content) < cutoff {
+				cutoff = len(job.Content)
+			}
+
+			if strings.Contains(string(job.Content[:cutoff]), t[0]) {
+				if Verbose {
+					printWarn(fmt.Sprintf("unknown remapping: %s to %s", job.Location, job.Language))
+				}
+
+				job.Language = t[1]
+				remapped = true
+			}
+		}
+	}
+
+	return remapped
 }
