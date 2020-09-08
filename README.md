@@ -43,6 +43,27 @@ Of if you have [homebrew](https://brew.sh/) installed
 
 Binaries for Windows, GNU/Linux and macOS for both i386 and x86_64 machines are available from the [releases](https://github.com/boyter/scc/releases) page.
 
+#### GitHub Action workflow
+
+_.github/workflows/main.yml_
+
+```
+on: [push]
+
+jobs:
+  scc_job:
+    runs-on: ubuntu-latest
+    name: A job to count the lines of code.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Get the lines of code.
+        id: scc
+        uses: iryanbell/scc-docker-action@v1.0.0
+        with:
+          args: ${{ env.workspace }} -i js,go,html,css
+```
+
 #### Other
 
 If you would like to assist with getting `scc` added into apt/chocolatey/etc... please submit a PR or at least raise an issue with instructions.
