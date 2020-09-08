@@ -45,6 +45,8 @@ Binaries for Windows, GNU/Linux and macOS for both i386 and x86_64 machines are 
 
 #### GitHub Action workflow
 
+https://github.com/marketplace/actions/scc-docker-action https://github.com/iRyanBell/scc-docker-action
+
 _.github/workflows/main.yml_
 
 ```
