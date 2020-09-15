@@ -374,7 +374,7 @@ You can have multiple remap rules if required,
  scc --remap-unknown "-*- C++ -*-":"C Header","other":"Java"
 ```
 
-There is als the `--remap-all` parameter which will remap all files.
+There is also the `--remap-all` parameter which will remap all files.
 
 Note that in all cases if the remap rule does not apply normal #! rules will apply.
 
