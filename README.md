@@ -383,7 +383,7 @@ Note that in all cases if the remap rule does not apply normal #! rules will app
 
 By default `scc` will output to the console. However you can produce output in other formats if you require.
 
-The different options are `tabular, wide, json, csv, cloc-yaml, html, html-table`. 
+The different options are `tabular, wide, json, csv, cloc-yaml, html, html-table, sql, sql-insert`. 
 
 Note that you can write `scc` output to disk using the `-o, --output` option. This allows you to specify a file to
 write your output to. For example `scc -f html -o output.html` will run `scc` against the current directory, and output
@@ -491,6 +491,39 @@ file and not just the summary.
 
 Note that this format if it has the `--by-file` option will give you the byte size of every file it `scc` reads allowing you to get a breakdown of the
 number of bytes processed.
+
+#### SQL and SQL-Insert
+
+The SQL output format "mostly" compatible with cloc's SQL output format https://github.com/AlDanial/cloc#sql-
+
+While all queries on the cloc documentation should work as expected, you will not be able to append output from `scc` and `cloc` into the same database. This is because the table format is slightly different
+to account for scc including complexity counts and bytes.
+
+The difference between `sql` and `sql-insert` is that `sql` will include table creation while the latter will only have the insert commands.
+
+Usage is 100% the same as any other `scc` command but sql output will always contain per file details. You can compute totals yourself using SQL.
+
+The below will run scc against the current directory, name the ouput as the project scc and then pipe the output to sqlite to put into the database code.db
+
+```
+scc --format sql --sql-project scc . | sqlite3 code.db
+```
+
+Assuming you then wanted to append another project
+
+```
+scc --format sql-insert --sql-project redis . | sqlite3 code.db
+```
+
+You could then run SQL against the database,
+
+```
+sqlite3 code.db 'select project,file,max(nCode) as nL from t
+                         group by project order by nL desc;'
+```
+
+See the cloc documentation for more examples.
+
 
 ### Performance
 
