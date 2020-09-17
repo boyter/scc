@@ -507,6 +507,24 @@ else
     exit
 fi
 
+if ./scc --format sql | grep -q "create table metadata"; then
+    echo -e "${GREEN}PASSED sql output test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should be able to output to sql"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc --format sql-insert | grep -q "insert into t values"; then
+    echo -e "${GREEN}PASSED sql-insert output test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should be able to output to sql-insert"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 if ./scc ./examples/countas/ --count-as jsp:html | grep -q "HTML"; then
     echo -e "${GREEN}PASSED counted JSP as HTML"
 else
@@ -624,7 +642,16 @@ else
     exit
 fi
 
-if ./scc --format-multi "tabular:stdout,html:stdout,csv:stdout" | grep -q "meta charset"; then
+if ./scc --format-multi "tabular:stdout,html:stdout,csv:stdout,sql:stdout" | grep -q "meta charset"; then
+    echo -e "${GREEN}PASSED format multi check"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED format multi check"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc --format-multi "tabular:stdout,html:stdout,csv:stdout,sql:stdout" | grep -q "insert into t values"; then
     echo -e "${GREEN}PASSED format multi check"
 else
     echo -e "${RED}======================================================="
@@ -651,7 +678,7 @@ else
     exit
 fi
 
-./scc --format-multi "tabular:output.tab,wide:output.wide,json:output.json,csv:output.csv,cloc-yaml:output.yaml,html:output.html,html-table:output.html2"
+./scc --format-multi "tabular:output.tab,wide:output.wide,json:output.json,csv:output.csv,cloc-yaml:output.yaml,html:output.html,html-table:output.html2,sql:output.sql"
 
 if test -f output.tab; then
     echo -e "${GREEN}PASSED output.tab check"
@@ -707,6 +734,15 @@ else
     exit
 fi
 
+if test -f output.sql; then
+    echo -e "${GREEN}PASSED output.sql check"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED output.sql check"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 # Try out specific languages
 for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java ' 'Boo ' 'License ' 'BASH ' 'C Shell ' 'Korn Shell ' 'Makefile ' 'Shell ' 'Zsh ' 'Rakefile ' 'Gemfile ' 'Dockerfile ' 'Yarn ' 'Sieve ' 'F# ' 'Elm ' 'Terraform ' 'Clojure ' 'C# ' 'LLVM IR ' 'HAML '
 do
@@ -747,6 +783,7 @@ rm ./output.csv
 rm ./output.yaml
 rm ./output.html
 rm ./output.html2
+rm ./output.sql
 
 
 echo -e "${GREEN}================================================="

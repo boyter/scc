@@ -175,12 +175,12 @@ cost of running some static analysis tools.
 ### Usage
 
 Command line usage of `scc` is designed to be as simple as possible.
-Full details can be found in `scc --help` or `scc -h`.
+Full details can be found in `scc --help` or `scc -h`. Note that the below reflects the state of master not a release.
 
 ```
 $ scc -h
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 2.13.0
+Version 3.0.0 (beta)
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
@@ -195,7 +195,7 @@ Flags:
       --debug                       enable debug output
       --exclude-dir strings         directories to exclude (default [.git,.hg,.svn])
       --file-gc-count int           number of files to parse before turning the GC on (default 10000)
-  -f, --format string               set output format [tabular, wide, json, csv, cloc-yaml, html, html-table] (default "tabular")
+  -f, --format string               set output format [tabular, wide, json, csv, cloc-yaml, html, html-table, sql, sql-insert] (default "tabular")
       --format-multi string         have multiple format output overriding --format [e.g. tabular:stdout,csv:file.csv,json:file.json]
       --gen                         identify generated files
       --generated-markers strings   string markers in head of generated files (default [do not edit])
@@ -224,6 +224,7 @@ Flags:
       --remap-unknown string        inspect files of unknown type and remap by checking for a string and remapping the language [e.g. "-*- C++ -*-":"C Header"]
       --size-unit string            set size unit [si, binary, mixed, xkcd-kb, xkcd-kelly, xkcd-imaginary, xkcd-intel, xkcd-drive, xkcd-bakers] (default "si")
   -s, --sort string                 column to sort by [files, name, lines, blanks, code, comments, complexity] (default "files")
+      --sql-project string          use supplied name as the project identifier for the current run. Only valid with the --format sql or sql-insert option
   -t, --trace                       enable trace output (not recommended when processing multiple files)
   -v, --verbose                     verbose output
       --version                     version for scc
@@ -382,7 +383,7 @@ Note that in all cases if the remap rule does not apply normal #! rules will app
 
 By default `scc` will output to the console. However you can produce output in other formats if you require.
 
-The different options are `tabular, wide, json, csv, cloc-yaml, html, html-table`. 
+The different options are `tabular, wide, json, csv, cloc-yaml, html, html-table, sql, sql-insert`. 
 
 Note that you can write `scc` output to disk using the `-o, --output` option. This allows you to specify a file to
 write your output to. For example `scc -f html -o output.html` will run `scc` against the current directory, and output
@@ -490,6 +491,39 @@ file and not just the summary.
 
 Note that this format if it has the `--by-file` option will give you the byte size of every file it `scc` reads allowing you to get a breakdown of the
 number of bytes processed.
+
+#### SQL and SQL-Insert
+
+The SQL output format "mostly" compatible with cloc's SQL output format https://github.com/AlDanial/cloc#sql-
+
+While all queries on the cloc documentation should work as expected, you will not be able to append output from `scc` and `cloc` into the same database. This is because the table format is slightly different
+to account for scc including complexity counts and bytes.
+
+The difference between `sql` and `sql-insert` is that `sql` will include table creation while the latter will only have the insert commands.
+
+Usage is 100% the same as any other `scc` command but sql output will always contain per file details. You can compute totals yourself using SQL.
+
+The below will run scc against the current directory, name the ouput as the project scc and then pipe the output to sqlite to put into the database code.db
+
+```
+scc --format sql --sql-project scc . | sqlite3 code.db
+```
+
+Assuming you then wanted to append another project
+
+```
+scc --format sql-insert --sql-project redis . | sqlite3 code.db
+```
+
+You could then run SQL against the database,
+
+```
+sqlite3 code.db 'select project,file,max(nCode) as nL from t
+                         group by project order by nL desc;'
+```
+
+See the cloc documentation for more examples.
+
 
 ### Performance
 

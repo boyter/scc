@@ -93,7 +93,7 @@ func main() {
 		"format",
 		"f",
 		"tabular",
-		"set output format [tabular, wide, json, csv, cloc-yaml, html, html-table]",
+		"set output format [tabular, wide, json, csv, cloc-yaml, html, html-table, sql, sql-insert]",
 	)
 	flags.StringSliceVarP(
 		&processor.AllowListExtensions,
@@ -270,6 +270,12 @@ func main() {
 		"format-multi",
 		"",
 		"have multiple format output overriding --format [e.g. tabular:stdout,csv:file.csv,json:file.json]",
+	)
+	flags.StringVar(
+		&processor.SQLProject,
+		"sql-project",
+		"",
+		"use supplied name as the project identifier for the current run. Only valid with the --format sql or sql-insert option",
 	)
 	flags.StringVar(
 		&processor.RemapUnknown,
