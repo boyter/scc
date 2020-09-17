@@ -275,7 +275,7 @@ func main() {
 		&processor.SQLProject,
 		"sql-project",
 		"",
-		"use supplied name as the project identifier for the current run.  Only valid with the --format sql or sql-insert option",
+		"use supplied name as the project identifier for the current run. Only valid with the --format sql or sql-insert option",
 	)
 	flags.StringVar(
 		&processor.RemapUnknown,

@@ -175,12 +175,12 @@ cost of running some static analysis tools.
 ### Usage
 
 Command line usage of `scc` is designed to be as simple as possible.
-Full details can be found in `scc --help` or `scc -h`.
+Full details can be found in `scc --help` or `scc -h`. Note that the below reflects the state of master not a release.
 
 ```
 $ scc -h
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 2.13.0
+Version 3.0.0 (beta)
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
@@ -195,7 +195,7 @@ Flags:
       --debug                       enable debug output
       --exclude-dir strings         directories to exclude (default [.git,.hg,.svn])
       --file-gc-count int           number of files to parse before turning the GC on (default 10000)
-  -f, --format string               set output format [tabular, wide, json, csv, cloc-yaml, html, html-table] (default "tabular")
+  -f, --format string               set output format [tabular, wide, json, csv, cloc-yaml, html, html-table, sql, sql-insert] (default "tabular")
       --format-multi string         have multiple format output overriding --format [e.g. tabular:stdout,csv:file.csv,json:file.json]
       --gen                         identify generated files
       --generated-markers strings   string markers in head of generated files (default [do not edit])
@@ -224,6 +224,7 @@ Flags:
       --remap-unknown string        inspect files of unknown type and remap by checking for a string and remapping the language [e.g. "-*- C++ -*-":"C Header"]
       --size-unit string            set size unit [si, binary, mixed, xkcd-kb, xkcd-kelly, xkcd-imaginary, xkcd-intel, xkcd-drive, xkcd-bakers] (default "si")
   -s, --sort string                 column to sort by [files, name, lines, blanks, code, comments, complexity] (default "files")
+      --sql-project string          use supplied name as the project identifier for the current run. Only valid with the --format sql or sql-insert option
   -t, --trace                       enable trace output (not recommended when processing multiple files)
   -v, --verbose                     verbose output
       --version                     version for scc
