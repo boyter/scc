@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -423,8 +424,10 @@ func toSqlInsert(input chan *FileJob) string {
 	for res := range input {
 		count++
 
+		dir, _ := filepath.Split(res.Location)
+
 		str.WriteString(fmt.Sprintf("\ninsert into t values('%s', '%s', '%s', '%s', '%s', %d, %d, %d, %d, %d);",
-			projectName, res.Language, res.Location, res.Location, res.Filename, res.Bytes, res.Blank, res.Comment, res.Code, res.Complexity))
+			projectName, res.Language, res.Location, dir, res.Filename, res.Bytes, res.Blank, res.Comment, res.Code, res.Complexity))
 
 		// every 1000 files commit and start a new transaction to avoid overloading
 		if count == 1000 {
