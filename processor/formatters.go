@@ -411,6 +411,59 @@ func toHtmlTable(input chan *FileJob) string {
 	return str.String()
 }
 
+
+func toSql(input chan *FileJob) string {
+	//startTime := makeTimestampMilli()
+
+	var str strings.Builder
+
+	projectName := strings.Join(DirFilePaths, ",")
+
+	str.WriteString(`create table metadata (   -- github.com/boyter/scc v ` + Version + `
+              timestamp text,
+              Project   text,
+              elapsed_s real);
+create table t        (
+              Project       text   ,
+              Language      text   ,
+              File          text   ,
+              File_dirname  text   ,
+              File_basename text   ,
+              nByte         integer,
+              nBlank        integer,
+              nComment      integer,
+              nCode         integer,
+              nComplexity   integer   );`)
+
+	str.WriteString("\nbegin transaction;")
+
+	count := 0
+	for res := range input {
+		count++
+
+		str.WriteString(fmt.Sprintf("\ninsert into t values('%s', '%s', '%s', '%s', '%s', %d, %d, %d, %d, %d);",
+			projectName, res.Language, res.Location, res.Location, res.Filename, res.Bytes, res.Blank, res.Comment, res.Code, res.Complexity))
+
+		if count == 1000 {
+			str.WriteString("\ncommit;")
+			str.WriteString("\nbegin transaction;")
+			count = 0
+		}
+	}
+
+
+	currentTime := time.Now()
+	es := float64(makeTimestampMilli()-startTimeMilli) * float64(0.001)
+	str.WriteString(fmt.Sprintf("\ninsert into metadata values('%s', '%s', %f);", currentTime.Format("2006-01-02 15:04:05"), projectName, es))
+
+	if count != 1000 {
+		str.WriteString("\ncommit;")
+	}
+
+
+	return str.String()
+}
+
 func fileSummarize(input chan *FileJob) string {
 	if FormatMulti != "" {
 		return fileSummarizeMulti(input)
@@ -429,6 +482,10 @@ func fileSummarize(input chan *FileJob) string {
 		return toHtml(input)
 	case strings.ToLower(Format) == "html-table":
 		return toHtmlTable(input)
+	case strings.ToLower(Format) == "sql":
+		return toSql(input)
+	//case strings.ToLower(Format) == "sql-insert":
+	//	return toSqlInsert(input)
 	}
 
 	return fileSummarizeShort(input)
