@@ -103,6 +103,9 @@ var Format = ""
 // FormatMulti is a rule for defining multiple output formats
 var FormatMulti = ""
 
+// SQLProject is used to store the name for the SQL insert formats but is optional
+var SQLProject = ""
+
 // RemapUnknown allows remapping of unknown files with a string to search the content for
 var RemapUnknown = ""
 

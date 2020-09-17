@@ -411,32 +411,14 @@ func toHtmlTable(input chan *FileJob) string {
 	return str.String()
 }
 
-
-func toSql(input chan *FileJob) string {
-	//startTime := makeTimestampMilli()
-
+func toSqlInsert(input chan *FileJob) string {
 	var str strings.Builder
-
-	projectName := strings.Join(DirFilePaths, ",")
-
-	str.WriteString(`create table metadata (   -- github.com/boyter/scc v ` + Version + `
-              timestamp text,
-              Project   text,
-              elapsed_s real);
-create table t        (
-              Project       text   ,
-              Language      text   ,
-              File          text   ,
-              File_dirname  text   ,
-              File_basename text   ,
-              nByte         integer,
-              nBlank        integer,
-              nComment      integer,
-              nCode         integer,
-              nComplexity   integer   );`)
+	projectName := SQLProject
+	if projectName == "" {
+		projectName = strings.Join(DirFilePaths, ",")
+	}
 
 	str.WriteString("\nbegin transaction;")
-
 	count := 0
 	for res := range input {
 		count++
@@ -444,23 +426,46 @@ create table t        (
 		str.WriteString(fmt.Sprintf("\ninsert into t values('%s', '%s', '%s', '%s', '%s', %d, %d, %d, %d, %d);",
 			projectName, res.Language, res.Location, res.Location, res.Filename, res.Bytes, res.Blank, res.Comment, res.Code, res.Complexity))
 
+		// every 1000 files commit and start a new transaction to avoid overloading
 		if count == 1000 {
 			str.WriteString("\ncommit;")
 			str.WriteString("\nbegin transaction;")
 			count = 0
 		}
 	}
-
-
-	currentTime := time.Now()
-	es := float64(makeTimestampMilli()-startTimeMilli) * float64(0.001)
-	str.WriteString(fmt.Sprintf("\ninsert into metadata values('%s', '%s', %f);", currentTime.Format("2006-01-02 15:04:05"), projectName, es))
-
 	if count != 1000 {
 		str.WriteString("\ncommit;")
 	}
 
+	currentTime := time.Now()
+	es := float64(makeTimestampMilli()-startTimeMilli) * 0.001
+	str.WriteString("\nbegin transaction;")
+	str.WriteString(fmt.Sprintf("\ninsert into metadata values('%s', '%s', %f);", currentTime.Format("2006-01-02 15:04:05"), projectName, es))
+	str.WriteString("\ncommit;")
 
+	return str.String()
+}
+
+func toSql(input chan *FileJob) string {
+	var str strings.Builder
+
+	str.WriteString(`create table metadata (   -- github.com/boyter/scc v ` + Version + `
+             timestamp text,
+             Project   text,
+             elapsed_s real);
+create table t        (
+             Project       text   ,
+             Language      text   ,
+             File          text   ,
+             File_dirname  text   ,
+             File_basename text   ,
+             nByte         integer,
+             nBlank        integer,
+             nComment      integer,
+             nCode         integer,
+             nComplexity   integer   );`)
+
+	str.WriteString(toSqlInsert(input))
 	return str.String()
 }
 
@@ -484,8 +489,8 @@ func fileSummarize(input chan *FileJob) string {
 		return toHtmlTable(input)
 	case strings.ToLower(Format) == "sql":
 		return toSql(input)
-	//case strings.ToLower(Format) == "sql-insert":
-	//	return toSqlInsert(input)
+	case strings.ToLower(Format) == "sql-insert":
+		return toSqlInsert(input)
 	}
 
 	return fileSummarizeShort(input)
@@ -533,6 +538,10 @@ func fileSummarizeMulti(input chan *FileJob) string {
 				val = toHtml(i)
 			case "html-table":
 				val = toHtmlTable(i)
+			case "sql":
+				val = toSql(i)
+			case "sql-insert":
+				val = toSqlInsert(i)
 			}
 
 			if t[1] == "stdout" {

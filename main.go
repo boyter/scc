@@ -272,6 +272,12 @@ func main() {
 		"have multiple format output overriding --format [e.g. tabular:stdout,csv:file.csv,json:file.json]",
 	)
 	flags.StringVar(
+		&processor.SQLProject,
+		"sql-project",
+		"",
+		"use supplied name as the project identifier for the current run.  Only valid with the --format sql or sql-insert option",
+	)
+	flags.StringVar(
 		&processor.RemapUnknown,
 		"remap-unknown",
 		"",
