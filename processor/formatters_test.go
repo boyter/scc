@@ -606,6 +606,48 @@ func TestToCsvMultiple(t *testing.T) {
 	}
 }
 
+func TestToSQLSingle(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	close(inputChan)
+	Debug = true // Increase coverage slightly
+	res := toSql(inputChan)
+	Debug = false
+
+	if !strings.Contains(res, `create table metadata`) {
+		t.Error("Expected create table return", res)
+	}
+
+	if !strings.Contains(res, `create table t`) {
+		t.Error("Expected create table return", res)
+	}
+
+	if !strings.Contains(res, `begin transaction`) {
+		t.Error("Expected begin transaction return", res)
+	}
+
+	if !strings.Contains(res, `insert into t values('', 'Go', './', './', 'bbbb.go', 1000, 1000, 1000, 1000, 1000);`) {
+		t.Error("Expected insert return", res)
+	}
+
+	if !strings.Contains(res, `insert into metadata values`) {
+		t.Error("Expected insert return", res)
+	}
+}
+
 func TestFileSummarizeWide(t *testing.T) {
 	inputChan := make(chan *FileJob, 1000)
 	inputChan <- &FileJob{
