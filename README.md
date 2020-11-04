@@ -285,7 +285,7 @@ You can also run against multiple files or directories `scc directory1 directory
 ### Interesting Use Cases
 
 Used inside Intel Nemu Hypervisor to track code changes between revisions https://github.com/intel/nemu/blob/topic/virt-x86/tools/cloc-change.sh#L9
-Appears to also be used inside both http://codescoop.com/ and https://pinpoint.com/
+Appears to also be used inside both http://codescoop.com/ https://pinpoint.com/ https://github.com/chaoss/grimoirelab-graal
 
 It also is used to count code and guess language types in https://searchcode.com/ which makes it one of the most frequently run code counters in the world. 
 
