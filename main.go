@@ -289,6 +289,12 @@ func main() {
 		"",
 		"inspect every file and remap by checking for a string and remapping the language [e.g. \"-*- C++ -*-\":\"C Header\"]",
 	)
+	flags.StringSliceVar(
+		&processor.RemapExtensions,
+		"remap-extensions",
+		[]string{},
+		"remap the specific extension(s) to a language [e.g. \"xhtml:HTML,hpp_,C++ Header\"] -",
+	)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

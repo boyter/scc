@@ -112,6 +112,9 @@ var RemapUnknown = ""
 // RemapAll allows remapping of all files with a string to search the content for
 var RemapAll = ""
 
+// RemapExtensions allows remapping of a file extension to a specific language
+var RemapExtensions = []string{}
+
 // FileOutput sets the file that output should be written to
 var FileOutput = ""
 
@@ -459,6 +462,19 @@ func printLanguages() {
 	}
 }
 
+func processExtensionRemaps() {
+	if len(RemapExtensions) != 0 {
+		for _, remap := range RemapExtensions {
+			t := strings.Split(remap, ":")
+			if len(t) == 2 {
+				ExtensionToLanguage[t[0]] = append(ExtensionToLanguage[t[0]], t[1])
+			} else if Verbose {
+				printWarn(fmt.Sprintf("Invalid parsing format: %s", remap))
+			}
+		}
+	}
+}
+
 // Process is the main entry point of the command line it sets everything up and starts running
 func Process() {
 	if Languages {
@@ -468,6 +484,7 @@ func Process() {
 
 	ProcessConstants()
 	processFlags()
+	processExtensionRemaps()
 
 	// Clean up any invalid arguments before setting everything up
 	if len(DirFilePaths) == 0 {
