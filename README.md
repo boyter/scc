@@ -95,12 +95,12 @@ For performance see the [Performance](https://github.com/boyter/scc#performance)
 
 Other similar projects,
 
- - [cloc](https://github.com/AlDanial/cloc) the original sloc counter
+ - [SLOCCount](https://www.dwheeler.com/sloccount/) the original sloc counter
+ - [cloc](https://github.com/AlDanial/cloc), inspired by SLOCCount; implemented in Perl for portability
  - [gocloc](https://github.com/hhatto/gocloc) a sloc counter in Go inspired by tokei
  - [loc](https://github.com/cgag/loc) rust implementation similar to tokei but often faster
  - [loccount](https://gitlab.com/esr/loccount) Go implementation written and maintained by ESR
  - [ployglot](https://github.com/vmchale/polyglot) ATS sloc counter
- - [sloccount](https://www.dwheeler.com/sloccount/) written as a faster cloc
  - [tokei](https://github.com/XAMPPRocky/tokei) fast, accurate and written in rust
 
 Interesting reading about other code counting projects tokei, loc, polyglot and loccount
