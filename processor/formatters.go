@@ -23,7 +23,7 @@ var tabularShortBreakCi = "-----------------------------------------------------
 var tabularShortFormatHead = "%-20s %9s %9s %8s %9s %8s %10s\n"
 var tabularShortFormatBody = "%-20s %9d %9d %8d %9d %8d %10d\n"
 var tabularShortFormatFile = "%-30s %9d %8d %9d %8d %10d\n"
-var shortFormatFileTrucate = 29
+var shortFormatFileTruncate = 29
 var shortNameTruncate = 20
 
 var tabularShortFormatHeadNoComplexity = "%-22s %11s %11s %10s %11s %9s\n"
@@ -36,7 +36,7 @@ var tabularWideBreakCi = "------------------------------------------------------
 var tabularWideFormatHead = "%-33s %9s %9s %8s %9s %8s %10s %16s\n"
 var tabularWideFormatBody = "%-33s %9d %9d %8d %9d %8d %10d %16.2f\n"
 var tabularWideFormatFile = "%-43s %9d %8d %9d %8d %10d %16.2f\n"
-var wideFormatFileTrucate = 42
+var wideFormatFileTruncate = 42
 
 func sortSummaryFiles(summary *LanguageSummary) {
 	switch {
@@ -709,13 +709,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 			str.WriteString(getTabularWideBreak())
 
 			for _, res := range summary.Files {
-				tmp := res.Location
-
-				if len(tmp) >= wideFormatFileTrucate {
-					totrim := len(tmp) - wideFormatFileTrucate
-					tmp = "~" + tmp[totrim:]
-				}
-
+				tmp := unicodeAwareTrim(res.Location, wideFormatFileTruncate)
 				str.WriteString(fmt.Sprintf(tabularWideFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.WeightedComplexity))
 			}
 		}
@@ -748,6 +742,24 @@ func fileSummarizeLong(input chan *FileJob) string {
 	}
 
 	return str.String()
+}
+
+// We need to trim the file display for tabular output formats which this does in a unicode aware way
+// to avoid cutting bytes... note that it needs to be expanded to deal with longer display characters at some
+// point in the future
+func unicodeAwareTrim(tmp string, size int) string {
+	// iterate all the runes so we can cut off correctly and get the correct length
+	var r []rune
+	for _, x := range tmp {
+		r = append(r, x)
+	}
+
+	if len(r) >= size {
+		t := len(r) - size
+		tmp = "~" + string(r[t:])
+	}
+
+	return tmp
 }
 
 func fileSummarizeShort(input chan *FileJob) string {
@@ -836,12 +848,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 			str.WriteString(getTabularShortBreak())
 
 			for _, res := range summary.Files {
-				tmp := res.Location
-
-				if len(tmp) >= shortFormatFileTrucate {
-					totrim := len(tmp) - shortFormatFileTrucate
-					tmp = "~" + tmp[totrim:]
-				}
+				tmp := unicodeAwareTrim(res.Location, shortFormatFileTruncate)
 
 				if !Complexity {
 					str.WriteString(fmt.Sprintf(tabularShortFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity))
