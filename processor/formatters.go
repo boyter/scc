@@ -289,6 +289,29 @@ func toCSV(input chan *FileJob) string {
 	return b.String()
 }
 
+// For very large repositories CSV stream can be used which prints results out as they come in
+// with the express idea of lowering memory usage, see https://github.com/boyter/scc/issues/210 for
+// the background on why this might be needed
+func toCSVStream(input chan *FileJob) string {
+	fmt.Println("Language,Location,Filename,Lines,Code,Comments,Blanks,Complexity,Bytes")
+
+	for result := range input {
+		fmt.Println(fmt.Sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s",
+			result.Language,
+			result.Location,
+			result.Filename,
+			fmt.Sprint(result.Lines),
+			fmt.Sprint(result.Code),
+			fmt.Sprint(result.Comment),
+			fmt.Sprint(result.Blank),
+			fmt.Sprint(result.Complexity),
+			fmt.Sprint(result.Bytes),
+		))
+	}
+
+	return ""
+}
+
 func toHtml(input chan *FileJob) string {
 	return `<html lang="en"><head><meta charset="utf-8" /><title>scc html output</title><style>table { border-collapse: collapse; }td, th { border: 1px solid #999; padding: 0.5rem; text-align: left;}</style></head><body>` +
 		toHtmlTable(input) +
@@ -486,6 +509,8 @@ func fileSummarize(input chan *FileJob) string {
 		return toClocYAML(input)
 	case strings.ToLower(Format) == "csv":
 		return toCSV(input)
+	case strings.ToLower(Format) == "csv-stream":
+		return toCSVStream(input)
 	case strings.ToLower(Format) == "html":
 		return toHtml(input)
 	case strings.ToLower(Format) == "html-table":
@@ -537,6 +562,10 @@ func fileSummarizeMulti(input chan *FileJob) string {
 				val = toClocYAML(i)
 			case "csv":
 				val = toCSV(i)
+			case "csv-stream":
+				val = toCSVStream(i)
+				// special case where we want to ignore writing to stdout ot disk as its already done
+				continue
 			case "html":
 				val = toHtml(i)
 			case "html-table":

@@ -5,7 +5,7 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 echo "Running go fmt..."
-gofmt -s -w ./..
+go fmt ./...
 
 echo "Running unit tests..."
 go test ./... || exit
@@ -602,6 +602,15 @@ if ./scc -f csv | grep -q "Bytes"; then
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED csv bytes check"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc -f csv-stream | grep -q "Bytes"; then
+    echo -e "${GREEN}PASSED csv-stream bytes check"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED csv-stream bytes check"
     echo -e "=======================================================${NC}"
     exit
 fi

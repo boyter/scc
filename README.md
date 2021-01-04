@@ -178,7 +178,6 @@ Command line usage of `scc` is designed to be as simple as possible.
 Full details can be found in `scc --help` or `scc -h`. Note that the below reflects the state of master not a release.
 
 ```
-$ scc -h
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
 Version 3.0.0 (beta)
 Ben Boyter <ben@boyter.org> + Contributors
@@ -195,7 +194,7 @@ Flags:
       --debug                       enable debug output
       --exclude-dir strings         directories to exclude (default [.git,.hg,.svn])
       --file-gc-count int           number of files to parse before turning the GC on (default 10000)
-  -f, --format string               set output format [tabular, wide, json, csv, cloc-yaml, html, html-table, sql, sql-insert] (default "tabular")
+  -f, --format string               set output format [tabular, wide, json, csv, csv-stream, cloc-yaml, html, html-table, sql, sql-insert] (default "tabular")
       --format-multi string         have multiple format output overriding --format [e.g. tabular:stdout,csv:file.csv,json:file.json]
       --gen                         identify generated files
       --generated-markers strings   string markers in head of generated files (default [do not edit])
@@ -421,6 +420,13 @@ CSV as an option is good for importing into a spreadsheet for analysis.
 
 Note that this format will give you the byte size of every file it `scc` reads allowing you to get a breakdown of the
 number of bytes processed.
+
+#### CSV-Stream
+
+csv-stream is an option useful for processing very large repositories where you are likely to run into memory issues. Its output format is 100% the same as CSV. 
+
+Note that you should not use this with the `format-multi` option as it will always print to standard output, and because of how it works will negate the memory saving it normally gains.
+savings that this option provides.
 
 #### cloc-yaml 
 
