@@ -1160,6 +1160,22 @@ func TestToHTMLTable(t *testing.T) {
 	}
 }
 
+func TestUnicodeAwareTrimAscii(t *testing.T) {
+	tmp := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.md"
+	res := unicodeAwareTrim(tmp, shortFormatFileTruncate)
+	if res != "~aaaaaaaaaaaaaaaaaaaaaaaaaa.md" {
+		t.Error("expected ~aaaaaaaaaaaaaaaaaaaaaaaaaa.md got", res)
+	}
+}
+
+func TestUnicodeAwareTrimUnicode(t *testing.T) {
+	tmp := "中文中文中文中文中文中文中文中文中文中文中文中文中文中文中文中文.md"
+	res := unicodeAwareTrim(tmp, shortFormatFileTruncate)
+	if res != "~中文中文中文中文中文中文中文中文中文中文中文中文中文.md" {
+		t.Error("expected ~中文中文中文中文中文中文中文中文中文中文中文中文中文.md got", res)
+	}
+}
+
 // When using columise  ~28726 ns/op
 // When using optimised ~14293 ns/op
 func BenchmarkFileSummerize(b *testing.B) {
