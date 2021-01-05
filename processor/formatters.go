@@ -749,10 +749,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 // point in the future
 func unicodeAwareTrim(tmp string, size int) string {
 	// iterate all the runes so we can cut off correctly and get the correct length
-	var r []rune
-	for _, x := range tmp {
-		r = append(r, x)
-	}
+	r := []rune(tmp)
 
 	if len(r) >= size {
 		t := len(r) - size

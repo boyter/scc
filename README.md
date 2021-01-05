@@ -382,7 +382,7 @@ Note that in all cases if the remap rule does not apply normal #! rules will app
 
 By default `scc` will output to the console. However you can produce output in other formats if you require.
 
-The different options are `tabular, wide, json, csv, cloc-yaml, html, html-table, sql, sql-insert`. 
+The different options are `tabular, wide, json, csv, csv-stream, cloc-yaml, html, html-table, sql, sql-insert`. 
 
 Note that you can write `scc` output to disk using the `-o, --output` option. This allows you to specify a file to
 write your output to. For example `scc -f html -o output.html` will run `scc` against the current directory, and output
@@ -423,10 +423,10 @@ number of bytes processed.
 
 #### CSV-Stream
 
-csv-stream is an option useful for processing very large repositories where you are likely to run into memory issues. Its output format is 100% the same as CSV. 
+csv-stream is an option useful for processing very large repositories where you are likely to run into memory issues. It's output format is 100% the same as CSV. 
 
 Note that you should not use this with the `format-multi` option as it will always print to standard output, and because of how it works will negate the memory saving it normally gains.
-savings that this option provides.
+savings that this option provides. Note that there is no sort applied with this option. 
 
 #### cloc-yaml 
 
