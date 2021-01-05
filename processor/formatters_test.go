@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"github.com/mattn/go-runewidth"
 	"strings"
 	"testing"
 )
@@ -1173,6 +1174,20 @@ func TestUnicodeAwareTrimUnicode(t *testing.T) {
 	res := unicodeAwareTrim(tmp, shortFormatFileTruncate)
 	if res != "~文中文中文中文中文中文中文.md" {
 		t.Error("expected ~文中文中文中文中文中文中文.md got", res)
+	}
+}
+
+func TestUnicodeAwareRightPad(t *testing.T) {
+	tmp := unicodeAwareRightPad("", 10)
+	if runewidth.StringWidth(tmp) != 10 {
+		t.Errorf("expected length of 10")
+	}
+}
+
+func TestUnicodeAwareRightPadUnicode(t *testing.T) {
+	tmp := unicodeAwareRightPad("中文", 10)
+	if runewidth.StringWidth(tmp) != 10 {
+		t.Errorf("expected length of 10")
 	}
 }
 
