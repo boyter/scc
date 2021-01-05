@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"github.com/mattn/go-runewidth"
 	"io/ioutil"
 	"math"
 	"os"
@@ -22,20 +23,20 @@ var tabularShortBreak = "──────────────────�
 var tabularShortBreakCi = "-------------------------------------------------------------------------------\n"
 var tabularShortFormatHead = "%-20s %9s %9s %8s %9s %8s %10s\n"
 var tabularShortFormatBody = "%-20s %9d %9d %8d %9d %8d %10d\n"
-var tabularShortFormatFile = "%-30s %9d %8d %9d %8d %10d\n"
+var tabularShortFormatFile = "%s %9d %8d %9d %8d %10d\n"
 var shortFormatFileTruncate = 29
 var shortNameTruncate = 20
 
 var tabularShortFormatHeadNoComplexity = "%-22s %11s %11s %10s %11s %9s\n"
 var tabularShortFormatBodyNoComplexity = "%-22s %11d %11d %10d %11d %9d\n"
-var tabularShortFormatFileNoComplexity = "%-34s %11d %10d %11d %9d\n"
+var tabularShortFormatFileNoComplexity = "%s %11d %10d %11d %9d\n"
 var longNameTruncate = 22
 
 var tabularWideBreak = "─────────────────────────────────────────────────────────────────────────────────────────────────────────────\n"
 var tabularWideBreakCi = "-------------------------------------------------------------------------------------------------------------\n"
 var tabularWideFormatHead = "%-33s %9s %9s %8s %9s %8s %10s %16s\n"
 var tabularWideFormatBody = "%-33s %9d %9d %8d %9d %8d %10d %16.2f\n"
-var tabularWideFormatFile = "%-43s %9d %8d %9d %8d %10d %16.2f\n"
+var tabularWideFormatFile = "%s %9d %8d %9d %8d %10d %16.2f\n"
 var wideFormatFileTruncate = 42
 
 func sortSummaryFiles(summary *LanguageSummary) {
@@ -710,6 +711,8 @@ func fileSummarizeLong(input chan *FileJob) string {
 
 			for _, res := range summary.Files {
 				tmp := unicodeAwareTrim(res.Location, wideFormatFileTruncate)
+				tmp = unicodeAwareRightPad(tmp, 43)
+
 				str.WriteString(fmt.Sprintf(tabularWideFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.WeightedComplexity))
 			}
 		}
@@ -752,8 +755,23 @@ func unicodeAwareTrim(tmp string, size int) string {
 	r := []rune(tmp)
 
 	if len(r) >= size {
-		t := len(r) - size
-		tmp = "~" + string(r[t:])
+		for runewidth.StringWidth(tmp) > size {
+			// remove character at a time till we get the length we want
+			tmp = string([]rune(tmp)[1:])
+		}
+
+		tmp = "~" + strings.TrimSpace(tmp)
+	}
+
+	return tmp
+}
+
+// Using %-30s in string format does not appear to be unicode aware with characters such as
+// 文中 meaning the size is off... which is annoying, so we implement this ourselves to get it
+// right
+func unicodeAwareRightPad(tmp string, size int) string {
+	for runewidth.StringWidth(tmp) < size {
+		tmp += " "
 	}
 
 	return tmp
@@ -848,8 +866,10 @@ func fileSummarizeShort(input chan *FileJob) string {
 				tmp := unicodeAwareTrim(res.Location, shortFormatFileTruncate)
 
 				if !Complexity {
+					tmp = unicodeAwareRightPad(tmp, 30)
 					str.WriteString(fmt.Sprintf(tabularShortFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity))
 				} else {
+					tmp = unicodeAwareRightPad(tmp, 34)
 					str.WriteString(fmt.Sprintf(tabularShortFormatFileNoComplexity, tmp, res.Lines, res.Blank, res.Comment, res.Code))
 				}
 			}
