@@ -708,6 +708,29 @@ GOOS=linux GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.13.0-i386-unkno
 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" && zip -r9 scc-2.13.0-arm64-unknown-linux.zip scc
 ```
 
+### Containers
+
+Note if you plan to run `scc` in Alpine containers you will need to build with CGO_ENABLED=0.
+
+See the below dockerfile as an example on how to achieve this based on this issue https://github.com/boyter/scc/issues/208
+
+```
+FROM golang as scc-get
+
+ENV GOOS=linux \
+GOARCH=amd64 \
+CGO_ENABLED=0
+
+ARG VERSION
+RUN git clone --branch $VERSION --depth 1 https://github.com/boyter/scc
+WORKDIR /go/scc
+RUN go build -ldflags="-s -w"
+
+FROM alpine
+COPY --from=scc-get /go/scc/scc /bin/
+ENTRYPOINT ["scc"]
+```
+
 ### Badges (beta)
 
 You can use `scc` to provide badges on your github/bitbucket/gitlab open repositories. For example, [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/)](https://github.com/boyter/scc/)
