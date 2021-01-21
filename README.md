@@ -183,7 +183,7 @@ Version 3.0.0 (beta)
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
-  scc [flags]
+  scc [flags] [files or directories]
 
 Flags:
       --avg-wage int                average wage value used for basic COCOMO calculation (default 56286)
