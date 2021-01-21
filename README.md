@@ -39,6 +39,12 @@ Or if you have [homebrew](https://brew.sh/) installed
 
 `$ brew install scc`
 
+#### Scoop
+
+Or if you are using [Scoop](https://scoop.sh/) on Windows
+
+`$ scoop install scc`
+
 #### Manual
 
 Binaries for Windows, GNU/Linux and macOS for both i386 and x86_64 machines are available from the [releases](https://github.com/boyter/scc/releases) page.
