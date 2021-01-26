@@ -574,7 +574,8 @@ func CountStats(fileJob *FileJob) {
 		}
 	}
 
-	if !isGenerated && Minified {
+	// check if 0 as well to avoid divide by zero https://github.com/boyter/scc/issues/223
+	if !isGenerated && Minified && fileJob.Lines != 0 {
 		avgLineByteCount := len(fileJob.Content) / int(fileJob.Lines)
 		minifiedGeneratedCheck(avgLineByteCount, fileJob)
 	}
