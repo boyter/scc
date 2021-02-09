@@ -2187,6 +2187,24 @@
     "multi_line": [],
     "quotes": []
   },
+  "FXML": {
+    "extensions": [
+      "fxml"
+    ],
+    "line_comment": [],
+    "multi_line": [
+      [
+        "<!--",
+        "-->"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "GDScript": {
     "complexitychecks": [
       "for ",
