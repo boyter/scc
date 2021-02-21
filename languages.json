@@ -1588,6 +1588,48 @@
       }
     ]
   },
+  "DM": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "switch(",
+      "while ",
+      "while(",
+      "else ",
+      "||",
+      "&&",
+      "!=",
+      "<>",
+      "==",
+      "in "
+    ],
+    "extensions": [
+      "dm"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "nestedmultiline": true,
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
   "Docker ignore": {
     "complexitychecks": [],
     "extensions": [],
