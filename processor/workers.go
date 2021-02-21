@@ -426,133 +426,139 @@ func CountStats(fileJob *FileJob) {
 		digest = blake2b.New256()
 	}
 
-	for index := checkBomSkip(fileJob); index < int(fileJob.Bytes); index++ {
-		// Based on our current state determine if the state should change by checking
-		// what the character is. The below is very CPU bound so need to be careful if
-		// changing anything in here and profile/measure afterwards!
-		// NB that the order of the if statements matters and has been set to what in benchmarks is most efficient
-		if !isWhitespace(fileJob.Content[index]) {
+	// if its a simple file then flip into simple check logic
+	if langFeatures.Simple {
+		// at this point all we need do is count the newlines
+		fmt.Println(">>>>SIMPLE", fileJob.Location)
+	} else {
+		for index := checkBomSkip(fileJob); index < int(fileJob.Bytes); index++ {
+			// Based on our current state determine if the state should change by checking
+			// what the character is. The below is very CPU bound so need to be careful if
+			// changing anything in here and profile/measure afterwards!
+			// NB that the order of the if statements matters and has been set to what in benchmarks is most efficient
+			if !isWhitespace(fileJob.Content[index]) {
 
-			switch currentState {
-			case SCode:
-				index, currentState, endString, endComments, ignoreEscape = codeState(
-					fileJob,
-					index,
-					endPoint,
-					currentState,
-					endString,
-					endComments,
-					langFeatures,
-					&digest,
-				)
-			case SString:
-				index, currentState = stringState(fileJob, index, endPoint, langFeatures.Strings, endString, currentState, ignoreEscape)
-			case SDocString:
-				// For a docstring we can either move into blank in which case we count it as a docstring
-				// or back into code in which case it should be counted as code
-				index, currentState = docStringState(fileJob, index, endPoint, langFeatures.Strings, endString, currentState)
-			case SMulticomment, SMulticommentCode:
-				index, currentState, endString, endComments = commentState(
-					fileJob,
-					index,
-					endPoint,
-					currentState,
-					endComments,
-					endString,
-					langFeatures,
-				)
-			case SBlank, SMulticommentBlank:
-				// From blank we can move into comment, move into a multiline comment
-				// or move into code but we can only do one.
-				index, currentState, endString, endComments, ignoreEscape = blankState(
-					fileJob,
-					index,
-					endPoint,
-					currentState,
-					endComments,
-					endString,
-					langFeatures,
-				)
+				switch currentState {
+				case SCode:
+					index, currentState, endString, endComments, ignoreEscape = codeState(
+						fileJob,
+						index,
+						endPoint,
+						currentState,
+						endString,
+						endComments,
+						langFeatures,
+						&digest,
+					)
+				case SString:
+					index, currentState = stringState(fileJob, index, endPoint, langFeatures.Strings, endString, currentState, ignoreEscape)
+				case SDocString:
+					// For a docstring we can either move into blank in which case we count it as a docstring
+					// or back into code in which case it should be counted as code
+					index, currentState = docStringState(fileJob, index, endPoint, langFeatures.Strings, endString, currentState)
+				case SMulticomment, SMulticommentCode:
+					index, currentState, endString, endComments = commentState(
+						fileJob,
+						index,
+						endPoint,
+						currentState,
+						endComments,
+						endString,
+						langFeatures,
+					)
+				case SBlank, SMulticommentBlank:
+					// From blank we can move into comment, move into a multiline comment
+					// or move into code but we can only do one.
+					index, currentState, endString, endComments, ignoreEscape = blankState(
+						fileJob,
+						index,
+						endPoint,
+						currentState,
+						endComments,
+						endString,
+						langFeatures,
+					)
+				}
 			}
-		}
 
-		// We shouldn't normally need this, but unclosed strings or comments
-		// might leave the index past the end of the file when we reach this
-		// point.
-		if index >= len(fileJob.Content) {
-			return
-		}
-
-		// Only check the first 10000 characters for null bytes indicating a binary file
-		// and if we find it then we return otherwise carry on and ignore binary markers
-		if index < 10000 && fileJob.Binary {
-			return
-		}
-
-		// This means the end of processing the line so calculate the stats according to what state
-		// we are currently in
-		if fileJob.Content[index] == '\n' || index >= endPoint {
-			fileJob.Lines++
-
-			if NoLarge && fileJob.Lines >= LargeLineCount {
-				// Save memory by unsetting the content as we no longer require it
-				fileJob.Content = nil
+			// We shouldn't normally need this, but unclosed strings or comments
+			// might leave the index past the end of the file when we reach this
+			// point.
+			if index >= len(fileJob.Content) {
 				return
 			}
 
-			switch currentState {
-			case SCode, SString, SCommentCode, SMulticommentCode:
-				fileJob.Code++
-				currentState = resetState(currentState)
-				if fileJob.Callback != nil {
-					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_CODE) {
-						return
+			// Only check the first 10000 characters for null bytes indicating a binary file
+			// and if we find it then we return otherwise carry on and ignore binary markers
+			if index < 10000 && fileJob.Binary {
+				return
+			}
+
+			// This means the end of processing the line so calculate the stats according to what state
+			// we are currently in
+			if fileJob.Content[index] == '\n' || index >= endPoint {
+				fileJob.Lines++
+
+				if NoLarge && fileJob.Lines >= LargeLineCount {
+					// Save memory by unsetting the content as we no longer require it
+					fileJob.Content = nil
+					return
+				}
+
+				switch currentState {
+				case SCode, SString, SCommentCode, SMulticommentCode:
+					fileJob.Code++
+					currentState = resetState(currentState)
+					if fileJob.Callback != nil {
+						if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_CODE) {
+							return
+						}
 					}
-				}
-				if Trace {
-					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as code", fileJob.Location, fileJob.Lines, currentState))
-				}
-			case SComment, SMulticomment, SMulticommentBlank:
-				fileJob.Comment++
-				currentState = resetState(currentState)
-				if fileJob.Callback != nil {
-					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
-						return
+					if Trace {
+						printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as code", fileJob.Location, fileJob.Lines, currentState))
 					}
-				}
-				if Trace {
-					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState))
-				}
-			case SBlank:
-				fileJob.Blank++
-				if fileJob.Callback != nil {
-					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_BLANK) {
-						return
+				case SComment, SMulticomment, SMulticommentBlank:
+					fileJob.Comment++
+					currentState = resetState(currentState)
+					if fileJob.Callback != nil {
+						if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
+							return
+						}
 					}
-				}
-				if Trace {
-					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as blank", fileJob.Location, fileJob.Lines, currentState))
-				}
-			case SDocString:
-				fileJob.Comment++
-				if fileJob.Callback != nil {
-					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
-						return
+					if Trace {
+						printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState))
 					}
-				}
-				if Trace {
-					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState))
+				case SBlank:
+					fileJob.Blank++
+					if fileJob.Callback != nil {
+						if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_BLANK) {
+							return
+						}
+					}
+					if Trace {
+						printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as blank", fileJob.Location, fileJob.Lines, currentState))
+					}
+				case SDocString:
+					fileJob.Comment++
+					if fileJob.Callback != nil {
+						if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
+							return
+						}
+					}
+					if Trace {
+						printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState))
+					}
 				}
 			}
 		}
 	}
-
 	if Duplicates {
 		fileJob.Hash = digest.Sum(nil)
 	}
 
 	isGenerated := false
 
+	// Determine if the file is generated
 	if Generated {
 		headLen := 1000
 		if headLen >= len(fileJob.Content) {

@@ -358,6 +358,13 @@ func processLanguageFeature(name string, value Language) {
 	}
 	processMask |= stringMask
 
+	simple := false
+	// if there is nothing to check IE no complexity, no comments and no quotes we can mark this as a simple
+	// file like text or some such and speed up processing of this file type
+	if len(value.ComplexityChecks) == 0 && len(value.LineComment) == 0 && len(value.MultiLine) == 0 && len(value.Quotes) == 0 {
+		simple = true
+	}
+
 	LanguageFeaturesMutex.Lock()
 	LanguageFeatures[name] = LanguageFeature{
 		Complexity:            complexityTrie,
@@ -373,6 +380,7 @@ func processLanguageFeature(name string, value Language) {
 		ProcessMask:           processMask,
 		Keywords:              value.Keywords,
 		Quotes:                value.Quotes,
+		Simple:                simple,
 	}
 	LanguageFeaturesMutex.Unlock()
 }

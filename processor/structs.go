@@ -50,6 +50,7 @@ type LanguageFeature struct {
 	ProcessMask           byte
 	Keywords              []string
 	Quotes                []Quote
+	Simple                bool // indicates that this is like a text file and can be counted more quickly
 }
 
 // FileJobCallback is an interface that FileJobs can implement to get a per line callback with the line type
