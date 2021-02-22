@@ -34,12 +34,6 @@ func main() {
 
 	flags := rootCmd.PersistentFlags()
 
-	flags.Int64Var(
-		&processor.AverageWage,
-		"avg-wage",
-		56286,
-		"average wage value used for basic COCOMO calculation",
-	)
 	flags.BoolVar(
 		&processor.DisableCheckBinary,
 		"binary",
@@ -109,11 +103,23 @@ func main() {
 		false,
 		"print supported languages and extensions",
 	)
+	flags.Int64Var(
+		&processor.AverageWage,
+		"avg-wage",
+		56286,
+		"average wage value used for basic COCOMO calculation",
+	)
 	flags.BoolVar(
 		&processor.Cocomo,
 		"no-cocomo",
 		false,
 		"remove COCOMO calculation output",
+	)
+	flags.StringVar(
+		&processor.CocomoProjectType,
+		"cocomo-project-type",
+		"organic",
+		"change COCOMO model type [organic, semi-detached, embedded, \"custom,1,1,1,1\"]",
 	)
 	flags.BoolVar(
 		&processor.Size,

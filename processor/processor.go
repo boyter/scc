@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"runtime/debug"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -69,6 +70,9 @@ var More = false
 
 // Cocomo toggles the COCOMO calculation
 var Cocomo = false
+
+// CocomoProjectType allows the flipping between project types which impacts the calculation
+var CocomoProjectType = "organic"
 
 // Size toggles the Size calculation
 var Size = false
@@ -219,6 +223,30 @@ func ProcessConstants() {
 
 	if Trace {
 		printTrace(fmt.Sprintf("nanoseconds build extension to language: %d", makeTimestampNano()-startTime))
+	}
+
+	// Configure COCOMO setting
+	_, ok := projectType[strings.ToLower(CocomoProjectType)]
+	if !ok {
+		// lets see if we can turn it into a custom one
+		spl := strings.Split(CocomoProjectType, ",")
+		val := []float64{}
+		if len(spl) == 5 {
+			// lets try to convert to float if we can
+			for i := 1; i < 5; i++ {
+				f, err := strconv.ParseFloat(spl[i], 64)
+				if err == nil {
+					val = append(val, f)
+				}
+			}
+		}
+
+		if len(val) == 4 {
+			projectType[CocomoProjectType] = val
+		} else {
+			// if nothing matches fall back to organic
+			CocomoProjectType = "organic"
+		}
 	}
 
 	// If lazy is set then we want to load in the features as we find them not in one go

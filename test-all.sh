@@ -752,6 +752,60 @@ else
     exit
 fi
 
+if ./scc --cocomo-project-type organic | grep -q "organic"; then
+    echo -e "${GREEN}PASSED cocomo organic"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED cocomo organic"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc --cocomo-project-type doesnotexist | grep -q "organic"; then
+    echo -e "${GREEN}PASSED cocomo fallback"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED cocomo fallback"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc --cocomo-project-type semi-detached | grep -q "semi-detached"; then
+    echo -e "${GREEN}PASSED cocomo semi-detached"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED cocomo semi-detached"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc --cocomo-project-type embedded | grep -q "embedded"; then
+    echo -e "${GREEN}PASSED cocomo embedded"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED cocomo embedded"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc --cocomo-project-type custom,1,1,1,1 | grep -q "custom,1,1,1,1"; then
+    echo -e "${GREEN}PASSED cocomo custom,1,1,1,1"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED cocomo custom,1,1,1,1"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc --cocomo-project-type custom,1,1,1 | grep -q "organic"; then
+    echo -e "${GREEN}PASSED cocomo custom fallback"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED cocomo custom fallback"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 # Try out specific languages
 for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java ' 'Boo ' 'License ' 'BASH ' 'C Shell ' 'Korn Shell ' 'Makefile ' 'Shell ' 'Zsh ' 'Rakefile ' 'Gemfile ' 'Dockerfile ' 'Yarn ' 'Sieve ' 'F# ' 'Elm ' 'Terraform ' 'Clojure ' 'C# ' 'LLVM IR ' 'HAML ' 'FXML ' 'DM '
 do
