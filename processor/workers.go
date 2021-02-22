@@ -440,6 +440,11 @@ func CountStats(fileJob *FileJob) {
 				return
 			}
 
+			if Duplicates {
+				digestible := []byte{fileJob.Content[index]}
+				digest.Write(digestible)
+			}
+
 			if fileJob.Content[index] == '\n' || index >= endPoint {
 				fileJob.Code++
 				fileJob.Lines++
