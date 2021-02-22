@@ -429,7 +429,37 @@ func CountStats(fileJob *FileJob) {
 	// if its a simple file then flip into simple check logic
 	if langFeatures.Simple {
 		// at this point all we need do is count the newlines
-		fmt.Println(">>>>SIMPLE", fileJob.Location)
+		for index := 0; index < int(fileJob.Bytes); index++ {
+			if isBinary(index, fileJob.Content[index]) {
+				fileJob.Binary = true
+			}
+
+			// Only check the first 10000 characters for null bytes indicating a binary file
+			// and if we find it then we return otherwise carry on and ignore binary markers
+			if index < 10000 && fileJob.Binary {
+				return
+			}
+
+			if fileJob.Content[index] == '\n' || index >= endPoint {
+				fileJob.Code++
+				fileJob.Lines++
+
+				if fileJob.Callback != nil {
+					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_CODE) {
+						return
+					}
+				}
+				if Trace {
+					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as code", fileJob.Location, fileJob.Lines, currentState))
+				}
+			}
+		}
+
+		if NoLarge && fileJob.Lines >= LargeLineCount {
+			// Save memory by unsetting the content as we no longer require it
+			fileJob.Content = nil
+			return
+		}
 	} else {
 		for index := checkBomSkip(fileJob); index < int(fileJob.Bytes); index++ {
 			// Based on our current state determine if the state should change by checking
