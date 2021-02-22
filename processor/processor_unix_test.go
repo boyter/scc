@@ -1,5 +1,7 @@
 // +build linux darwin
 
+// SPDX-License-Identifier: MIT OR Unlicense
+
 package processor
 
 import (
