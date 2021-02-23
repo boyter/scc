@@ -259,6 +259,93 @@ func toJSON(input chan *FileJob) string {
 }
 
 func toCSV(input chan *FileJob) string {
+	if Files {
+		return toCSVFiles(input)
+	}
+
+	return toCSVSummary(input)
+}
+
+func toCSVSummary(input chan *FileJob) string {
+	languages := map[string]LanguageSummary{}
+
+	for res := range input {
+		_, ok := languages[res.Language]
+
+		if !ok {
+			files := []*FileJob{}
+			if Files {
+				files = append(files, res)
+			}
+
+			languages[res.Language] = LanguageSummary{
+				Name:       res.Language,
+				Lines:      res.Lines,
+				Code:       res.Code,
+				Comment:    res.Comment,
+				Blank:      res.Blank,
+				Complexity: res.Complexity,
+				Count:      1,
+				Files:      files,
+				Bytes:      res.Bytes,
+			}
+		} else {
+			tmp := languages[res.Language]
+			files := tmp.Files
+			if Files {
+				files = append(files, res)
+			}
+
+			languages[res.Language] = LanguageSummary{
+				Name:       res.Language,
+				Lines:      tmp.Lines + res.Lines,
+				Code:       tmp.Code + res.Code,
+				Comment:    tmp.Comment + res.Comment,
+				Blank:      tmp.Blank + res.Blank,
+				Complexity: tmp.Complexity + res.Complexity,
+				Count:      tmp.Count + 1,
+				Files:      files,
+				Bytes:      res.Bytes + tmp.Bytes,
+			}
+		}
+	}
+
+	language := []LanguageSummary{}
+	for _, summary := range languages {
+		language = append(language, summary)
+	}
+	language = sortLanguageSummary(language)
+
+	records := [][]string{{
+		"Language",
+		"Lines",
+		"Code",
+		"Comments",
+		"Blanks",
+		"Complexity",
+		"Bytes"},
+	}
+
+	for _, result := range language {
+		records = append(records, []string{
+			result.Name,
+			fmt.Sprint(result.Lines),
+			fmt.Sprint(result.Code),
+			fmt.Sprint(result.Comment),
+			fmt.Sprint(result.Blank),
+			fmt.Sprint(result.Complexity),
+			fmt.Sprint(result.Bytes)})
+	}
+
+	b := &bytes.Buffer{}
+	w := csv.NewWriter(b)
+	_ = w.WriteAll(records)
+	w.Flush()
+
+	return b.String()
+}
+
+func toCSVFiles(input chan *FileJob) string {
 	records := [][]string{{
 		"Language",
 		"Location",
@@ -286,7 +373,7 @@ func toCSV(input chan *FileJob) string {
 
 	b := &bytes.Buffer{}
 	w := csv.NewWriter(b)
-	w.WriteAll(records)
+	_ = w.WriteAll(records)
 	w.Flush()
 
 	return b.String()
