@@ -150,3 +150,40 @@ hello there! how's it going?
 		t.Errorf("Expected 0 lines got %d", fileJob.Blank)
 	}
 }
+
+func TestCountStatsIssue230(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Elm",
+	}
+
+	fileJob.SetContent(`module Main exposing (main)
+
+import Html
+
+
+main =
+    Html.node "style" [] [ Html.text "div[role=button] {-webkit-tap-highlight-color: transparent}" ]
+
+
+a =
+    3`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 11 {
+		t.Errorf("Expected 11 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 6 {
+		t.Errorf("Expected 6 lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 5 {
+		t.Errorf("Expected 5 lines got %d", fileJob.Blank)
+	}
+}
