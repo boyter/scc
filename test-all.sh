@@ -642,7 +642,25 @@ else
     exit
 fi
 
-if ./scc --format-multi "tabular:stdout,html:stdout,csv:stdout" | grep -q "Language,Location"; then
+if ./scc -f csv | grep -q "Language,Lines,Code,Comments,Blanks,Complexity,Bytes"; then
+    echo -e "${GREEN}PASSED csv summary"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED csv summary"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc -f csv --by-file | grep -q "Language,Location,Filename,Lines,Code,Comments,Blanks,Complexity,Bytes"; then
+    echo -e "${GREEN}PASSED csv file"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED csv file"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc --by-file --format-multi "tabular:stdout,html:stdout,csv:stdout" | grep -q "Language,Location"; then
     echo -e "${GREEN}PASSED format multi check"
 else
     echo -e "${RED}======================================================="
