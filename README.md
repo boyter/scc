@@ -185,55 +185,56 @@ Full details can be found in `scc --help` or `scc -h`. Note that the below refle
 
 ```
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 3.0.0 (beta)
+Version 3.0.0
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
   scc [flags] [files or directories]
 
 Flags:
-      --avg-wage int                average wage value used for basic COCOMO calculation (default 56286)
-      --binary                      disable binary file detection
-      --by-file                     display output for every file
-      --ci                          enable CI output settings where stdout is ASCII
-      --count-as string             count extension as language [e.g. jsp:htm,chead:"C Header" maps extension jsp to html and chead to C Header]
-      --debug                       enable debug output
-      --exclude-dir strings         directories to exclude (default [.git,.hg,.svn])
-      --file-gc-count int           number of files to parse before turning the GC on (default 10000)
-  -f, --format string               set output format [tabular, wide, json, csv, csv-stream, cloc-yaml, html, html-table, sql, sql-insert] (default "tabular")
-      --format-multi string         have multiple format output overriding --format [e.g. tabular:stdout,csv:file.csv,json:file.json]
-      --gen                         identify generated files
-      --generated-markers strings   string markers in head of generated files (default [do not edit])
-  -h, --help                        help for scc
-  -i, --include-ext strings         limit to file extensions [comma separated list: e.g. go,java,js]
-      --include-symlinks            if set will count symlink files
-  -l, --languages                   print supported languages and extensions
-      --large-byte-count int        number of bytes a file can contain before being removed from output (default 1000000)
-      --large-line-count int        number of lines a file can contain before being removed from output (default 40000)
-      --min                         identify minified files
-  -z, --min-gen                     identify minified or generated files
-      --min-gen-line-length int     number of bytes per average line for file to be considered minified or generated (default 255)
-      --no-cocomo                   remove COCOMO calculation output
-  -c, --no-complexity               skip calculation of code complexity
-  -d, --no-duplicates               remove duplicate files from stats and output
-      --no-gen                      ignore generated files in output (implies --gen)
-      --no-gitignore                disables .gitignore file logic
-      --no-ignore                   disables .ignore file logic
-      --no-large                    ignore files over certain byte and line size set by max-line-count and max-byte-count
-      --no-min                      ignore minified files in output (implies --min)
-      --no-min-gen                  ignore minified or generated files in output (implies --min-gen)
-      --no-size                     remove size calculation output
-  -M, --not-match stringArray       ignore files and directories matching regular expression
-  -o, --output string               output filename (default stdout)
-      --remap-all string            inspect every file and remap by checking for a string and remapping the language [e.g. "-*- C++ -*-":"C Header"]
-      --remap-unknown string        inspect files of unknown type and remap by checking for a string and remapping the language [e.g. "-*- C++ -*-":"C Header"]
-      --size-unit string            set size unit [si, binary, mixed, xkcd-kb, xkcd-kelly, xkcd-imaginary, xkcd-intel, xkcd-drive, xkcd-bakers] (default "si")
-  -s, --sort string                 column to sort by [files, name, lines, blanks, code, comments, complexity] (default "files")
-      --sql-project string          use supplied name as the project identifier for the current run. Only valid with the --format sql or sql-insert option
-  -t, --trace                       enable trace output (not recommended when processing multiple files)
-  -v, --verbose                     verbose output
-      --version                     version for scc
-  -w, --wide                        wider output with additional statistics (implies --complexity)
+      --avg-wage int                 average wage value used for basic COCOMO calculation (default 56286)
+      --binary                       disable binary file detection
+      --by-file                      display output for every file
+      --ci                           enable CI output settings where stdout is ASCII
+      --cocomo-project-type string   change COCOMO model type [organic, semi-detached, embedded, "custom,1,1,1,1"] (default "organic")
+      --count-as string              count extension as language [e.g. jsp:htm,chead:"C Header" maps extension jsp to html and chead to C Header]
+      --debug                        enable debug output
+      --exclude-dir strings          directories to exclude (default [.git,.hg,.svn])
+      --file-gc-count int            number of files to parse before turning the GC on (default 10000)
+  -f, --format string                set output format [tabular, wide, json, csv, csv-stream, cloc-yaml, html, html-table, sql, sql-insert] (default "tabular")
+      --format-multi string          have multiple format output overriding --format [e.g. tabular:stdout,csv:file.csv,json:file.json]
+      --gen                          identify generated files
+      --generated-markers strings    string markers in head of generated files (default [do not edit,<auto-generated />])
+  -h, --help                         help for scc
+  -i, --include-ext strings          limit to file extensions [comma separated list: e.g. go,java,js]
+      --include-symlinks             if set will count symlink files
+  -l, --languages                    print supported languages and extensions
+      --large-byte-count int         number of bytes a file can contain before being removed from output (default 1000000)
+      --large-line-count int         number of lines a file can contain before being removed from output (default 40000)
+      --min                          identify minified files
+  -z, --min-gen                      identify minified or generated files
+      --min-gen-line-length int      number of bytes per average line for file to be considered minified or generated (default 255)
+      --no-cocomo                    remove COCOMO calculation output
+  -c, --no-complexity                skip calculation of code complexity
+  -d, --no-duplicates                remove duplicate files from stats and output
+      --no-gen                       ignore generated files in output (implies --gen)
+      --no-gitignore                 disables .gitignore file logic
+      --no-ignore                    disables .ignore file logic
+      --no-large                     ignore files over certain byte and line size set by max-line-count and max-byte-count
+      --no-min                       ignore minified files in output (implies --min)
+      --no-min-gen                   ignore minified or generated files in output (implies --min-gen)
+      --no-size                      remove size calculation output
+  -M, --not-match stringArray        ignore files and directories matching regular expression
+  -o, --output string                output filename (default stdout)
+      --remap-all string             inspect every file and remap by checking for a string and remapping the language [e.g. "-*- C++ -*-":"C Header"]
+      --remap-unknown string         inspect files of unknown type and remap by checking for a string and remapping the language [e.g. "-*- C++ -*-":"C Header"]
+      --size-unit string             set size unit [si, binary, mixed, xkcd-kb, xkcd-kelly, xkcd-imaginary, xkcd-intel, xkcd-drive, xkcd-bakers] (default "si")
+  -s, --sort string                  column to sort by [files, name, lines, blanks, code, comments, complexity] (default "files")
+      --sql-project string           use supplied name as the project identifier for the current run. Only valid with the --format sql or sql-insert option
+  -t, --trace                        enable trace output (not recommended when processing multiple files)
+  -v, --verbose                      verbose output
+      --version                      version for scc
+  -w, --wide                         wider output with additional statistics (implies --complexity)
 ```
 
 Output should look something like the below for the redis project
@@ -243,39 +244,76 @@ $ scc
 ───────────────────────────────────────────────────────────────────────────────
 Language                 Files     Lines   Blanks  Comments     Code Complexity
 ───────────────────────────────────────────────────────────────────────────────
-C                          285    168526    19069     29354   120103      30054
-C Header                   213     31573     3569      6804    21200       1627
-TCL                        118     21776     2346      1290    18140       1870
-Shell                       44      1614      213       319     1082        183
-Autoconf                    22     10871     1038      1326     8507        953
-Lua                         20       525       68        70      387         65
-Markdown                    16      2591      681         0     1910          0
-Makefile                    11      1305      256       113      936         58
-Ruby                        10       778       78        71      629        115
-gitignore                   10       161       16         0      145          0
-YAML                         6       572       40         6      526          0
-HTML                         5      9658     2928        12     6718          0
-C++                          4       286       48        14      224         31
-License                      4       100       20         0       80          0
-Plain Text                   3       185       26         0      159          0
-CMake                        2       214       43         3      168          4
-CSS                          2       107       16         0       91          0
-Python                       2       219       12         6      201         34
-Systemd                      2        80        6         0       74          0
-BASH                         1       118       14         5       99         31
-Batch                        1        28        2         0       26          3
-C++ Header                   1         9        1         3        5          0
-Extensible Styleshe…         1        10        0         0       10          0
-Smarty Template              1        44        1         0       43          5
-m4                           1       562      116        53      393          0
+Go                          34      8548     1396       398     6754       1392
+Java                        24      3913      798       651     2464        547
+JavaScript                  11       201        0        26      175         53
+Markdown                    11      1229      296         0      933          0
+Python                       9       350       20        20      310         32
+CSS                          5        24        0        19        5          0
+License                      5        55       12         0       43          0
+YAML                         4        78       13        20       45          0
+gitignore                    4        41        9         8       24          0
+Shell                        3      1069      141        84      844         94
+C#                           2       623       58        73      492         26
+JavaServer Pages             2         1        0         0        1          0
+Makefile                     2         2        0         0        2          0
+Plain Text                   2        31        7         0       24          0
+Powershell                   2       240       35       159       46          8
+ignore                       2         3        0         0        3          0
+Alchemist                    1        20        0         0       20         55
+Alloy                        1        50        6        40        4          0
+BASH                         1         1        0         0        1          0
+Bitbucket Pipeline           1        23        1         0       22          0
+Boo                          1         1        0         0        1          0
+Bosque                       1       179       32         8      139          1
+C Header                     1       235        1        67      167         14
+C Shell                      1         1        0         0        1          0
+Clojure                      1         1        0         0        1          0
+Coq                          1       168       18         9      141          5
+DM                           1        21        2         7       12          4
+Docker ignore                1         3        0         1        2          0
+Dockerfile                   1         1        0         0        1          0
+Elm                          1         6        1         0        5          1
+Extensible Styleshe…         1         0        0         0        0          0
+F#                           1         3        0         0        3          1
+FXML                         1         9        1         0        8          0
+Flow9                        1        21        3         6       12          5
+Freemarker Template          1         0        0         0        0          0
+Futhark                      1        29        3        10       16          2
+Gemfile                      1         1        0         0        1          0
+Gherkin Specificati…         1         0        0         0        0          0
+HAML                         1        14        3         1       10          0
+HTML                         1       581        0         0      581          0
+JSON                         1      7189        0         0     7189          0
+Korn Shell                   1         1        0         0        1          0
+LLVM IR                      1         5        0         1        4          0
+Luna                         1        23        5         1       17          0
+Macromedia eXtensib…         1         0        0         0        0          0
+Monkey C                     1        74       12         0       62         12
+Perl                         1         2        0         1        1          0
+Q#                           1        31        6         2       23          5
+Rakefile                     1         1        0         0        1          0
+Report Definition L…         1         0        0         0        0          0
+Sieve                        1       192       14        14      164         47
+TOML                         1         8        2         0        6          0
+Terraform                    1        31        7         6       18         21
+V                            1        73        8        30       35          3
+Varnish Configurati…         1         0        0         0        0          0
+Verilog                      1        79        7        21       51          2
+Web Services Descri…         1         1        0         0        1          0
+Wren                         1       188       22        35      131          8
+XML Schema                   1         1        0         0        1          0
+Yarn                         1        30        4         0       26          5
+Zsh                          1         1        0         0        1          0
+nuspec                       1        22        0         0       22          0
 ───────────────────────────────────────────────────────────────────────────────
-Total                      785    251912    30607     39449   181856      35033
+Total                      168     25728     2943      1718    21067       2343
 ───────────────────────────────────────────────────────────────────────────────
-Estimated Cost to Develop $6,372,492
-Estimated Schedule Effort 27.800436 months
-Estimated People Required 20.364495
+Estimated Cost to Develop (organic) $662,793
+Estimated Schedule Effort (organic) 11.763532 months
+Estimated People Required (organic) 5.005602
 ───────────────────────────────────────────────────────────────────────────────
-Processed 8665286 bytes, 8.665 megabytes (SI)
+Processed 1776938 bytes, 1.777 megabytes (SI)
 ───────────────────────────────────────────────────────────────────────────────
 ```
 
@@ -310,7 +348,6 @@ Because of this it is able to accurately determine if a comment is in a string o
 
 It also attempts to count the complexity of code. This is done by checking for branching operations in the code. For example, each of the following `for if switch while else || && != ==` if encountered in Java would increment that files complexity by one.
 
-
 ### Complexity Estimates
 
 Lets take a minute to discuss the complexity estimate itself.
@@ -320,6 +357,52 @@ The complexity estimate is really just a number that is only comparable to files
 Because some languages don't have loops and instead use recursion they can have a lower complexity count. Does this mean they are less complex? Probably not, but the tool cannot see this because it does not build an AST of the code as it only scans through it.
 
 Generally though the complexity there is to help estimate between projects written in the same language, or for finding the most complex file in a project `scc --by-file -s complexity` which can be useful when you are estimating on how hard something is to maintain, or when looking for those files that should probably be refactored.
+
+### COCOMO
+
+The COCOMO statistics displayed at the bottom of any command line run can be configured as needed.
+
+```
+Estimated Cost to Develop (organic) $664,081
+Estimated Schedule Effort (organic) 11.772217 months
+Estimated People Required (organic) 5.011633
+```
+
+To change the COCOMO parameters, you can either use one of the default COCOMO models.
+
+```
+scc --cocomo-project-type organic
+scc --cocomo-project-type semi-detached
+scc --cocomo-project-type embedded
+```
+
+You can also supply your own parameters if you are familiar with COCOMO as follows,
+
+```
+scc --cocomo-project-type "custom,1,1,1,1"
+```
+
+See below for details about how the model choices, and the parameters they use.
+
+Organic – A software project is said to be an organic type if the team size required is adequately small, the
+problem is well understood and has been solved in the past and also the team members have a nominal experience
+regarding the problem.
+
+`scc --cocomo-project-type "organic,2.4,1.05,2.5,0.38"`
+
+Semi-detached – A software project is said to be a Semi-detached type if the vital characteristics such as team-size,
+experience, knowledge of the various programming environment lie in between that of organic and Embedded.
+The projects classified as Semi-Detached are comparatively less familiar and difficult to develop compared to
+the organic ones and require more experience and better guidance and creativity. Eg: Compilers or
+different Embedded Systems can be considered of Semi-Detached type.
+
+`scc --cocomo-project-type "semi-detached,3.0,1.12,2.5,0.35"`
+
+Embedded – A software project with requiring the highest level of complexity, creativity, and experience
+requirement fall under this category. Such software requires a larger team size than the other two models
+and also the developers need to be sufficiently experienced and creative to develop such complex models.
+
+`scc --cocomo-project-type "embedded,3.6,1.20,2.5,0.32"`
 
 ### Large File Detection
 
@@ -425,7 +508,7 @@ number of bytes processed.
 CSV as an option is good for importing into a spreadsheet for analysis. 
 
 Note that this format will give you the byte size of every file it `scc` reads allowing you to get a breakdown of the
-number of bytes processed.
+number of bytes processed. Also note that CSV respects `--by-file` and as such will return a summary by default.
 
 #### CSV-Stream
 
@@ -705,13 +788,13 @@ scc is pretty well tested with many unit, integration and benchmarks to ensure t
 Run go build for windows and linux then the following in linux, keep in mind need to update the version
 
 ```
-GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.13.0-x86_64-apple-darwin.zip scc
-GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" && zip -r9 scc-2.13.0-arm64-apple-darwin.zip scc
-GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.13.0-x86_64-pc-windows.zip scc.exe
-GOOS=windows GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.13.0-i386-pc-windows.zip scc.exe
-GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-2.13.0-x86_64-unknown-linux.zip scc
-GOOS=linux GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-2.13.0-i386-unknown-linux.zip scc
-GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" && zip -r9 scc-2.13.0-arm64-unknown-linux.zip scc
+GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-3.0.0-x86_64-apple-darwin.zip scc
+GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" && zip -r9 scc-3.0.0-arm64-apple-darwin.zip scc
+GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-3.0.0-x86_64-pc-windows.zip scc.exe
+GOOS=windows GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-3.0.0-i386-pc-windows.zip scc.exe
+GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-3.0.0-x86_64-unknown-linux.zip scc
+GOOS=linux GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-3.0.0-i386-unknown-linux.zip scc
+GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" && zip -r9 scc-3.0.0-arm64-unknown-linux.zip scc
 ```
 
 ### Containers
