@@ -125,7 +125,11 @@ wget https://github.com/boyter/scc/releases/download/v2.10.0/scc-2.13.0-x86_64-u
 unzip scc-2.13.0-x86_64-unknown-linux.zip
 cp scc /usr/local/bin/scc2.13.0
 
-# Now setup as the default
+wget https://github.com/boyter/scc/releases/download/v3.0.0/scc-3.0.0-x86_64-unknown-linux.zip
+unzip scc-3.0.0-x86_64-unknown-linux.zip
+cp scc /usr/local/bin/scc3.0.0
+
+# Now setup the most recent as the default
 mv scc /usr/local/bin/scc
 
 echo "Setting up rust toolchain"
@@ -134,19 +138,19 @@ source $HOME/.cargo/env
 
 cargo install hyperfine tokei loc
 
-wget https://github.com/vmchale/polyglot/releases/download/0.5.24/poly-x86_64-unknown-linux-icc
-mv poly-x86_64-unknown-linux-icc /usr/local/bin/polyglot
+wget https://github.com/vmchale/polyglot/releases/download/0.5.29/poly-x86_64-unknown-linux-gcc-9
+mv poly-x86_64-unknown-linux-gcc-9 /usr/local/bin/polyglot
 chmod +x /usr/local/bin/polyglot/
 
 # Now setup all of the benchmarks
 
-rm -rf artifical
-mkdir artifical
-cp create_performance_test.py artifical
-cd artifical
+rm -rf artificial
+mkdir artificial
+cp create_performance_test.py artificial
+cd artificial
 python create_performance_test.py
 cd ..
-rm artifical/create_performance_test.py
+rm artificial/create_performance_test.py
 
 # Clone the stuff we want to test
 rm -rf redis
@@ -174,11 +178,11 @@ git clone --depth=1 https://github.com/torvalds/linux.git
 
 # Regression test all versions of scc
 echo "Running regression benchmark"
-hyperfine 'scc1.0.0 linux' 'scc1.1.0 linux' 'scc1.2.0 linux' 'scc1.3.0 linux' 'scc1.4.0 linux' 'scc1.5.0 linux' 'scc1.6.0 linux' 'scc1.7.0 linux' 'scc1.8.0 linux' 'scc1.9.0 linux' 'scc1.10.0 linux' 'scc1.11.0 linux' 'scc1.12.0 linux' 'scc1.12.1 linux' 'scc2.0.0 linux' 'scc2.1.0 linux' 'scc2.2.0 linux' 'scc2.3.0 linux' 'scc2.4.0 linux' 'scc2.5.0 linux' 'scc2.6.0 linux' 'scc2.7.0 linux' 'scc2.8.0 linux' 'scc2.9.0 linux' 'scc2.9.1 linux' 'scc2.10.0 linux' 'scc2.11.0 linux' 'scc2.12.0 linux' 'scc2.13.0 linux' > benchmark_regression.txt
+hyperfine 'scc1.0.0 linux' 'scc1.1.0 linux' 'scc1.2.0 linux' 'scc1.3.0 linux' 'scc1.4.0 linux' 'scc1.5.0 linux' 'scc1.6.0 linux' 'scc1.7.0 linux' 'scc1.8.0 linux' 'scc1.9.0 linux' 'scc1.10.0 linux' 'scc1.11.0 linux' 'scc1.12.0 linux' 'scc1.12.1 linux' 'scc2.0.0 linux' 'scc2.1.0 linux' 'scc2.2.0 linux' 'scc2.3.0 linux' 'scc2.4.0 linux' 'scc2.5.0 linux' 'scc2.6.0 linux' 'scc2.7.0 linux' 'scc2.8.0 linux' 'scc2.9.0 linux' 'scc2.9.1 linux' 'scc2.10.0 linux' 'scc2.11.0 linux' 'scc2.12.0 linux' 'scc2.13.0 linux' 'scc3.0.0 linux' > benchmark_regression.txt
 
 # Benchmark against everything
-echo "Running artifical benchmark"
-hyperfine 'scc artifical' 'scc -c artifical' 'tokei artifical' 'loc artifical' 'polyglot artifical' > benchmark_artifical.txt
+echo "Running artificial benchmark"
+hyperfine 'scc artificial' 'scc -c artificial' 'tokei artificial' 'loc artificial' 'polyglot artificial' > benchmark_artificial.txt
 
 echo "Running redis benchmark"
 hyperfine 'scc redis' 'scc -c redis' 'tokei redis' 'loc redis' 'polyglot redis' 'gocloc redis' > benchmark_redis.txt
