@@ -629,10 +629,10 @@ However if you want greater performance and you have RAM to spare you can disabl
 Benchmarks are run on fresh 32 Core CPU Optimised Digital Ocean Virtual Machine 2020/08/19 all done using [hyperfine](https://github.com/sharkdp/hyperfine) with 3 warm-up runs and 10 timed runs.
 
 ```
-scc v2.13.0
-tokei v12.0.4
+scc v3.0.0
+tokei v12.1.2
 loc v0.5.0
-polyglot v0.5.25
+polyglot v0.5.29
 ```
 
 See https://github.com/boyter/scc/blob/master/benchmark.sh to see how the benchmarks are run.
@@ -642,39 +642,39 @@ See https://github.com/boyter/scc/blob/master/benchmark.sh to see how the benchm
 
 | Program | Runtime |
 |---|---|
-| scc | 17.9 ms ±   1.8 ms |
-| scc (no complexity) | 14.6 ms ±   1.3 ms |
-| tokei | 29.3 ms ±   6.8 ms |
-| loc | 50.7 ms ±  21.8 ms |
-| polyglot | 19.6 ms ±   0.7 ms |
+| scc | 18.2 ms ±   1.8 ms |
+| scc (no complexity) | 15.0 ms ±   1.6 ms |
+| tokei | 26.9 ms ±   5.7 ms |
+| loc | 47.6 ms ±  23.8 ms |
+| polyglot | 20.4 ms ±   1.1 ms |
 
 #### CPython https://github.com/python/cpython
 
 | Program | Runtime |
 |---|---|
-| scc | 52.3 ms ±   4.9 ms |
-| scc (no complexity) | 45.2 ms ±   4.4 ms |
-| tokei | 92.2 ms ±   7.4 ms |
-| loc | 132.7 ms ±  17.7 ms |
-| polyglot | 88.0 ms ±   1.6 ms |
+| scc | 50.5 ms ±   4.2 ms |
+| scc (no complexity) | 43.8 ms ±   3.3 ms |
+| tokei | 90.2 ms ±   2.8 ms |
+| loc | 143.3 ms ±  20.9 ms |
+| polyglot | 86.6 ms ±   3.4 ms |
 
 #### Linux Kernel https://github.com/torvalds/linux
 
 | Program | Runtime |
 |---|---|
-| scc | 584.8 ms ±  15.8 ms |
-| scc (no complexity) | 420.7 ms ±  11.3 ms |
-| tokei | 871.9 ms ±  23.1 ms |
-| loc | 1.999 s ±  0.057 s |
-| polyglot | 1.171 s ±  0.043 s |
+| scc | 612.1 ms ±  16.1 ms |
+| scc (no complexity) | 462.1 ms ±  16.8 ms |
+| tokei | 883.3 ms ±  23.4 ms |
+| loc | 2.145 s ±  0.049 s |
+| polyglot | 1.215 s ±  0.047 s s |
 
 If you enable duplicate detection expect performance to fall by about 20% in `scc`.
 
-Performance is tracked over each release and presented below.
+Performance is tracked over each release and presented below. Currently the most recent release 3.0.0 is the fastest version.
 
 <img alt="scc" src=https://github.com/boyter/scc/raw/master/performance-over-time.png>
 
-https://jsfiddle.net/0ardq2g7/
+https://jsfiddle.net/u4m6xysv/3/
 
 ### CI/CD Support
 

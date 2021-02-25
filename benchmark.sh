@@ -140,7 +140,7 @@ cargo install hyperfine tokei loc
 
 wget https://github.com/vmchale/polyglot/releases/download/0.5.29/poly-x86_64-unknown-linux-gcc-9
 mv poly-x86_64-unknown-linux-gcc-9 /usr/local/bin/polyglot
-chmod +x /usr/local/bin/polyglot/
+chmod +x /usr/local/bin/polyglot
 
 # Now setup all of the benchmarks
 
