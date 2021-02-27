@@ -6190,6 +6190,23 @@
       }
     ]
   },
+  "TL": {
+    "complexitychecks": [],
+    "extensions": [
+      "tl"
+    ],
+    "line_comment": [
+      "//",
+      "///"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": []
+  },
   "Unreal Script": {
     "complexitychecks": [
       "for ",
