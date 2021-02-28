@@ -240,80 +240,43 @@ Flags:
 Output should look something like the below for the redis project
 
 ```
-$ scc
+$ scc redis 
 ───────────────────────────────────────────────────────────────────────────────
 Language                 Files     Lines   Blanks  Comments     Code Complexity
 ───────────────────────────────────────────────────────────────────────────────
-Go                          34      8548     1396       398     6754       1392
-Java                        24      3913      798       651     2464        547
-JavaScript                  11       201        0        26      175         53
-Markdown                    11      1229      296         0      933          0
-Python                       9       350       20        20      310         32
-CSS                          5        24        0        19        5          0
-License                      5        55       12         0       43          0
-YAML                         4        78       13        20       45          0
-gitignore                    4        41        9         8       24          0
-Shell                        3      1069      141        84      844         94
-C#                           2       623       58        73      492         26
-JavaServer Pages             2         1        0         0        1          0
-Makefile                     2         2        0         0        2          0
-Plain Text                   2        31        7         0       24          0
-Powershell                   2       240       35       159       46          8
-ignore                       2         3        0         0        3          0
-Alchemist                    1        20        0         0       20         55
-Alloy                        1        50        6        40        4          0
-BASH                         1         1        0         0        1          0
-Bitbucket Pipeline           1        23        1         0       22          0
-Boo                          1         1        0         0        1          0
-Bosque                       1       179       32         8      139          1
-C Header                     1       235        1        67      167         14
-C Shell                      1         1        0         0        1          0
-Clojure                      1         1        0         0        1          0
-Coq                          1       168       18         9      141          5
-DM                           1        21        2         7       12          4
-Docker ignore                1         3        0         1        2          0
-Dockerfile                   1         1        0         0        1          0
-Elm                          1         6        1         0        5          1
-Extensible Styleshe…         1         0        0         0        0          0
-F#                           1         3        0         0        3          1
-FXML                         1         9        1         0        8          0
-Flow9                        1        21        3         6       12          5
-Freemarker Template          1         0        0         0        0          0
-Futhark                      1        29        3        10       16          2
-Gemfile                      1         1        0         0        1          0
-Gherkin Specificati…         1         0        0         0        0          0
-HAML                         1        14        3         1       10          0
-HTML                         1       581        0         0      581          0
-JSON                         1      7189        0         0     7189          0
-Korn Shell                   1         1        0         0        1          0
-LLVM IR                      1         5        0         1        4          0
-Luna                         1        23        5         1       17          0
-Macromedia eXtensib…         1         0        0         0        0          0
-Monkey C                     1        74       12         0       62         12
-Perl                         1         2        0         1        1          0
-Q#                           1        31        6         2       23          5
-Rakefile                     1         1        0         0        1          0
-Report Definition L…         1         0        0         0        0          0
-Sieve                        1       192       14        14      164         47
-TOML                         1         8        2         0        6          0
-Terraform                    1        31        7         6       18         21
-V                            1        73        8        30       35          3
-Varnish Configurati…         1         0        0         0        0          0
-Verilog                      1        79        7        21       51          2
-Web Services Descri…         1         1        0         0        1          0
-Wren                         1       188       22        35      131          8
-XML Schema                   1         1        0         0        1          0
-Yarn                         1        30        4         0       26          5
-Zsh                          1         1        0         0        1          0
-nuspec                       1        22        0         0       22          0
+C                          296    180267    20367     31679   128221      32548
+C Header                   215     32362     3624      6968    21770       1636
+TCL                        143     28959     3130      1784    24045       2340
+Shell                       44      1658      222       326     1110        187
+Autoconf                    22     10871     1038      1326     8507        953
+Lua                         20       525       68        70      387         65
+Markdown                    16      2595      683         0     1912          0
+Makefile                    11      1363      262       125      976         59
+Ruby                        10       795       78        78      639        116
+gitignore                   10       162       16         0      146          0
+YAML                         6       711       46         8      657          0
+HTML                         5      9658     2928        12     6718          0
+C++                          4       286       48        14      224         31
+License                      4       100       20         0       80          0
+Plain Text                   3       185       26         0      159          0
+CMake                        2       214       43         3      168          4
+CSS                          2       107       16         0       91          0
+Python                       2       219       12         6      201         34
+Systemd                      2        80        6         0       74          0
+BASH                         1       118       14         5       99         31
+Batch                        1        28        2         0       26          3
+C++ Header                   1         9        1         3        5          0
+Extensible Styleshe…         1        10        0         0       10          0
+Smarty Template              1        44        1         0       43          5
+m4                           1       562      116        53      393          0
 ───────────────────────────────────────────────────────────────────────────────
-Total                      168     25728     2943      1718    21067       2343
+Total                      823    271888    32767     42460   196661      38012
 ───────────────────────────────────────────────────────────────────────────────
-Estimated Cost to Develop (organic) $662,793
-Estimated Schedule Effort (organic) 11.763532 months
-Estimated People Required (organic) 5.005602
+Estimated Cost to Develop (organic) $6,918,301
+Estimated Schedule Effort (organic) 28.682292 months
+Estimated People Required (organic) 21.428982
 ───────────────────────────────────────────────────────────────────────────────
-Processed 1776938 bytes, 1.777 megabytes (SI)
+Processed 9425137 bytes, 9.425 megabytes (SI)
 ───────────────────────────────────────────────────────────────────────────────
 ```
 
