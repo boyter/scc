@@ -1,0 +1,16 @@
+# https://git-scm.com/docs/gitignore
+
+# A blank line matches no files, so it can serve as a separator for readability.
+
+# A line starting with # serves as a comment.
+# Put a backslash ("\") in front of the first hash for patterns that begin with a hash.
+# *
+
+# empty error where it resolves to nothing crash https://github.com/boyter/scc/issues/149
+/
+
+# Trailing spaces are ignored unless they are quoted with backslash ("\").
+/
+
+# An optional prefix "!" which negates the pattern
+!*

@@ -73,7 +73,8 @@ go-gitignore parse gitignore file, and generate a simple tree index for matching
 
 *note: glob pattern*
 
-go-gitignore use [filepath.Match](https://golang.org/pkg/path/filepath/#Match) for matching meta char pattern, so not support recursive pattern (path/`**`/file).
+go-gitignore use [filepath.Match](https://golang.org/pkg/path/filepath/#Match) for matching meta char pattern, 
+so not support recursive pattern (path/`**`/file).
 
 ## Installation
 
