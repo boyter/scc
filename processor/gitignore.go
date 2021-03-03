@@ -23,7 +23,7 @@ func NewIgnoreMatcher(contents string) IgnoreMatcher {
 
 func (ignoreMatcher *IgnoreMatcher) Match(value string) bool {
 	for _, x := range ignoreMatcher.contents {
-		if ignoreMatcher.matchLine(x, value) {
+		if ignoreMatcher.matchLine(x, value) == true {
 			return true
 		}
 	}

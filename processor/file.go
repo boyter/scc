@@ -49,9 +49,9 @@ func getExtension(name string) string {
 
 // DirectoryJob is a struct for dealing with directories we want to walk
 type DirectoryJob struct {
-	root    string
-	path    string
-	ignores []gitignore.IgnoreMatcher
+	root       string
+	path       string
+	ignores    []gitignore.IgnoreMatcher
 	gitignores []IgnoreMatcher
 }
 
@@ -171,15 +171,15 @@ DIRENTS:
 			}
 		}
 
-		for _, ignore := range ignores {
-			if ignore.Match(path, isDir) {
-				if Verbose {
-					printWarn("skipping file/directory due to ignore: " + path)
-					fmt.Println(">>>", isDir)
-				}
-				continue DIRENTS
-			}
-		}
+		//for _, ignore := range ignores {
+		//	if ignore.Match(path, isDir) {
+		//		if Verbose {
+		//			printWarn("skipping file/directory due to ignore: " + path)
+		//			fmt.Println(">>>", isDir)
+		//		}
+		//		continue DIRENTS
+		//	}
+		//}
 
 		for _, ignore := range gitignores {
 			if ignore.Match(path) {
