@@ -51,6 +51,7 @@ type DirectoryJob struct {
 	root    string
 	path    string
 	ignores []gitignore.IgnoreMatcher
+	gitignores []IgnoreMatcher
 }
 
 // DirectoryWalker is responsible for actually walking directories using cuba
