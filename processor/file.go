@@ -4,6 +4,7 @@ package processor
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -116,6 +117,7 @@ func (dw *DirectoryWalker) Walk(handle *cuba.Handle) {
 	job := handle.Item().(*DirectoryJob)
 
 	ignores := job.ignores
+	gitignores := job.gitignores
 
 	dirents, err := dw.Readdir(job.path)
 	if err != nil {
@@ -134,6 +136,13 @@ func (dw *DirectoryWalker) Walk(handle *cuba.Handle) {
 				printError(fmt.Sprintf("failed to load gitignore %s: %v", job.path, err))
 			} else {
 				ignores = append(ignores, ignore)
+			}
+
+			c, err := ioutil.ReadFile(path)
+			if err != nil {
+				printError(fmt.Sprintf("2 failed to load gitignore %s: %v", job.path, err))
+			} else {
+				gitignores = append(gitignores, NewIgnoreMatcher(string(c)))
 			}
 		}
 	}
@@ -162,10 +171,19 @@ DIRENTS:
 			}
 		}
 
-		for _, ignore := range ignores {
-			if ignore.Match(path, isDir) {
+		//for _, ignore := range ignores {
+		//	if ignore.Match(path, isDir) {
+		//		if Verbose {
+		//			printWarn("skipping directory due to ignore: " + path)
+		//		}
+		//		continue DIRENTS
+		//	}
+		//}
+
+		for _, ignore := range gitignores {
+			if ignore.Match(path) {
 				if Verbose {
-					printWarn("skipping directory due to ignore: " + path)
+					printWarn("2 skipping directory due to ignore: " + path)
 				}
 				continue DIRENTS
 			}
@@ -174,9 +192,10 @@ DIRENTS:
 		if isDir {
 			handle.Push(
 				&DirectoryJob{
-					root:    job.root,
-					path:    path,
-					ignores: ignores,
+					root:       job.root,
+					path:       path,
+					ignores:    ignores,
+					gitignores: gitignores,
 				},
 			)
 		} else {
