@@ -171,19 +171,21 @@ DIRENTS:
 			}
 		}
 
-		//for _, ignore := range ignores {
-		//	if ignore.Match(path, isDir) {
-		//		if Verbose {
-		//			printWarn("skipping directory due to ignore: " + path)
-		//		}
-		//		continue DIRENTS
-		//	}
-		//}
+		for _, ignore := range ignores {
+			if ignore.Match(path, isDir) {
+				if Verbose {
+					printWarn("skipping file/directory due to ignore: " + path)
+					fmt.Println(">>>", isDir)
+				}
+				continue DIRENTS
+			}
+		}
 
 		for _, ignore := range gitignores {
 			if ignore.Match(path) {
 				if Verbose {
-					printWarn("2 skipping directory due to ignore: " + path)
+					printWarn("2 skipping file/directory due to ignore: " + path)
+					fmt.Println("2>>>", isDir)
 				}
 				continue DIRENTS
 			}
