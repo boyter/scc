@@ -45,6 +45,12 @@ Or if you are using [Scoop](https://scoop.sh/) on Windows
 
 `$ scoop install scc`
 
+#### Chocolatey
+
+Or if you are using [Chocolatey](https://chocolatey.org/) on Windows
+
+`$ choco install scc`
+
 #### Manual
 
 Binaries for Windows, GNU/Linux and macOS for both i386 and x86_64 machines are available from the [releases](https://github.com/boyter/scc/releases) page.
