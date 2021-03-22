@@ -99,8 +99,9 @@ func isBinary(index int, currentByte byte) bool {
 	return false
 }
 
-func shouldProcess(currentByte, processBytesMask byte) bool {
-	if currentByte&processBytesMask != currentByte {
+func shouldProcess(currentByte byte, processBytesMask uint64) bool {
+	k := BloomTable[currentByte]
+	if k&processBytesMask != k {
 		return false
 	}
 	return true
