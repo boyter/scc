@@ -357,7 +357,7 @@ func processLanguageFeature(name string, value Language) {
 	var processMask uint64
 
 	for _, v := range value.ComplexityChecks {
-		complexityMask |= BloomHash(v[0])
+		complexityMask |= BloomTable[v[0]]
 		complexityTrie.Insert(TComplexity, []byte(v))
 		if !Complexity {
 			tokenTrie.Insert(TComplexity, []byte(v))
@@ -368,21 +368,21 @@ func processLanguageFeature(name string, value Language) {
 	}
 
 	for _, v := range value.LineComment {
-		singleLineCommentMask |= BloomHash(v[0])
+		singleLineCommentMask |= BloomTable[v[0]]
 		slCommentTrie.Insert(TSlcomment, []byte(v))
 		tokenTrie.Insert(TSlcomment, []byte(v))
 	}
 	processMask |= singleLineCommentMask
 
 	for _, v := range value.MultiLine {
-		multiLineCommentMask |= BloomHash(v[0][0])
+		multiLineCommentMask |= BloomTable[v[0][0]]
 		mlCommentTrie.InsertClose(TMlcomment, []byte(v[0]), []byte(v[1]))
 		tokenTrie.InsertClose(TMlcomment, []byte(v[0]), []byte(v[1]))
 	}
 	processMask |= multiLineCommentMask
 
 	for _, v := range value.Quotes {
-		stringMask |= BloomHash(v.Start[0])
+		stringMask |= BloomTable[v.Start[0]]
 		stringTrie.InsertClose(TString, []byte(v.Start), []byte(v.End))
 		tokenTrie.InsertClose(TString, []byte(v.Start), []byte(v.End))
 	}
