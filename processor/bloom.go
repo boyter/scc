@@ -1,7 +1,6 @@
 package processor
 
-// Prime number less than 256
-const BloomPrime = 251
+import "math/rand"
 
 var BloomTable [256]uint64
 
@@ -12,13 +11,27 @@ func init() {
 }
 
 func BloomHash(b byte) uint64 {
-	i := uint64(b)
+	// Since our input is based on ASCII characters (and majority lower case
+	// characters) the values are not well distributed through the 0-255 byte
+	// range. math/rand gives us a way to generate a value with more well
+	// distributed randomness.
+	k := rand.New(rand.NewSource(int64(b))).Uint64()
 
-	k := (i^BloomPrime) * i
+	// Mask to slice out a 0-63 value
+	var mask64 uint64 = 0b00111111
 
-	k1 := k & 0x3f
-	k2 := k >> 1 & 0x3f
-	k3 := k >> 2 & 0x3f
+	// For a bloom filter we only want a few bits set, but distributed
+	// through the 64 bit space.
+	// The logic here is to slice a value between 0 and 63 from k, and set a
+	// single bit in the output hash based on that.
+	// Setting three bits this way seems to give the best results. Fewer bits
+	// makes the hash not unique enough, more leads to overcrowding the bloom
+	// filter.
+	var hash uint64
+	for i := uint64(0); i < 3; i++ {
+		n := k >> (i*8) & mask64
+		hash |= 1 << n
+	}
 
-	return (1 << k1) | (1 << k2) | (1 << k3)
+	return hash
 }
