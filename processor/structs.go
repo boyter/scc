@@ -5,6 +5,7 @@ package processor
 import (
 	"bytes"
 	"sync"
+	"hash"
 )
 
 // Used by trie structure to store the types
@@ -76,11 +77,12 @@ type FileJob struct {
 	Blank              int64
 	Complexity         int64
 	WeightedComplexity float64
-	Hash               []byte
+	Hash               hash.Hash
 	Callback           FileJobCallback
 	Binary             bool
 	Minified           bool
 	Generated          bool
+	EndPoint           int
 }
 
 // LanguageSummary is used to hold summarised results for a single language

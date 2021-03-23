@@ -5,7 +5,6 @@ package processor
 import (
 	"bytes"
 	"fmt"
-	"hash"
 	"runtime/debug"
 	"strings"
 	"sync"
@@ -32,6 +31,19 @@ const SheBang string = "#!"
 
 // LineType what type of line are are processing
 type LineType int32
+
+func (lt LineType) String() string {
+	switch lt {
+	case LINE_BLANK:
+		return "blank"
+	case LINE_CODE:
+		return "code"
+	case LINE_COMMENT:
+		return "comment"
+	default:
+		return fmt.Sprintf("%d", lt)
+	}
+}
 
 // These are not meant to be CAMEL_CASE but as it us used by an external project we cannot change it
 const (
@@ -107,253 +119,10 @@ func shouldProcess(currentByte byte, processBytesMask uint64) bool {
 	return true
 }
 
-func resetState(currentState int64) int64 {
-	if currentState == SMulticomment || currentState == SMulticommentCode {
-		currentState = SMulticomment
-	} else if currentState == SString {
-		currentState = SString
-	} else {
-		currentState = SBlank
-	}
-
-	return currentState
-}
-
-func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, endString []byte, currentState int64, ignoreEscape bool) (int, int64) {
-	// Its not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
-	// without checking if it is out of bounds first
-	for i := index; i < endPoint; i++ {
-		index = i
-
-		// If we hit a newline, return because we want to count the stats but keep
-		// the current state so we end up back in this loop when the outer
-		// one calls again
-		if fileJob.Content[i] == '\n' {
-			return i, currentState
-		}
-
-		// If we are in a literal string we want to ignore the \ check OR we aren't checking for special ones
-		if ignoreEscape || fileJob.Content[i-1] != '\\' {
-			if checkForMatchSingle(fileJob.Content[i], index, endPoint, endString, fileJob) {
-				return i, SCode
-			}
-		}
-	}
-
-	return index, currentState
-}
-
-// This is a special state check pretty much only ever used by Python codebases
-// but potentially it could be expanded to deal with other types
-func docStringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, endString []byte, currentState int64) (int, int64) {
-	// Its not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
-	// without checking if it is out of bounds first
-	for i := index; i < endPoint; i++ {
-		index = i
-
-		if fileJob.Content[i] == '\n' {
-			return i, currentState
-		}
-
-		if fileJob.Content[i-1] != '\\' {
-			if ok, _, _ := stringTrie.Match(fileJob.Content[i:]); ok != 0 {
-				// So we have hit end of docstring at this point in which case check if only whitespace characters till the next
-				// newline and if so we change to a comment otherwise to code
-				// need to start the loop after ending definition of docstring, therefore adding the length of the string to
-				// the index
-				for j := index + len(endString); j <= endPoint; j++ {
-					if fileJob.Content[j] == '\n' {
-						if Debug {
-							printDebug("Found newline so docstring is comment")
-						}
-						return i, SComment
-					}
-
-					if !isWhitespace(fileJob.Content[j]) {
-						if Debug {
-							printDebug(fmt.Sprintf("Found something not whitespace so is code: %s", string(fileJob.Content[j])))
-						}
-						return i, SCode
-					}
-				}
-
-				return i, SCode
-			}
-		}
-	}
-
-	return index, currentState
-}
-
-func codeState(
-	fileJob *FileJob,
-	index int,
-	endPoint int,
-	currentState int64,
-	endString []byte,
-	endComments [][]byte,
-	langFeatures LanguageFeature,
-	digest *hash.Hash,
-) (int, int64, []byte, [][]byte, bool) {
-	// Hacky fix to https://github.com/boyter/scc/issues/181
-	if endPoint > len(fileJob.Content) {
-		endPoint--
-	}
-
-	for i := index; i < endPoint; i++ {
-		curByte := fileJob.Content[i]
-		index = i
-
-		if curByte == '\n' {
-			return i, currentState, endString, endComments, false
-		}
-
-		if isBinary(i, curByte) {
-			fileJob.Binary = true
-			return i, currentState, endString, endComments, false
-		}
-
-		if shouldProcess(curByte, langFeatures.ProcessMask) {
-			if Duplicates {
-				// Technically this is wrong because we skip bytes so this is not a true
-				// hash of the file contents, but for duplicate files it shouldn't matter
-				// as both will skip the same way
-				digestible := []byte{fileJob.Content[index]}
-				(*digest).Write(digestible)
-			}
-
-			switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[i:]); tokenType {
-			case TString:
-				// If we are in string state then check what sort of string so we know if docstring OR ignoreescape string
-				i, ignoreEscape := verifyIgnoreEscape(langFeatures, fileJob, index)
-
-				// It is safe to -1 here as to enter the code state we need to have
-				// transitioned from blank to here hence i should always be >= 1
-				// This check is to ensure we aren't in a character declaration
-				// TODO this should use language features
-				if fileJob.Content[i-1] != '\\' {
-					currentState = SString
-				}
-
-				return i, currentState, endString, endComments, ignoreEscape
-
-			case TSlcomment:
-				currentState = SCommentCode
-				return i, currentState, endString, endComments, false
-
-			case TMlcomment:
-				if langFeatures.Nested || len(endComments) == 0 {
-					endComments = append(endComments, endString)
-					currentState = SMulticommentCode
-					i += offsetJump - 1
-
-					return i, currentState, endString, endComments, false
-				}
-
-			case TComplexity:
-				if index == 0 || isWhitespace(fileJob.Content[index-1]) {
-					fileJob.Complexity++
-				}
-			}
-		}
-	}
-
-	return index, currentState, endString, endComments, false
-}
-
-func commentState(fileJob *FileJob, index int, endPoint int, currentState int64, endComments [][]byte, endString []byte, langFeatures LanguageFeature) (int, int64, []byte, [][]byte) {
-	for i := index; i < endPoint; i++ {
-		curByte := fileJob.Content[i]
-		index = i
-
-		if curByte == '\n' {
-			return i, currentState, endString, endComments
-		}
-
-		if checkForMatchSingle(curByte, index, endPoint, endComments[len(endComments)-1], fileJob) {
-			// set offset jump here
-			offsetJump := len(endComments[len(endComments)-1])
-			endComments = endComments[:len(endComments)-1]
-
-			if len(endComments) == 0 {
-				// If we started as multiline code switch back to code so we count correctly
-				// IE i := 1 /* for the lols */
-				// TODO is that required? Might still be required to count correctly
-				if currentState == SMulticommentCode {
-					currentState = SCode // TODO pointless to change here, just set S_MULTICOMMENT_BLANK
-				} else {
-					currentState = SMulticommentBlank
-				}
-			}
-
-			i += offsetJump - 1
-			return i, currentState, endString, endComments
-		}
-		// Check if we are entering another multiline comment
-		// This should come below check for match single as it speeds up processing
-		if langFeatures.Nested || len(endComments) == 0 {
-			if ok, offsetJump, endString := langFeatures.MultiLineComments.Match(fileJob.Content[i:]); ok != 0 {
-				endComments = append(endComments, endString)
-				i += offsetJump - 1
-
-				return i, currentState, endString, endComments
-			}
-		}
-	}
-
-	return index, currentState, endString, endComments
-}
-
-func blankState(
-	fileJob *FileJob,
-	index int,
-	endPoint int,
-	currentState int64,
-	endComments [][]byte,
-	endString []byte,
-	langFeatures LanguageFeature,
-) (int, int64, []byte, [][]byte, bool) {
-	switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[index:]); tokenType {
-	case TMlcomment:
-		if langFeatures.Nested || len(endComments) == 0 {
-			endComments = append(endComments, endString)
-			currentState = SMulticomment
-			index += offsetJump - 1
-			return index, currentState, endString, endComments, false
-		}
-
-	case TSlcomment:
-		currentState = SComment
-		return index, currentState, endString, endComments, false
-
-	case TString:
-		index, ignoreEscape := verifyIgnoreEscape(langFeatures, fileJob, index)
-
-		for _, v := range langFeatures.Quotes {
-			if v.End == string(endString) && v.DocString {
-				currentState = SDocString
-				return index, currentState, endString, endComments, ignoreEscape
-			}
-		}
-		currentState = SString
-		return index, currentState, endString, endComments, ignoreEscape
-
-	case TComplexity:
-		currentState = SCode
-		if index == 0 || isWhitespace(fileJob.Content[index-1]) {
-			fileJob.Complexity++
-		}
-
-	default:
-		currentState = SCode
-	}
-
-	return index, currentState, endString, endComments, false
-}
-
 // Some languages such as C# have quoted strings like @"\" where no escape character is required
 // this checks if there is one so we can cater for these cases
-func verifyIgnoreEscape(langFeatures LanguageFeature, fileJob *FileJob, index int) (int, bool) {
+func verifyIgnoreEscape(langFeatures *LanguageFeature, fileJob *FileJob, index int) (int, bool, bool) {
+	docString := false
 	ignoreEscape := false
 
 	// loop over the string states and if we have the special flag match, and if so we need to ensure we can handle them
@@ -370,13 +139,14 @@ func verifyIgnoreEscape(langFeatures LanguageFeature, fileJob *FileJob, index in
 
 			// If we have a match then jump ahead enough so we don't pick it up again for cases like @"
 			if isMatch {
+				docString = langFeatures.Quotes[i].DocString
 				ignoreEscape = true
 				index = index + len(langFeatures.Quotes[i].Start)
 			}
 		}
 	}
 
-	return index, ignoreEscape
+	return index, docString, ignoreEscape
 }
 
 // CountStats will process the fileJob
@@ -411,22 +181,17 @@ func CountStats(fileJob *FileJob) {
 		langFeatures.Tokens = &Trie{}
 	}
 
-	endPoint := int(fileJob.Bytes - 1)
-	currentState := SBlank
-	endComments := [][]byte{}
-	endString := []byte{}
-
-	// TODO needs to be set via langFeatures.Quotes[0].IgnoreEscape for the matching feature
-	ignoreEscape := false
+	var lineStart int
+	var lineType LineType
+	var currentState State = &StateBlank{}
 
 	// For determining duplicates we need the below. The reason for creating
 	// the byte array here is to avoid GC pressure. MD5 is in the standard library
 	// and is fast enough to not warrant murmur3 hashing. No need to be
 	// crypto secure here either so no need to eat the performance cost of a better
 	// hash method
-	var digest hash.Hash
 	if Duplicates {
-		digest = blake2b.New256()
+		fileJob.Hash = blake2b.New256()
 	}
 
 	for index := checkBomSkip(fileJob); index < int(fileJob.Bytes); index++ {
@@ -435,47 +200,9 @@ func CountStats(fileJob *FileJob) {
 		// changing anything in here and profile/measure afterwards!
 		// NB that the order of the if statements matters and has been set to what in benchmarks is most efficient
 		if !isWhitespace(fileJob.Content[index]) {
-
-			switch currentState {
-			case SCode:
-				index, currentState, endString, endComments, ignoreEscape = codeState(
-					fileJob,
-					index,
-					endPoint,
-					currentState,
-					endString,
-					endComments,
-					langFeatures,
-					&digest,
-				)
-			case SString:
-				index, currentState = stringState(fileJob, index, endPoint, langFeatures.Strings, endString, currentState, ignoreEscape)
-			case SDocString:
-				// For a docstring we can either move into blank in which case we count it as a docstring
-				// or back into code in which case it should be counted as code
-				index, currentState = docStringState(fileJob, index, endPoint, langFeatures.Strings, endString, currentState)
-			case SMulticomment, SMulticommentCode:
-				index, currentState, endString, endComments = commentState(
-					fileJob,
-					index,
-					endPoint,
-					currentState,
-					endComments,
-					endString,
-					langFeatures,
-				)
-			case SBlank, SMulticommentBlank:
-				// From blank we can move into comment, move into a multiline comment
-				// or move into code but we can only do one.
-				index, currentState, endString, endComments, ignoreEscape = blankState(
-					fileJob,
-					index,
-					endPoint,
-					currentState,
-					endComments,
-					endString,
-					langFeatures,
-				)
+			index, lineType, currentState = currentState.Process(fileJob, &langFeatures, index, lineType)
+			if Trace {
+				printTrace(fmt.Sprintf("state transition @ %d:%d: line=%s state=%s", fileJob.Lines+1, index-lineStart, lineType, currentState))
 			}
 		}
 
@@ -494,7 +221,7 @@ func CountStats(fileJob *FileJob) {
 
 		// This means the end of processing the line so calculate the stats according to what state
 		// we are currently in
-		if fileJob.Content[index] == '\n' || index >= endPoint {
+		if fileJob.Content[index] == '\n' || index >= fileJob.EndPoint {
 			fileJob.Lines++
 
 			if NoLarge && fileJob.Lines >= LargeLineCount {
@@ -503,55 +230,39 @@ func CountStats(fileJob *FileJob) {
 				return
 			}
 
-			switch currentState {
-			case SCode, SString, SCommentCode, SMulticommentCode:
+			switch lineType {
+			case LINE_CODE:
 				fileJob.Code++
-				currentState = resetState(currentState)
-				if fileJob.Callback != nil {
-					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_CODE) {
-						return
-					}
-				}
-				if Trace {
-					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as code", fileJob.Location, fileJob.Lines, currentState))
-				}
-			case SComment, SMulticomment, SMulticommentBlank:
+			case LINE_COMMENT:
 				fileJob.Comment++
-				currentState = resetState(currentState)
-				if fileJob.Callback != nil {
-					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
-						return
-					}
-				}
-				if Trace {
-					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState))
-				}
-			case SBlank:
+			case LINE_BLANK:
 				fileJob.Blank++
-				if fileJob.Callback != nil {
-					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_BLANK) {
-						return
-					}
-				}
-				if Trace {
-					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as blank", fileJob.Location, fileJob.Lines, currentState))
-				}
-			case SDocString:
-				fileJob.Comment++
-				if fileJob.Callback != nil {
-					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
-						return
-					}
-				}
-				if Trace {
-					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState))
+			}
+
+			if Trace {
+				printTrace(fmt.Sprintf(
+					"%s line %d [%s] ended with state: %v: counted as %v",
+					fileJob.Location,
+					fileJob.Lines,
+					string(fileJob.Content[lineStart:index]),
+					currentState,
+					lineType,
+				))
+				//printTrace(fmt.Sprintf(`line %d: "%s"`, fileJob.Lines, string(fileJob.Content[lineStart:index])))
+
+				// lineStart is only used to produce the line trace, so it's
+				// safe to update it inside the condition
+				lineStart = index+1
+			}
+
+			if fileJob.Callback != nil {
+				if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, lineType) {
+					return
 				}
 			}
-		}
-	}
 
-	if Duplicates {
-		fileJob.Hash = digest.Sum(nil)
+			lineType, currentState = currentState.Reset()
+		}
 	}
 
 	isGenerated := false
@@ -736,7 +447,8 @@ func processFile(job *FileJob) bool {
 
 	if Duplicates {
 		duplicates.mux.Lock()
-		if duplicates.Check(job.Bytes, job.Hash) {
+		jobHash := job.Hash.Sum(nil)
+		if duplicates.Check(job.Bytes, jobHash) {
 			if Verbose {
 				printWarn(fmt.Sprintf("skipping duplicate file: %s", job.Location))
 			}
@@ -745,7 +457,7 @@ func processFile(job *FileJob) bool {
 			return false
 		}
 
-		duplicates.Add(job.Bytes, job.Hash)
+		duplicates.Add(job.Bytes, jobHash)
 		duplicates.mux.Unlock()
 	}
 
