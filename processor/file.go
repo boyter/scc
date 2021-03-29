@@ -259,6 +259,7 @@ func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 			Extension:         extension,
 			PossibleLanguages: language,
 			Bytes:             fileInfo.Size(),
+			EndPoint:          int(fileInfo.Size() - 1),
 		}
 	} else if Verbose {
 		printWarn(fmt.Sprintf("skipping file unknown extension: %s", name))
