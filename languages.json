@@ -6645,16 +6645,18 @@
       "== "
     ],
     "extensions": [
-      "vim"
+      "vim",
+      "vimrc",
+      "gvimrc"
     ],
     "line_comment": [
-      "\\\""
+      "\"", "#"
     ],
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
