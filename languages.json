@@ -6645,10 +6645,20 @@
       "== "
     ],
     "extensions": [
-      "vim"
+      "vim",
+      "vimrc",
+      "gvimrc"
+    ],
+    "filenames": [
+        "_vimrc",
+        ".vimrc",
+        "_gvimrc",
+        ".gvimrc",
+        "vimrc",
+        "gvimrc"
     ],
     "line_comment": [
-      "\\\""
+      "\"", "#"
     ],
     "multi_line": [],
     "quotes": [
