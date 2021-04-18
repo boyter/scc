@@ -5,6 +5,7 @@ package processor
 import (
 	"bytes"
 	"sync"
+	"hash"
 )
 
 // Used by trie structure to store the types
@@ -45,11 +46,11 @@ type LanguageFeature struct {
 	Strings               *Trie
 	Tokens                *Trie
 	Nested                bool
-	ComplexityCheckMask   byte
-	SingleLineCommentMask byte
-	MultiLineCommentMask  byte
-	StringCheckMask       byte
-	ProcessMask           byte
+	ComplexityCheckMask   uint64
+	SingleLineCommentMask uint64
+	MultiLineCommentMask  uint64
+	StringCheckMask       uint64
+	ProcessMask           uint64
 	Keywords              []string
 	Quotes                []Quote
 }
@@ -76,11 +77,12 @@ type FileJob struct {
 	Blank              int64
 	Complexity         int64
 	WeightedComplexity float64
-	Hash               []byte
+	Hash               hash.Hash
 	Callback           FileJobCallback
 	Binary             bool
 	Minified           bool
 	Generated          bool
+	EndPoint           int
 }
 
 // LanguageSummary is used to hold summarised results for a single language
