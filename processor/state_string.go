@@ -22,7 +22,7 @@ func (state *StateString) Process(job *FileJob, lang *LanguageFeature, index int
 		}
 
 		// If we are in a literal string we want to ignore the \ check OR we aren't checking for special ones
-		if state.SkipEsc || job.Content[i-1] != '\\' {
+		if state.SkipEsc || judgeEscape(i, job) {
 			if checkForMatchSingle(job.Content[i], i, job.EndPoint, state.End, job) {
 				return i, LINE_CODE, &StateCode{}
 			}
@@ -34,4 +34,15 @@ func (state *StateString) Process(job *FileJob, lang *LanguageFeature, index int
 
 func (state *StateString) Reset() (LineType, State) {
 	return LINE_CODE, state
+}
+
+// judge if the slash count before index is even number
+func judgeEscape(index int, fileJob *FileJob) bool {
+	slashCount := 0
+	i := 1
+	for index >= i && fileJob.Content[index-i] == '\\' {
+		slashCount++
+		i++
+	}
+	return slashCount%2 == 0
 }
