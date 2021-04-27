@@ -1,6 +1,6 @@
 package processor
 
-type StateBlank struct {}
+type StateBlank struct{}
 
 func (state *StateBlank) String() string {
 	return "blank"

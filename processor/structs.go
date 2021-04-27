@@ -4,8 +4,8 @@ package processor
 
 import (
 	"bytes"
-	"sync"
 	"hash"
+	"sync"
 )
 
 // Used by trie structure to store the types

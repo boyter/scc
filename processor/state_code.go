@@ -1,6 +1,6 @@
 package processor
 
-type StateCode struct {}
+type StateCode struct{}
 
 func (state *StateCode) String() string {
 	return "code"

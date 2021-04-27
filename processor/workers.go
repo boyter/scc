@@ -252,7 +252,7 @@ func CountStats(fileJob *FileJob) {
 
 				// lineStart is only used to produce the line trace, so it's
 				// safe to update it inside the condition
-				lineStart = index+1
+				lineStart = index + 1
 			}
 
 			if fileJob.Callback != nil {

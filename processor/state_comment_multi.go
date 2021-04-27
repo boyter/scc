@@ -1,7 +1,7 @@
 package processor
 
 type StateCommentMulti struct {
-	Stack     [][]byte
+	Stack [][]byte
 }
 
 func (state *StateCommentMulti) String() string {

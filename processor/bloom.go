@@ -29,7 +29,7 @@ func BloomHash(b byte) uint64 {
 	// filter.
 	var hash uint64
 	for i := uint64(0); i < 3; i++ {
-		n := k >> (i*8) & mask64
+		n := k >> (i * 8) & mask64
 		hash |= 1 << n
 	}
 
