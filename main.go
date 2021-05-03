@@ -4,7 +4,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/boyter/scc/processor"
+	"github.com/boyter/scc/v3/processor"
 	"github.com/spf13/cobra"
 	"os"
 )
