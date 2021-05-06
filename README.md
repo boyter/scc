@@ -691,7 +691,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/boyter/scc/processor"
+	"github.com/boyter/scc/v3/processor"
 )
 
 type statsProcessor struct{}

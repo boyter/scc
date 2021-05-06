@@ -1,4 +1,4 @@
-module github.com/boyter/scc
+module github.com/boyter/scc/v3
 
 go 1.14
 
