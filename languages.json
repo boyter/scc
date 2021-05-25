@@ -23,6 +23,34 @@
     "multi_line": [],
     "quotes": []
   },
+    "APL": {
+    "complexitychecks": [
+      ":For ",
+      ":If ",
+      ":Case ",
+      ":CaseList ",
+      ":While ",
+      ":Repeat ",
+      ":Else ",
+      "∨",
+      "∧",
+      "≠",
+      "~",
+      "¨",
+      "="
+    ],
+    "extensions": [
+      "apl",
+      "aplf",
+      "apln",
+      "aplc"
+    ],
+    "line_comment": [
+      "⍝"
+    ],
+    "multi_line": [],
+    "quotes": ["'"]
+  },
   "ASP": {
     "complexitychecks": [
       "for ",
