@@ -49,7 +49,12 @@
       "⍝"
     ],
     "multi_line": [],
-    "quotes": ["'"]
+    "quotes": [
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
   },
   "ASP": {
     "complexitychecks": [
