@@ -2473,6 +2473,8 @@
   },
   "Go": {
     "complexitychecks": [
+      "go ",
+      "defer ",
       "for ",
       "for(",
       "if ",
