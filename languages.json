@@ -23,6 +23,39 @@
     "multi_line": [],
     "quotes": []
   },
+    "APL": {
+    "complexitychecks": [
+      ":For ",
+      ":If ",
+      ":Case ",
+      ":CaseList ",
+      ":While ",
+      ":Repeat ",
+      ":Else ",
+      "∨",
+      "∧",
+      "≠",
+      "~",
+      "¨",
+      "="
+    ],
+    "extensions": [
+      "apl",
+      "aplf",
+      "apln",
+      "aplc"
+    ],
+    "line_comment": [
+      "⍝"
+    ],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
   "ASP": {
     "complexitychecks": [
       "for ",
@@ -2440,6 +2473,8 @@
   },
   "Go": {
     "complexitychecks": [
+      "go ",
+      "defer ",
       "for ",
       "for(",
       "if ",
@@ -4838,15 +4873,28 @@
     "complexitychecks": [
       "for ",
       "for(",
+      "while ",
+      "while(",
       "if ",
       "if(",
-      "switch ",
-      "while ",
+      "elif ",
+      "elif(",
       "else ",
+      "else:",
+      "match ",
+      "match(",
+      "try ",
+      "try:",
+      "except ",
+      "except(",
+      "finally ",
+      "finally:",
+      "with ",
+      "with (",
       "and ",
+      "and(",
       "or ",
-      "not ",
-      "in "
+      "or("
     ],
     "extensions": [
       "py"

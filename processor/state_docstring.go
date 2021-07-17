@@ -5,8 +5,8 @@ import (
 )
 
 type StateDocString struct {
-	End       []byte
-	SkipEsc   bool
+	End     []byte
+	SkipEsc bool
 }
 
 func (state *StateDocString) String() string {

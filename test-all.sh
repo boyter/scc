@@ -319,6 +319,17 @@ else
     echo -e "${GREEN}PASSED hidden directory${NC}"
 fi
 
+
+# Regression issue https://github.com/boyter/scc/issues/260
+if ./scc -d "examples/issue260/" 2>&1 >/dev/null | grep -q "invalid memory address" ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED duplicate empty crash"
+    echo -e "=======================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED duplicate empty crash${NC}"
+fi
+
 a=$(./scc | grep Total)
 b=$(./scc --no-ignore | grep Total)
 if [ "$a" == "$b" ]; then

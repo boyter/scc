@@ -545,7 +545,7 @@ func Process() {
 	if FileOutput == "" {
 		fmt.Println(result)
 	} else {
-		_ = ioutil.WriteFile(FileOutput, []byte(result), 0600)
+		_ = ioutil.WriteFile(FileOutput, []byte(result), 0644)
 		fmt.Println("results written to " + FileOutput)
 	}
 }

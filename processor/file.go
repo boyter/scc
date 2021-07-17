@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/boyter/scc/processor/gitignore"
+	"github.com/boyter/scc/v3/processor/gitignore"
 	"github.com/dbaggerman/cuba"
 )
 

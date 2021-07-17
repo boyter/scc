@@ -5,12 +5,11 @@ package processor
 import (
 	"bytes"
 	"fmt"
+	"github.com/minio/blake2b-simd"
 	"runtime/debug"
 	"strings"
 	"sync"
 	"sync/atomic"
-
-	"github.com/minio/blake2b-simd"
 )
 
 // The below are used as identifiers for the code state machine
@@ -155,6 +154,15 @@ func verifyIgnoreEscape(langFeatures *LanguageFeature, fileJob *FileJob, index i
 // Newlines belong to the line they started on so a file of \n means only 1 line
 // This is the 'hot' path for the application and needs to be as fast as possible
 func CountStats(fileJob *FileJob) {
+	// For determining duplicates we need the below. The reason for creating
+	// the byte array here is to avoid GC pressure. MD5 is in the standard library
+	// and is fast enough to not warrant murmur3 hashing. No need to be
+	// crypto secure here either so no need to eat the performance cost of a better
+	// hash method
+	if Duplicates {
+		fileJob.Hash = blake2b.New256()
+	}
+
 	// If the file has a length of 0 it is is empty then we say it has no lines
 	if fileJob.Bytes == 0 {
 		fileJob.Lines = 0
@@ -184,15 +192,6 @@ func CountStats(fileJob *FileJob) {
 	var lineStart int
 	var lineType LineType
 	var currentState State = &StateBlank{}
-
-	// For determining duplicates we need the below. The reason for creating
-	// the byte array here is to avoid GC pressure. MD5 is in the standard library
-	// and is fast enough to not warrant murmur3 hashing. No need to be
-	// crypto secure here either so no need to eat the performance cost of a better
-	// hash method
-	if Duplicates {
-		fileJob.Hash = blake2b.New256()
-	}
 
 	for index := checkBomSkip(fileJob); index < int(fileJob.Bytes); index++ {
 		// Based on our current state determine if the state should change by checking
@@ -252,7 +251,7 @@ func CountStats(fileJob *FileJob) {
 
 				// lineStart is only used to produce the line trace, so it's
 				// safe to update it inside the condition
-				lineStart = index+1
+				lineStart = index + 1
 			}
 
 			if fileJob.Callback != nil {

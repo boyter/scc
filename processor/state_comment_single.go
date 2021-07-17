@@ -1,6 +1,6 @@
 package processor
 
-type StateCommentSingle struct {}
+type StateCommentSingle struct{}
 
 func (state *StateCommentSingle) String() string {
 	return "comment"
