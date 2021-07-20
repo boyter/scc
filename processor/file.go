@@ -66,7 +66,12 @@ func NewDirectoryWalker(output chan<- *FileJob) *DirectoryWalker {
 		output: output,
 	}
 	for _, exclude := range Exclude {
-		directoryWalker.excludes = append(directoryWalker.excludes, regexp.MustCompile(exclude))
+		regexpResult, err := regexp.Compile(exclude)
+		if err == nil {
+			directoryWalker.excludes = append(directoryWalker.excludes, regexpResult)
+		} else {
+			printError(err.Error())
+		}
 	}
 
 	directoryWalker.buffer = cuba.New(directoryWalker.Walk, cuba.NewStack())
