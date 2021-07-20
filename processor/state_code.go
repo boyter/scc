@@ -26,7 +26,7 @@ func (state *StateCode) Process(job *FileJob, lang *LanguageFeature, index int, 
 			return i, LINE_CODE, state
 		}
 
-		if shouldProcess(curByte, lang.ProcessMask) {
+		if shouldProcess(curByte, lang.ProcessMask, lang.BloomMap) {
 			if Duplicates {
 				// Technically this is wrong because we skip bytes so this is not a true
 				// hash of the file contents, but for duplicate files it shouldn't matter

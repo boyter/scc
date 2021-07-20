@@ -53,6 +53,7 @@ type LanguageFeature struct {
 	ProcessMask           uint64
 	Keywords              []string
 	Quotes                []Quote
+	BloomMap              [256]uint64
 }
 
 // FileJobCallback is an interface that FileJobs can implement to get a per line callback with the line type

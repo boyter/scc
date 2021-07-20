@@ -177,6 +177,9 @@ var FilenameToLanguage = map[string]string{}
 // LanguageFeatures contains the processed languages from processLanguageFeature
 var LanguageFeatures = map[string]LanguageFeature{}
 
+// options to decide use bloom filter or simple hash map to get the result of should process method
+var NoBloomFilter = false
+
 // LanguageFeaturesMutex is the shared mutex used to control getting and setting of language features
 // used rather than sync.Map because it turned out to be marginally faster
 var LanguageFeaturesMutex = sync.Mutex{}
@@ -355,12 +358,20 @@ func processLanguageFeature(name string, value Language) {
 	var multiLineCommentMask uint64
 	var stringMask uint64
 	var processMask uint64
+	var bloomMap [256]uint64
+
+	if NoBloomFilter {
+		bloomMap = [256]uint64{}
+	}
 
 	for _, v := range value.ComplexityChecks {
 		complexityMask |= BloomTable[v[0]]
 		complexityTrie.Insert(TComplexity, []byte(v))
 		if !Complexity {
 			tokenTrie.Insert(TComplexity, []byte(v))
+			if NoBloomFilter {
+				bloomMap[v[0]] = 1
+			}
 		}
 	}
 	if !Complexity {
@@ -369,6 +380,9 @@ func processLanguageFeature(name string, value Language) {
 
 	for _, v := range value.LineComment {
 		singleLineCommentMask |= BloomTable[v[0]]
+		if NoBloomFilter {
+			bloomMap[v[0]] = 1
+		}
 		slCommentTrie.Insert(TSlcomment, []byte(v))
 		tokenTrie.Insert(TSlcomment, []byte(v))
 	}
@@ -376,6 +390,9 @@ func processLanguageFeature(name string, value Language) {
 
 	for _, v := range value.MultiLine {
 		multiLineCommentMask |= BloomTable[v[0][0]]
+		if NoBloomFilter {
+			bloomMap[v[0][0]] = 1
+		}
 		mlCommentTrie.InsertClose(TMlcomment, []byte(v[0]), []byte(v[1]))
 		tokenTrie.InsertClose(TMlcomment, []byte(v[0]), []byte(v[1]))
 	}
@@ -383,6 +400,9 @@ func processLanguageFeature(name string, value Language) {
 
 	for _, v := range value.Quotes {
 		stringMask |= BloomTable[v.Start[0]]
+		if NoBloomFilter {
+			bloomMap[v.Start[0]] = 1
+		}
 		stringTrie.InsertClose(TString, []byte(v.Start), []byte(v.End))
 		tokenTrie.InsertClose(TString, []byte(v.Start), []byte(v.End))
 	}
@@ -403,6 +423,7 @@ func processLanguageFeature(name string, value Language) {
 		ProcessMask:           processMask,
 		Keywords:              value.Keywords,
 		Quotes:                value.Quotes,
+		BloomMap:              bloomMap,
 	}
 	LanguageFeaturesMutex.Unlock()
 }
