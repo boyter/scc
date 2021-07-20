@@ -69,6 +69,8 @@ func NewDirectoryWalker(output chan<- *FileJob) *DirectoryWalker {
 		regexpResult, err := regexp.Compile(exclude)
 		if err == nil {
 			directoryWalker.excludes = append(directoryWalker.excludes, regexpResult)
+		} else {
+			printError(err.Error())
 		}
 	}
 
