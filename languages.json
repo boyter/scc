@@ -892,7 +892,8 @@
       "cpp",
       "cxx",
       "c++",
-      "pcc"
+      "pcc",
+      "ino"
     ],
     "line_comment": [
       "//"
