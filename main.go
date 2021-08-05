@@ -297,7 +297,7 @@ func main() {
 	flags.BoolVar(
 		&processor.NoBloomFilter,
 		"no-bloom-filter",
-		true,
+		false,
 		"option to use bloom filter or simple hash map to get the result of process judgement")
 
 	if err := rootCmd.Execute(); err != nil {
