@@ -110,19 +110,8 @@ func isBinary(index int, currentByte byte) bool {
 	return false
 }
 
-func shouldProcess(currentByte byte, processBytesMask uint64, bloomMap [256]uint64) bool {
-	if NoBloomFilter {
-		k := bloomMap[currentByte]
-		if k == 0 {
-			return false
-		}
-	} else {
-		k := BloomTable[currentByte]
-		if k&processBytesMask != k {
-			return false
-		}
-	}
-	return true
+func shouldProcess(currentByte byte, lang *LanguageFeature) bool {
+	return lang.ByteFilter.ShouldProcess(currentByte)
 }
 
 // Some languages such as C# have quoted strings like @"\" where no escape character is required

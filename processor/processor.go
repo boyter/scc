@@ -358,20 +358,14 @@ func processLanguageFeature(name string, value Language) {
 	var multiLineCommentMask uint64
 	var stringMask uint64
 	var processMask uint64
-	var bloomMap [256]uint64
-
-	if NoBloomFilter {
-		bloomMap = [256]uint64{}
-	}
+	var bloomMap [256]bool
 
 	for _, v := range value.ComplexityChecks {
 		complexityMask |= BloomTable[v[0]]
 		complexityTrie.Insert(TComplexity, []byte(v))
 		if !Complexity {
 			tokenTrie.Insert(TComplexity, []byte(v))
-			if NoBloomFilter {
-				bloomMap[v[0]] = 1
-			}
+			bloomMap[v[0]] = true
 		}
 	}
 	if !Complexity {
@@ -380,9 +374,7 @@ func processLanguageFeature(name string, value Language) {
 
 	for _, v := range value.LineComment {
 		singleLineCommentMask |= BloomTable[v[0]]
-		if NoBloomFilter {
-			bloomMap[v[0]] = 1
-		}
+		bloomMap[v[0]] = true
 		slCommentTrie.Insert(TSlcomment, []byte(v))
 		tokenTrie.Insert(TSlcomment, []byte(v))
 	}
@@ -390,9 +382,7 @@ func processLanguageFeature(name string, value Language) {
 
 	for _, v := range value.MultiLine {
 		multiLineCommentMask |= BloomTable[v[0][0]]
-		if NoBloomFilter {
-			bloomMap[v[0][0]] = 1
-		}
+		bloomMap[v[0][0]] = true
 		mlCommentTrie.InsertClose(TMlcomment, []byte(v[0]), []byte(v[1]))
 		tokenTrie.InsertClose(TMlcomment, []byte(v[0]), []byte(v[1]))
 	}
@@ -400,16 +390,14 @@ func processLanguageFeature(name string, value Language) {
 
 	for _, v := range value.Quotes {
 		stringMask |= BloomTable[v.Start[0]]
-		if NoBloomFilter {
-			bloomMap[v.Start[0]] = 1
-		}
+		bloomMap[v.Start[0]] = true
 		stringTrie.InsertClose(TString, []byte(v.Start), []byte(v.End))
 		tokenTrie.InsertClose(TString, []byte(v.Start), []byte(v.End))
 	}
 	processMask |= stringMask
 
 	LanguageFeaturesMutex.Lock()
-	LanguageFeatures[name] = LanguageFeature{
+	var languageFeature = LanguageFeature{
 		Complexity:            complexityTrie,
 		MultiLineComments:     mlCommentTrie,
 		SingleLineComments:    slCommentTrie,
@@ -425,7 +413,17 @@ func processLanguageFeature(name string, value Language) {
 		Quotes:                value.Quotes,
 		BloomMap:              bloomMap,
 	}
+	languageFeature.ByteFilter = byteFilterFactory(NoBloomFilter, languageFeature)
+	LanguageFeatures[name] = languageFeature
 	LanguageFeaturesMutex.Unlock()
+}
+
+func byteFilterFactory(nobloomFilterFlag bool, lang LanguageFeature) ByteFilter {
+	if nobloomFilterFlag {
+		return SimpleFilter{lang.BloomMap}
+	} else {
+		return BloomFilter{lang.ProcessMask}
+	}
 }
 
 func processFlags() {
