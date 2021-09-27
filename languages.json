@@ -23,7 +23,7 @@
     "multi_line": [],
     "quotes": []
   },
-    "APL": {
+  "APL": {
     "complexitychecks": [
       ":For ",
       ":If ",
@@ -5674,6 +5674,43 @@
       }
     ]
   },
+  "Solidity": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== ",
+      "assembly ",
+      "assembly{",
+      "unchecked ",
+      "unchecked{"
+    ],
+    "extensions": [
+      "sol"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "Specman e": {
     "complexitychecks": [
       "for ",
@@ -6736,15 +6773,16 @@
       "gvimrc"
     ],
     "filenames": [
-        "_vimrc",
-        ".vimrc",
-        "_gvimrc",
-        ".gvimrc",
-        "vimrc",
-        "gvimrc"
+      "_vimrc",
+      ".vimrc",
+      "_gvimrc",
+      ".gvimrc",
+      "vimrc",
+      "gvimrc"
     ],
     "line_comment": [
-      "\"", "#"
+      "\"",
+      "#"
     ],
     "multi_line": [],
     "quotes": [
@@ -7060,10 +7098,8 @@
     "extensions": [
       "yarn"
     ],
-    "line_comment": [
-    ],
-    "quotes": [
-    ]
+    "line_comment": [],
+    "quotes": []
   },
   "YAML": {
     "complexitychecks": [],
