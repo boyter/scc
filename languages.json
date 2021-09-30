@@ -1142,17 +1142,19 @@
   },
   "Clojure": {
     "complexitychecks": [
-      "for ",
-      "for(",
-      "if ",
-      "if(",
-      "switch ",
-      "while ",
-      "else ",
-      "|| ",
-      "&& ",
-      "!= ",
-      "== "
+      "(for ",
+      "(when ",
+      "(loop ",
+      "(doseq ",
+      "(cond ",
+      "(if",
+      "(if-not ",
+      "(and ",
+      "(or ",
+      "(not ",
+      "(= ",
+      "(not= ",
+      "(recur "
     ],
     "extensions": [
       "clj",
@@ -1940,6 +1942,38 @@
       ]
     ],
     "quotes": []
+  },
+  "Fennel": {
+    "complexitychecks": [
+      "(for",
+      "(each",
+      "(if",
+      "(when",
+      "(while",
+      "(switch",
+      "(do",
+      "(..",
+      "(=",
+      "(and",
+      "(or"
+    ],
+    "extensions": [
+      "fnl"
+    ],
+    "multi_line": [],
+    "line_comment": [
+      ";"
+    ],
+    "quotes": [
+      {
+        "start": "\"",
+        "end": "\""
+      },
+      {
+        "start": ",",
+        "end": "'"
+      }
+    ]
   },
   "F*": {
     "complexitychecks": [
