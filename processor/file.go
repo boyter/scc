@@ -234,6 +234,15 @@ func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 		fileInfo, _ = os.Lstat(symPath)
 	}
 
+	// Skip non-regular files. They are unlikely to be code and may hang if we
+	// try and read them.
+	if !fileInfo.Mode().IsRegular() {
+		if Verbose {
+			printWarn(fmt.Sprintf("skipping non-regular file: %s", path))
+		}
+		return nil
+	}
+
 	language, extension := DetectLanguage(name)
 
 	if len(language) != 0 {
