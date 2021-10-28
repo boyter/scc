@@ -998,7 +998,7 @@ func calculateCocomo(sumCode int64, str *strings.Builder) {
 
 		p := gmessage.NewPrinter(glang.English)
 
-		str.WriteString(p.Sprintf("Estimated Cost to Develop (%s) $%d\n", CocomoProjectType, int64(estimatedCost)))
+		str.WriteString(p.Sprintf("Estimated Cost to Develop (%s) %s%d\n", CocomoProjectType, CurrencySymbol, int64(estimatedCost)))
 		str.WriteString(fmt.Sprintf("Estimated Schedule Effort (%s) %f months\n", CocomoProjectType, estimatedScheduleMonths))
 		if math.IsNaN(estimatedPeopleRequired) {
 			str.WriteString(fmt.Sprintf("Estimated People Required 1 Grandparent\n"))
