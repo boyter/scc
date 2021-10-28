@@ -294,6 +294,12 @@ func main() {
 		"",
 		"inspect every file and remap by checking for a string and remapping the language [e.g. \"-*- C++ -*-\":\"C Header\"]",
 	)
+	flags.StringVar(
+		&processor.CurrencySymbol,
+		"currency-symbol",
+		"$",
+		"set currency symbol",
+	)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

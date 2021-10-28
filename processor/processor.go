@@ -118,6 +118,9 @@ var RemapUnknown = ""
 // RemapAll allows remapping of all files with a string to search the content for
 var RemapAll = ""
 
+// CurrencySymbol allows setting the currency symbol for cocomo project cost estimation
+var CurrencySymbol = ""
+
 // FileOutput sets the file that output should be written to
 var FileOutput = ""
 
