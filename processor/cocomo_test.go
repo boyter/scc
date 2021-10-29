@@ -8,7 +8,7 @@ import (
 
 func TestEstimateCost(t *testing.T) {
 	eff := EstimateEffort(26)
-	got := EstimateCost(eff, 56000)
+	got := EstimateCost(eff, 56000, 2.4)
 
 	// Should be around 582
 	if got < 580 || got > 585 {
@@ -18,7 +18,7 @@ func TestEstimateCost(t *testing.T) {
 
 func TestEstimateCostManyLines(t *testing.T) {
 	eff := EstimateEffort(77873)
-	got := EstimateCost(eff, 56000)
+	got := EstimateCost(eff, 56000, 2.4)
 
 	// Should be around 2602096
 	if got < 2602000 || got > 2602100 {

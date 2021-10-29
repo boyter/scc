@@ -145,6 +145,9 @@ var AllowListExtensions = []string{}
 // AverageWage is the average wage in dollars used for the COCOMO cost estimate
 var AverageWage int64 = 56286
 
+// Overhead is the overhead multiplier for corporate overhead (facilities, equipment, accounting, etc.)
+var Overhead float64 = 2.4
+
 // GcFileCount is the number of files to process before turning the GC back on
 var GcFileCount = 10000
 var gcPercent = -1
