@@ -108,6 +108,12 @@ func main() {
 		56286,
 		"average wage value used for basic COCOMO calculation",
 	)
+	flags.Float64Var(
+		&processor.Overhead,
+		"overhead",
+		2.4,
+		"set the overhead multiplier for corporate overhead (facilities, equipment, accounting, etc.)",
+	)
 	flags.BoolVar(
 		&processor.Cocomo,
 		"no-cocomo",

@@ -817,7 +817,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 
 	if !Cocomo {
 		estimatedEffort := EstimateEffort(int64(sumCode))
-		estimatedCost := EstimateCost(estimatedEffort, AverageWage)
+		estimatedCost := EstimateCost(estimatedEffort, AverageWage, Overhead)
 		estimatedScheduleMonths := EstimateScheduleMonths(estimatedEffort)
 		estimatedPeopleRequired := estimatedEffort / estimatedScheduleMonths
 
@@ -992,7 +992,7 @@ func trimNameShort(summary LanguageSummary, trimmedName string) string {
 func calculateCocomo(sumCode int64, str *strings.Builder) {
 	if !Cocomo {
 		estimatedEffort := EstimateEffort(int64(sumCode))
-		estimatedCost := EstimateCost(estimatedEffort, AverageWage)
+		estimatedCost := EstimateCost(estimatedEffort, AverageWage, Overhead)
 		estimatedScheduleMonths := EstimateScheduleMonths(estimatedEffort)
 		estimatedPeopleRequired := estimatedEffort / estimatedScheduleMonths
 

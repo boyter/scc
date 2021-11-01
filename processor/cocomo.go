@@ -27,8 +27,8 @@ var projectType = map[string][]float64{
 
 // EstimateCost calculates the cost in dollars applied using generic COCOMO weighted values based
 // on the average yearly wage
-func EstimateCost(effortApplied float64, averageWage int64) float64 {
-	return effortApplied * float64(averageWage/12) * 2.4
+func EstimateCost(effortApplied float64, averageWage int64, overhead float64) float64 {
+	return effortApplied * float64(averageWage/12) * overhead
 }
 
 // EstimateEffort calculate the effort applied using generic COCOMO weighted values
