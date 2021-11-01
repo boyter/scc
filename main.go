@@ -114,6 +114,12 @@ func main() {
 		2.4,
 		"set the overhead multiplier for corporate overhead (facilities, equipment, accounting, etc.)",
 	)
+	flags.Float64Var(
+		&processor.EAF,
+		"eaf",
+		1.0,
+		"the effort adjustment factor derived from the cost drivers (1.0 if rated nominal)",
+	)
 	flags.BoolVar(
 		&processor.Cocomo,
 		"no-cocomo",

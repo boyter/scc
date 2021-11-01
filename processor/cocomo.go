@@ -32,8 +32,7 @@ func EstimateCost(effortApplied float64, averageWage int64, overhead float64) fl
 }
 
 // EstimateEffort calculate the effort applied using generic COCOMO weighted values
-func EstimateEffort(sloc int64) float64 {
-	var eaf float64 = 1
+func EstimateEffort(sloc int64, eaf float64) float64 {
 	var effortApplied = projectType[CocomoProjectType][0] * math.Pow(float64(sloc)/1000, projectType[CocomoProjectType][1]) * eaf
 	return effortApplied
 }
