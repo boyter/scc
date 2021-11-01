@@ -7,7 +7,7 @@ import (
 )
 
 func TestEstimateCost(t *testing.T) {
-	eff := EstimateEffort(26)
+	eff := EstimateEffort(26, 1)
 	got := EstimateCost(eff, 56000, 2.4)
 
 	// Should be around 582
@@ -17,7 +17,7 @@ func TestEstimateCost(t *testing.T) {
 }
 
 func TestEstimateCostManyLines(t *testing.T) {
-	eff := EstimateEffort(77873)
+	eff := EstimateEffort(77873, 1)
 	got := EstimateCost(eff, 56000, 2.4)
 
 	// Should be around 2602096
@@ -27,7 +27,7 @@ func TestEstimateCostManyLines(t *testing.T) {
 }
 
 func TestEstimateScheduleMonths(t *testing.T) {
-	eff := EstimateEffort(537)
+	eff := EstimateEffort(537, 1)
 	got := EstimateScheduleMonths(eff)
 
 	// Should be around 2.7

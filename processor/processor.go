@@ -148,6 +148,9 @@ var AverageWage int64 = 56286
 // Overhead is the overhead multiplier for corporate overhead (facilities, equipment, accounting, etc.)
 var Overhead float64 = 2.4
 
+// the effort adjustment factor derived from the cost drivers, i.e. 1.0 if rated nominal
+var EAF float64 = 1.0
+
 // GcFileCount is the number of files to process before turning the GC back on
 var GcFileCount = 10000
 var gcPercent = -1
