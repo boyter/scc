@@ -701,6 +701,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 		sumComment += res.Comment
 		sumBlank += res.Blank
 		sumComplexity += res.Complexity
+		sumBytes += res.Bytes
 
 		var weightedComplexity float64
 		if res.Code != 0 {
