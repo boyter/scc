@@ -17,7 +17,7 @@ import (
 
 	"github.com/mattn/go-runewidth"
 
-	glang "golang.org/x/text/language"
+	"golang.org/x/text/language"
 	gmessage "golang.org/x/text/message"
 	"gopkg.in/yaml.v2"
 )
@@ -993,14 +993,14 @@ func calculateCocomo(sumCode int64, str *strings.Builder) {
 	estimatedScheduleMonths := EstimateScheduleMonths(estimatedEffort)
 	estimatedPeopleRequired := estimatedEffort / estimatedScheduleMonths
 
-	p := gmessage.NewPrinter(glang.English)
+	p := gmessage.NewPrinter(language.Make(os.Getenv("LANG")))
 
 	str.WriteString(p.Sprintf("Estimated Cost to Develop (%s) %s%d\n", CocomoProjectType, CurrencySymbol, int64(estimatedCost)))
-	str.WriteString(fmt.Sprintf("Estimated Schedule Effort (%s) %f months\n", CocomoProjectType, estimatedScheduleMonths))
+	str.WriteString(p.Sprintf("Estimated Schedule Effort (%s) %f months\n", CocomoProjectType, estimatedScheduleMonths))
 	if math.IsNaN(estimatedPeopleRequired) {
-		str.WriteString(fmt.Sprintf("Estimated People Required 1 Grandparent\n"))
+		str.WriteString(p.Sprintf("Estimated People Required 1 Grandparent\n"))
 	} else {
-		str.WriteString(fmt.Sprintf("Estimated People Required (%s) %f\n", CocomoProjectType, estimatedPeopleRequired))
+		str.WriteString(p.Sprintf("Estimated People Required (%s) %f\n", CocomoProjectType, estimatedPeopleRequired))
 	}
 }
 
