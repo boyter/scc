@@ -7,7 +7,6 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"github.com/mattn/go-runewidth"
 	"io/ioutil"
 	"math"
 	"os"
@@ -15,6 +14,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/mattn/go-runewidth"
 
 	glang "golang.org/x/text/language"
 	gmessage "golang.org/x/text/message"
@@ -690,7 +691,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 	}
 
 	languages := map[string]LanguageSummary{}
-	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
+	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumBytes int64 = 0, 0, 0, 0, 0, 0, 0
 	var sumWeightedComplexity float64
 
 	for res := range input {
@@ -816,23 +817,13 @@ func fileSummarizeLong(input chan *FileJob) string {
 	str.WriteString(getTabularWideBreak())
 
 	if !Cocomo {
-		estimatedEffort := EstimateEffort(int64(sumCode), EAF)
-		estimatedCost := EstimateCost(estimatedEffort, AverageWage, Overhead)
-		estimatedScheduleMonths := EstimateScheduleMonths(estimatedEffort)
-		estimatedPeopleRequired := estimatedEffort / estimatedScheduleMonths
-
-		p := gmessage.NewPrinter(glang.English)
-
-		str.WriteString(p.Sprintf("Estimated Cost to Develop $%d\n", int64(estimatedCost)))
-		str.WriteString(fmt.Sprintf("Estimated Schedule Effort %f months\n", estimatedScheduleMonths))
-		if math.IsNaN(estimatedPeopleRequired) {
-			str.WriteString(fmt.Sprintf("Estimated People Required 1 Grandparent\n"))
-		} else {
-			str.WriteString(fmt.Sprintf("Estimated People Required %f\n", estimatedPeopleRequired))
-		}
+		calculateCocomo(sumCode, &str)
 		str.WriteString(getTabularWideBreak())
 	}
-
+	if !Size {
+		calculateSize(sumBytes, &str)
+		str.WriteString(getTabularWideBreak())
+	}
 	return str.String()
 }
 
@@ -977,8 +968,14 @@ func fileSummarizeShort(input chan *FileJob) string {
 	}
 	str.WriteString(getTabularShortBreak())
 
-	calculateCocomo(sumCode, &str)
-	calculateSize(sumBytes, &str)
+	if !Cocomo {
+		calculateCocomo(sumCode, &str)
+		str.WriteString(getTabularShortBreak())
+	}
+	if !Size {
+		calculateSize(sumBytes, &str)
+		str.WriteString(getTabularShortBreak())
+	}
 	return str.String()
 }
 
@@ -990,71 +987,65 @@ func trimNameShort(summary LanguageSummary, trimmedName string) string {
 }
 
 func calculateCocomo(sumCode int64, str *strings.Builder) {
-	if !Cocomo {
-		estimatedEffort := EstimateEffort(int64(sumCode), EAF)
-		estimatedCost := EstimateCost(estimatedEffort, AverageWage, Overhead)
-		estimatedScheduleMonths := EstimateScheduleMonths(estimatedEffort)
-		estimatedPeopleRequired := estimatedEffort / estimatedScheduleMonths
+	estimatedEffort := EstimateEffort(int64(sumCode), EAF)
+	estimatedCost := EstimateCost(estimatedEffort, AverageWage, Overhead)
+	estimatedScheduleMonths := EstimateScheduleMonths(estimatedEffort)
+	estimatedPeopleRequired := estimatedEffort / estimatedScheduleMonths
 
-		p := gmessage.NewPrinter(glang.English)
+	p := gmessage.NewPrinter(glang.English)
 
-		str.WriteString(p.Sprintf("Estimated Cost to Develop (%s) %s%d\n", CocomoProjectType, CurrencySymbol, int64(estimatedCost)))
-		str.WriteString(fmt.Sprintf("Estimated Schedule Effort (%s) %f months\n", CocomoProjectType, estimatedScheduleMonths))
-		if math.IsNaN(estimatedPeopleRequired) {
-			str.WriteString(fmt.Sprintf("Estimated People Required 1 Grandparent\n"))
-		} else {
-			str.WriteString(fmt.Sprintf("Estimated People Required (%s) %f\n", CocomoProjectType, estimatedPeopleRequired))
-		}
-		str.WriteString(getTabularShortBreak())
+	str.WriteString(p.Sprintf("Estimated Cost to Develop (%s) %s%d\n", CocomoProjectType, CurrencySymbol, int64(estimatedCost)))
+	str.WriteString(fmt.Sprintf("Estimated Schedule Effort (%s) %f months\n", CocomoProjectType, estimatedScheduleMonths))
+	if math.IsNaN(estimatedPeopleRequired) {
+		str.WriteString(fmt.Sprintf("Estimated People Required 1 Grandparent\n"))
+	} else {
+		str.WriteString(fmt.Sprintf("Estimated People Required (%s) %f\n", CocomoProjectType, estimatedPeopleRequired))
 	}
 }
 
 func calculateSize(sumBytes int64, str *strings.Builder) {
-	if !Size {
-		var size float64
 
-		switch strings.ToLower(SizeUnit) {
-		case "binary":
-			size = float64(sumBytes) / 1_048_576
-		case "mixed":
-			size = float64(sumBytes) / 1_024_000
-		case "xkcd-kb":
-			str.WriteString("1000 bytes during leap years, 1024 otherwise\n")
-			tim := time.Now()
-			if isLeapYear(tim.Year()) {
-				size = float64(sumBytes) / 1_000_000
-			}
-		case "xkcd-kelly":
-			str.WriteString("compromise between 1000 and 1024 bytes\n")
-			size = float64(sumBytes) / (1012 * 1012)
-		case "xkcd-imaginary":
-			str.WriteString("used in quantum computing\n")
-			str.WriteString(fmt.Sprintf("Processed %d bytes, %s megabytes (%s)\n", sumBytes, `¯\_(ツ)_/¯`, strings.ToUpper(SizeUnit)))
-		case "xkcd-intel":
-			str.WriteString("calculated on pentium F.P.U.\n")
-			size = float64(sumBytes) / (1023.937528 * 1023.937528)
-		case "xkcd-drive":
-			str.WriteString("shrinks by 4 bytes every year for marketing reasons\n")
-			tim := time.Now()
+	var size float64
 
-			s := 908 - ((tim.Year() - 2013) * 4) // comic starts with 908 in 2013 hence hardcoded values
-			s = min(s, 908)                      // just in case the clock is stupidly set
-
-			size = float64(sumBytes) / float64(s*s)
-		case "xkcd-bakers":
-			str.WriteString("9 bits to the byte since you're such a good customer\n")
-			size = float64(sumBytes) / (1152 * 1152)
-		default:
-			// SI value of 1000 bytes
+	switch strings.ToLower(SizeUnit) {
+	case "binary":
+		size = float64(sumBytes) / 1_048_576
+	case "mixed":
+		size = float64(sumBytes) / 1_024_000
+	case "xkcd-kb":
+		str.WriteString("1000 bytes during leap years, 1024 otherwise\n")
+		tim := time.Now()
+		if isLeapYear(tim.Year()) {
 			size = float64(sumBytes) / 1_000_000
-			SizeUnit = "SI"
 		}
+	case "xkcd-kelly":
+		str.WriteString("compromise between 1000 and 1024 bytes\n")
+		size = float64(sumBytes) / (1012 * 1012)
+	case "xkcd-imaginary":
+		str.WriteString("used in quantum computing\n")
+		str.WriteString(fmt.Sprintf("Processed %d bytes, %s megabytes (%s)\n", sumBytes, `¯\_(ツ)_/¯`, strings.ToUpper(SizeUnit)))
+	case "xkcd-intel":
+		str.WriteString("calculated on pentium F.P.U.\n")
+		size = float64(sumBytes) / (1023.937528 * 1023.937528)
+	case "xkcd-drive":
+		str.WriteString("shrinks by 4 bytes every year for marketing reasons\n")
+		tim := time.Now()
 
-		if strings.ToLower(SizeUnit) != "xkcd-imaginary" {
-			str.WriteString(fmt.Sprintf("Processed %d bytes, %.3f megabytes (%s)\n", sumBytes, size, strings.ToUpper(SizeUnit)))
-		}
+		s := 908 - ((tim.Year() - 2013) * 4) // comic starts with 908 in 2013 hence hardcoded values
+		s = min(s, 908)                      // just in case the clock is stupidly set
 
-		str.WriteString(getTabularShortBreak())
+		size = float64(sumBytes) / float64(s*s)
+	case "xkcd-bakers":
+		str.WriteString("9 bits to the byte since you're such a good customer\n")
+		size = float64(sumBytes) / (1152 * 1152)
+	default:
+		// SI value of 1000 bytes
+		size = float64(sumBytes) / 1_000_000
+		SizeUnit = "SI"
+	}
+
+	if strings.ToLower(SizeUnit) != "xkcd-imaginary" {
+		str.WriteString(fmt.Sprintf("Processed %d bytes, %.3f megabytes (%s)\n", sumBytes, size, strings.ToUpper(SizeUnit)))
 	}
 }
 
