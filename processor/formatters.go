@@ -1009,6 +1009,7 @@ func calcolateCocomoSLOCCount(sumCode int64, str *strings.Builder) {
 	str.WriteString(p.Sprintf(" (Basic COCOMO model, Months = %.2f*(person-months**%.2f))\n", projectType[CocomoProjectType][2], projectType[CocomoProjectType][3]))
 	str.WriteString(p.Sprintf("Estimated Average Number of Developers (Effort/Schedule)       = %.2f\n", estimatedPeopleRequired))
 	str.WriteString(p.Sprintf("Total Estimated Cost to Develop                                = %s%.0f\n", CurrencySymbol, estimatedCost))
+	str.WriteString(p.Sprintf(" (average salary = %s%d/year, overhead = %.2f)\n", CurrencySymbol, AverageWage, Overhead))
 }
 
 func calculateCocomo(sumCode int64, str *strings.Builder) {
