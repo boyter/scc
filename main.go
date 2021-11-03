@@ -4,9 +4,10 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/boyter/scc/v3/processor"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 //go:generate go run scripts/include.go
@@ -119,6 +120,12 @@ func main() {
 		"eaf",
 		1.0,
 		"the effort adjustment factor derived from the cost drivers (1.0 if rated nominal)",
+	)
+	flags.BoolVar(
+		&processor.SLOCCountFormat,
+		"sloccount-format",
+		false,
+		"print a more SLOCCount like COCOMO calculation",
 	)
 	flags.BoolVar(
 		&processor.Cocomo,

@@ -818,8 +818,11 @@ func fileSummarizeLong(input chan *FileJob) string {
 	str.WriteString(getTabularWideBreak())
 
 	if !Cocomo {
-		calculateCocomo(sumCode, &str)
-		str.WriteString(getTabularWideBreak())
+		if SLOCCountFormat {
+			calcolateCocomoSLOCCount(sumCode, &str)
+		} else {
+			calculateCocomo(sumCode, &str)
+		}
 	}
 	if !Size {
 		calculateSize(sumBytes, &str)
@@ -970,7 +973,11 @@ func fileSummarizeShort(input chan *FileJob) string {
 	str.WriteString(getTabularShortBreak())
 
 	if !Cocomo {
-		calculateCocomo(sumCode, &str)
+		if SLOCCountFormat {
+			calcolateCocomoSLOCCount(sumCode, &str)
+		} else {
+			calculateCocomo(sumCode, &str)
+		}
 		str.WriteString(getTabularShortBreak())
 	}
 	if !Size {
@@ -987,6 +994,23 @@ func trimNameShort(summary LanguageSummary, trimmedName string) string {
 	return trimmedName
 }
 
+func calcolateCocomoSLOCCount(sumCode int64, str *strings.Builder) {
+	estimatedEffort := EstimateEffort(int64(sumCode), EAF)
+	estimatedScheduleMonths := EstimateScheduleMonths(estimatedEffort)
+	estimatedPeopleRequired := estimatedEffort / estimatedScheduleMonths
+	estimatedCost := EstimateCost(estimatedEffort, AverageWage, Overhead)
+
+	p := gmessage.NewPrinter(language.Make(os.Getenv("LANG")))
+
+	str.WriteString(p.Sprintf("Total Physical Source Lines of Code (SLOC)                     = %d\n", sumCode))
+	str.WriteString(p.Sprintf("Development Effort Estimate, Person-Years (Person-Months)      = %.2f (%.2f)\n", estimatedEffort/12, estimatedEffort))
+	str.WriteString(p.Sprintf(" (Basic COCOMO model, Person-Months = %.2f*(KSLOC**%.2f)*%.2f)\n", projectType[CocomoProjectType][0], projectType[CocomoProjectType][1], EAF))
+	str.WriteString(p.Sprintf("Schedule Estimate, Years (Months)                              = %.2f (%.2f)\n", estimatedScheduleMonths/12, estimatedScheduleMonths))
+	str.WriteString(p.Sprintf(" (Basic COCOMO model, Months = %.2f*(person-months**%.2f))\n", projectType[CocomoProjectType][2], projectType[CocomoProjectType][3]))
+	str.WriteString(p.Sprintf("Estimated Average Number of Developers (Effort/Schedule)       = %.2f\n", estimatedPeopleRequired))
+	str.WriteString(p.Sprintf("Total Estimated Cost to Develop                                = %s%.0f\n", CurrencySymbol, estimatedCost))
+}
+
 func calculateCocomo(sumCode int64, str *strings.Builder) {
 	estimatedEffort := EstimateEffort(int64(sumCode), EAF)
 	estimatedCost := EstimateCost(estimatedEffort, AverageWage, Overhead)
@@ -996,11 +1020,11 @@ func calculateCocomo(sumCode int64, str *strings.Builder) {
 	p := gmessage.NewPrinter(language.Make(os.Getenv("LANG")))
 
 	str.WriteString(p.Sprintf("Estimated Cost to Develop (%s) %s%d\n", CocomoProjectType, CurrencySymbol, int64(estimatedCost)))
-	str.WriteString(p.Sprintf("Estimated Schedule Effort (%s) %f months\n", CocomoProjectType, estimatedScheduleMonths))
+	str.WriteString(p.Sprintf("Estimated Schedule Effort (%s) %.2f months\n", CocomoProjectType, estimatedScheduleMonths))
 	if math.IsNaN(estimatedPeopleRequired) {
 		str.WriteString(p.Sprintf("Estimated People Required 1 Grandparent\n"))
 	} else {
-		str.WriteString(p.Sprintf("Estimated People Required (%s) %f\n", CocomoProjectType, estimatedPeopleRequired))
+		str.WriteString(p.Sprintf("Estimated People Required (%s) %.2f\n", CocomoProjectType, estimatedPeopleRequired))
 	}
 }
 

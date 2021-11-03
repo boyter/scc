@@ -5,7 +5,6 @@ package processor
 import (
 	"encoding/base64"
 	"fmt"
-	jsoniter "github.com/json-iterator/go"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -15,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 // Version indicates the version of the application
@@ -72,6 +73,9 @@ var More = false
 
 // Cocomo toggles the COCOMO calculation
 var Cocomo = false
+
+// Print a more SLOCCount like COCOMO calculation
+var SLOCCountFormat = false
 
 // CocomoProjectType allows the flipping between project types which impacts the calculation
 var CocomoProjectType = "organic"
