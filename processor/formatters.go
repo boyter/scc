@@ -819,7 +819,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 
 	if !Cocomo {
 		if SLOCCountFormat {
-			calcolateCocomoSLOCCount(sumCode, &str)
+			calculateCocomoSLOCCount(sumCode, &str)
 		} else {
 			calculateCocomo(sumCode, &str)
 		}
@@ -974,7 +974,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 	if !Cocomo {
 		if SLOCCountFormat {
-			calcolateCocomoSLOCCount(sumCode, &str)
+			calculateCocomoSLOCCount(sumCode, &str)
 		} else {
 			calculateCocomo(sumCode, &str)
 		}
@@ -994,7 +994,7 @@ func trimNameShort(summary LanguageSummary, trimmedName string) string {
 	return trimmedName
 }
 
-func calcolateCocomoSLOCCount(sumCode int64, str *strings.Builder) {
+func calculateCocomoSLOCCount(sumCode int64, str *strings.Builder) {
 	estimatedEffort := EstimateEffort(int64(sumCode), EAF)
 	estimatedScheduleMonths := EstimateScheduleMonths(estimatedEffort)
 	estimatedPeopleRequired := estimatedEffort / estimatedScheduleMonths
