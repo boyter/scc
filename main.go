@@ -87,7 +87,7 @@ func main() {
 		"format",
 		"f",
 		"tabular",
-		"set output format [tabular, wide, json, csv, csv-stream, cloc-yaml, html, html-table, sql, sql-insert]",
+		"set output format [tabular, wide, json, csv, csv-stream, cloc-yaml, html, html-table, sql, sql-insert, openmetrics]",
 	)
 	flags.StringSliceVarP(
 		&processor.AllowListExtensions,
