@@ -17,7 +17,7 @@ import (
 
 	"github.com/mattn/go-runewidth"
 
-	"golang.org/x/text/language"
+	glanguage "golang.org/x/text/language"
 	gmessage "golang.org/x/text/message"
 	"gopkg.in/yaml.v2"
 )
@@ -41,6 +41,29 @@ var tabularWideFormatHead = "%-33s %9s %9s %8s %9s %8s %10s %16s\n"
 var tabularWideFormatBody = "%-33s %9d %9d %8d %9d %8d %10d %16.2f\n"
 var tabularWideFormatFile = "%s %9d %8d %9d %8d %10d %16.2f\n"
 var wideFormatFileTruncate = 42
+
+var openMetricsMetadata = `# TYPE scc_files count
+# HELP scc_files Number of sourcecode files.
+# TYPE scc_lines count
+# UNIT scc_lines lines
+# HELP scc_lines Number of lines.
+# TYPE scc_code count
+# UNIT scc_code lines
+# HELP scc_code Number of lines of actual code.
+# TYPE scc_comments count
+# HELP scc_comments Number of comments.
+# TYPE scc_blanks count
+# UNIT scc_blanks lines
+# HELP scc_blanks Number of blank lines.
+# TYPE scc_complexity count
+# UNIT scc_complexity lines
+# HELP scc_complexity Code complexity.
+# TYPE scc_bytes count
+# UNIT scc_bytes bytes
+# HELP scc_bytes Size in bytes.
+`
+var openMetricsSummaryRecordFormat = "scc_%s{language=\"%s\"} %d\n"
+var openMetricsFileRecordFormat = "scc_%s{language=\"%s\", file=\"%s\"} %d\n"
 
 func sortSummaryFiles(summary *LanguageSummary) {
 	switch {
@@ -200,54 +223,7 @@ func toClocYAML(input chan *FileJob) string {
 
 func toJSON(input chan *FileJob) string {
 	startTime := makeTimestampMilli()
-	languages := map[string]LanguageSummary{}
-
-	for res := range input {
-		_, ok := languages[res.Language]
-
-		if !ok {
-			files := []*FileJob{}
-			if Files {
-				files = append(files, res)
-			}
-
-			languages[res.Language] = LanguageSummary{
-				Name:       res.Language,
-				Lines:      res.Lines,
-				Code:       res.Code,
-				Comment:    res.Comment,
-				Blank:      res.Blank,
-				Complexity: res.Complexity,
-				Count:      1,
-				Files:      files,
-				Bytes:      res.Bytes,
-			}
-		} else {
-			tmp := languages[res.Language]
-			files := tmp.Files
-			if Files {
-				files = append(files, res)
-			}
-
-			languages[res.Language] = LanguageSummary{
-				Name:       res.Language,
-				Lines:      tmp.Lines + res.Lines,
-				Code:       tmp.Code + res.Code,
-				Comment:    tmp.Comment + res.Comment,
-				Blank:      tmp.Blank + res.Blank,
-				Complexity: tmp.Complexity + res.Complexity,
-				Count:      tmp.Count + 1,
-				Files:      files,
-				Bytes:      res.Bytes + tmp.Bytes,
-			}
-		}
-	}
-
-	language := []LanguageSummary{}
-	for _, summary := range languages {
-		language = append(language, summary)
-	}
-
+	language := aggregateLanguageSummary(input)
 	language = sortLanguageSummary(language)
 
 	jsonString, _ := json.Marshal(language)
@@ -268,53 +244,7 @@ func toCSV(input chan *FileJob) string {
 }
 
 func toCSVSummary(input chan *FileJob) string {
-	languages := map[string]LanguageSummary{}
-
-	for res := range input {
-		_, ok := languages[res.Language]
-
-		if !ok {
-			files := []*FileJob{}
-			if Files {
-				files = append(files, res)
-			}
-
-			languages[res.Language] = LanguageSummary{
-				Name:       res.Language,
-				Lines:      res.Lines,
-				Code:       res.Code,
-				Comment:    res.Comment,
-				Blank:      res.Blank,
-				Complexity: res.Complexity,
-				Count:      1,
-				Files:      files,
-				Bytes:      res.Bytes,
-			}
-		} else {
-			tmp := languages[res.Language]
-			files := tmp.Files
-			if Files {
-				files = append(files, res)
-			}
-
-			languages[res.Language] = LanguageSummary{
-				Name:       res.Language,
-				Lines:      tmp.Lines + res.Lines,
-				Code:       tmp.Code + res.Code,
-				Comment:    tmp.Comment + res.Comment,
-				Blank:      tmp.Blank + res.Blank,
-				Complexity: tmp.Complexity + res.Complexity,
-				Count:      tmp.Count + 1,
-				Files:      files,
-				Bytes:      res.Bytes + tmp.Bytes,
-			}
-		}
-	}
-
-	language := []LanguageSummary{}
-	for _, summary := range languages {
-		language = append(language, summary)
-	}
+	language := aggregateLanguageSummary(input)
 	language = sortLanguageSummary(language)
 
 	records := [][]string{{
@@ -378,6 +308,47 @@ func toCSVFiles(input chan *FileJob) string {
 	w.Flush()
 
 	return b.String()
+}
+
+func toOpenMetrics(input chan *FileJob) string {
+	if Files {
+		return toOpenMetricsFiles(input)
+	}
+
+	return toOpenMetricsSummary(input)
+}
+
+func toOpenMetricsSummary(input chan *FileJob) string {
+	language := aggregateLanguageSummary(input)
+	language = sortLanguageSummary(language)
+
+	var sb strings.Builder
+	sb.WriteString(openMetricsMetadata)
+	for _, result := range language {
+		sb.WriteString(fmt.Sprintf(openMetricsSummaryRecordFormat, "files", result.Name, result.Count))
+		sb.WriteString(fmt.Sprintf(openMetricsSummaryRecordFormat, "lines", result.Name, result.Lines))
+		sb.WriteString(fmt.Sprintf(openMetricsSummaryRecordFormat, "code", result.Name, result.Code))
+		sb.WriteString(fmt.Sprintf(openMetricsSummaryRecordFormat, "comments", result.Name, result.Comment))
+		sb.WriteString(fmt.Sprintf(openMetricsSummaryRecordFormat, "blanks", result.Name, result.Blank))
+		sb.WriteString(fmt.Sprintf(openMetricsSummaryRecordFormat, "complexity", result.Name, result.Complexity))
+		sb.WriteString(fmt.Sprintf(openMetricsSummaryRecordFormat, "bytes", result.Name, result.Bytes))
+	}
+	return sb.String()
+}
+
+func toOpenMetricsFiles(input chan *FileJob) string {
+	var sb strings.Builder
+	sb.WriteString(openMetricsMetadata)
+	for file := range input {
+		var filename = strings.ReplaceAll(file.Location, "\\", "\\\\")
+		sb.WriteString(fmt.Sprintf(openMetricsFileRecordFormat, "lines", file.Language, filename, file.Lines))
+		sb.WriteString(fmt.Sprintf(openMetricsFileRecordFormat, "code", file.Language, filename, file.Code))
+		sb.WriteString(fmt.Sprintf(openMetricsFileRecordFormat, "comments", file.Language, filename, file.Comment))
+		sb.WriteString(fmt.Sprintf(openMetricsFileRecordFormat, "blanks", file.Language, filename, file.Blank))
+		sb.WriteString(fmt.Sprintf(openMetricsFileRecordFormat, "complexity", file.Language, filename, file.Complexity))
+		sb.WriteString(fmt.Sprintf(openMetricsFileRecordFormat, "bytes", file.Language, filename, file.Bytes))
+	}
+	return sb.String()
 }
 
 // For very large repositories CSV stream can be used which prints results out as they come in
@@ -610,6 +581,8 @@ func fileSummarize(input chan *FileJob) string {
 		return toSql(input)
 	case strings.ToLower(Format) == "sql-insert":
 		return toSqlInsert(input)
+	case strings.ToLower(Format) == "openmetrics":
+		return toOpenMetrics(input)
 	}
 
 	return fileSummarizeShort(input)
@@ -665,6 +638,8 @@ func fileSummarizeMulti(input chan *FileJob) string {
 				val = toSql(i)
 			case "sql-insert":
 				val = toSqlInsert(i)
+			case "openmetrics":
+				val = toOpenMetrics(i)
 			}
 
 			if t[1] == "stdout" {
@@ -1000,7 +975,7 @@ func calculateCocomoSLOCCount(sumCode int64, str *strings.Builder) {
 	estimatedPeopleRequired := estimatedEffort / estimatedScheduleMonths
 	estimatedCost := EstimateCost(estimatedEffort, AverageWage, Overhead)
 
-	p := gmessage.NewPrinter(language.Make(os.Getenv("LANG")))
+	p := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
 
 	str.WriteString(p.Sprintf("Total Physical Source Lines of Code (SLOC)                     = %d\n", sumCode))
 	str.WriteString(p.Sprintf("Development Effort Estimate, Person-Years (Person-Months)      = %.2f (%.2f)\n", estimatedEffort/12, estimatedEffort))
@@ -1018,7 +993,7 @@ func calculateCocomo(sumCode int64, str *strings.Builder) {
 	estimatedScheduleMonths := EstimateScheduleMonths(estimatedEffort)
 	estimatedPeopleRequired := estimatedEffort / estimatedScheduleMonths
 
-	p := gmessage.NewPrinter(language.Make(os.Getenv("LANG")))
+	p := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
 
 	str.WriteString(p.Sprintf("Estimated Cost to Develop (%s) %s%d\n", CocomoProjectType, CurrencySymbol, int64(estimatedCost)))
 	str.WriteString(p.Sprintf("Estimated Schedule Effort (%s) %.2f months\n", CocomoProjectType, estimatedScheduleMonths))
@@ -1091,6 +1066,58 @@ func isLeapYear(year int) bool {
 		leapFlag = false
 	}
 	return leapFlag
+}
+
+func aggregateLanguageSummary(input chan *FileJob) []LanguageSummary {
+	languages := map[string]LanguageSummary{}
+
+	for res := range input {
+		_, ok := languages[res.Language]
+
+		if !ok {
+			var files []*FileJob
+			if Files {
+				files = append(files, res)
+			}
+
+			languages[res.Language] = LanguageSummary{
+				Name:       res.Language,
+				Lines:      res.Lines,
+				Code:       res.Code,
+				Comment:    res.Comment,
+				Blank:      res.Blank,
+				Complexity: res.Complexity,
+				Count:      1,
+				Files:      files,
+				Bytes:      res.Bytes,
+			}
+		} else {
+			tmp := languages[res.Language]
+			files := tmp.Files
+			if Files {
+				files = append(files, res)
+			}
+
+			languages[res.Language] = LanguageSummary{
+				Name:       res.Language,
+				Lines:      tmp.Lines + res.Lines,
+				Code:       tmp.Code + res.Code,
+				Comment:    tmp.Comment + res.Comment,
+				Blank:      tmp.Blank + res.Blank,
+				Complexity: tmp.Complexity + res.Complexity,
+				Count:      tmp.Count + 1,
+				Files:      files,
+				Bytes:      res.Bytes + tmp.Bytes,
+			}
+		}
+	}
+
+	var language []LanguageSummary
+	for _, summary := range languages {
+		language = append(language, summary)
+	}
+
+	return language
 }
 
 func sortLanguageSummary(language []LanguageSummary) []LanguageSummary {

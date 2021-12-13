@@ -649,6 +649,74 @@ func TestToCsvStreamMultiple(t *testing.T) {
 	}
 }
 
+func TestToOpenMetricsMultiple(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "aaaa.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	close(inputChan)
+	Debug = true // Increase coverage slightly
+	res := toOpenMetrics(inputChan)
+	Debug = false
+
+	var expectedResult = `# TYPE scc_files count
+# HELP scc_files Number of sourcecode files.
+# TYPE scc_lines count
+# UNIT scc_lines lines
+# HELP scc_lines Number of lines.
+# TYPE scc_code count
+# UNIT scc_code lines
+# HELP scc_code Number of lines of actual code.
+# TYPE scc_comments count
+# HELP scc_comments Number of comments.
+# TYPE scc_blanks count
+# UNIT scc_blanks lines
+# HELP scc_blanks Number of blank lines.
+# TYPE scc_complexity count
+# UNIT scc_complexity lines
+# HELP scc_complexity Code complexity.
+# TYPE scc_bytes count
+# UNIT scc_bytes bytes
+# HELP scc_bytes Size in bytes.
+scc_files{language="Go"} 2
+scc_lines{language="Go"} 2000
+scc_code{language="Go"} 2000
+scc_comments{language="Go"} 2000
+scc_blanks{language="Go"} 2000
+scc_complexity{language="Go"} 2000
+scc_bytes{language="Go"} 2000
+`
+
+	if res != expectedResult {
+		t.Error("Expected OpenMetrics return", res)
+	}
+}
+
 func TestToSQLSingle(t *testing.T) {
 	inputChan := make(chan *FileJob, 1000)
 	inputChan <- &FileJob{
@@ -825,6 +893,116 @@ func TestFileSummarizeYml(t *testing.T) {
 
 	if !strings.Contains(res, `code: 1000`) {
 		t.Error("Expected YML return", res)
+	}
+}
+
+func TestFileSummarizeOpenMetrics(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+
+	close(inputChan)
+	Format = "OpenMetrics"
+	More = false
+	res := fileSummarize(inputChan)
+
+	var expectedResult = `# TYPE scc_files count
+# HELP scc_files Number of sourcecode files.
+# TYPE scc_lines count
+# UNIT scc_lines lines
+# HELP scc_lines Number of lines.
+# TYPE scc_code count
+# UNIT scc_code lines
+# HELP scc_code Number of lines of actual code.
+# TYPE scc_comments count
+# HELP scc_comments Number of comments.
+# TYPE scc_blanks count
+# UNIT scc_blanks lines
+# HELP scc_blanks Number of blank lines.
+# TYPE scc_complexity count
+# UNIT scc_complexity lines
+# HELP scc_complexity Code complexity.
+# TYPE scc_bytes count
+# UNIT scc_bytes bytes
+# HELP scc_bytes Size in bytes.
+scc_files{language="Go"} 1
+scc_lines{language="Go"} 1000
+scc_code{language="Go"} 1000
+scc_comments{language="Go"} 1000
+scc_blanks{language="Go"} 1000
+scc_complexity{language="Go"} 1000
+scc_bytes{language="Go"} 1000
+`
+
+	if res != expectedResult {
+		t.Error("Expected OpenMetrics return", res)
+	}
+}
+
+func TestFileSummarizeOpenMetricsPerFile(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "C:\\bbbb.go", // to test escaping of the backslash
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+
+	close(inputChan)
+	Format = "OpenMetrics"
+	More = false
+	Files = true
+	res := fileSummarize(inputChan)
+
+	var expectedResult = `# TYPE scc_files count
+# HELP scc_files Number of sourcecode files.
+# TYPE scc_lines count
+# UNIT scc_lines lines
+# HELP scc_lines Number of lines.
+# TYPE scc_code count
+# UNIT scc_code lines
+# HELP scc_code Number of lines of actual code.
+# TYPE scc_comments count
+# HELP scc_comments Number of comments.
+# TYPE scc_blanks count
+# UNIT scc_blanks lines
+# HELP scc_blanks Number of blank lines.
+# TYPE scc_complexity count
+# UNIT scc_complexity lines
+# HELP scc_complexity Code complexity.
+# TYPE scc_bytes count
+# UNIT scc_bytes bytes
+# HELP scc_bytes Size in bytes.
+scc_lines{language="Go", file="C:\\bbbb.go"} 1000
+scc_code{language="Go", file="C:\\bbbb.go"} 1000
+scc_comments{language="Go", file="C:\\bbbb.go"} 1000
+scc_blanks{language="Go", file="C:\\bbbb.go"} 1000
+scc_complexity{language="Go", file="C:\\bbbb.go"} 1000
+scc_bytes{language="Go", file="C:\\bbbb.go"} 1000
+`
+
+	if res != expectedResult {
+		t.Error("Expected OpenMetrics return", res)
 	}
 }
 
