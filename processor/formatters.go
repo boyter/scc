@@ -1075,7 +1075,7 @@ func aggregateLanguageSummary(input chan *FileJob) []LanguageSummary {
 		_, ok := languages[res.Language]
 
 		if !ok {
-			var files []*FileJob
+			files := []*FileJob{}
 			if Files {
 				files = append(files, res)
 			}
@@ -1112,7 +1112,7 @@ func aggregateLanguageSummary(input chan *FileJob) []LanguageSummary {
 		}
 	}
 
-	var language []LanguageSummary
+	language := []LanguageSummary{}
 	for _, summary := range languages {
 		language = append(language, summary)
 	}
