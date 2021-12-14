@@ -2591,6 +2591,24 @@
       }
     ]
   },
+  "DOT": {
+    "complexitychecks": [],
+    "extensions": [
+      "dot",
+      "gv"
+    ],
+    "line_comment": [
+      "//",
+      "#"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": []
+  },
   "Groovy": {
     "complexitychecks": [
       "for ",
