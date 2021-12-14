@@ -61,7 +61,7 @@ func TestCalculateCocomo(t *testing.T) {
 	var str strings.Builder
 	calculateCocomo(1, &str)
 
-	if !strings.Contains(str.String(), "Estimated Schedule Effort (organic) 0.221524 months") {
+	if !strings.Contains(str.String(), "Estimated Schedule Effort (organic) 0.22 months") {
 		t.Error("expected to match got", str.String())
 	}
 }

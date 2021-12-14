@@ -35,7 +35,7 @@ namespace Baz
 	CountStats(&fileJob)
 
 	if fileJob.Lines != 14 {
-		t.Errorf("Expected 14 lines")
+		t.Errorf("Expected 14 lines got %d", fileJob.Lines)
 	}
 
 	if fileJob.Code != 11 {
