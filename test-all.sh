@@ -428,7 +428,7 @@ else
     echo -e "${GREEN}PASSED minified ignored check"
 fi
 
-if ./scc ./examples/minified/ --no-min-gen | grep -q "0.000000"; then
+if ./scc ./examples/minified/ --no-min-gen | grep -q "\$0"; then
     echo -e "${GREEN}PASSED removed min"
 else
     echo -e "${RED}======================================================="
@@ -437,7 +437,7 @@ else
     exit
 fi
 
-if ./scc ./examples/generated/ --no-min-gen | grep -q "0.000000"; then
+if ./scc ./examples/generated/ --no-min-gen | grep -q "\$0"; then
     echo -e "${GREEN}PASSED removed gen"
 else
     echo -e "${RED}======================================================="
@@ -473,7 +473,7 @@ else
     echo -e "${GREEN}PASSED extension param should ignore #!"
 fi
 
-if ./scc -z --min-gen-line-length 1 --no-min-gen . | grep -q "0.000000"; then
+if ./scc -z --min-gen-line-length 1 --no-min-gen . | grep -q "\$0"; then
     echo -e "${GREEN}PASSED min gen line length"
 else
     echo -e "${RED}======================================================="
@@ -482,7 +482,7 @@ else
     exit
 fi
 
-if ./scc --no-large --large-byte-count 0 ./examples/language | grep -q "0.000000"; then
+if ./scc --no-large --large-byte-count 0 ./examples/language | grep -q "\$0"; then
     echo -e "${GREEN}PASSED no large byte test"
 else
     echo -e "${RED}======================================================="
@@ -491,7 +491,7 @@ else
     exit
 fi
 
-if ./scc --no-large --large-line-count 0 ./examples/language | grep -q "0.000000"; then
+if ./scc --no-large --large-line-count 0 ./examples/language | grep -q "\$0"; then
     echo -e "${GREEN}PASSED no large line test"
 else
     echo -e "${RED}======================================================="
