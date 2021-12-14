@@ -426,7 +426,6 @@ func CountStats(fileJob *FileJob) {
 	// TODO needs to be set via langFeatures.Quotes[0].IgnoreEscape for the matching feature
 	ignoreEscape := false
 
-
 	for index := checkBomSkip(fileJob); index < int(fileJob.Bytes); index++ {
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if

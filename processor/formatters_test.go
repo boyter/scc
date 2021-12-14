@@ -680,6 +680,7 @@ func TestToOpenMetricsMultiple(t *testing.T) {
 		Binary:             false,
 	}
 	close(inputChan)
+	Files = false
 	Debug = true // Increase coverage slightly
 	res := toOpenMetrics(inputChan)
 	Debug = false
@@ -734,6 +735,7 @@ func TestToSQLSingle(t *testing.T) {
 		Binary:             false,
 	}
 	close(inputChan)
+	Files = false
 	Debug = true // Increase coverage slightly
 	res := toSql(inputChan)
 	Debug = false
@@ -914,6 +916,7 @@ func TestFileSummarizeOpenMetrics(t *testing.T) {
 	}
 
 	close(inputChan)
+	Files = false
 	Format = "OpenMetrics"
 	More = false
 	res := fileSummarize(inputChan)
