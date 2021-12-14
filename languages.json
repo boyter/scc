@@ -5652,6 +5652,38 @@
       "sh"
     ]
   },
+  "Nushell": {
+    "complexitychecks": [
+      "for ",
+      "do { ",
+      "each {",
+      "if ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "nu"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ],
+    "shebangs": [
+      "nu"
+    ]
+  },
   "Smarty Template": {
     "complexitychecks": [
       "for ",
