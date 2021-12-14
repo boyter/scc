@@ -46,11 +46,11 @@ type LanguageFeature struct {
 	Strings               *Trie
 	Tokens                *Trie
 	Nested                bool
-	ComplexityCheckMask   uint64
-	SingleLineCommentMask uint64
-	MultiLineCommentMask  uint64
-	StringCheckMask       uint64
-	ProcessMask           uint64
+	ComplexityCheckMask   byte
+	SingleLineCommentMask byte
+	MultiLineCommentMask  byte
+	StringCheckMask       byte
+	ProcessMask           byte
 	Keywords              []string
 	Quotes                []Quote
 }
