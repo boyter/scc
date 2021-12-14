@@ -5568,6 +5568,45 @@
     ],
     "nestedmultiline": true,
     "quotes": [],
+    "shebangs": []
+  },
+  "Racket": {
+    "complexitychecks": [
+      "(if",
+      "(cond",
+      "[else",
+      "(and",
+      "(or",
+      "(for",
+      "#:when",
+      "#:unless",
+      "#:break",
+      "#:final",
+      "(do",
+      "(when",
+      "(unless",
+      "(shared",
+      "(case"
+    ],
+    "extensions": [
+      "rkt"
+    ],
+    "line_comment": [
+      ";"
+    ],
+    "multi_line": [
+      [
+        "|#",
+        "#|"
+      ]
+    ],
+    "nestedmultiline": true,
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ],
     "shebangs": [
       "racket"
     ]

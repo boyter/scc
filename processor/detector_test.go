@@ -171,7 +171,7 @@ func TestDetectSheBangLisp(t *testing.T) {
 	}
 }
 
-func TestDetectSheBangScheme(t *testing.T) {
+func TestDetectSheBangRacket(t *testing.T) {
 	ProcessConstants()
 
 	cases := []string{
@@ -182,8 +182,8 @@ func TestDetectSheBangScheme(t *testing.T) {
 	for _, c := range cases {
 		x, y := DetectSheBang(c)
 
-		if x != "Scheme" || y != nil {
-			t.Error("Expected Scheme match got", x)
+		if x != "Racket" || y != nil {
+			t.Error("Expected Racket match got", x)
 		}
 	}
 }
