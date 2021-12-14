@@ -11,7 +11,7 @@ Also it has a very short name which is easy to type `scc`.
 
 If you don't like sloc cloc and code feel free to use the name `Succinct Code Counter`.
 
-[![Build Status](https://travis-ci.org/boyter/scc.svg?branch=master)](https://travis-ci.org/boyter/scc)
+[![Go](https://github.com/boyter/scc/actions/workflows/go.yml/badge.svg)](https://github.com/boyter/scc/actions/workflows/go.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/boyter/scc)](https://goreportcard.com/report/github.com/boyter/scc)
 [![Coverage Status](https://coveralls.io/repos/github/boyter/scc/badge.svg?branch=master)](https://coveralls.io/github/boyter/scc?branch=master)
 [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/)](https://github.com/boyter/scc/)
