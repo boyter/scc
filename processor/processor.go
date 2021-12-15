@@ -146,6 +146,9 @@ var FileSummaryJobQueueSize = runtime.NumCPU()
 // AllowListExtensions is a list of extensions which are allowed to be processed
 var AllowListExtensions = []string{}
 
+// ExcludeListExtensions is a list of extensions which should be ignored
+var ExcludeListExtensions = []string{}
+
 // AverageWage is the average wage in dollars used for the COCOMO cost estimate
 var AverageWage int64 = 56286
 

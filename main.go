@@ -96,6 +96,13 @@ func main() {
 		[]string{},
 		"limit to file extensions [comma separated list: e.g. go,java,js]",
 	)
+	flags.StringSliceVarP(
+		&processor.ExcludeListExtensions,
+		"exclude-ext",
+		"x",
+		[]string{},
+		"ignore file extensions (overrides include-ext) [comma separated list: e.g. go,java,js]",
+	)
 	flags.BoolVarP(
 		&processor.Languages,
 		"languages",

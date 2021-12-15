@@ -246,6 +246,7 @@ func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 	language, extension := DetectLanguage(name)
 
 	if len(language) != 0 {
+		// check if extensions in the allow list, which should limit to just those extensions
 		if len(AllowListExtensions) != 0 {
 			ok := false
 			for _, x := range AllowListExtensions {
@@ -257,6 +258,23 @@ func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 			if !ok {
 				if Verbose {
 					printWarn(fmt.Sprintf("skipping file as not in allow list: %s", name))
+				}
+				return nil
+			}
+		}
+
+		// check if we should exclude this type
+		if len(ExcludeListExtensions) != 0 {
+			ok := true
+			for _, x := range ExcludeListExtensions {
+				if x == extension {
+					ok = false
+				}
+			}
+
+			if !ok {
+				if Verbose {
+					printWarn(fmt.Sprintf("skipping file as in exclude list: %s", name))
 				}
 				return nil
 			}
