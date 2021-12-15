@@ -835,6 +835,19 @@ else
     exit
 fi
 
+a=$(./scc --exclude-dir examples/)
+b=$(./scc --exclude-dir examples)
+if [ "$a" != "$b" ]; then
+    echo "$a"
+    echo "$b"
+    echo -e "${RED}======================================================="
+    echo -e "FAILED examples exclude-dir check"
+    echo -e "=================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED examples exclude-dir check"
+fi
+
 # Try out specific languages
 for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java ' 'Boo ' 'License ' 'BASH ' 'C Shell ' 'Korn Shell ' 'Makefile ' 'Shell ' 'Zsh ' 'Rakefile ' 'Gemfile ' 'Dockerfile ' 'Yarn ' 'Sieve ' 'F# ' 'Elm ' 'Terraform ' 'Clojure ' 'C# ' 'LLVM IR ' 'HAML ' 'FXML ' 'DM ' 'Nushell ' 'Racket ' 'DOT '
 do

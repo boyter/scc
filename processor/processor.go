@@ -280,6 +280,13 @@ func ProcessConstants() {
 			printTrace("configured to lazy load language features")
 		}
 	}
+
+	// Fix for https://github.com/boyter/scc/issues/250
+	fixedPath := []string{}
+	for _, path := range PathDenyList {
+		fixedPath = append(fixedPath, strings.TrimRight(path, "/"))
+	}
+	PathDenyList = fixedPath
 }
 
 // Configure and setup any count-as params the use has supplied
