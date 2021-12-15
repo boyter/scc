@@ -19,6 +19,17 @@ func TestProcessConstants(t *testing.T) {
 	}
 }
 
+func TestProcessConstantsPathExclude(t *testing.T) {
+	PathDenyList = []string{"testing/"}
+	ProcessConstants()
+
+	if PathDenyList[0] != "testing" {
+		t.Error("expected / to be trimmed")
+	}
+
+	PathDenyList = []string{}
+}
+
 func TestConfigureGc(t *testing.T) {
 	ConfigureGc()
 }
