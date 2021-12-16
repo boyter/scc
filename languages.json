@@ -5421,7 +5421,10 @@
       "== "
     ],
     "extensions": [
-      "sql"
+      "sql", 
+      "dml", 
+      "ddl", 
+      "dql"
     ],
     "line_comment": [
       "--"
