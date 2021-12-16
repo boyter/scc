@@ -646,9 +646,11 @@ func fileSummarizeMulti(input chan *FileJob) string {
 				str.WriteString(val)
 				str.WriteString("\n")
 			} else {
-				_ = ioutil.WriteFile(t[1], []byte(val), 0600)
+				err := ioutil.WriteFile(t[1], []byte(val), 0600)
+				if err != nil {
+					fmt.Println(fmt.Sprintf("%s unable to be written to for format %s", t[1], t[0]))
+				}
 			}
-
 		}
 	}
 
