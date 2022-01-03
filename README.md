@@ -190,9 +190,9 @@ Command line usage of `scc` is designed to be as simple as possible.
 Full details can be found in `scc --help` or `scc -h`. Note that the below reflects the state of master not a release.
 
 ```
-$ scc -h
+$ scc -h                                                                                      
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 3.0.0
+Version 3.1.0 (beta)
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
