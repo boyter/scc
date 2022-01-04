@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -247,15 +248,7 @@ func toCSVSummary(input chan *FileJob) string {
 	language := aggregateLanguageSummary(input)
 	language = sortLanguageSummary(language)
 
-	records := [][]string{{
-		"Language",
-		"Lines",
-		"Code",
-		"Comments",
-		"Blanks",
-		"Complexity",
-		"Bytes"},
-	}
+	records := [][]string{}
 
 	for _, result := range language {
 		records = append(records, []string{
@@ -268,9 +261,72 @@ func toCSVSummary(input chan *FileJob) string {
 			fmt.Sprint(result.Bytes)})
 	}
 
+	// Cater for the common case of adding plural even for those options that don't make sense
+	// as its quite common for those who English is not a first language to make a simple mistake
+	switch {
+	case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "languages":
+		sort.Slice(records, func(i, j int) bool {
+			return strings.Compare(records[i][0], records[j][0]) < 0
+		})
+	case SortBy == "line" || SortBy == "lines":
+		sort.Slice(records, func(i, j int) bool {
+			i1, _ := strconv.ParseInt(records[i][1], 10, 64)
+			i2, _ := strconv.ParseInt(records[j][1], 10, 64)
+			return i1 > i2
+		})
+	case SortBy == "blank" || SortBy == "blanks":
+		sort.Slice(records, func(i, j int) bool {
+			i1, _ := strconv.ParseInt(records[i][4], 10, 64)
+			i2, _ := strconv.ParseInt(records[j][4], 10, 64)
+			return i1 > i2
+		})
+	case SortBy == "code" || SortBy == "codes":
+		sort.Slice(records, func(i, j int) bool {
+			i1, _ := strconv.ParseInt(records[i][2], 10, 64)
+			i2, _ := strconv.ParseInt(records[j][2], 10, 64)
+			return i1 > i2
+		})
+	case SortBy == "comment" || SortBy == "comments":
+		sort.Slice(records, func(i, j int) bool {
+			i1, _ := strconv.ParseInt(records[i][3], 10, 64)
+			i2, _ := strconv.ParseInt(records[j][3], 10, 64)
+			return i1 > i2
+		})
+	case SortBy == "complexity" || SortBy == "complexitys":
+		sort.Slice(records, func(i, j int) bool {
+			i1, _ := strconv.ParseInt(records[i][5], 10, 64)
+			i2, _ := strconv.ParseInt(records[j][5], 10, 64)
+			return i1 > i2
+		})
+	case SortBy == "byte" || SortBy == "bytes":
+		sort.Slice(records, func(i, j int) bool {
+			i1, _ := strconv.ParseInt(records[i][6], 10, 64)
+			i2, _ := strconv.ParseInt(records[j][6], 10, 64)
+			return i1 > i2
+		})
+	default:
+		sort.Slice(records, func(i, j int) bool {
+			i1, _ := strconv.ParseInt(records[i][1], 10, 64)
+			i2, _ := strconv.ParseInt(records[j][1], 10, 64)
+			return i1 > i2
+		})
+	}
+
+	recordsEnd := [][]string{{
+		"Language",
+		"Lines",
+		"Code",
+		"Comments",
+		"Blanks",
+		"Complexity",
+		"Bytes"},
+	}
+
+	recordsEnd = append(recordsEnd, records...)
+
 	b := &bytes.Buffer{}
 	w := csv.NewWriter(b)
-	_ = w.WriteAll(records)
+	_ = w.WriteAll(recordsEnd)
 	w.Flush()
 
 	return b.String()
@@ -300,6 +356,59 @@ func toCSVFiles(input chan *FileJob) string {
 			fmt.Sprint(result.Blank),
 			fmt.Sprint(result.Complexity),
 			fmt.Sprint(result.Bytes)})
+	}
+
+	// Cater for the common case of adding plural even for those options that don't make sense
+	// as its quite common for those who English is not a first language to make a simple mistake
+	switch {
+	case SortBy == "name" || SortBy == "names":
+		sort.Slice(records, func(i, j int) bool {
+			return strings.Compare(records[i][2], records[j][2]) < 0
+		})
+	case SortBy == "language" || SortBy == "languages":
+		sort.Slice(records, func(i, j int) bool {
+			return strings.Compare(records[i][0], records[j][0]) < 0
+		})
+	case SortBy == "line" || SortBy == "lines":
+		sort.Slice(records, func(i, j int) bool {
+			i1, _ := strconv.ParseInt(records[i][3], 10, 64)
+			i2, _ := strconv.ParseInt(records[j][3], 10, 64)
+			return i1 > i2
+		})
+	case SortBy == "blank" || SortBy == "blanks":
+		sort.Slice(records, func(i, j int) bool {
+			i1, _ := strconv.ParseInt(records[i][6], 10, 64)
+			i2, _ := strconv.ParseInt(records[j][6], 10, 64)
+			return i1 > i2
+		})
+	case SortBy == "code" || SortBy == "codes":
+		sort.Slice(records, func(i, j int) bool {
+			i1, _ := strconv.ParseInt(records[i][4], 10, 64)
+			i2, _ := strconv.ParseInt(records[j][4], 10, 64)
+			return i1 > i2
+		})
+	case SortBy == "comment" || SortBy == "comments":
+		sort.Slice(records, func(i, j int) bool {
+			i1, _ := strconv.ParseInt(records[i][5], 10, 64)
+			i2, _ := strconv.ParseInt(records[j][5], 10, 64)
+			return i1 > i2
+		})
+	case SortBy == "complexity" || SortBy == "complexitys":
+		sort.Slice(records, func(i, j int) bool {
+			i1, _ := strconv.ParseInt(records[i][7], 10, 64)
+			i2, _ := strconv.ParseInt(records[j][7], 10, 64)
+			return i1 > i2
+		})
+	case SortBy == "byte" || SortBy == "bytes":
+		sort.Slice(records, func(i, j int) bool {
+			i1, _ := strconv.ParseInt(records[i][8], 10, 64)
+			i2, _ := strconv.ParseInt(records[j][8], 10, 64)
+			return i1 > i2
+		})
+	default:
+		sort.Slice(records, func(i, j int) bool {
+			return records[i][2] > records[j][2]
+		})
 	}
 
 	b := &bytes.Buffer{}

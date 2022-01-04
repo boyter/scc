@@ -649,6 +649,58 @@ func TestToCsvStreamMultiple(t *testing.T) {
 	}
 }
 
+func TestToCsvFilesSorted(t *testing.T) {
+	fj1 := &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              90,
+		Lines:              90,
+		Code:               90,
+		Comment:            90,
+		Blank:              90,
+		Complexity:         90,
+		WeightedComplexity: 90,
+		Binary:             false,
+	}
+	fj2 := &FileJob{
+		Language:           "Go",
+		Filename:           "aaaa.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+
+	Files = true
+	SortBy = "lines"
+
+	inputChan1 := make(chan *FileJob, 1000)
+	inputChan1 <- fj1
+	inputChan1 <- fj2
+	close(inputChan1)
+	res1 := toCSV(inputChan1)
+
+	inputChan2 := make(chan *FileJob, 1000)
+	inputChan2 <- fj2
+	inputChan2 <- fj1
+	close(inputChan2)
+	res2 := toCSV(inputChan2)
+
+	Files = false
+
+	if res1 != res2 {
+		t.Error("Should be sorted to be the same")
+	}
+}
+
 func TestToOpenMetricsMultiple(t *testing.T) {
 	inputChan := make(chan *FileJob, 1000)
 	inputChan <- &FileJob{
