@@ -333,17 +333,7 @@ func toCSVSummary(input chan *FileJob) string {
 }
 
 func toCSVFiles(input chan *FileJob) string {
-	records := [][]string{{
-		"Language",
-		"Location",
-		"Filename",
-		"Lines",
-		"Code",
-		"Comments",
-		"Blanks",
-		"Complexity",
-		"Bytes"},
-	}
+	records := [][]string{}
 
 	for result := range input {
 		records = append(records, []string{
@@ -411,9 +401,23 @@ func toCSVFiles(input chan *FileJob) string {
 		})
 	}
 
+	recordsEnd := [][]string{{
+		"Language",
+		"Location",
+		"Filename",
+		"Lines",
+		"Code",
+		"Comments",
+		"Blanks",
+		"Complexity",
+		"Bytes"},
+	}
+
+	recordsEnd = append(recordsEnd, records...)
+
 	b := &bytes.Buffer{}
 	w := csv.NewWriter(b)
-	_ = w.WriteAll(records)
+	_ = w.WriteAll(recordsEnd)
 	w.Flush()
 
 	return b.String()
