@@ -168,7 +168,7 @@ once in a comment everything there should be considered a comment until that com
 Would be counted as 4 lines of comments. This is noticeable when comparing scc's output to other tools on large
 repositories.
 
-`scc` is also able count verbatim strings correctly. For example in C# the following,
+`scc` is able to count verbatim strings correctly. For example in C# the following,
 
 ```
 private const string BasePath = @"a:\";
@@ -187,7 +187,8 @@ cost of running some static analysis tools.
 ### Usage
 
 Command line usage of `scc` is designed to be as simple as possible.
-Full details can be found in `scc --help` or `scc -h`. Note that the below reflects the state of master not a release.
+Full details can be found in `scc --help` or `scc -h`. Note that the below reflects the state of master not a release, as such
+features listed below may be missing from your installation.
 
 ```
 $ scc -h                                                                                      
