@@ -23,7 +23,7 @@ Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
 
 #### Go Get
 
-If you are comfortable using Go and have >= 1.13 installed:
+If you are comfortable using Go and have >= 1.17 installed:
 
 `$ go get -u github.com/boyter/scc/`
 
