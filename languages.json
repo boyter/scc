@@ -5166,7 +5166,8 @@
       "== "
     ],
     "extensions": [
-      "cshtml"
+      "cshtml",
+      "razor"
     ],
     "line_comment": [],
     "multi_line": [
