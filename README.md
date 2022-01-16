@@ -114,6 +114,7 @@ Other similar projects,
  - [loccount](https://gitlab.com/esr/loccount) Go implementation written and maintained by ESR
  - [ployglot](https://github.com/vmchale/polyglot) ATS sloc counter
  - [tokei](https://github.com/XAMPPRocky/tokei) fast, accurate and written in rust
+ - [sloc](https://github.com/flosse/sloc) coffeescript code counter
 
 Interesting reading about other code counting projects tokei, loc, polyglot and loccount
 
