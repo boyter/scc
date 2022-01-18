@@ -25,7 +25,11 @@ Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
 
 If you are comfortable using Go and have >= 1.17 installed:
 
-`$ go get -u github.com/boyter/scc/`
+`go install github.com/boyter/scc@latest`
+
+or bleeding edge with
+
+`go install github.com/boyter/scc@master`
 
 #### Snap
 
