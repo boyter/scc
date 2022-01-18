@@ -33,6 +33,8 @@ A [snap install](https://snapcraft.io/scc) exists thanks to [Ricardo](https://fe
 
 `$ sudo snap install scc`
 
+*NB* Snap installed applications cannot run outside of `/home` https://askubuntu.com/questions/930437/permission-denied-error-when-running-apps-installed-as-snap-packages-ubuntu-17 so you may encounter issues if you use snap and attempt to run outside this directory.
+
 #### Homebrew
 
 Or if you have [homebrew](https://brew.sh/) installed
