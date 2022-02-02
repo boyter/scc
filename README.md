@@ -79,7 +79,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Get the lines of code.
         id: scc
-        uses: iryanbell/scc-docker-action@v1.0.0
+        uses: iryanbell/scc-docker-action@v1.0.2
         with:
           args: ${{ env.workspace }} -i js,go,html,css
 ```
