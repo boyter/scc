@@ -1004,6 +1004,49 @@
     "multi_line": [],
     "quotes": []
   },
+  "CodeQL": {
+    "complexitychecks": [
+      "and ",
+      "or ",
+      "implies ",
+      "if ",
+      "else ",
+      "not ",
+      "instanceof ",
+      "in ",
+      "exists(",
+      "forall( ",
+      "avg(",
+      "concat(",
+      "count(",
+      "max(",
+      "min(",
+      "rank(",
+      "strictconcat(",
+      "strictcount(",
+      "strictsum(",
+      "sum("
+    ],
+    "extensions": [
+      "ql",
+      "qll"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "CSS": {
     "complexitychecks": [
       "for ",
