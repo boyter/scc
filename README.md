@@ -317,6 +317,8 @@ It also is used to count code and guess language types in https://searchcode.com
 
 You can also hook scc into your gitlab pipeline https://gitlab.com/guided-explorations/ci-cd-plugin-extensions/ci-cd-plugin-extension-scc
 
+Also used by CodeQL https://github.com/boyter/scc/pull/317
+
 ### Features
 
 `scc` uses a small state machine in order to determine what state the code is when it reaches a newline `\n`. As such it is aware of and able to count
