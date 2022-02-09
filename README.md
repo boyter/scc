@@ -317,7 +317,7 @@ It also is used to count code and guess language types in https://searchcode.com
 
 You can also hook scc into your gitlab pipeline https://gitlab.com/guided-explorations/ci-cd-plugin-extensions/ci-cd-plugin-extension-scc
 
-Also used by CodeQL https://github.com/boyter/scc/pull/317
+Also used by CodeQL https://github.com/boyter/scc/pull/317 and Scaleway https://twitter.com/Scaleway/status/1488087029476995074?s=20&t=N2-z6O-ISDdDzULg4o4uVQ
 
 ### Features
 
