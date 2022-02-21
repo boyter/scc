@@ -150,7 +150,7 @@ Why use `scc`?
  - You need to tell the difference between Coq and Verilog in the same directory
  - cloc yaml output support so potentially a drop in replacement for some users
  - Can identify or ignore minified files
- - Able to identify many #! files
+ - Able to identify many #! files ADVANCED! https://github.com/boyter/scc/issues/115
  - Can ignore large files by lines or bytes
 
 Why not use `scc`?
