@@ -298,7 +298,7 @@ func TestNewFileJobYAMLCloudformation(t *testing.T) {
 
 	found := false
 	for _, j := range job.PossibleLanguages {
-		if j == "CloudFormation" {
+		if j == "CloudFormation (YAML)" {
 			found = true
 		}
 	}
