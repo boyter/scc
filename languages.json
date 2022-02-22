@@ -7299,6 +7299,51 @@
     "multi_line": [],
     "quotes": []
   },
+  "CloudFormation": {
+    "complexitychecks": [],
+    "extensions": [
+      "yaml",
+      "yml"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [],
+    "quotes": [],
+    "keywords": [
+      "Resources:",
+      "AWSTemplateFormatVersion:",
+      "Description:",
+      "AWS::",
+      "Properties:",
+      "Name:",
+      "Type:",
+      "!GetAtt",
+      "!Sub",
+      "Statement:",
+      "Ref:",
+      "DependsOn:",
+      "!Select",
+      "!Equals",
+      "!If",
+      "Fn::If",
+      "Fn::And",
+      "Fn::Equals",
+      "Fn::Not",
+      "Fn::Or",
+      "Fn::Base64",
+      "Fn::Cidr",
+      "Fn::FindInMap",
+      "Fn::GetAtt",
+      "Fn::GetAZs",
+      "Fn::ImportValue",
+      "Fn::Join",
+      "Fn::Select",
+      "Fn::Split",
+      "Fn::Sub",
+      "Fn::Transform"
+    ]
+  },
   "Zig": {
     "complexitychecks": [
       "while ",

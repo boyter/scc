@@ -1,0 +1,150 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: AWS lambda search - implementation
+
+Resources:
+
+  # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html
+
+  LambdaFunctionController:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: aws-lambda-search-controller
+      Handler: main
+      Role: !GetAtt LambdaServiceRole.Arn
+      MemorySize: 3538
+      Code:
+        S3Bucket: !Sub "aws-lambda-search-lambda-${AWS::AccountId}"
+        S3Key: controller.zip
+      Runtime: go1.x
+      Timeout: 10 # needs to be high to account for the cold start time otherwise it never runs
+
+  LambdaFunctionController2:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: aws-lambda-search-controller-2
+      Handler: main
+      Role: !GetAtt LambdaServiceRole.Arn
+      MemorySize: 3538
+      Code:
+        S3Bucket: !Sub "aws-lambda-search-lambda-${AWS::AccountId}"
+        S3Key: controller.zip
+      Runtime: go1.x
+      Timeout: 10 # needs to be high to account for the cold start time otherwise it never runs
+
+  LambdaFunctionNewsFetcher:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: newsfetcher
+      Handler: main
+      Role: !GetAtt LambdaServiceRole.Arn
+      MemorySize: 1024
+      Code:
+        S3Bucket: !Sub "aws-lambda-search-lambda-${AWS::AccountId}"
+        S3Key: newsfetcher.zip
+      Runtime: go1.x
+      Timeout: 10 # needs to be high to account for the cold start time otherwise it never runs
+
+  CronEvent: #logical name of the resource
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: rate(15 minutes)
+      Targets:
+        - Arn:
+            Fn::GetAtt: [ LambdaFunctionNewsFetcher , "Arn" ] #reference the lambda function by its arn
+          Id:
+            Ref: LambdaFunctionNewsFetcher
+
+  HttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: aws-lambda-api-search
+      Description: "aws lambda search API"
+      ProtocolType: HTTP
+      RouteSelectionExpression: "$request.method $request.path"
+      Version: "1.0"
+      DisableExecuteApiEndpoint: false
+      CorsConfiguration:
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+        AllowOrigins:
+          - "*"
+        AllowHeaders:
+          - "*"
+
+  HttpApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "aws-lambda-search-api-gateway-logs"
+      RetentionInDays: 1
+
+  HttpApiStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref HttpApi
+      AutoDeploy: true
+      StageName: "$default"
+      AccessLogSettings:
+        DestinationArn: !GetAtt HttpApiLogGroup.Arn
+        Format: '{"requestId":"$context.requestId","ip": "$context.identity.sourceIp","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","routeKey":"$context.routeKey","status":"$context.status","protocol":"$context.protocol","responseLength":"$context.responseLength","userId":"$context.authorizer.userId","userRole":"$context.authorizer.userRole","sessionId":"$context.authorizer.sessionId"}'
+
+  HttpSearchRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      AuthorizationType: NONE
+      RouteKey: "GET /search"
+      Target: !Sub "integrations/${HttpApiIntegration}"
+
+  HttpApiIntegration:
+    DependsOn:
+      - LambdaFunctionController
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref HttpApi
+      ConnectionType: INTERNET
+      IntegrationMethod: POST
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt LambdaFunctionController.Arn
+      PayloadFormatVersion: "2.0"
+
+  HttpSearchRoute2:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      AuthorizationType: NONE
+      RouteKey: "GET /search2"
+      Target: !Sub "integrations/${HttpApiIntegration2}"
+
+  HttpApiIntegration2:
+    DependsOn:
+      - LambdaFunctionController2
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref HttpApi
+      ConnectionType: INTERNET
+      IntegrationMethod: POST
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt LambdaFunctionController2.Arn
+      PayloadFormatVersion: "2.0"
+
+  LambdaAPIGatewayPermission:
+    DependsOn:
+      - HttpApi
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt LambdaFunctionController.Arn
+      Principal: apigateway.amazonaws.com
+
+  LambdaAPIGatewayPermission2:
+    DependsOn:
+      - HttpApi
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt LambdaFunctionController2.Arn
+      Principal: apigateway.amazonaws.com

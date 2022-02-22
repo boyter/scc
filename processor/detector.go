@@ -167,11 +167,13 @@ func DetermineLanguage(filename string, fallbackLanguage string, possibleLanguag
 	startTime := makeTimestampNano()
 
 	var toCheck string
-	if len(content) > 20000 {
-		toCheck = string(content)[:20000]
+	if len(content) > 20_000 {
+		toCheck = string(content)[:20_000]
 	} else {
 		toCheck = string(content)
 	}
+
+	primary := ""
 
 	toSort := []languageGuess{}
 	for _, lan := range possibleLanguages {
@@ -186,6 +188,17 @@ func DetermineLanguage(filename string, fallbackLanguage string, possibleLanguag
 			}
 		}
 
+		// if no features are found that means that this one is considered the primary
+		// and as such the default fallback if we don't find a suitable number of matching
+		// keywords
+		// consider YAML files for example, where cloudformation files can also be YAML
+		// YAML can have any form so its not possible to say "this is a yaml file"
+		// so we can only say "this is likely to be a cloudformation file", and as such
+		// we need to handle a fallback case, which in this case is nothing
+		if len(langFeatures.Keywords) == 0 {
+			primary = lan
+		}
+
 		toSort = append(toSort, languageGuess{Name: lan, Count: count})
 	}
 
@@ -196,6 +209,18 @@ func DetermineLanguage(filename string, fallbackLanguage string, possibleLanguag
 
 		return toSort[i].Count > toSort[j].Count
 	})
+
+	//fmt.Println(toSort)
+	//fmt.Println(possibleLanguages)
+	//fmt.Println(primary, toSort[0].Name, toSort[0].Count)
+
+	if primary != "" && len(toSort) != 0 {
+		// OK at this point we have a primary, which means we want 3 or more matches to count as something else
+		if toSort[0].Count < 3 {
+			// we didn't find enough results, so lets return the primary in this case
+			return primary
+		}
+	}
 
 	if Verbose {
 		printWarn(fmt.Sprintf("guessing language %s for file %s", toSort[0].Name, filename))

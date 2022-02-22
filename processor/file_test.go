@@ -278,8 +278,33 @@ func TestNewFileJobYAML(t *testing.T) {
 	fi, _ := os.Stat("../examples/issue114/.travis.yml")
 	job := newFileJob("../examples/issue114/", ".travis.yml", fi)
 
-	if job.PossibleLanguages[0] != "YAML" {
-		t.Error("Expected YAML got", job.PossibleLanguages[0])
+	found := false
+	for _, j := range job.PossibleLanguages {
+		if j == "YAML" {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Error("Expected YAML in but didn't find", job.PossibleLanguages)
+	}
+}
+
+func TestNewFileJobYAMLCloudformation(t *testing.T) {
+	ProcessConstants()
+
+	fi, _ := os.Stat("../examples/issue114/.travis.yml")
+	job := newFileJob("../examples/issue114/", ".travis.yml", fi)
+
+	found := false
+	for _, j := range job.PossibleLanguages {
+		if j == "CloudFormation" {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Error("Expected CloudFormation in but didn't find", job.PossibleLanguages)
 	}
 }
 
