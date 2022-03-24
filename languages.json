@@ -631,6 +631,54 @@
     "multi_line": [],
     "quotes": []
   },
+  "Blade template": {
+    "complexitychecks": [
+      "@for ",
+      "@for(",
+      "@foreach ",
+      "@foreach(",
+      "@forelse ",
+      "@forelse(",
+      "@each ",
+      "@each (",
+      "@while ",
+      "@while(",
+      "@if ",
+      "@if(",
+      "@unless ",
+      "@unless(",
+      "@isset ",
+      "@isset(",
+      "@empty ",
+      "@empty(",
+      "@else ",
+      "@elseif ",
+      "@elseif(",
+      "@while ",
+      "@while(",
+      "@switch ",
+      "@switch (",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "blade.php"
+    ],
+    "line_comment": [],
+    "multi_line": [
+      [
+        "{{--",
+        "--}}"
+      ],
+      [
+        "<!--",
+        "-->"
+      ]
+    ],
+    "quotes": []
+  },
   "Boo": {
     "complexitychecks": [
       "for ",
