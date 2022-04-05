@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/boyter/scc/v3/processor"
 	"github.com/spf13/cobra"
@@ -15,6 +16,23 @@ func main() {
 	//f, _ := os.Create("scc.pprof")
 	//pprof.StartCPUProfile(f)
 	//defer pprof.StopCPUProfile()
+
+	if len(os.Args) == 2 && strings.HasPrefix(os.Args[1], "@") {
+		// handle "scc @flags.txt" syntax
+		filepath := strings.TrimPrefix(os.Args[1], "@")
+		b, err := os.ReadFile(filepath)
+		if err != nil {
+			fmt.Printf("Error reading flags from a file: %s\n", err)
+			os.Exit(1)
+		}
+
+		args := strings.Split(string(b), "\n")
+		var newArgs []string
+		for _, x := range args {
+			newArgs = append(newArgs, strings.TrimSpace(x))
+		}
+		os.Args = append([]string{os.Args[0]}, newArgs...)
+	}
 
 	rootCmd := &cobra.Command{
 		Use:     "scc [flags] [files or directories]",

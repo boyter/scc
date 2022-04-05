@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# make sure this script can be executed from any dir
+cd $(dirname $0)
+
 GREEN='\033[1;32m'
 RED='\033[0;31m'
 NC='\033[0m'
@@ -27,6 +30,24 @@ go build -ldflags="-s -w" || exit
 echo '```' > LANGUAGES.md
 ./scc --languages >> LANGUAGES.md
 echo '```' >> LANGUAGES.md
+
+
+echo "Running with @file flag parsing syntax"
+# include \n, \r\n and no line terminators
+echo -e "go.mod\ngo.sum\r\nLICENSE" > flags.txt
+if ./scc @flags.txt ; then
+    echo -e "${GREEN}PASSED @file flag syntax"
+    # post processing
+    rm flags.txt
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should handle @file flag parsing syntax"
+    echo -e "=======================================================${NC}"
+    # post processing
+    rm flags.txt
+    exit
+fi
+
 
 echo "Building HTML report..."
 
