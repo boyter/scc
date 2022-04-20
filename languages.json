@@ -459,6 +459,54 @@
     "multi_line": [],
     "quotes": []
   },
+  "bait": {
+    "complexitychecks": [
+      "for ",
+      "if ",
+      "else ",
+      " or ",
+      " and ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "bait"
+    ],
+    "keywords": [
+      "and",
+      "break",
+      "const ",
+      "continue",
+      "else ",
+      "fun ",
+      "import ",
+      "not ",
+      "or ",
+      "package ",
+      "return",
+      "struct "
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "nestedmultiline": true,
+    "quotes": [
+      {
+        "end": "'",
+        "start": "'"
+      },
+      {
+        "end": "`",
+        "start": "`"
+      }
+    ]
+  },
   "BASH": {
     "complexitychecks": [
       "for ",
@@ -5513,9 +5561,9 @@
       "== "
     ],
     "extensions": [
-      "sql", 
-      "dml", 
-      "ddl", 
+      "sql",
+      "dml",
+      "ddl",
       "dql"
     ],
     "line_comment": [
@@ -6686,13 +6734,7 @@
     "line_comment": [
       "//"
     ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
-    "nestedmultiline": true,
+    "multi_line": [],
     "quotes": [
       {
         "end": "\"",
