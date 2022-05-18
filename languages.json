@@ -56,6 +56,41 @@
       }
     ]
   },
+  "AppleScript": {
+    "complexitychecks": [
+      "considering ",
+      "ignoring ",
+      "repeat ",
+      "while ",
+      "if ",
+      "else ",
+      "else if ",
+      "try ",
+      "on error ",
+      "and ",
+      "or "
+    ],
+    "extensions": [
+      "applescript"
+    ],
+    "line_comment": [
+      "#",
+      "--"
+    ],
+    "multi_line": [
+      [
+        "(*",
+        "*)"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ],
+    "shebangs": []
+  },
   "ASP": {
     "complexitychecks": [
       "for ",
