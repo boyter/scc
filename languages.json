@@ -4208,6 +4208,62 @@
       }
     ]
   },
+  "MATLAB": {
+    "complexitychecks": [
+      "if ",
+      "elseif ",
+      "case ",
+      "otherwise ",
+      "try",
+      "for ",
+      "while "
+    ],
+    "extensions": [
+      "m"
+    ],
+    "keywords": [
+      "eye(",
+      "zeros(",
+      "ones(",
+      "transpose(",
+      "meshgrid(",
+      "mod(",
+      "classdef",
+      "function",
+      "disp(",
+      "sin(",
+      "tan(",
+      "cos(",
+      "plot",
+      "sqrt(",
+      "deblank(",
+      "findstr(",
+      "strrep(",
+      "strcmp(",
+      "display(",
+      "strcat(",
+      "iscellstr(",
+      "strfind(",
+      "%",
+      "function",
+      "fprintf("
+    ],
+    "line_comment": [
+      "%"
+    ],
+    "multi_line": [ 
+      [
+        "%{",
+        "}%"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
   "Modula3": {
     "complexitychecks": [
       "for ",
@@ -4449,10 +4505,27 @@
     "extensions": [
       "m"
     ],
+    "keywords": [
+      "#include",
+      "printf",
+      "stdio.h",
+      ".h",
+      "@import",
+      "@interface",
+      "@property",
+      "@implementation",
+      "NSArray",
+      "#pragma",
+      "static",
+      "const",
+      "atomic",
+      "@end",
+      "//"
+    ],
     "line_comment": [
       "//"
     ],
-    "multi_line": [
+    "multi_line": [ 
       [
         "/*",
         "*/"

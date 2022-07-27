@@ -895,6 +895,21 @@ do
     fi
 done
 
+
+# Issue339
+for i in 'MATLAB ' 'Objective C '
+do
+    if ./scc "examples/issue339/" | grep -q "$i "; then
+        echo -e "${GREEN}PASSED $i Language Check"
+    else
+        echo -e "${RED}======================================================="
+        echo -e "FAILED Should be able to find $i"
+        echo -e "=======================================================${NC}"
+        exit
+    fi
+done
+
+
 # Extra case for longer languages that are normally truncated
 for i in 'CloudFormation (YAM' 'CloudFormation (JSO'
 do
