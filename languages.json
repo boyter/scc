@@ -4245,7 +4245,6 @@
       "iscellstr(",
       "strfind(",
       "%",
-      "function",
       "fprintf("
     ],
     "line_comment": [
