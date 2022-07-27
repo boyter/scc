@@ -6418,6 +6418,26 @@
     "multi_line": [],
     "quotes": []
   },
+  "Teal": {
+    "complexitychecks": [
+      "loop:",
+      "retsub",
+      "callsub ",
+      "&&",
+      "==",
+      "||",
+      "<=",
+      ">="
+    ],
+    "extensions": [
+      "teal"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [],
+    "quotes": []
+  },
   "Terraform": {
     "complexitychecks": [
       "count",
