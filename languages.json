@@ -37,13 +37,15 @@
       "≠",
       "~",
       "¨",
-      "="
+      "=",
+      ":"
     ],
     "extensions": [
       "apl",
       "aplf",
       "apln",
-      "aplc"
+      "aplc",
+      "dyalog"
     ],
     "line_comment": [
       "⍝"
@@ -3522,6 +3524,32 @@
       }
     ]
   },
+  "K": {
+    "complexitychecks": [
+      "'",
+      "/",
+      "\\",
+      "':",
+      "/:",
+      "\\:",
+      "|",
+      "&",
+      "!",
+      "="
+    ],
+    "extensions": [
+      "k"
+    ],
+    "line_comment": [
+      "/"
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "Korn Shell": {
     "complexitychecks": [
       "for ",
@@ -4384,6 +4412,34 @@
         "end": "\\\"",
         "start": "\\\""
       },
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
+  "Nial": {
+    "complexitychecks": [
+      "case ",
+      "for ",
+      "if ",
+      "repeat ",
+      "while ",
+      "or ",
+      "and ",
+      "= ",
+      "equal ",
+      "~= ",
+      "unequal "
+    ],
+    "extensions": [
+      "ndf"
+    ],
+    "line_comment": [
+      "%"
+    ],
+    "multi_line": [],
+    "quotes": [
       {
         "end": "'",
         "start": "'"
@@ -5641,6 +5697,31 @@
       {
         "end": "\"",
         "start": "\""
+      }
+    ]
+  },
+  "SNOBOL": {
+    "complexitychecks": [
+      ":(",
+      ":s(",
+      ":f(",
+      "eq ",
+      "ne "
+    ],
+    "extensions": [
+      "sno"
+    ],
+    "line_comment": [
+      "*"
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
       }
     ]
   },
