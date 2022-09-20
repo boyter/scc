@@ -770,7 +770,7 @@ Summary
 
 If you enable duplicate detection expect performance to fall by about 20% in `scc`.
 
-Performance is tracked over each release and presented below. Currently the most recent release 3.0.0 is the fastest version.
+Performance is tracked over each release and presented below. Currently, the most recent release 3.1.0 is the fastest version.
 
 <img alt="scc" src=https://github.com/boyter/scc/raw/master/performance-over-time.png>
 
@@ -885,17 +885,7 @@ scc is pretty well tested with many unit, integration and benchmarks to ensure t
 
 ### Package
 
-Run go build for windows and linux then the following in linux, keep in mind need to update the version
-
-```
-GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-3.0.0-x86_64-apple-darwin.zip scc
-GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" && zip -r9 scc-3.0.0-arm64-apple-darwin.zip scc
-GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-3.0.0-x86_64-pc-windows.zip scc.exe
-GOOS=windows GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-3.0.0-i386-pc-windows.zip scc.exe
-GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" && zip -r9 scc-3.0.0-x86_64-unknown-linux.zip scc
-GOOS=linux GOARCH=386 go build -ldflags="-s -w" && zip -r9 scc-3.0.0-i386-unknown-linux.zip scc
-GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" && zip -r9 scc-3.0.0-arm64-unknown-linux.zip scc
-```
+Packaging as of version v3.1.0 is done through https://goreleaser.com/ 
 
 ### Containers
 
