@@ -45,6 +45,12 @@ Or if you have [homebrew](https://brew.sh/) installed
 
 `$ brew install scc`
 
+#### MacPorts
+
+On macOS, you can also install via [MacPorts](https://www.macports.org)
+
+`$ sudo port install scc`
+
 #### Scoop
 
 Or if you are using [Scoop](https://scoop.sh/) on Windows
