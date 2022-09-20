@@ -129,6 +129,10 @@ wget https://github.com/boyter/scc/releases/download/v3.0.0/scc-3.0.0-x86_64-unk
 unzip scc-3.0.0-x86_64-unknown-linux.zip
 cp scc /usr/local/bin/scc3.0.0
 
+wget https://github.com/boyter/scc/releases/download/v3.1.0/scc_3.1.0_Linux_x86_64.tar.gz
+unzip scc_3.1.0_Linux_x86_64.tar.gz
+cp scc /usr/local/bin/scc3.1.0
+
 # Now setup the most recent as the default
 mv scc /usr/local/bin/scc
 
@@ -178,20 +182,20 @@ git clone --depth=1 https://github.com/torvalds/linux.git
 
 # Regression test all versions of scc
 echo "Running regression benchmark"
-hyperfine 'scc1.0.0 linux' 'scc1.1.0 linux' 'scc1.2.0 linux' 'scc1.3.0 linux' 'scc1.4.0 linux' 'scc1.5.0 linux' 'scc1.6.0 linux' 'scc1.7.0 linux' 'scc1.8.0 linux' 'scc1.9.0 linux' 'scc1.10.0 linux' 'scc1.11.0 linux' 'scc1.12.0 linux' 'scc1.12.1 linux' 'scc2.0.0 linux' 'scc2.1.0 linux' 'scc2.2.0 linux' 'scc2.3.0 linux' 'scc2.4.0 linux' 'scc2.5.0 linux' 'scc2.6.0 linux' 'scc2.7.0 linux' 'scc2.8.0 linux' 'scc2.9.0 linux' 'scc2.9.1 linux' 'scc2.10.0 linux' 'scc2.11.0 linux' 'scc2.12.0 linux' 'scc2.13.0 linux' 'scc3.0.0 linux' > benchmark_regression.txt
+hyperfine 'scc1.0.0 linux' 'scc1.1.0 linux' 'scc1.2.0 linux' 'scc1.3.0 linux' 'scc1.4.0 linux' 'scc1.5.0 linux' 'scc1.6.0 linux' 'scc1.7.0 linux' 'scc1.8.0 linux' 'scc1.9.0 linux' 'scc1.10.0 linux' 'scc1.11.0 linux' 'scc1.12.0 linux' 'scc1.12.1 linux' 'scc2.0.0 linux' 'scc2.1.0 linux' 'scc2.2.0 linux' 'scc2.3.0 linux' 'scc2.4.0 linux' 'scc2.5.0 linux' 'scc2.6.0 linux' 'scc2.7.0 linux' 'scc2.8.0 linux' 'scc2.9.0 linux' 'scc2.9.1 linux' 'scc2.10.0 linux' 'scc2.11.0 linux' 'scc2.12.0 linux' 'scc2.13.0 linux' 'scc3.0.0 linux' 'scc3.1.0 linux' > benchmark_regression.txt
 
 # Benchmark against everything
 echo "Running artificial benchmark"
 hyperfine 'scc artificial' 'scc -c artificial' 'tokei artificial' 'loc artificial' 'polyglot artificial' > benchmark_artificial.txt
 
 echo "Running redis benchmark"
-hyperfine 'scc redis' 'scc -c redis' 'tokei redis' 'loc redis' 'polyglot redis' 'gocloc redis' > benchmark_redis.txt
+hyperfine 'scc redis' 'scc -c redis' 'tokei redis' 'loc redis' 'polyglot redis' > benchmark_redis.txt
 
 echo "Running cpython benchmark"
-hyperfine 'scc cpython' 'scc -c cpython' 'tokei cpython' 'loc cpython' 'polyglot cpython' 'gocloc cpython' > benchmark_cpython.txt
+hyperfine 'scc cpython' 'scc -c cpython' 'tokei cpython' 'loc cpython' 'polyglot cpython' > benchmark_cpython.txt
 
 echo "Running linux benchmark"
-hyperfine 'scc linux' 'scc -c linux' 'tokei linux' 'loc linux' 'polyglot linux' 'gocloc linux' > benchmark_linux.txt
+hyperfine 'scc linux' 'scc -c linux' 'tokei linux' 'loc linux' 'polyglot linux' > benchmark_linux.txt
 
 #echo "Running linux10 benchmark"
 #hyperfine 'scc linux10' 'scc -c linux10' 'tokei linux10' 'loc linux10' 'polyglot linux10' > benchmark_linux10.txt

@@ -200,7 +200,7 @@ features listed below may be missing from your installation.
 ```
 $ scc -h                                                                                      
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 3.1.0 (beta)
+Version 3.1.0
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
@@ -666,7 +666,7 @@ However if you want greater performance and you have RAM to spare you can disabl
 Benchmarks are run on fresh 32 Core CPU Optimised Digital Ocean Virtual Machine 2021/02/25 all done using [hyperfine](https://github.com/sharkdp/hyperfine) with 3 warm-up runs and 10 timed runs.
 
 ```
-scc v3.0.0
+scc v3.1.0
 tokei v12.1.2
 loc v0.5.0
 polyglot v0.5.29
@@ -677,33 +677,96 @@ See https://github.com/boyter/scc/blob/master/benchmark.sh to see how the benchm
 
 #### Redis https://github.com/antirez/redis/
 
-| Program | Runtime |
-|---|---|
-| scc | 18.2 ms ±   1.8 ms |
-| scc (no complexity) | 15.0 ms ±   1.6 ms |
-| tokei | 26.9 ms ±   5.7 ms |
-| loc | 47.6 ms ±  23.8 ms |
-| polyglot | 20.4 ms ±   1.1 ms |
+```shell
+Benchmark 1: scc redis
+  Time (mean ± σ):      20.2 ms ±   1.7 ms    [User: 127.1 ms, System: 47.0 ms]
+  Range (min … max):    16.8 ms …  25.8 ms    132 runs
+ 
+Benchmark 2: scc -c redis
+  Time (mean ± σ):      17.0 ms ±   1.4 ms    [User: 91.6 ms, System: 32.7 ms]
+  Range (min … max):    14.3 ms …  21.6 ms    169 runs
+ 
+Benchmark 3: tokei redis
+  Time (mean ± σ):      33.7 ms ±   5.0 ms    [User: 246.4 ms, System: 55.0 ms]
+  Range (min … max):    24.2 ms …  47.5 ms    76 runs
+ 
+Benchmark 4: loc redis
+  Time (mean ± σ):      36.9 ms ±  30.6 ms    [User: 756.5 ms, System: 20.7 ms]
+  Range (min … max):     9.9 ms … 123.9 ms    71 runs
+ 
+Benchmark 5: polyglot redis
+  Time (mean ± σ):      21.8 ms ±   0.9 ms    [User: 32.1 ms, System: 46.3 ms]
+  Range (min … max):    20.0 ms …  28.4 ms    138 runs
+ 
+Summary
+  'scc -c redis' ran
+    1.19 ± 0.14 times faster than 'scc redis'
+    1.28 ± 0.12 times faster than 'polyglot redis'
+    1.98 ± 0.33 times faster than 'tokei redis'
+    2.17 ± 1.81 times faster than 'loc redis'
+```
 
 #### CPython https://github.com/python/cpython
 
-| Program | Runtime |
-|---|---|
-| scc | 50.5 ms ±   4.2 ms |
-| scc (no complexity) | 43.8 ms ±   3.3 ms |
-| tokei | 90.2 ms ±   2.8 ms |
-| loc | 143.3 ms ±  20.9 ms |
-| polyglot | 86.6 ms ±   3.4 ms |
+```shell
+Benchmark 1: scc cpython
+  Time (mean ± σ):      52.6 ms ±   3.8 ms    [User: 624.3 ms, System: 121.5 ms]
+  Range (min … max):    45.3 ms …  62.3 ms    47 runs
+ 
+Benchmark 2: scc -c cpython
+  Time (mean ± σ):      46.0 ms ±   3.8 ms    [User: 468.0 ms, System: 111.2 ms]
+  Range (min … max):    40.0 ms …  58.0 ms    67 runs
+ 
+Benchmark 3: tokei cpython
+  Time (mean ± σ):     110.4 ms ±   6.6 ms    [User: 1239.8 ms, System: 114.5 ms]
+  Range (min … max):    98.3 ms … 123.6 ms    26 runs
+ 
+Benchmark 4: loc cpython
+  Time (mean ± σ):      52.9 ms ±  25.2 ms    [User: 1103.0 ms, System: 57.4 ms]
+  Range (min … max):    30.0 ms … 118.9 ms    49 runs
+ 
+Benchmark 5: polyglot cpython
+  Time (mean ± σ):      82.4 ms ±   3.0 ms    [User: 153.3 ms, System: 168.8 ms]
+  Range (min … max):    74.8 ms …  88.7 ms    36 runs
+ 
+Summary
+  'scc -c cpython' ran
+    1.14 ± 0.13 times faster than 'scc cpython'
+    1.15 ± 0.56 times faster than 'loc cpython'
+    1.79 ± 0.16 times faster than 'polyglot cpython'
+    2.40 ± 0.24 times faster than 'tokei cpython'
+```
 
 #### Linux Kernel https://github.com/torvalds/linux
 
-| Program | Runtime |
-|---|---|
-| scc | 612.1 ms ±  16.1 ms |
-| scc (no complexity) | 462.1 ms ±  16.8 ms |
-| tokei | 883.3 ms ±  23.4 ms |
-| loc | 2.145 s ±  0.049 s |
-| polyglot | 1.215 s ±  0.047 s s |
+```shell
+Benchmark 1: scc linux
+  Time (mean ± σ):     743.0 ms ±  18.8 ms    [User: 17133.4 ms, System: 1280.2 ms]
+  Range (min … max):   709.4 ms … 778.8 ms    10 runs
+ 
+Benchmark 2: scc -c linux
+  Time (mean ± σ):     528.8 ms ±  11.8 ms    [User: 10272.0 ms, System: 1236.9 ms]
+  Range (min … max):   508.9 ms … 543.1 ms    10 runs
+ 
+Benchmark 3: tokei linux
+  Time (mean ± σ):     736.5 ms ±  18.2 ms    [User: 13098.3 ms, System: 2276.0 ms]
+  Range (min … max):   699.3 ms … 760.8 ms    10 runs
+ 
+Benchmark 4: loc linux
+  Time (mean ± σ):     567.1 ms ± 113.4 ms    [User: 15984.5 ms, System: 1037.0 ms]
+  Range (min … max):   381.8 ms … 656.3 ms    10 runs
+ 
+Benchmark 5: polyglot linux
+  Time (mean ± σ):      1.241 s ±  0.027 s    [User: 2.973 s, System: 2.636 s]
+  Range (min … max):    1.196 s …  1.299 s    10 runs
+ 
+Summary
+  'scc -c linux' ran
+    1.07 ± 0.22 times faster than 'loc linux'
+    1.39 ± 0.05 times faster than 'tokei linux'
+    1.41 ± 0.05 times faster than 'scc linux'
+    2.35 ± 0.07 times faster than 'polyglot linux'
+```
 
 If you enable duplicate detection expect performance to fall by about 20% in `scc`.
 
@@ -711,7 +774,7 @@ Performance is tracked over each release and presented below. Currently the most
 
 <img alt="scc" src=https://github.com/boyter/scc/raw/master/performance-over-time.png>
 
-https://jsfiddle.net/u4m6xysv/3/
+https://jsfiddle.net/m1w7kgqv/
 
 ### CI/CD Support
 
