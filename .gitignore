@@ -37,3 +37,5 @@ gitignorefile.txt
 # macOS
 
 .DS_Store
+
+dist/
