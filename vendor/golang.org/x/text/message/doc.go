@@ -5,22 +5,21 @@
 // Package message implements formatted I/O for localized strings with functions
 // analogous to the fmt's print functions. It is a drop-in replacement for fmt.
 //
-//
-// Localized Formatting
+// # Localized Formatting
 //
 // A format string can be localized by replacing any of the print functions of
 // fmt with an equivalent call to a Printer.
 //
-//    p := message.NewPrinter(message.MatchLanguage("en"))
-//    p.Println(123456.78) // Prints 123,456.78
+//	p := message.NewPrinter(message.MatchLanguage("en"))
+//	p.Println(123456.78) // Prints 123,456.78
 //
-//    p.Printf("%d ducks in a row", 4331) // Prints 4,331 ducks in a row
+//	p.Printf("%d ducks in a row", 4331) // Prints 4,331 ducks in a row
 //
-//    p := message.NewPrinter(message.MatchLanguage("nl"))
-//    p.Println("Hoogte: %f meter", 1244.9) // Prints Hoogte: 1.244,9 meter
+//	p := message.NewPrinter(message.MatchLanguage("nl"))
+//	p.Println("Hoogte: %f meter", 1244.9) // Prints Hoogte: 1.244,9 meter
 //
-//    p := message.NewPrinter(message.MatchLanguage("bn"))
-//    p.Println(123456.78) // Prints ১,২৩,৪৫৬.৭৮
+//	p := message.NewPrinter(message.MatchLanguage("bn"))
+//	p.Println(123456.78) // Prints ১,২৩,৪৫৬.৭৮
 //
 // Printer currently supports numbers and specialized types for which packages
 // exist in x/text. Other builtin types such as time.Time and slices are
@@ -34,8 +33,7 @@
 //
 // See package fmt for more options.
 //
-//
-// Translation
+// # Translation
 //
 // The format strings that are passed to Printf, Sprintf, Fprintf, or Errorf
 // are used as keys to look up translations for the specified languages.
@@ -43,34 +41,35 @@
 //
 // One can use arbitrary keys to distinguish between otherwise ambiguous
 // strings:
-//    p := message.NewPrinter(language.English)
-//    p.Printf("archive(noun)")  // Prints "archive"
-//    p.Printf("archive(verb)")  // Prints "archive"
 //
-//    p := message.NewPrinter(language.German)
-//    p.Printf("archive(noun)")  // Prints "Archiv"
-//    p.Printf("archive(verb)")  // Prints "archivieren"
+//	p := message.NewPrinter(language.English)
+//	p.Printf("archive(noun)")  // Prints "archive"
+//	p.Printf("archive(verb)")  // Prints "archive"
+//
+//	p := message.NewPrinter(language.German)
+//	p.Printf("archive(noun)")  // Prints "Archiv"
+//	p.Printf("archive(verb)")  // Prints "archivieren"
 //
 // To retain the fallback functionality, use Key:
-//    p.Printf(message.Key("archive(noun)", "archive"))
-//    p.Printf(message.Key("archive(verb)", "archive"))
 //
+//	p.Printf(message.Key("archive(noun)", "archive"))
+//	p.Printf(message.Key("archive(verb)", "archive"))
 //
-// Translation Pipeline
+// # Translation Pipeline
 //
 // Format strings that contain text need to be translated to support different
 // locales. The first step is to extract strings that need to be translated.
 //
-// 1. Install gotext
-//    go get -u golang.org/x/text/cmd/gotext
-//    gotext -help
+//  1. Install gotext
+//     go get -u golang.org/x/text/cmd/gotext
+//     gotext -help
 //
 // 2. Mark strings in your source to be translated by using message.Printer,
 // instead of the functions of the fmt package.
 //
 // 3. Extract the strings from your source
 //
-//    gotext extract
+//	gotext extract
 //
 // The output will be written to the textdata directory.
 //
@@ -88,13 +87,11 @@
 // see also package golang.org/x/text/message/catalog can be used to implement
 // either dynamic or static loading of messages.
 //
-//
-// Plural and Gender Forms
+// # Plural and Gender Forms
 //
 // Translated messages can vary based on the plural and gender forms of
 // substitution values. In general, it is up to the translators to provide
 // alternative translations for such forms. See the packages in
 // golang.org/x/text/feature and golang.org/x/text/message/catalog for more
 // information.
-//
 package message

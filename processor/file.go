@@ -280,6 +280,22 @@ func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 			}
 		}
 
+		if len(ExcludeFilename) != 0 {
+			ok := true
+			for _, x := range ExcludeFilename {
+				if strings.Contains(name, x) {
+					ok = false
+				}
+			}
+
+			if !ok {
+				if Verbose {
+					printWarn(fmt.Sprintf("skipping file as in exclude file list: %s", name))
+				}
+				return nil
+			}
+		}
+
 		for _, l := range language {
 			LoadLanguageFeature(l)
 		}

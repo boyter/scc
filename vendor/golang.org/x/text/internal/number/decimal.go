@@ -33,13 +33,14 @@ const maxIntDigits = 20
 // may point outside a valid position in Digits.
 //
 // Examples:
-//      Number     Decimal
-//      12345      Digits: [1, 2, 3, 4, 5], Exp: 5
-//      12.345     Digits: [1, 2, 3, 4, 5], Exp: 2
-//      12000      Digits: [1, 2],          Exp: 5
-//      12000.00   Digits: [1, 2],          Exp: 5
-//      0.00123    Digits: [1, 2, 3],       Exp: -2
-//      0          Digits: [],              Exp: 0
+//
+//	Number     Decimal
+//	12345      Digits: [1, 2, 3, 4, 5], Exp: 5
+//	12.345     Digits: [1, 2, 3, 4, 5], Exp: 2
+//	12000      Digits: [1, 2],          Exp: 5
+//	12000.00   Digits: [1, 2],          Exp: 5
+//	0.00123    Digits: [1, 2, 3],       Exp: -2
+//	0          Digits: [],              Exp: 0
 type Decimal struct {
 	digits
 
@@ -60,22 +61,23 @@ type digits struct {
 // engineering notation. Digits must have at least one digit.
 //
 // Examples:
-//      Number     Decimal
-//    decimal
-//      12345      Digits: [1, 2, 3, 4, 5], Exp: 5  End: 5
-//      12.345     Digits: [1, 2, 3, 4, 5], Exp: 2  End: 5
-//      12000      Digits: [1, 2],          Exp: 5  End: 5
-//      12000.00   Digits: [1, 2],          Exp: 5  End: 7
-//      0.00123    Digits: [1, 2, 3],       Exp: -2 End: 3
-//      0          Digits: [],              Exp: 0  End: 1
-//    scientific (actual exp is Exp - Comma)
-//      0e0        Digits: [0],             Exp: 1, End: 1, Comma: 1
-//      .0e0       Digits: [0],             Exp: 0, End: 1, Comma: 0
-//      0.0e0      Digits: [0],             Exp: 1, End: 2, Comma: 1
-//      1.23e4     Digits: [1, 2, 3],       Exp: 5, End: 3, Comma: 1
-//      .123e5     Digits: [1, 2, 3],       Exp: 5, End: 3, Comma: 0
-//    engineering
-//      12.3e3     Digits: [1, 2, 3],       Exp: 5, End: 3, Comma: 2
+//
+//	  Number     Decimal
+//	decimal
+//	  12345      Digits: [1, 2, 3, 4, 5], Exp: 5  End: 5
+//	  12.345     Digits: [1, 2, 3, 4, 5], Exp: 2  End: 5
+//	  12000      Digits: [1, 2],          Exp: 5  End: 5
+//	  12000.00   Digits: [1, 2],          Exp: 5  End: 7
+//	  0.00123    Digits: [1, 2, 3],       Exp: -2 End: 3
+//	  0          Digits: [],              Exp: 0  End: 1
+//	scientific (actual exp is Exp - Comma)
+//	  0e0        Digits: [0],             Exp: 1, End: 1, Comma: 1
+//	  .0e0       Digits: [0],             Exp: 0, End: 1, Comma: 0
+//	  0.0e0      Digits: [0],             Exp: 1, End: 2, Comma: 1
+//	  1.23e4     Digits: [1, 2, 3],       Exp: 5, End: 3, Comma: 1
+//	  .123e5     Digits: [1, 2, 3],       Exp: 5, End: 3, Comma: 0
+//	engineering
+//	  12.3e3     Digits: [1, 2, 3],       Exp: 5, End: 3, Comma: 2
 type Digits struct {
 	digits
 	// End indicates the end position of the number.

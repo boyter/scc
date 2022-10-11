@@ -13,8 +13,7 @@
 // language. The Loader interface defines a source of dictionaries. A
 // translation of a format string is represented by a Message.
 //
-//
-// Catalogs
+// # Catalogs
 //
 // A Catalog defines a programmatic interface for setting message translations.
 // It maintains a set of per-language dictionaries with translations for a set
@@ -24,8 +23,7 @@
 // the key. For example, a Dictionary for "en-GB" could leave out entries that
 // are identical to those in a dictionary for "en".
 //
-//
-// Messages
+// # Messages
 //
 // A Message is a format string which varies on the value of substitution
 // variables. For instance, to indicate the number of results one could want "no
@@ -39,8 +37,7 @@
 // to selected string. This separation of concerns allows Catalog to be used to
 // store any kind of formatting strings.
 //
-//
-// Selecting messages based on linguistic features of substitution arguments
+// # Selecting messages based on linguistic features of substitution arguments
 //
 // Messages may vary based on any linguistic features of the argument values.
 // The most common one is plural form, but others exist.
@@ -48,10 +45,10 @@
 // Selection messages are provided in packages that provide support for a
 // specific linguistic feature. The following snippet uses plural.Select:
 //
-//   catalog.Set(language.English, "You are %d minute(s) late.",
-//       plural.Select(1,
-//           "one", "You are 1 minute late.",
-//           "other", "You are %d minutes late."))
+//	catalog.Set(language.English, "You are %d minute(s) late.",
+//	    plural.Select(1,
+//	        "one", "You are 1 minute late.",
+//	        "other", "You are %d minutes late."))
 //
 // In this example, a message is stored in the Catalog where one of two messages
 // is selected based on the first argument, a number. The first message is
@@ -64,47 +61,46 @@
 // Selects can be nested. This allows selecting sentences based on features of
 // multiple arguments or multiple linguistic properties of a single argument.
 //
-//
-// String interpolation
+// # String interpolation
 //
 // There is often a lot of commonality between the possible variants of a
 // message. For instance, in the example above the word "minute" varies based on
 // the plural catogory of the argument, but the rest of the sentence is
 // identical. Using interpolation the above message can be rewritten as:
 //
-//   catalog.Set(language.English, "You are %d minute(s) late.",
-//       catalog.Var("minutes",
-//           plural.Select(1, "one", "minute", "other", "minutes")),
-//       catalog.String("You are %[1]d ${minutes} late."))
+//	catalog.Set(language.English, "You are %d minute(s) late.",
+//	    catalog.Var("minutes",
+//	        plural.Select(1, "one", "minute", "other", "minutes")),
+//	    catalog.String("You are %[1]d ${minutes} late."))
 //
 // Var is defined to return the variable name if the message does not yield a
 // match. This allows us to further simplify this snippet to
 //
-//   catalog.Set(language.English, "You are %d minute(s) late.",
-//       catalog.Var("minutes", plural.Select(1, "one", "minute")),
-//       catalog.String("You are %d ${minutes} late."))
+//	catalog.Set(language.English, "You are %d minute(s) late.",
+//	    catalog.Var("minutes", plural.Select(1, "one", "minute")),
+//	    catalog.String("You are %d ${minutes} late."))
 //
 // Overall this is still only a minor improvement, but things can get a lot more
 // unwieldy if more than one linguistic feature is used to determine a message
 // variant. Consider the following example:
 //
-//   // argument 1: list of hosts, argument 2: list of guests
-//   catalog.Set(language.English, "%[1]v invite(s) %[2]v to their party.",
-//     catalog.Var("their",
-//         plural.Select(1,
-//             "one", gender.Select(1, "female", "her", "other", "his"))),
-//     catalog.Var("invites", plural.Select(1, "one", "invite"))
-//     catalog.String("%[1]v ${invites} %[2]v to ${their} party.")),
+//	// argument 1: list of hosts, argument 2: list of guests
+//	catalog.Set(language.English, "%[1]v invite(s) %[2]v to their party.",
+//	  catalog.Var("their",
+//	      plural.Select(1,
+//	          "one", gender.Select(1, "female", "her", "other", "his"))),
+//	  catalog.Var("invites", plural.Select(1, "one", "invite"))
+//	  catalog.String("%[1]v ${invites} %[2]v to ${their} party.")),
 //
 // Without variable substitution, this would have to be written as
 //
-//   // argument 1: list of hosts, argument 2: list of guests
-//   catalog.Set(language.English, "%[1]v invite(s) %[2]v to their party.",
-//     plural.Select(1,
-//         "one", gender.Select(1,
-//             "female", "%[1]v invites %[2]v to her party."
-//             "other", "%[1]v invites %[2]v to his party."),
-//         "other", "%[1]v invites %[2]v to their party.")
+//	// argument 1: list of hosts, argument 2: list of guests
+//	catalog.Set(language.English, "%[1]v invite(s) %[2]v to their party.",
+//	  plural.Select(1,
+//	      "one", gender.Select(1,
+//	          "female", "%[1]v invites %[2]v to her party."
+//	          "other", "%[1]v invites %[2]v to his party."),
+//	      "other", "%[1]v invites %[2]v to their party.")
 //
 // Not necessarily shorter, but using variables there is less duplication and
 // the messages are more maintenance friendly. Moreover, languages may have up
@@ -113,32 +109,31 @@
 // Different messages using the same inflections can reuse variables by moving
 // them to macros. Using macros we can rewrite the message as:
 //
-//   // argument 1: list of hosts, argument 2: list of guests
-//   catalog.SetString(language.English, "%[1]v invite(s) %[2]v to their party.",
-//       "%[1]v ${invites(1)} %[2]v to ${their(1)} party.")
+//	// argument 1: list of hosts, argument 2: list of guests
+//	catalog.SetString(language.English, "%[1]v invite(s) %[2]v to their party.",
+//	    "%[1]v ${invites(1)} %[2]v to ${their(1)} party.")
 //
 // Where the following macros were defined separately.
 //
-//   catalog.SetMacro(language.English, "invites", plural.Select(1, "one", "invite"))
-//   catalog.SetMacro(language.English, "their", plural.Select(1,
-//      "one", gender.Select(1, "female", "her", "other", "his"))),
+//	catalog.SetMacro(language.English, "invites", plural.Select(1, "one", "invite"))
+//	catalog.SetMacro(language.English, "their", plural.Select(1,
+//	   "one", gender.Select(1, "female", "her", "other", "his"))),
 //
 // Placeholders use parentheses and the arguments to invoke a macro.
 //
-//
-// Looking up messages
+// # Looking up messages
 //
 // Message lookup using Catalogs is typically only done by specialized packages
 // and is not something the user should be concerned with. For instance, to
 // express the tardiness of a user using the related message we defined earlier,
 // the user may use the package message like so:
 //
-//   p := message.NewPrinter(language.English)
-//   p.Printf("You are %d minute(s) late.", 5)
+//	p := message.NewPrinter(language.English)
+//	p.Printf("You are %d minute(s) late.", 5)
 //
 // Which would print:
-//   You are 5 minutes late.
 //
+//	You are 5 minutes late.
 //
 // This package is UNDER CONSTRUCTION and its API may change.
 package catalog // import "golang.org/x/text/message/catalog"

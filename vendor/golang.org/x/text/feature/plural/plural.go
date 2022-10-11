@@ -19,7 +19,6 @@ import (
 
 // Rules defines the plural rules for all languages for a certain plural type.
 //
-//
 // This package is UNDER CONSTRUCTION and its API may change.
 type Rules struct {
 	rules          []pluralCheck
@@ -53,19 +52,19 @@ var (
 
 // getIntApprox converts the digits in slice digits[start:end] to an integer
 // according to the following rules:
-//	- Let i be asInt(digits[start:end]), where out-of-range digits are assumed
-//	  to be zero.
-//	- Result n is big if i / 10^nMod > 1.
-//	- Otherwise the result is i % 10^nMod.
+//   - Let i be asInt(digits[start:end]), where out-of-range digits are assumed
+//     to be zero.
+//   - Result n is big if i / 10^nMod > 1.
+//   - Otherwise the result is i % 10^nMod.
 //
 // For example, if digits is {1, 2, 3} and start:end is 0:5, then the result
 // for various values of nMod is:
-//	- when nMod == 2, n == big
-//	- when nMod == 3, n == big
-//	- when nMod == 4, n == big
-//	- when nMod == 5, n == 12300
-//	- when nMod == 6, n == 12300
-//	- when nMod == 7, n == 12300
+//   - when nMod == 2, n == big
+//   - when nMod == 3, n == big
+//   - when nMod == 4, n == big
+//   - when nMod == 5, n == 12300
+//   - when nMod == 6, n == 12300
+//   - when nMod == 7, n == 12300
 func getIntApprox(digits []byte, start, end, nMod, big int) (n int) {
 	// Leading 0 digits just result in 0.
 	p := start
@@ -106,12 +105,13 @@ func getIntApprox(digits []byte, start, end, nMod, big int) (n int) {
 //
 // The following table contains examples of possible arguments to represent
 // the given numbers.
-//      decimal    digits              exp    scale
-//      123        []byte{1, 2, 3}     3      0
-//      123.4      []byte{1, 2, 3, 4}  3      1
-//      123.40     []byte{1, 2, 3, 4}  3      2
-//      100000     []byte{1}           6      0
-//      100000.00  []byte{1}           6      3
+//
+//	decimal    digits              exp    scale
+//	123        []byte{1, 2, 3}     3      0
+//	123.4      []byte{1, 2, 3, 4}  3      1
+//	123.40     []byte{1, 2, 3, 4}  3      2
+//	100000     []byte{1}           6      0
+//	100000.00  []byte{1}           6      3
 func (p *Rules) MatchDigits(t language.Tag, digits []byte, exp, scale int) Form {
 	index, _ := language.CompactIndex(t)
 
@@ -153,14 +153,15 @@ func (p *Rules) matchComponents(t language.Tag, n, f, scale int) Form {
 // MatchPlural returns the plural form for the given language and plural
 // operands (as defined in
 // http://unicode.org/reports/tr35/tr35-numbers.html#Language_Plural_Rules):
-//  where
-//  	n  absolute value of the source number (integer and decimals)
-//  input
-//  	i  integer digits of n.
-//  	v  number of visible fraction digits in n, with trailing zeros.
-//  	w  number of visible fraction digits in n, without trailing zeros.
-//  	f  visible fractional digits in n, with trailing zeros (f = t * 10^(v-w))
-//  	t  visible fractional digits in n, without trailing zeros.
+//
+//	where
+//		n  absolute value of the source number (integer and decimals)
+//	input
+//		i  integer digits of n.
+//		v  number of visible fraction digits in n, with trailing zeros.
+//		w  number of visible fraction digits in n, without trailing zeros.
+//		f  visible fractional digits in n, with trailing zeros (f = t * 10^(v-w))
+//		t  visible fractional digits in n, without trailing zeros.
 //
 // If any of the operand values is too large to fit in an int, it is okay to
 // pass the value modulo 10,000,000.

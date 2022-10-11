@@ -149,6 +149,9 @@ var AllowListExtensions = []string{}
 // ExcludeListExtensions is a list of extensions which should be ignored
 var ExcludeListExtensions = []string{}
 
+// ExcludeFilename is a list of filenames which should be ignored
+var ExcludeFilename = []string{}
+
 // AverageWage is the average wage in dollars used for the COCOMO cost estimate
 var AverageWage int64 = 56286
 

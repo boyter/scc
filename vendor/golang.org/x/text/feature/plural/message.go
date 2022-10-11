@@ -35,13 +35,13 @@ type Interface interface {
 // The cases argument are pairs of selectors and messages. Selectors are of type
 // string or Form. Messages are of type string or catalog.Message. A selector
 // matches an argument if:
-//    - it is "other" or Other
-//    - it matches the plural form of the argument: "zero", "one", "two", "few",
-//      or "many", or the equivalent Form
-//    - it is of the form "=x" where x is an integer that matches the value of
-//      the argument.
-//    - it is of the form "<x" where x is an integer that is larger than the
-//      argument.
+//   - it is "other" or Other
+//   - it matches the plural form of the argument: "zero", "one", "two", "few",
+//     or "many", or the equivalent Form
+//   - it is of the form "=x" where x is an integer that matches the value of
+//     the argument.
+//   - it is of the form "<x" where x is an integer that is larger than the
+//     argument.
 //
 // The format argument determines the formatting parameters for which to
 // determine the plural form. This is especially relevant for non-integer

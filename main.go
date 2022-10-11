@@ -121,6 +121,13 @@ func main() {
 		[]string{},
 		"ignore file extensions (overrides include-ext) [comma separated list: e.g. go,java,js]",
 	)
+	flags.StringSliceVarP(
+		&processor.ExcludeFilename,
+		"exclude-file",
+		"n",
+		[]string{},
+		"ignore files with matching names [comma separated list: e.g. main.go,_test.go]",
+	)
 	flags.BoolVarP(
 		&processor.Languages,
 		"languages",

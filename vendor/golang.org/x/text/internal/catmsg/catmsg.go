@@ -9,8 +9,7 @@
 // own. For instance, the plural package provides functionality for selecting
 // translation strings based on the plural category of substitution arguments.
 //
-//
-// Encoding and Decoding
+// # Encoding and Decoding
 //
 // Catalogs store Messages encoded as a single string. Compiling a message into
 // a string both results in compacter representation and speeds up evaluation.
@@ -25,8 +24,7 @@
 // the message. This decoder takes a Decoder argument which provides the
 // counterparts for the decoding.
 //
-//
-// Renderers
+// # Renderers
 //
 // A Decoder must be initialized with a Renderer implementation. These
 // implementations must be provided by packages that use Catalogs, typically
@@ -38,22 +36,22 @@
 // as sequence of substrings passed to the Renderer. The following snippet shows
 // how to express the above example using the message package.
 //
-//   message.Set(language.English, "You are %d minute(s) late.",
-//       catalog.Var("minutes", plural.Select(1, "one", "minute")),
-//       catalog.String("You are %[1]d ${minutes} late."))
+//	message.Set(language.English, "You are %d minute(s) late.",
+//	    catalog.Var("minutes", plural.Select(1, "one", "minute")),
+//	    catalog.String("You are %[1]d ${minutes} late."))
 //
-//   p := message.NewPrinter(language.English)
-//   p.Printf("You are %d minute(s) late.", 5) // always 5 minutes late.
+//	p := message.NewPrinter(language.English)
+//	p.Printf("You are %d minute(s) late.", 5) // always 5 minutes late.
 //
 // To evaluate the Printf, package message wraps the arguments in a Renderer
 // that is passed to the catalog for message decoding. The call sequence that
 // results from evaluating the above message, assuming the person is rather
 // tardy, is:
 //
-//   Render("You are %[1]d ")
-//   Arg(1)
-//   Render("minutes")
-//   Render(" late.")
+//	Render("You are %[1]d ")
+//	Arg(1)
+//	Render("minutes")
+//	Render(" late.")
 //
 // The calls to Arg is caused by the plural.Select execution, which evaluates
 // the argument to determine whether the singular or plural message form should
@@ -249,10 +247,12 @@ func (s FirstOf) Compile(e *Encoder) error {
 // Var defines a message that can be substituted for a placeholder of the same
 // name. If an expression does not result in a string after evaluation, Name is
 // used as the substitution. For example:
-//    Var{
-//      Name:    "minutes",
-//      Message: plural.Select(1, "one", "minute"),
-//    }
+//
+//	Var{
+//	  Name:    "minutes",
+//	  Message: plural.Select(1, "one", "minute"),
+//	}
+//
 // will resolve to minute for singular and minutes for plural forms.
 type Var struct {
 	Name    string
@@ -300,13 +300,15 @@ func (r Raw) Compile(e *Encoder) (err error) {
 // calls for each placeholder and interstitial string. For example, for the
 // message: "%[1]v ${invites} %[2]v to ${their} party." The sequence of calls
 // is:
-//   d.Render("%[1]v ")
-//   d.Arg(1)
-//   d.Render(resultOfInvites)
-//   d.Render(" %[2]v to ")
-//   d.Arg(2)
-//   d.Render(resultOfTheir)
-//   d.Render(" party.")
+//
+//	d.Render("%[1]v ")
+//	d.Arg(1)
+//	d.Render(resultOfInvites)
+//	d.Render(" %[2]v to ")
+//	d.Arg(2)
+//	d.Render(resultOfTheir)
+//	d.Render(" party.")
+//
 // where the messages for "invites" and "their" both use a plural.Select
 // referring to the first argument.
 //
