@@ -2455,6 +2455,20 @@
     ],
     "quotes": []
   },
+  "FSL": {
+    "complexitychecks": [
+      "->",
+      "<-"
+    ],
+    "extensions": [
+      "fsl"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [],
+    "quotes": []
+  },
   "Futhark": {
     "complexitychecks": [
       "if ",

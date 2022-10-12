@@ -1,0 +1,151 @@
+machine_name     : "Should you use twitter?";
+machine_author   : "MachinShin ";
+machine_license  : MIT;
+machine_comment  : "#madewithfsl";
+machine_language : en;
+machine_version  : 1.0.0;
+fsl_version      : 1.0.0;
+
+start_states     : [Start];
+
+end_states       : [
+  "You can keep your Twitter account"
+  "Get off Twitter and seek help"
+  "Sorry Twitter just isn't for you"
+  "Get off Twitter"
+  "Maybe you should stick to Facebook"
+];
+
+Start -> "Is your Twitter for personal or business use?";
+"Is your Twitter for personal or business use?" 'Personal'
+    -> "Do you have a habit of revealing intimate personal details?";
+"Is your Twitter for personal or business use?" 'Business'
+    -> "Are you using Twitter to communicate\n with customers and send brand updates?";
+"Is your Twitter for personal or business use?" 'My business is personal'
+   -> "Do you distinguish your business account\n from your personal account?";
+
+"Do you have a habit of revealing intimate personal details?" 'No, I have a pretty good ability to self control'
+  -> "Are a majority of your tweets interesting,\n funny, or thought-provoking?";
+
+"Do you have a habit of revealing intimate personal details?" 'Only when I have had a little took much to drink'
+  -> "Does your boss follow you?";
+
+"Does your boss follow you?" 'Yes'
+    -> "Get off Twitter";
+"Does your boss follow you?" 'No'
+    -> "Are you just using Twitter to stalk celebrites?" -> "Get off Twitter and seek help";
+
+"Are a majority of your tweets interesting,\n funny, or thought-provoking?" 'No, they are mostly pics of my lunch or my cat'
+    -> "Are you a celebrity";
+
+"Are a majority of your tweets interesting,\n funny, or thought-provoking?" 'Yes'
+    -> "Are you capable of keeping your insights\n to 140 characters or fewer?";
+
+"Are you a celebrity" 'No'
+    -> "Maybe you should stick to Facebook";
+"Are you a celebrity" 'Yes'
+    -> "You can keep your Twitter account";
+
+"Do you distinguish your business account\n from your personal account?" 'No, of course not'
+    -> "Get off Twitter";
+
+"Do you distinguish your business account\n from your personal account?" 'Yes'
+    -> "Are you using Twitter to communicate\n with customers and send brand updates?";
+
+"Are you using Twitter to communicate\n with customers and send brand updates?" 'No, not exactly'
+    -> "You understand what Twitter is, right?";
+
+"Are you using Twitter to communicate\n with customers and send brand updates?" 'Yes'
+    -> "Do a majority of your clients or customers remember the good old days of the Coolidge Administration?";
+
+"Do a majority of your clients or customers remember the good old days of the Coolidge Administration?" 'No'
+    -> "How often do you tweet?";
+
+"Do a majority of your clients or customers remember the good old days of the Coolidge Administration?" 'Yes, and their first zeppelin ride'
+    -> "Sorry Twitter just isn't for you";
+
+"You can keep your Twitter account" <-
+  'Yes' "Do you like to know what is going on in the world\n 5-6 minutes before any world news outlet?";
+"You can keep your Twitter account" <- 'Yes' "Are a majority of your tweets\n related to your business or industry?";
+
+"Do you like to know what is going on in the world\n 5-6 minutes before any world news outlet?" 'No'
+  -> "Sorry Twitter just isn't for you";
+"Are a majority of your tweets related\n to your business or industry?" 'No'
+  -> "Sorry Twitter just isn't for you";
+
+"Do you only keep your twitter account\n for the rush you feel when your tweet is retweeted?" 'Yes'
+  -> "Really?";
+
+"Really?" 'Yes'
+  -> "Get off Twitter and seek help";
+"Really?" 'No'
+  -> "Do you only keep your twitter account\n for the rush you feel when your tweet is retweeted?";
+
+"Are you capable of keeping your insights\n to 140 characters or fewer?"
+  -> "Do you only keep your twitter account\n for the rush you feel when your tweet is retweeted?";
+
+
+"Get off Twitter" <- 'Yeah you caught me' "Wait - Are you spam or a bot?";
+ "Wait - Are you spam or a bot?" 'No' -> "How often do you tweet?";
+ "Wait - Are you spam or a bot?" <- 'Yes' "You understand what Twitter is, right?";
+
+ "How often do you tweet?" 'Hardly ever'
+    -> "Are you just using Twitter to stalk celebrites?";
+ "How often do you tweet?" '15 times a month'
+    -> "Do you only keep your twitter account\n for the rush you feel when your tweet is retweeted?";
+ "How often do you tweet?" 'Almost everyday'
+    -> "Are a majority of your tweets\n related to your business or industry?";
+
+
+
+//css for states
+
+state "Really?": {
+  shape: octagon;
+  background-color: black;
+  text-color: white;
+};
+
+state "Maybe you should stick to Facebook": {
+  shape: octagon;
+  background-color: skyblue;
+  text-color: white;
+};
+
+
+state "Get off Twitter": {
+  shape: octagon;
+  background-color: skyblue;
+  text-color: white;
+};
+
+
+state "Get off Twitter and seek help": {
+  shape: octagon;
+  background-color: skyblue;
+  text-color: white;
+};
+
+state "You can keep your Twitter account": {
+  shape: octagon;
+  background-color: skyblue;
+  text-color: white;
+};
+
+state "Sorry Twitter just isn't for you": {
+  shape: octagon;
+  background-color: skyblue;
+  text-color: white;
+};
+
+state "Does your boss follow you?" : {
+  shape: octagon;
+  background-color: yellow;
+};
+
+state Start : {
+  background-color : limegreen;
+  text-color       : white;
+  shape            : octagon;
+  linestyle        : dashed;
+};
