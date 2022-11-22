@@ -5360,6 +5360,16 @@
         "docString": true,
         "end": "'''",
         "start": "'''"
+      },
+      {
+        "docString": true,
+        "end": "\"\"\"",
+        "start": "r\"\"\""
+      },
+      {
+        "docString": true,
+        "end": "'''",
+        "start": "r'''"
       }
     ],
     "shebangs": [
