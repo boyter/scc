@@ -2510,6 +2510,17 @@
       }
     ]
   },
+  "INI": {
+    "extensions": [
+      "ini"
+    ],
+    "line_comment": [
+      "#",
+      ";"
+    ],
+    "multi_line": [],
+    "quotes": []
+  },
   "GDScript": {
     "complexitychecks": [
       "for ",
