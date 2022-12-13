@@ -4149,6 +4149,9 @@
       "csproj",
       "vbproj",
       "fsproj",
+      "vcproj",
+      "vcxproj",
+      "vcxproj.filters",
       "props",
       "targets"
     ],
