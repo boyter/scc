@@ -4133,17 +4133,7 @@
   },
   "MSBuild": {
     "complexitychecks": [
-      "for ",
-      "for(",
-      "if ",
-      "if(",
-      "switch ",
-      "while ",
-      "else ",
-      "|| ",
-      "&& ",
-      "!= ",
-      "== "
+      "Condition"
     ],
     "extensions": [
       "csproj",
