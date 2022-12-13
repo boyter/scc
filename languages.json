@@ -4152,7 +4152,12 @@
       "vcproj",
       "vcxproj",
       "vcxproj.filters",
+      "myapp",
       "props",
+      "rdlc",
+      "resx",
+      "settings",
+      "sln",
       "targets"
     ],
     "line_comment": [],
