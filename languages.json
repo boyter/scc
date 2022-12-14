@@ -4133,23 +4133,21 @@
   },
   "MSBuild": {
     "complexitychecks": [
-      "for ",
-      "for(",
-      "if ",
-      "if(",
-      "switch ",
-      "while ",
-      "else ",
-      "|| ",
-      "&& ",
-      "!= ",
-      "== "
+      "Condition"
     ],
     "extensions": [
       "csproj",
       "vbproj",
       "fsproj",
+      "vcproj",
+      "vcxproj",
+      "vcxproj.filters",
+      "myapp",
       "props",
+      "rdlc",
+      "resx",
+      "settings",
+      "sln",
       "targets"
     ],
     "line_comment": [],
