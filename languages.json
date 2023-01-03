@@ -2157,10 +2157,10 @@
       "and",
       "or",
       "xor",
-      
+
       "eq",
       "=",
-      
+
       "smart-if",
       "smart-if*",
       "smart-when",
@@ -4499,7 +4499,7 @@
     "line_comment": [
       "%"
     ],
-    "multi_line": [ 
+    "multi_line": [
       [
         "%{",
         "}%"
@@ -4801,7 +4801,7 @@
     "line_comment": [
       "//"
     ],
-    "multi_line": [ 
+    "multi_line": [
       [
         "/*",
         "*/"
@@ -5149,8 +5149,7 @@
     ],
     "shebangs": [
       "perl",
-      "perl5",
-      "perl6"
+      "perl5"
     ]
   },
   "Plain Text": {
@@ -5682,6 +5681,148 @@
         "end": "'",
         "start": "'"
       }
+    ]
+  },
+  "Raku": {
+    "complexitychecks": [
+      "== ",
+      "≡ ",
+      "!= ",
+      "≠ ",
+      "!== ",
+      "≢ ",
+      "< ",
+      "⊂ ",
+      "!< ",
+      "⊄ ",
+      "<= ",
+      "≤ ",
+      "⊆ ",
+      "!<= ",
+      "⊈ ",
+      "> ",
+      "⊃ ",
+      "!> ",
+      "⊅ ",
+      ">= ",
+      "≥ ",
+      "⊇ ",
+      "!>= ",
+      "⊉ ",
+      "=~= ",
+      "≅ ",
+      "=== ",
+      "eq ",
+      "!eq ",
+      "eqv ",
+      "ne ",
+      "gt ",
+      "ge ",
+      "lt ",
+      "le ",
+      "=:=",
+      "CATCH ",
+      "CONTROL ",
+      "DOC ",
+      "NEXT ",
+      "and ",
+      "default ",
+      "do {",
+      "else ",
+      "elsif ",
+      "emit ",
+      "for ",
+      "gather ",
+      "given ",
+      "if ",
+      "last ",
+      "loop (",
+      "next ",
+      "once ",
+      "or ",
+      "orwith ",
+      "react {",
+      "redo ",
+      "repeat ",
+      "start {",
+      "supply ",
+      "unless ",
+      "until ",
+      "when ",
+      "whenever ",
+      "while ",
+      "with ",
+      "without "
+    ],
+    "extensions": [
+      "raku",
+      "rakumod",
+      "rakutest",
+      "rakudoc",
+      "t"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [
+      [
+        "=begin",
+        "=end"
+      ],
+      [
+        "#`(",
+        ")"
+      ],
+      [
+        "#`[",
+        "]"
+      ],
+      [
+        "#`{",
+        "}"
+      ],
+      [
+        "#`｢",
+        "｣"
+      ]
+
+    ],
+    "quotes": [
+      {
+        "end": "\\\"",
+        "start": "\\\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      },
+      {
+        "end": "“",
+        "start": "„"
+      },
+      {
+        "end": "»",
+        "start": "«"
+      },
+      {
+        "end": ">>",
+        "start": "<<"
+      },
+      {
+        "end": "”",
+        "start": "“"
+      },
+      {
+        "end": "‘",
+        "start": "’"
+      },
+      {
+        "end": "｣",
+        "start": "｢"
+      }
+    ],
+    "shebangs": [
+      "raku"
     ]
   },
   "Razor": {
