@@ -3644,13 +3644,15 @@
       "for(",
       "if ",
       "if(",
-      "switch ",
       "while ",
       "else ",
+      "elseif ",
+      "elseif(",
+      "try ",
+      "catch ",
+      "finally ",
       "|| ",
-      "&& ",
-      "!= ",
-      "== "
+      "&& "
     ],
     "extensions": [
       "jl"
