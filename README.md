@@ -627,15 +627,12 @@ The output includes a metadata header containing definitions of the returned met
 # UNIT scc_lines lines
 # HELP scc_lines Number of lines.
 # TYPE scc_code count
-# UNIT scc_code lines
 # HELP scc_code Number of lines of actual code.
 # TYPE scc_comments count
 # HELP scc_comments Number of comments.
 # TYPE scc_blanks count
-# UNIT scc_blanks lines
 # HELP scc_blanks Number of blank lines.
 # TYPE scc_complexity count
-# UNIT scc_complexity lines
 # HELP scc_complexity Code complexity.
 # TYPE scc_bytes count
 # UNIT scc_bytes bytes
@@ -655,12 +652,12 @@ scc_bytes{language="Go"} 1000
 
 or, if `--by-file` is present, in per file form:
 ```text
-scc_lines{language="Go", file="./bbbb.go"} 1000
-scc_code{language="Go", file="./bbbb.go"} 1000
-scc_comments{language="Go", file="./bbbb.go"} 1000
-scc_blanks{language="Go", file="./bbbb.go"} 1000
-scc_complexity{language="Go", file="./bbbb.go"} 1000
-scc_bytes{language="Go", file="./bbbb.go"} 1000
+scc_lines{language="Go",file="./bbbb.go"} 1000
+scc_code{language="Go",file="./bbbb.go"} 1000
+scc_comments{language="Go",file="./bbbb.go"} 1000
+scc_blanks{language="Go",file="./bbbb.go"} 1000
+scc_complexity{language="Go",file="./bbbb.go"} 1000
+scc_bytes{language="Go",file="./bbbb.go"} 1000
 ```
 
 ### Performance
