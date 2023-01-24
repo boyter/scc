@@ -740,7 +740,6 @@ func TestToOpenMetricsMultiple(t *testing.T) {
 	var expectedResult = `# TYPE scc_files count
 # HELP scc_files Number of sourcecode files.
 # TYPE scc_lines count
-# UNIT scc_lines lines
 # HELP scc_lines Number of lines.
 # TYPE scc_code count
 # HELP scc_code Number of lines of actual code.
@@ -760,7 +759,6 @@ scc_comments{language="Go"} 2000
 scc_blanks{language="Go"} 2000
 scc_complexity{language="Go"} 2000
 scc_bytes{language="Go"} 2000
-# EOF
 `
 
 	if res != expectedResult {
@@ -974,7 +972,6 @@ func TestFileSummarizeOpenMetrics(t *testing.T) {
 	var expectedResult = `# TYPE scc_files count
 # HELP scc_files Number of sourcecode files.
 # TYPE scc_lines count
-# UNIT scc_lines lines
 # HELP scc_lines Number of lines.
 # TYPE scc_code count
 # HELP scc_code Number of lines of actual code.
@@ -994,7 +991,6 @@ scc_comments{language="Go"} 1000
 scc_blanks{language="Go"} 1000
 scc_complexity{language="Go"} 1000
 scc_bytes{language="Go"} 1000
-# EOF
 `
 
 	if res != expectedResult {
@@ -1028,7 +1024,6 @@ func TestFileSummarizeOpenMetricsPerFile(t *testing.T) {
 	var expectedResult = `# TYPE scc_files count
 # HELP scc_files Number of sourcecode files.
 # TYPE scc_lines count
-# UNIT scc_lines lines
 # HELP scc_lines Number of lines.
 # TYPE scc_code count
 # HELP scc_code Number of lines of actual code.
@@ -1047,7 +1042,7 @@ scc_comments{language="Go",file="C:\\bbbb.go"} 1000
 scc_blanks{language="Go",file="C:\\bbbb.go"} 1000
 scc_complexity{language="Go",file="C:\\bbbb.go"} 1000
 scc_bytes{language="Go",file="C:\\bbbb.go"} 1000
-`
+# EOF`
 
 	if res != expectedResult {
 		t.Error("Expected OpenMetrics return", res)
