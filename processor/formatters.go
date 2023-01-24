@@ -46,25 +46,21 @@ var wideFormatFileTruncate = 42
 var openMetricsMetadata = `# TYPE scc_files count
 # HELP scc_files Number of sourcecode files.
 # TYPE scc_lines count
-# UNIT scc_lines lines
 # HELP scc_lines Number of lines.
 # TYPE scc_code count
-# UNIT scc_code lines
 # HELP scc_code Number of lines of actual code.
 # TYPE scc_comments count
 # HELP scc_comments Number of comments.
 # TYPE scc_blanks count
-# UNIT scc_blanks lines
 # HELP scc_blanks Number of blank lines.
 # TYPE scc_complexity count
-# UNIT scc_complexity lines
 # HELP scc_complexity Code complexity.
 # TYPE scc_bytes count
 # UNIT scc_bytes bytes
 # HELP scc_bytes Size in bytes.
 `
 var openMetricsSummaryRecordFormat = "scc_%s{language=\"%s\"} %d\n"
-var openMetricsFileRecordFormat = "scc_%s{language=\"%s\", file=\"%s\"} %d\n"
+var openMetricsFileRecordFormat = "scc_%s{language=\"%s\",file=\"%s\"} %d\n"
 
 func sortSummaryFiles(summary *LanguageSummary) {
 	switch {
@@ -461,6 +457,7 @@ func toOpenMetricsFiles(input chan *FileJob) string {
 		sb.WriteString(fmt.Sprintf(openMetricsFileRecordFormat, "complexity", file.Language, filename, file.Complexity))
 		sb.WriteString(fmt.Sprintf(openMetricsFileRecordFormat, "bytes", file.Language, filename, file.Bytes))
 	}
+	sb.WriteString("# EOF")
 	return sb.String()
 }
 
