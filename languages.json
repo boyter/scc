@@ -7721,7 +7721,9 @@
     "extensions": [
       "vue"
     ],
-    "line_comment": [],
+    "line_comment": [
+      "//"
+    ],
     "multi_line": [
       [
         "<!--",
