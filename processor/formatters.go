@@ -11,6 +11,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -467,11 +468,17 @@ func toOpenMetricsFiles(input chan *FileJob) string {
 func toCSVStream(input chan *FileJob) string {
 	fmt.Println("Language,Location,Filename,Lines,Code,Comments,Blanks,Complexity,Bytes")
 
+	var quoteRegex = regexp.MustCompile("\"")
+
 	for result := range input {
+		// Escape quotes in location and filename then surround with quotes.
+		var location = "\"" + quoteRegex.ReplaceAllString(result.Location, "\"\"") + "\""
+		var filename = "\"" + quoteRegex.ReplaceAllString(result.Filename, "\"\"") + "\""
+
 		fmt.Println(fmt.Sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s",
 			result.Language,
-			result.Location,
-			result.Filename,
+			location,
+			filename,
 			fmt.Sprint(result.Lines),
 			fmt.Sprint(result.Code),
 			fmt.Sprint(result.Comment),
