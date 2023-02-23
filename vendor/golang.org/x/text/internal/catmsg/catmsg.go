@@ -37,8 +37,8 @@
 // how to express the above example using the message package.
 //
 //	message.Set(language.English, "You are %d minute(s) late.",
-//	    catalog.Var("minutes", plural.Select(1, "one", "minute")),
-//	    catalog.String("You are %[1]d ${minutes} late."))
+//		catalog.Var("minutes", plural.Select(1, "one", "minute")),
+//		catalog.String("You are %[1]d ${minutes} late."))
 //
 //	p := message.NewPrinter(language.English)
 //	p.Printf("You are %d minute(s) late.", 5) // always 5 minutes late.
@@ -102,20 +102,24 @@ const (
 	msgFirst
 	msgRaw
 	msgString
-	numFixed
+	msgAffix
+	// Leave some arbitrary room for future expansion: 20 should suffice.
+	numInternal = 20
 )
 
 const prefix = "golang.org/x/text/internal/catmsg."
 
 var (
+	// TODO: find a more stable way to link handles to message types.
 	mutex sync.Mutex
 	names = map[string]Handle{
 		prefix + "Vars":   msgVars,
 		prefix + "First":  msgFirst,
 		prefix + "Raw":    msgRaw,
 		prefix + "String": msgString,
+		prefix + "Affix":  msgAffix,
 	}
-	handlers = make([]Handler, numFixed)
+	handlers = make([]Handler, numInternal)
 )
 
 func init() {
@@ -158,6 +162,20 @@ func init() {
 			d.ExecuteSubstitution()
 		}
 		return true
+	}
+
+	handlers[msgAffix] = func(d *Decoder) bool {
+		// TODO: use an alternative method for common cases.
+		prefix := d.DecodeString()
+		suffix := d.DecodeString()
+		if prefix != "" {
+			d.Render(prefix)
+		}
+		ret := d.ExecuteMessage()
+		if suffix != "" {
+			d.Render(suffix)
+		}
+		return ret
 	}
 }
 
@@ -375,4 +393,25 @@ func (s String) Compile(e *Encoder) (err error) {
 		e.EncodeString(string(b))
 	}
 	return err
+}
+
+// Affix is a message that adds a prefix and suffix to another message.
+// This is mostly used add back whitespace to a translation that was stripped
+// before sending it out.
+type Affix struct {
+	Message Message
+	Prefix  string
+	Suffix  string
+}
+
+// Compile implements Message.
+func (a Affix) Compile(e *Encoder) (err error) {
+	// TODO: consider adding a special message type that just adds a single
+	// return. This is probably common enough to handle the majority of cases.
+	// Get some stats first, though.
+	e.EncodeMessageType(msgAffix)
+	e.EncodeString(a.Prefix)
+	e.EncodeString(a.Suffix)
+	e.EncodeMessage(a.Message)
+	return nil
 }

@@ -381,7 +381,7 @@ func (d *Decimal) ConvertFloat(r RoundingContext, x float64, size int) {
 	if r.Increment > 0 {
 		scale := int(r.IncrementScale)
 		mult := 1.0
-		if scale > len(scales) {
+		if scale >= len(scales) {
 			mult = math.Pow(10, float64(scale))
 		} else {
 			mult = scales[scale]

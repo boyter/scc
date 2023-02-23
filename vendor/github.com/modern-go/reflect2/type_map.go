@@ -8,12 +8,10 @@ import (
 )
 
 // typelinks1 for 1.5 ~ 1.6
-//
 //go:linkname typelinks1 reflect.typelinks
 func typelinks1() [][]unsafe.Pointer
 
 // typelinks2 for 1.7 ~
-//
 //go:linkname typelinks2 reflect.typelinks
 func typelinks2() (sections []unsafe.Pointer, offset [][]int32)
 
