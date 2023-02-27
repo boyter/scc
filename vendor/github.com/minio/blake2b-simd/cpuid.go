@@ -1,4 +1,3 @@
-//go:build (386 && !gccgo) || (amd64 && !gccgo)
 // +build 386,!gccgo amd64,!gccgo
 
 // Copyright 2016 Frank Wessels <fwessels@xs4all.nl>

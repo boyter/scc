@@ -6,7 +6,7 @@ package plural
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"reflect"
 	"strconv"
 
@@ -56,7 +56,7 @@ type Interface interface {
 func Selectf(arg int, format string, cases ...interface{}) catalog.Message {
 	var p parser
 	// Intercept the formatting parameters of format by doing a dummy print.
-	fmt.Fprintf(ioutil.Discard, format, &p)
+	fmt.Fprintf(io.Discard, format, &p)
 	m := &message{arg, kindDefault, 0, cases}
 	switch p.verb {
 	case 'g':

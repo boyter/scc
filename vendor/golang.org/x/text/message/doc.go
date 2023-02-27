@@ -16,7 +16,7 @@
 //	p.Printf("%d ducks in a row", 4331) // Prints 4,331 ducks in a row
 //
 //	p := message.NewPrinter(message.MatchLanguage("nl"))
-//	p.Println("Hoogte: %f meter", 1244.9) // Prints Hoogte: 1.244,9 meter
+//	p.Printf("Hoogte: %.1f meter", 1244.9) // Prints Hoogte: 1,244.9 meter
 //
 //	p := message.NewPrinter(message.MatchLanguage("bn"))
 //	p.Println(123456.78) // Prints ১,২৩,৪৫৬.৭৮
@@ -30,6 +30,7 @@
 //   - flag # always resorts to fmt for printing
 //   - verb 'f', 'e', 'g', 'd' use localized formatting unless the '#' flag is
 //     specified.
+//   - verb 'm' inserts a translation of a string argument.
 //
 // See package fmt for more options.
 //
@@ -60,9 +61,10 @@
 // Format strings that contain text need to be translated to support different
 // locales. The first step is to extract strings that need to be translated.
 //
-//  1. Install gotext
-//     go get -u golang.org/x/text/cmd/gotext
-//     gotext -help
+// 1. Install gotext
+//
+//	go get -u golang.org/x/text/cmd/gotext
+//	gotext -help
 //
 // 2. Mark strings in your source to be translated by using message.Printer,
 // instead of the functions of the fmt package.

@@ -24,12 +24,14 @@ github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.3
 ## explicit
 github.com/spf13/pflag
-# golang.org/x/text v0.3.0
+# golang.org/x/text v0.3.8
 ## explicit
 golang.org/x/text/feature/plural
 golang.org/x/text/internal
 golang.org/x/text/internal/catmsg
 golang.org/x/text/internal/format
+golang.org/x/text/internal/language
+golang.org/x/text/internal/language/compact
 golang.org/x/text/internal/number
 golang.org/x/text/internal/stringset
 golang.org/x/text/internal/tag
