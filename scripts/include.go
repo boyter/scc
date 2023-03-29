@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -22,8 +21,8 @@ func fatalf(f string, v ...interface{}) {
 // Reads all .json files in the current folder
 // and encodes them as strings literals in constants.go
 func generateConstants() error {
-	files, _ := ioutil.ReadDir(".")
-	out, err := ioutil.TempFile(".", "temp_constants")
+	files, _ := os.ReadDir(".")
+	out, err := os.CreateTemp(".", "temp_constants")
 	if err != nil {
 		return fmt.Errorf("failed to open temp file: %v", err)
 	}

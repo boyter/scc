@@ -7,7 +7,6 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
@@ -763,7 +762,7 @@ func fileSummarizeMulti(input chan *FileJob) string {
 				str.WriteString(val)
 				str.WriteString("\n")
 			} else {
-				err := ioutil.WriteFile(t[1], []byte(val), 0600)
+				err := os.WriteFile(t[1], []byte(val), 0600)
 				if err != nil {
 					fmt.Printf("%s unable to be written to for format %s: %s", t[1], t[0], err)
 				}

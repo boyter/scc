@@ -5,7 +5,6 @@ package processor
 import (
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -571,7 +570,7 @@ func Process() {
 	if FileOutput == "" {
 		fmt.Println(result)
 	} else {
-		_ = ioutil.WriteFile(FileOutput, []byte(result), 0644)
+		_ = os.WriteFile(FileOutput, []byte(result), 0644)
 		fmt.Println("results written to " + FileOutput)
 	}
 }
