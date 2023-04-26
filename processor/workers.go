@@ -130,8 +130,27 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, en
 			return i, currentState
 		}
 
-		// If we are in a literal string we want to ignore the \ check OR we aren't checking for special ones
-		if ignoreEscape || fileJob.Content[i-1] != '\\' {
+		is_escaped := false
+		// if there is an escape symbol before us, investigate
+		if fileJob.Content[i-1] == '\\' {
+			num_escapes := 0
+			for j := i - 1; j > 0; j -= 1 {
+				if fileJob.Content[j] == '\\' {
+					num_escapes += 1
+				} else {
+					break
+				}
+			}
+
+			// if number of escapes is even, all escapes are themselves escaped
+			// otherwise the last escape does escape current string terminator
+			if num_escapes%2 != 0 {
+				is_escaped = true
+			}
+		}
+
+		// If we are in a literal string we want to ignore escapes OR we aren't checking for special ones
+		if ignoreEscape || !is_escaped {
 			if checkForMatchSingle(fileJob.Content[i], index, endPoint, endString, fileJob) {
 				return i, SCode
 			}
