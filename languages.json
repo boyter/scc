@@ -3097,6 +3097,35 @@
     "multi_line": [],
     "quotes": []
   },
+  "Hare": {
+    "complexitychecks": [
+      "for ",
+      "if ",
+      "else ",
+      "match ",
+      "switch ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "ha"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+	"end": "`",
+        "start": "`"
+      }
+    ]
+  },
   "Haskell": {
     "complexitychecks": [
       "for ",
