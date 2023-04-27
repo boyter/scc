@@ -909,6 +909,19 @@ do
     fi
 done
 
+# Issue345 (https://github.com/boyter/scc/issues/345)
+a=$(./scc "examples/issue345/" -f csv | sed -n '2 p')
+b="C++,4,3,1,0,0,76"
+if [ "$a" == "$b" ]; then
+    echo -e "{GREEN}PASSED string termination check"
+else
+    echo -e "$a"
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should terminate the string properly"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 
 # Extra case for longer languages that are normally truncated
 for i in 'CloudFormation (YAM' 'CloudFormation (JSO'
