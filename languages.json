@@ -507,7 +507,7 @@
       "== "
     ],
     "extensions": [
-      "bait"
+      "bt"
     ],
     "keywords": [
       "and",
@@ -537,6 +537,10 @@
       {
         "end": "'",
         "start": "'"
+      },
+      {
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "`",
