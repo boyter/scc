@@ -4417,7 +4417,8 @@
       "bp"
     ],
     "filenames": [
-      "makefile"
+      "makefile",
+      "gnumakefile"
     ],
     "line_comment": [
       "#"
