@@ -90,6 +90,10 @@ jobs:
           args: ${{ env.workspace }} -i js,go,html,css
 ```
 
+#### GitLab
+
+https://about.gitlab.com/blog/2023/02/15/code-counting-in-gitlab/
+
 #### Other
 
 If you would like to assist with getting `scc` added into apt/chocolatey/etc... please submit a PR or at least raise an issue with instructions.
