@@ -7056,6 +7056,22 @@
     "multi_line": [],
     "quotes": []
   },
+  "Textile": {
+    "complexitychecks": [],
+    "extensions": [
+      "textile"
+    ],
+    "line_comment": [
+      "###. "
+    ],
+    "multi_line": [
+      [
+        "###.. ",
+        "p. "
+      ]
+    ],
+    "quotes": []
+  },
   "Thrift": {
     "complexitychecks": [],
     "extensions": [
