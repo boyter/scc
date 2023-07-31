@@ -5892,6 +5892,41 @@
     ],
     "quotes": []
   },
+  "ReScript": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== ",
+      "=== "
+    ],
+    "extensions": [
+      "res", 
+      "resi"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*", 
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "ReStructuredText": {
     "complexitychecks": [],
     "extensions": [
