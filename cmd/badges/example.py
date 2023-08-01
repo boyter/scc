@@ -4,13 +4,13 @@ from pathlib import Path
 import re
 import string
 
-import boto3
+# import boto3
 
 from datetime import datetime, timedelta
 import time
 import math
 
-s3 = boto3.client('s3')
+# s3 = boto3.client('s3')
 bucket_name = 'sloccloccode'
 
 def lambda_handler(event, context):

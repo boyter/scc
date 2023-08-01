@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"strings"
 )
@@ -41,4 +42,46 @@ func processPath(path string) (location, error) {
 	}
 
 	return location{}, nil
+}
+
+func formatCount(count float64) string {
+	//ranges = [
+	//	(1e18, 'E'),
+	//	(1e15, 'P'),
+	//	(1e12, 'T'),
+	//	(1e9, 'G'),
+	//	(1e6, 'M'),
+	//	(1e3, 'k'),
+	//]
+	//
+	//for x, y in ranges:
+	//	if count >= x:
+	//		t = str(round(count / x, 1))
+	//		if len(t) > 3:
+	//			t = t[:t.find('.')]
+	//		return t + y
+	//
+	//return str(round(count, 1))
+
+	type r struct {
+		val float64
+		sym string
+	}
+	ranges := []r{
+		{1e18, "E"},
+		{1e15, "P"},
+		{1e12, "T"},
+		{1e9, "G"},
+		{1e6, "M"},
+		{1e3, "k"},
+	}
+
+	for _, v := range ranges {
+		if count >= v.val {
+			t := math.Round(count / v.val)
+			return fmt.Sprintf("%v%v", t, v.sym)
+		}
+	}
+
+	return fmt.Sprintf("%v", math.Round(count))
 }
