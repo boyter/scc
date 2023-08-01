@@ -1,6 +1,10 @@
 package main
 
-import "testing"
+import (
+	"fmt"
+	"math"
+	"testing"
+)
 
 func Test_processPath(t *testing.T) {
 	type args struct {
@@ -28,6 +32,9 @@ func Test_processPath(t *testing.T) {
 }
 
 func Test_formatCount(t *testing.T) {
+
+	fmt.Println(math.Round(2500 / 1000))
+
 	type args struct {
 		count float64
 	}
@@ -56,6 +63,34 @@ func Test_formatCount(t *testing.T) {
 				count: 2500,
 			},
 			want: "2.5k",
+		},
+		{
+			name: "",
+			args: args{
+				count: 436465,
+			},
+			want: "436k",
+		},
+		{
+			name: "",
+			args: args{
+				count: 263804,
+			},
+			want: "264k",
+		},
+		{
+			name: "",
+			args: args{
+				count: 86400,
+			},
+			want: "86k",
+		},
+		{
+			name: "",
+			args: args{
+				count: 81.99825581739397,
+			},
+			want: "82",
 		},
 	}
 	for _, tt := range tests {
