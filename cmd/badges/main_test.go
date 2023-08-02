@@ -1,33 +1,9 @@
 package main
 
 import (
+	"reflect"
 	"testing"
 )
-
-func Test_processPath(t *testing.T) {
-	type args struct {
-		path string
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		{
-			name: "",
-			args: args{
-				path: "/github/boyter/really-cheap-chatbot/",
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, err := processPath(tt.args.path)
-			if err != nil {
-				t.Error("err")
-			}
-		})
-	}
-}
 
 func Test_formatCount(t *testing.T) {
 	type args struct {
@@ -92,6 +68,55 @@ func Test_formatCount(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := formatCount(tt.args.count); got != tt.want {
 				t.Errorf("formatCount() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_processPath(t *testing.T) {
+	type args struct {
+		path string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    location
+		wantErr bool
+	}{
+		{
+			name: "",
+			args: args{
+				path: "/github/boyter/really-cheap-chatbot/",
+			},
+			want: location{
+				Location: "github",
+				User:     "boyter",
+				Repo:     "really-cheap-chatbot",
+			},
+			wantErr: false,
+		},
+		{
+			name: "",
+			args: args{
+				path: "github/boyter/really-cheap-chatbot",
+			},
+			want: location{
+				Location: "github",
+				User:     "boyter",
+				Repo:     "really-cheap-chatbot",
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := processPath(tt.args.path)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("processPath() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("processPath() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

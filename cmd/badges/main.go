@@ -41,28 +41,14 @@ func processPath(path string) (location, error) {
 		return location{}, errors.New("")
 	}
 
-	return location{}, nil
+	return location{
+		Location: s[0],
+		User:     s[1],
+		Repo:     s[2],
+	}, nil
 }
 
 func formatCount(count float64) string {
-	//ranges = [
-	//	(1e18, 'E'),
-	//	(1e15, 'P'),
-	//	(1e12, 'T'),
-	//	(1e9, 'G'),
-	//	(1e6, 'M'),
-	//	(1e3, 'k'),
-	//]
-	//
-	//for x, y in ranges:
-	//	if count >= x:
-	//		t = str(round(count / x, 1))
-	//		if len(t) > 3:
-	//			t = t[:t.find('.')]
-	//		return t + y
-	//
-	//return str(round(count, 1))
-
 	type r struct {
 		val float64
 		sym string
