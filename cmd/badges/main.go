@@ -1,16 +1,23 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"net/http"
+	"os"
+	"os/exec"
+	"regexp"
+	"strconv"
 	"strings"
+	"time"
 )
 
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := processPath(r.URL.Path)
+		_, err := processUrlPath(r.URL.Path)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			_, _ = w.Write([]byte("you be invalid"))
@@ -59,7 +66,17 @@ type location struct {
 	Repo     string
 }
 
-func processPath(path string) (location, error) {
+func (l *location) String() string {
+	//url.Parse("https://"+l.Location)
+	return ""
+}
+
+// processUrlPath takes in a string path and returns a struct
+// that contains the location user and repo which is what most
+// repositories need
+// returns an error if we get anything other than 3 parts since thats
+// the format we expect
+func processUrlPath(path string) (location, error) {
 	path = strings.TrimPrefix(path, "/")
 	path = strings.TrimSuffix(path, "/")
 	s := strings.Split(path, "/")
@@ -74,6 +91,9 @@ func processPath(path string) (location, error) {
 	}, nil
 }
 
+// formatCount turns a float into a string usable for display
+// to the user so, 2532 would be 2.5k and such up the various
+// units
 func formatCount(count float64) string {
 	type r struct {
 		val float64
@@ -101,4 +121,130 @@ func formatCount(count float64) string {
 	}
 
 	return fmt.Sprintf("%v", math.Round(count))
+}
+
+func process(id int, s string) {
+	fmt.Println("processing", s)
+
+	// Clean target just to be sure
+	cmdArgs := []string{
+		"-rf",
+		"/tmp/scc-tmp-path-" + strconv.Itoa(id),
+	}
+
+	cmd := exec.Command("rm", cmdArgs...)
+	err := cmd.Run()
+
+	if err != nil {
+		fmt.Println("rm start", err.Error())
+		return
+	}
+
+	// Run git clone against the target
+	// 180 seconds seems enough as the kernel itself takes about 60 seconds
+	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+	defer cancel()
+
+	cmd = exec.CommandContext(ctx, "git", "clone", "--depth=1", s+".git", "/tmp/scc-tmp-path-"+strconv.Itoa(id))
+
+	cmd.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
+	resp, err := cmd.Output()
+
+	if ctx.Err() == context.DeadlineExceeded {
+		fmt.Println("git clone timed out")
+		return
+	}
+
+	if err != nil {
+		fmt.Println("git clone non-zero exit code", string(resp))
+		return
+	}
+
+	// Run scc against what we just cloned
+	fileName := processPath(s)
+
+	if fileName == "" {
+		return
+	}
+
+	cmdArgs = []string{
+		"-f",
+		"json",
+		"-o",
+		"/tmp/" + fileName,
+		"/tmp/scc-tmp-path-" + strconv.Itoa(id),
+	}
+
+	cmd = exec.Command("scc", cmdArgs...)
+	err = cmd.Run()
+
+	if err != nil {
+		fmt.Println("scc", err.Error())
+	}
+
+	//err = uploadS3File("sloccloccode", fileName, "/tmp/"+fileName)
+	//if err != nil {
+	//	fmt.Println("s3 upload", err.Error())
+	//}
+	//fmt.Println("uploaded now cleaning up")
+
+	// Cleanup
+	cmdArgs = []string{
+		"-rf",
+		"/tmp/" + fileName,
+	}
+
+	cmd = exec.Command("rm", cmdArgs...)
+	err = cmd.Run()
+
+	if err != nil {
+		fmt.Println("rm cleanup filename", err.Error())
+		return
+	}
+
+	cmdArgs = []string{
+		"-rf",
+		"/tmp/scc-tmp-path-" + strconv.Itoa(id),
+	}
+
+	cmd = exec.Command("rm", cmdArgs...)
+	err = cmd.Run()
+
+	if err != nil {
+		fmt.Println("rm cleanup", err.Error())
+		return
+	}
+}
+
+func processPath(s string) string {
+	s = strings.ToLower(s)
+	split := strings.Split(s, "/")
+
+	if len(split) != 5 {
+		return ""
+	}
+
+	sp := []string{}
+
+	for _, s := range split {
+		sp = append(sp, cleanString(s))
+	}
+
+	filename := strings.Replace(sp[2], ".com", "", -1)
+	filename = strings.Replace(filename, ".org", "", -1)
+	filename += "." + sp[3]
+	filename += "." + strings.Replace(sp[4], ".git", "", -1) + ".json"
+
+	return filename
+}
+
+func cleanString(s string) string {
+	reg, err := regexp.Compile("[^a-z0-9-._]+")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	processedString := reg.ReplaceAllString(s, "")
+
+	return processedString
 }

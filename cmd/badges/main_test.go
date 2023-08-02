@@ -110,13 +110,13 @@ func Test_processPath(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := processPath(tt.args.path)
+			got, err := processUrlPath(tt.args.path)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("processPath() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("processUrlPath() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("processPath() got = %v, want %v", got, tt.want)
+				t.Errorf("processUrlPath() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
