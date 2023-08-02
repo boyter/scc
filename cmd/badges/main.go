@@ -78,7 +78,7 @@ func formatCount(count float64) string {
 
 	for _, v := range ranges {
 		if count >= v.val {
-			t := fmt.Sprintf("%.1f", math.Round(count/v.val))
+			t := fmt.Sprintf("%.1f", math.Ceil(count/v.val*10)/10)
 
 			if len(t) > 3 {
 				t = t[:strings.Index(t, ".")]
