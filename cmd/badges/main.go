@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/boyter/scc/v3/processor"
 	"github.com/rs/zerolog/log"
 	"math"
 	"net/http"
@@ -28,25 +30,50 @@ func main() {
 			return
 		}
 
-		process(1, loc)
+		data, err := process(1, loc)
+		if err != nil {
+			log.Error().Str(uniqueCode, "03ec75c3").Err(err).Send()
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte("something bad happened sorry"))
+			return
+		}
+
+		var res []processor.LanguageSummary
+		err = json.Unmarshal(data, &res)
+		if err != nil {
+			log.Error().Str(uniqueCode, "9192cad8").Err(err).Send()
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte("something bad happened sorry"))
+			return
+		}
 
 		category := strings.TrimSpace(strings.ToLower(r.URL.Query().Get("category")))
 
 		title := ""
+		var value int64
 
 		switch category {
 		case "codes":
 			fallthrough
 		case "code":
 			title = "Code lines"
+			for _, x := range res {
+				value += x.Code
+			}
 		case "blank":
 			fallthrough
 		case "blanks":
 			title = "Blank lines"
+			for _, x := range res {
+				value += x.Blank
+			}
 		case "comment":
 			fallthrough
 		case "comments":
 			title = "Comments"
+			for _, x := range res {
+				value += x.Comment
+			}
 		case "cocomo":
 			title = "COCOMO $"
 		case "lines": // lines is the default
@@ -56,10 +83,13 @@ func main() {
 		default:
 			//
 			title = "Total lines"
+			for _, x := range res {
+				value += x.Lines
+			}
 		}
 
 		textLength := "250"
-		s := formatCount(30000)
+		s := formatCount(float64(value))
 
 		if len(s) <= 3 {
 			textLength = "200"
@@ -136,11 +166,10 @@ func formatCount(count float64) string {
 	return fmt.Sprintf("%v", math.Round(count))
 }
 
-func process(id int, s location) {
-	_, ok := cache.Get(s.String())
+func process(id int, s location) ([]byte, error) {
+	val, ok := cache.Get(s.String())
 	if ok {
-		// TODO real thing here
-		return
+		return val, nil
 	}
 
 	// Clean target just to be sure
@@ -153,8 +182,7 @@ func process(id int, s location) {
 	err := cmd.Run()
 
 	if err != nil {
-		log.Error().Err(err).Str(uniqueCode, "41b5460d").Str("loc", s.String()).Send()
-		return
+		return nil, err
 	}
 
 	// Run git clone against the target
@@ -165,23 +193,21 @@ func process(id int, s location) {
 	cmd = exec.CommandContext(ctx, "git", "clone", "--depth=1", s.String(), "/tmp/scc-tmp-path-"+strconv.Itoa(id))
 
 	cmd.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
-	resp, err := cmd.Output()
+	_, err = cmd.Output()
 
 	if ctx.Err() == context.DeadlineExceeded {
-		log.Error().Str(uniqueCode, "8f8ccc64").Str("loc", s.String()).Msg("git clone timed out")
-		return
+		return nil, err
 	}
 
 	if err != nil {
-		log.Error().Err(err).Str(uniqueCode, "f28fb388").Str("loc", s.String()).Str("resp", string(resp)).Msg("git clone non-zero exit code")
-		return
+		return nil, err
 	}
 
 	// Run scc against what we just cloned
 	fileName := processPath(s.String())
 
 	if fileName == "" {
-		return
+		return nil, errors.New("processPath returned empty")
 	}
 
 	cmdArgs = []string{
@@ -194,19 +220,15 @@ func process(id int, s location) {
 
 	cmd = exec.Command("scc", cmdArgs...)
 	err = cmd.Run()
-
 	if err != nil {
-		log.Error().Err(err).Str(uniqueCode, "3a74fde3").Str("loc", s.String()).Str("resp", string(resp)).Send()
-		return
+		return nil, err
 	}
 
 	file, err := os.ReadFile("/tmp/" + fileName)
 	if err != nil {
-		log.Error().Err(err).Str(uniqueCode, "b16570de").Str("loc", s.String()).Str("resp", string(resp)).Send()
-		return
+		return nil, err
 	}
 	cache.Add(s.String(), file)
-	//map[string]processor.LanguageSummary{}
 
 	// Cleanup
 	cmdArgs = []string{
@@ -218,8 +240,7 @@ func process(id int, s location) {
 	err = cmd.Run()
 
 	if err != nil {
-		log.Error().Err(err).Str(uniqueCode, "ed40409c").Str("loc", s.String()).Str("resp", string(resp)).Send()
-		return
+		return nil, err
 	}
 
 	cmdArgs = []string{
@@ -231,9 +252,10 @@ func process(id int, s location) {
 	err = cmd.Run()
 
 	if err != nil {
-		log.Error().Err(err).Str(uniqueCode, "2bca46a1").Str("loc", s.String()).Str("resp", string(resp)).Send()
-		return
+		return nil, err
 	}
+
+	return file, nil
 }
 
 func processPath(s string) string {
