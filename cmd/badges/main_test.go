@@ -89,7 +89,7 @@ func Test_processPath(t *testing.T) {
 				path: "/github/boyter/really-cheap-chatbot/",
 			},
 			want: location{
-				Location: "github",
+				Provider: "github",
 				User:     "boyter",
 				Repo:     "really-cheap-chatbot",
 			},
@@ -101,7 +101,7 @@ func Test_processPath(t *testing.T) {
 				path: "github/boyter/really-cheap-chatbot",
 			},
 			want: location{
-				Location: "github",
+				Provider: "github",
 				User:     "boyter",
 				Repo:     "really-cheap-chatbot",
 			},
