@@ -49,44 +49,7 @@ func main() {
 
 		category := strings.TrimSpace(strings.ToLower(r.URL.Query().Get("category")))
 
-		title := ""
-		var value int64
-
-		switch category {
-		case "codes":
-			fallthrough
-		case "code":
-			title = "Code lines"
-			for _, x := range res {
-				value += x.Code
-			}
-		case "blank":
-			fallthrough
-		case "blanks":
-			title = "Blank lines"
-			for _, x := range res {
-				value += x.Blank
-			}
-		case "comment":
-			fallthrough
-		case "comments":
-			title = "Comments"
-			for _, x := range res {
-				value += x.Comment
-			}
-		case "cocomo":
-			title = "COCOMO $"
-		case "lines": // lines is the default
-			fallthrough
-		case "line": // lines is the default
-			fallthrough
-		default:
-			//
-			title = "Total lines"
-			for _, x := range res {
-				value += x.Lines
-			}
-		}
+		title, value := calculate(category, res)
 
 		textLength := "250"
 		s := formatCount(float64(value))
@@ -101,6 +64,62 @@ func main() {
 	})
 
 	http.ListenAndServe(":8080", nil).Error()
+}
+
+func calculate(category string, res []processor.LanguageSummary) (string, int64) {
+	title := ""
+	var value int64
+
+	switch category {
+	case "codes":
+		fallthrough
+	case "code":
+		title = "Code lines"
+		for _, x := range res {
+			value += x.Code
+		}
+	case "blank":
+		fallthrough
+	case "blanks":
+		title = "Blank lines"
+		for _, x := range res {
+			value += x.Blank
+		}
+	case "comment":
+		fallthrough
+	case "comments":
+		title = "Comments"
+		for _, x := range res {
+			value += x.Comment
+		}
+	case "cocomo":
+		title = "COCOMO $"
+		for _, x := range res {
+			value += x.Code
+		}
+
+		wage := 56286
+		//if 'avg-wage' in event['queryStringParameters']:
+		//wage = event['queryStringParameters']['avg-wage']
+
+		value = int64(estimateCost(value, wage))
+		//if wage.isdigit():
+		//s = format_count(estimate_cost(sum([x['Code'] for x in j]), int(wage)))
+		//else:
+		//s = format_count(estimate_cost(sum([x['Code'] for x in j])))
+
+	case "lines": // lines is the default
+		fallthrough
+	case "line": // lines is the default
+		fallthrough
+	default:
+		//
+		title = "Total lines"
+		for _, x := range res {
+			value += x.Lines
+		}
+	}
+	return title, value
 }
 
 type location struct {
@@ -289,4 +308,12 @@ func cleanString(s string) string {
 	processedString := reg.ReplaceAllString(s, "")
 
 	return processedString
+}
+
+func estimateEffort(codeCount int64) float64 {
+	return 3.2 * math.Pow(float64(codeCount)/1000, 1.05) * 1
+}
+
+func estimateCost(codeCount int64, averageWage int) float64 {
+	return estimateEffort(codeCount) * (float64(averageWage) / 12) * 1.8
 }
