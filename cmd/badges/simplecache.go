@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 	"sync"
+	"time"
 )
 
 type cacheEntry struct {
@@ -17,13 +18,35 @@ type SimpleCache struct {
 }
 
 func NewSimpleCache(maxItems int) *SimpleCache {
-	cache := SimpleCache{
+	simpleCache := SimpleCache{
 		maxItems: maxItems,
 		items:    map[string]cacheEntry{},
 		lock:     sync.Mutex{},
 	}
+	simpleCache.runAgeItems()
+	return &simpleCache
+}
 
-	return &cache
+func (cache *SimpleCache) runAgeItems() {
+	go func() {
+		for {
+			// maps are randomly ordered, so only decrementing 50 at a time should be acceptable
+			count := 50
+			cache.lock.Lock()
+			for k, v := range cache.items {
+				if v.hits > 0 {
+					v.hits--
+					cache.items[k] = v
+				}
+				count--
+				if count <= 0 {
+					break
+				}
+			}
+			cache.lock.Unlock()
+			time.Sleep(10 * time.Second)
+		}
+	}()
 }
 
 func (cache *SimpleCache) Add(cacheKey string, entry []byte) {

@@ -36,9 +36,9 @@ func TestSimpleCache_Multiple(t *testing.T) {
 }
 
 func TestSimpleCache_MultipleLarge(t *testing.T) {
-	simpleCache := NewSimpleCache(10)
+	simpleCache := NewSimpleCache(1000)
 
-	for i := 0; i < 5000; i++ {
+	for i := 0; i < 500000; i++ {
 		simpleCache.Add(fmt.Sprintf("%d", i), []byte{})
 		simpleCache.Add("10", []byte{})
 		simpleCache.Get(fmt.Sprintf("%d", i))
@@ -46,7 +46,7 @@ func TestSimpleCache_MultipleLarge(t *testing.T) {
 		simpleCache.Get("10")
 	}
 
-	if len(simpleCache.items) != 9 {
-		t.Errorf("expected 9 items got %v", len(simpleCache.items))
+	if len(simpleCache.items) != 999 {
+		t.Errorf("expected 999 items got %v", len(simpleCache.items))
 	}
 }

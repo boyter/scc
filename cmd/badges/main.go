@@ -19,7 +19,8 @@ import (
 )
 
 var uniqueCode = "unique_code"
-var cache = NewSimpleCache(1000)
+var cache = NewSimpleCache(100)
+var countingSemaphore = make(chan bool, 5)
 
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -48,12 +49,12 @@ func main() {
 		}
 
 		category := strings.TrimSpace(strings.ToLower(r.URL.Query().Get("category")))
+		wage := tryParseInt(strings.TrimSpace(strings.ToLower(r.URL.Query().Get("avg-wage"))), 56286)
+		title, value := calculate(category, wage, res)
 
-		title, value := calculate(category, res)
-
-		textLength := "250"
 		s := formatCount(float64(value))
 
+		textLength := "250"
 		if len(s) <= 3 {
 			textLength = "200"
 		}
@@ -63,10 +64,12 @@ func main() {
 		_, _ = w.Write([]byte(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="20"><linearGradient id="b" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><clipPath id="a"><rect width="100" height="20" rx="3" fill="#fff"/></clipPath><g clip-path="url(#a)"><path fill="#555" d="M0 0h69v20H0z"/><path fill="#4c1" d="M69 0h31v20H69z"/><path fill="url(#b)" d="M0 0h100v20H0z"/></g><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="110"> <text x="355" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="590">` + title + `</text><text x="355" y="140" transform="scale(.1)" textLength="590">` + title + `</text><text x="835" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="` + textLength + `">` + s + `</text><text x="835" y="140" transform="scale(.1)" textLength="` + textLength + `">` + s + `</text></g> </svg>`))
 	})
 
-	http.ListenAndServe(":8080", nil).Error()
+	addr := ":8080"
+	log.Info().Str(uniqueCode, "1876ce1e").Str("addr", addr).Msg("serving")
+	http.ListenAndServe(addr, nil).Error()
 }
 
-func calculate(category string, res []processor.LanguageSummary) (string, int64) {
+func calculate(category string, wage int, res []processor.LanguageSummary) (string, int64) {
 	title := ""
 	var value int64
 
@@ -98,16 +101,7 @@ func calculate(category string, res []processor.LanguageSummary) (string, int64)
 			value += x.Code
 		}
 
-		wage := 56286
-		//if 'avg-wage' in event['queryStringParameters']:
-		//wage = event['queryStringParameters']['avg-wage']
-
 		value = int64(estimateCost(value, wage))
-		//if wage.isdigit():
-		//s = format_count(estimate_cost(sum([x['Code'] for x in j]), int(wage)))
-		//else:
-		//s = format_count(estimate_cost(sum([x['Code'] for x in j])))
-
 	case "lines": // lines is the default
 		fallthrough
 	case "line": // lines is the default
@@ -186,6 +180,11 @@ func formatCount(count float64) string {
 }
 
 func process(id int, s location) ([]byte, error) {
+	countingSemaphore <- true
+	defer func() {
+		<-countingSemaphore // remove one to free up concurrency
+	}()
+
 	val, ok := cache.Get(s.String())
 	if ok {
 		return val, nil
@@ -316,4 +315,12 @@ func estimateEffort(codeCount int64) float64 {
 
 func estimateCost(codeCount int64, averageWage int) float64 {
 	return estimateEffort(codeCount) * (float64(averageWage) / 12) * 1.8
+}
+
+func tryParseInt(s string, def int) int {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return def
+	}
+	return i
 }
