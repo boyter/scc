@@ -950,6 +950,8 @@ Note that the avg-wage value must be a positive integer otherwise it will revert
 
 *NB* it may not work for VERY large repositories (has been tested on Apache hadoop/spark without issue).
 
+You can find the source code for badges in the repository at https://github.com/boyter/scc/blob/master/cmd/badges/main.go 
+
 ### Languages
 
 List of supported languages. The master version of `scc` supports 239 languages at last count. Note that this is always assumed that you built from master, and it might trail behind what is actually supported. To see what your version of `scc` supports run `scc --languages`
