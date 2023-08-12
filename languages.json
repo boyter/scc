@@ -7034,6 +7034,33 @@
     "multi_line": [],
     "quotes": []
   },
+  "TemplateToolkit": {
+    "complexitychecks": [
+      "[% BLOCK",
+      "[% FILTER",
+      "[% FOR",
+      "[% FOREACH",
+      "[% IF",
+      "[% INCLUDE",
+      "[% MACRO",
+      "[% PROCESS",
+      "[% SWITCH",
+      "[% UNLESS",
+      "[% WRAPPER"
+    ],
+    "extensions": [
+      "tt",
+      "tt2"
+    ],
+    "line_comment": [],
+    "multi_line": [
+      [
+        "[%#",
+        "%]"
+      ]
+    ],
+    "quotes": []
+  },
   "Terraform": {
     "complexitychecks": [
       "count",
