@@ -19,8 +19,8 @@ import (
 )
 
 var uniqueCode = "unique_code"
-var cache = NewSimpleCache(100)
-var countingSemaphore = make(chan bool, 5)
+var cache = NewSimpleCache(1000)
+var countingSemaphore = make(chan bool, 1)
 
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +33,7 @@ func main() {
 
 		data, err := process(1, loc)
 		if err != nil {
-			log.Error().Str(uniqueCode, "03ec75c3").Err(err).Send()
+			log.Error().Str(uniqueCode, "03ec75c3").Err(err).Str("loc", loc.String()).Send()
 			w.WriteHeader(http.StatusBadRequest)
 			_, _ = w.Write([]byte("something bad happened sorry"))
 			return
