@@ -363,6 +363,18 @@ Because some languages don't have loops and instead use recursion they can have 
 
 Generally though the complexity there is to help estimate between projects written in the same language, or for finding the most complex file in a project `scc --by-file -s complexity` which can be useful when you are estimating on how hard something is to maintain, or when looking for those files that should probably be refactored.
 
+As for how it works.
+
+It's my own definition, but tries to be an approximation of cyclomatic complexity https://en.wikipedia.org/wiki/Cyclomatic_complexity although done only on a file level. 
+
+The reason it's an approximation is that it's calculated almost for free from a CPU point of view (since its a cheap lookup when counting), whereas a real cyclomatic complexity count would need to parse the code. It gives a reasonable guess in practice though even if it fails to identify recursive methods. The goal was never for it to be exact sorry.
+
+In short when scc is looking through what it has identified as code if it notices what are usually branch conditions it will increment a counter.
+
+The conditions it looks for are compiled into the code and you can get an idea for them by looking at the JSON inside the repository. See https://github.com/boyter/scc/blob/master/languages.json#L3524 for an example of what it's looking at for a file that's Java.
+
+The increment happens for each of the matching conditions and produces the number you see.
+
 ### COCOMO
 
 The COCOMO statistics displayed at the bottom of any command line run can be configured as needed.
