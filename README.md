@@ -367,7 +367,7 @@ As for how it works.
 
 It's my own definition, but tries to be an approximation of cyclomatic complexity https://en.wikipedia.org/wiki/Cyclomatic_complexity although done only on a file level. 
 
-The reason it's an approximation is that it's calculated almost for free from a CPU point of view (since its a cheap lookup when counting), whereas a real cyclomatic complexity count would need to parse the code. It gives a reasonable guess in practice though even if it fails to identify recursive methods. The goal was never for it to be exact sorry.
+The reason it's an approximation is that it's calculated almost for free from a CPU point of view (since its a cheap lookup when counting), whereas a real cyclomatic complexity count would need to parse the code. It gives a reasonable guess in practice though even if it fails to identify recursive methods. The goal was never for it to be exact.
 
 In short when scc is looking through what it has identified as code if it notices what are usually branch conditions it will increment a counter.
 
