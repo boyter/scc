@@ -4173,6 +4173,77 @@
       "lua"
     ]
   },
+  "Luau": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "while ",
+      "while(",
+      "else ",
+      "else(",
+      "elseif ",
+      "elseif(",
+      "or ",
+      "and ",
+      "~= ",
+      "== "
+    ],
+    "extensions": [
+      "luau"
+    ],
+    "line_comment": [
+      "--"
+    ],
+    "multi_line": [
+      [
+        "--[[",
+        "]]"
+      ],
+      [
+      "--[=[",
+      "]=]"
+      ],
+      [
+      "--[==[",
+      "]==]"
+      ],
+      [
+      "--[===[",
+      "]===]"
+      ],
+      [
+      "--[====[",
+      "]====]"
+      ],
+      [
+      "--[=====[",
+      "]=====]"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\\\"",
+        "start": "\\\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      },
+      {
+        "end": "`",
+        "start": "`"
+      },
+      {
+        "end": "[[",
+        "start": "]]"
+      }
+    ],
+    "shebangs": [
+      "luau"
+    ]
+  },
   "Lucius": {
     "complexitychecks": [
       "for ",
