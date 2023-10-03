@@ -5652,6 +5652,53 @@
       "python3"
     ]
   },
+  "PRQL": {
+    "complexitychecks": [
+      "case ",
+      "&& ",
+      "|| ",
+      "!= ",
+      "== ",
+      "~= "
+    ],
+    "extensions": [
+      "prql"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      },
+      {
+        "docString": true,
+        "end": "\"\"\"",
+        "start": "\"\"\""
+      },
+      {
+        "docString": true,
+        "end": "'''",
+        "start": "'''"
+      },
+      {
+        "docString": true,
+        "end": "\"\"\"",
+        "start": "r\"\"\""
+      },
+      {
+        "docString": true,
+        "end": "'''",
+        "start": "r'''"
+      }
+    ]
+  },
   "Q#": {
     "complexitychecks": [
       "for ",
