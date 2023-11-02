@@ -941,7 +941,7 @@ ENTRYPOINT ["scc"]
 
 ### Badges (beta)
 
-You can use `scc` to provide badges on your github/bitbucket/gitlab open repositories. For example, [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/)](https://github.com/boyter/scc/)
+You can use `scc` to provide badges on your github/bitbucket/gitlab/sr.ht open repositories. For example, [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/)](https://github.com/boyter/scc/)
  The format to do so is,
 
 https://sloc.xyz/PROVIDER/USER/REPO
@@ -973,6 +973,13 @@ Note that the avg-wage value must be a positive integer otherwise it will revert
 *NB* it may not work for VERY large repositories (has been tested on Apache hadoop/spark without issue).
 
 You can find the source code for badges in the repository at https://github.com/boyter/scc/blob/master/cmd/badges/main.go 
+
+#### A example for each supported provider
+
+- github - https://sloc.xyz/github/boyter/scc/
+- sr.ht - https://sloc.xyz/sr.ht/~nektro/magnolia-desktop/
+- bitbucket - https://sloc.xyz/bitbucket/boyter/decodingcaptchas
+- gitlab - https://sloc.xyz/gitlab/esr/loccount
 
 ### Languages
 

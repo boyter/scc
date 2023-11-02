@@ -123,7 +123,17 @@ type location struct {
 }
 
 func (l *location) String() string {
-	parse, _ := url.Parse("https://" + l.Provider + ".com/" + l.User + "/" + l.Repo + ".git")
+	loc := ".com/"
+	ext := ".git"
+	switch strings.ToLower(l.Provider) {
+	case "bitbucket":
+		loc = ".org/"
+	case "git.sr.ht":
+		loc = "/"
+		ext = ""
+	}
+
+	parse, _ := url.Parse("https://" + l.Provider + loc + l.User + "/" + l.Repo + ext)
 	return parse.String()
 }
 
@@ -133,11 +143,16 @@ func (l *location) String() string {
 // returns an error if we get anything other than 3 parts since thats
 // the format we expect
 func processUrlPath(path string) (location, error) {
+	path = strings.ToLower(path)
 	path = strings.TrimPrefix(path, "/")
 	path = strings.TrimSuffix(path, "/")
 	s := strings.Split(path, "/")
 	if len(s) != 3 {
 		return location{}, errors.New("invalid path part")
+	}
+
+	if s[0] == "sr.ht" {
+		s[0] = "git.sr.ht"
 	}
 
 	return location{
