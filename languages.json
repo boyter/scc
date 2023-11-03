@@ -1254,6 +1254,33 @@
     ],
     "quotes": []
   },
+  "Cairo": {
+      "complexitychecks": [
+        "loop ",
+        "if ",
+        "if(",
+        "match ",
+        "match(",
+        "else ",
+        "|| ",
+        "&& ",
+        "!= ",
+        "== "
+      ],
+      "extensions": [
+        "cairo"
+      ],
+      "line_comment": [
+        "//"
+      ],
+      "multi_line": [],
+      "quotes": [
+        {
+          "end": "'",
+          "start": "'"
+        }
+      ]
+  },
   "Cassius": {
     "complexitychecks": [
       "for ",
