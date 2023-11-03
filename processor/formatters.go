@@ -931,7 +931,7 @@ func unicodeAwareTrim(tmp string, size int) string {
 	// iterate all the runes so we can cut off correctly and get the correct length
 	r := []rune(tmp)
 
-	if len(r) >= size {
+	if len(r) > size {
 		for runewidth.StringWidth(tmp) > size {
 			// remove character one at a time till we get the length we want
 			tmp = string([]rune(tmp)[1:])

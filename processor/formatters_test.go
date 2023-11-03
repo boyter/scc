@@ -1392,6 +1392,14 @@ func TestUnicodeAwareTrimAscii(t *testing.T) {
 	}
 }
 
+func TestUnicodeAwareTrimExactSizeAscii(t *testing.T) {
+	tmp := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.md"
+	res := unicodeAwareTrim(tmp, len(tmp))
+	if res != tmp {
+		t.Errorf("expected %s got %s", tmp, res)
+	}
+}
+
 func TestUnicodeAwareTrimUnicode(t *testing.T) {
 	tmp := "中文中文中文中文中文中文中文中文中文中文中文中文中文中文中文中文.md"
 	res := unicodeAwareTrim(tmp, shortFormatFileTruncate)
