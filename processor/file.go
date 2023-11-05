@@ -158,7 +158,7 @@ DIRENTS:
 		}
 
 		for _, exclude := range dw.excludes {
-			if exclude.Match([]byte(name)) || exclude.Match([]byte(path)) {
+			if exclude.MatchString(name) || exclude.MatchString(path) {
 				if Verbose {
 					printWarn("skipping file/directory due to match exclude: " + name)
 				}
