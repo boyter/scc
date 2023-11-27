@@ -683,7 +683,7 @@ else
     exit
 fi
 
-if ./scc -f csv --by-file | grep -q "Language,Location,Filename,Lines,Code,Comments,Blanks,Complexity,Bytes"; then
+if ./scc -f csv --by-file | grep -q "Language,Provider,Filename,Lines,Code,Comments,Blanks,Complexity,Bytes"; then
     echo -e "${GREEN}PASSED csv file"
 else
     echo -e "${RED}======================================================="
@@ -692,7 +692,7 @@ else
     exit
 fi
 
-if ./scc --by-file --format-multi "tabular:stdout,html:stdout,csv:stdout" | grep -q "Language,Location"; then
+if ./scc --by-file --format-multi "tabular:stdout,html:stdout,csv:stdout" | grep -q "Language,Provider"; then
     echo -e "${GREEN}PASSED format multi check"
 else
     echo -e "${RED}======================================================="
