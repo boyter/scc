@@ -87,7 +87,7 @@ func (cache *SimpleCache) expireItems() {
 	count := 10
 	if len(cache.items) >= cache.maxItems {
 		lfuKey := ""
-		lfuLowestCount := math.MaxInt64
+		lfuLowestCount := math.MaxInt
 
 		for k, v := range cache.items {
 			v.hits--
