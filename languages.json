@@ -391,7 +391,7 @@
       }
     ]
   },
-  "Arvo": {
+  "Avro": {
     "complexitychecks": [],
     "extensions": [
       "avdl",
