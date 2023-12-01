@@ -5313,6 +5313,41 @@
       "perl5"
     ]
   },
+  "Picat": {
+    "complexitychecks": [
+      "do ",
+      "foreach ",
+      "foreach(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "while(",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "pi"
+    ],
+    "line_comment": [
+      "%"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "Plain Text": {
     "complexitychecks": [],
     "extensions": [
