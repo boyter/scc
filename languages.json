@@ -7268,6 +7268,43 @@
     ],
     "quotes": []
   },
+  "Templ": {
+    "complexitychecks": [
+      "if ",
+      " else ",
+      "switch ",
+      "case ",
+      "default:",
+      "for ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "templ"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "`",
+        "ignoreEscape": true,
+        "start": "`"
+      }
+    ]
+  },
   "Terraform": {
     "complexitychecks": [
       "count",
