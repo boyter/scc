@@ -2988,6 +2988,44 @@
       }
     ]
   },
+  "GraphQL": {
+    "complexitychecks": [
+      "type ",
+      "input ",
+      "query ",
+      "mutation ",
+      "subscription ",
+      "directive ",
+      "scalar ",
+      "enum ",
+      "interface ",
+      "union ",
+      "fragment "
+    ],
+    "extensions": [
+      "graphql"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [
+      [
+        "\"\"\"",
+        "\"\"\""
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "docString": true,
+        "end": "\"\"\"",
+        "start": "\"\"\""
+      }
+    ]
+  },
   "DOT": {
     "complexitychecks": [],
     "extensions": [
