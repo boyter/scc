@@ -3192,17 +3192,16 @@
   },
   "Haskell": {
     "complexitychecks": [
-      "for ",
-      "for(",
       "if ",
-      "if(",
-      "switch ",
-      "while ",
+      "then ",
       "else ",
       "|| ",
       "&& ",
-      "!= ",
-      "== "
+      "/= ",
+      "== ",
+      "case ",
+      "do {",
+      "forall "
     ],
     "extensions": [
       "hs"
@@ -6288,7 +6287,8 @@
       "|| ",
       "&& ",
       "!= ",
-      "== "
+      "== ",
+      "match "
     ],
     "extensions": [
       "rs"
