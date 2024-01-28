@@ -8753,5 +8753,39 @@
         "start": "\""
       }
     ]
+  },
+  "Odin": {
+   "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "when ",
+      "switch ",
+      "defer ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "odin"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
   }
 }
