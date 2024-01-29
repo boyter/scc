@@ -23,6 +23,7 @@ BASH (bash,bash_login,bash_logout,bash_profile,bashrc,.bash_login,.bash_logout,.
 Basic (bas)
 Batch (bat,btm,cmd)
 Bazel (bzl,build.bazel,build,workspace)
+Bicep (bicep)
 Bitbake (bb,bbappend,bbclass)
 Bitbucket Pipeline (bitbucket-pipelines.yml)
 Blade template (blade.php)

@@ -679,6 +679,41 @@
       }
     ]
   },
+  "Bicep": {
+    "complexitychecks": [
+      "@minLength(",
+      "@maxLength(",
+      "@secure(",
+      "[for ",
+      "if(",
+      "if (",
+      " == ",
+      " != ",
+      " ? ",
+      "using ",
+      "range(",
+      "type ",
+      "func "
+    ],
+    "extensions": [
+      "bicep"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
   "Bitbake": {
     "complexitychecks": [
       "for ",
