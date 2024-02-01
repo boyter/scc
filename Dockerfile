@@ -11,4 +11,4 @@ RUN go build -ldflags="-s -w" -o /bin/scc
 
 FROM alpine:3.19
 COPY --from=scc-get /bin/scc /bin/scc
-ENTRYPOINT ["/bin/scc"]
+CMD ["/bin/scc"]
