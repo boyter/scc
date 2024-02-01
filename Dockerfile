@@ -5,10 +5,10 @@ GOARCH=amd64 \
 CGO_ENABLED=0
 
 ARG VERSION=v3.2.0
-RUN git clone --branch $VERSION --depth 1 https://github.com/boyter/scc
-WORKDIR /go/scc
-RUN go build -ldflags="-s -w"
+COPY . /scc
+WORKDIR /scc
+RUN go build -ldflags="-s -w" -o /bin/scc
 
 FROM alpine:3.19
-COPY --from=scc-get /go/scc/scc /bin/
-ENTRYPOINT ["scc"]
+COPY --from=scc-get /bin/scc /bin/scc
+CMD ["/bin/scc"]
