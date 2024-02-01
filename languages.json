@@ -679,6 +679,41 @@
       }
     ]
   },
+  "Bicep": {
+    "complexitychecks": [
+      "@minLength(",
+      "@maxLength(",
+      "@secure(",
+      "[for ",
+      "if(",
+      "if (",
+      " == ",
+      " != ",
+      " ? ",
+      "using ",
+      "range(",
+      "type ",
+      "func "
+    ],
+    "extensions": [
+      "bicep"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
   "Bitbake": {
     "complexitychecks": [
       "for ",
@@ -8737,6 +8772,40 @@
     "extensions": [
       "re",
       "rei"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
+  "Odin": {
+   "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "when ",
+      "switch ",
+      "defer ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "odin"
     ],
     "line_comment": [
       "//"
