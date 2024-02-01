@@ -19,6 +19,10 @@ If you don't like sloc cloc and code feel free to use the name `Succinct Code Co
 
 Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
 
+### Support
+
+Using `scc` commercially? If you want priority support for `scc` you can purchase a years worth https://boyter.gumroad.com/l/kgenuv which entitles you to priority direct email support from the developer.
+
 ### Install
 
 #### Go Get
