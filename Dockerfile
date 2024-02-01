@@ -7,8 +7,8 @@ CGO_ENABLED=0
 ARG VERSION=v3.2.0
 COPY . /scc
 WORKDIR /scc
-RUN go build -ldflags="-s -w"
+RUN go build -ldflags="-s -w" -o /bin/scc
 
 FROM alpine:3.19
-COPY --from=scc-get /scc/scc /bin/
-ENTRYPOINT ["scc"]
+COPY --from=scc-get /bin/scc /bin/scc
+ENTRYPOINT ["/bin/scc"]
