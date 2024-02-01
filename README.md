@@ -77,6 +77,16 @@ Or, if you prefer to build from source, you can use the ports tree
 
 `$ cd /usr/ports/devel/scc && make install clean`
 
+### Run in Docker
+
+Go to the directory you want to run scc from.
+
+Run the command below to run the latest release of scc on your current working directory:
+
+```
+docker run --rm -it -v "$PWD:/pwd"  ghcr.io/lhoupert/scc:master scc /pwd
+```
+
 #### Manual
 
 Binaries for Windows, GNU/Linux and macOS for both i386 and x86_64 machines are available from the [releases](https://github.com/boyter/scc/releases) page.
