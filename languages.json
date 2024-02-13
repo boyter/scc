@@ -5258,6 +5258,51 @@
     "multi_line": [],
     "quotes": []
   },
+  "Pkl": {
+    "complexitychecks": [
+      "function ",
+      "?? ",
+      "?.",
+      "ifNonNull(",
+      "if ",
+      " else ",
+      ".map",
+      "for ",
+      "when ",
+      "..."
+    ],
+    "extensions": [
+      "pkl"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "#\"",
+        "start": "\"#"
+      },
+      {
+        "end": "##\"",
+        "start": "\"##"
+      },
+      {
+        "end": "\"\"\"",
+        "ignoreEscape": true,
+        "start": "\"\"\""
+      }
+    ]
+  },
   "PL/SQL": {
     "complexitychecks": [
       "and ",
