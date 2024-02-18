@@ -1,8 +1,0 @@
-[prune]
-  go-tests = true
-  unused-packages = true
-
-[[constraint]]
-  name = "github.com/dbaggerman/cuba"
-  version = "0.3.2"
-
