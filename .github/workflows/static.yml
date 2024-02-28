@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - run: find .
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -32,7 +34,8 @@ jobs:
       - run: find .
       - run: curl -LO https://github.com/kaihendry/lesshero/releases/download/v0.0.9/lesshero_0.0.9_linux_amd64.tar.gz
       - run: tar xvf lesshero_0.0.9_linux_amd64.tar.gz
-      - run: git status
+      - run: git log
+      - run: pwd
       - run: ./lesshero -c lesshero.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
