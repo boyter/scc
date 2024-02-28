@@ -4,4 +4,4 @@ jobs:
   hello_world_job:
     runs-on: ubuntu-latest
     steps:
-      - uses: kaihendry/test-action@v2
+      - uses: kaihendry/test-action@main
