@@ -30,12 +30,9 @@ jobs:
       - run: find .
       - name: Setup Pages
         uses: actions/configure-pages@v4
-      # - uses: kaihendry/test-action@main # produces lesshero.html (SOMEHOW BROKEN DOCKERFILE)
-      - run: find .
+      - uses: kaihendry/test-action@main # TODO produce lesshero.html
       - run: curl -LO https://github.com/kaihendry/lesshero/releases/download/v0.0.9/lesshero_0.0.9_linux_amd64.tar.gz
       - run: tar xvf lesshero_0.0.9_linux_amd64.tar.gz
-      - run: git log
-      - run: pwd
       - run: mkdir "_site/"
       - run: ./lesshero -c _site/index.html
       - name: Upload artifact
