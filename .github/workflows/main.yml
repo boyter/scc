@@ -1,7 +1,7 @@
-on: workflow_dispatch
+on: [ workflow_dispatch, push ]
 
 jobs:
   hello_world_job:
     runs-on: ubuntu-latest
     steps:
-      - uses: kaihendry/test-action@head
+      - uses: kaihendry/test-action@v2
