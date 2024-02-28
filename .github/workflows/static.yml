@@ -29,9 +29,9 @@ jobs:
           fetch-depth: 0
       - name: Setup Pages
         uses: actions/configure-pages@v4
-      - uses: kaihendry/test-action@main
+      - uses: kaihendry/lesshero@main
       - run:  mkdir "_site" && mv lesshero.html _site/index.html
-      - name: Upload artifact
+      - name: Upload artifact # TODO: we want to ideally upload one file, not overwrite the whole site!
         uses: actions/upload-pages-artifact@v3
       - name: Deploy to GitHub Pages
         id: deployment
