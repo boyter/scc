@@ -29,9 +29,8 @@ jobs:
           fetch-depth: 0
       - name: Setup Pages
         uses: actions/configure-pages@v4
-      - run: mkdir "_site/"
-      - uses: kaihendry/test-action@main # TODO produce lesshero.html
-      - run:  mv foobar.html _site/index.html
+      - uses: kaihendry/test-action@main
+      - run:  mkdir "_site" && mv lesshero.html _site/index.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
       - name: Deploy to GitHub Pages
