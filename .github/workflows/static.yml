@@ -36,11 +36,10 @@ jobs:
       - run: tar xvf lesshero_0.0.9_linux_amd64.tar.gz
       - run: git log
       - run: pwd
-      - run: ./lesshero -c lesshero.html
+      - run: mkdir "_site/"
+      - run: ./lesshero -c _site/index.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
-        with:
-          path: lesshero.html
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
