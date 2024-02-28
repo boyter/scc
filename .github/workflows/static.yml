@@ -32,6 +32,7 @@ jobs:
       - run: find .
       - run: curl -LO https://github.com/kaihendry/lesshero/releases/download/v0.0.9/lesshero_0.0.9_linux_amd64.tar.gz
       - run: tar xvf lesshero_0.0.9_linux_amd64.tar.gz
+      - run: git status
       - run: ./lesshero -c lesshero.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
