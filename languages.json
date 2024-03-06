@@ -4544,6 +4544,7 @@
       "vcproj",
       "vcxproj",
       "vcxproj.filters",
+      "ilproj",
       "myapp",
       "props",
       "rdlc",
