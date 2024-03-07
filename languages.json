@@ -93,6 +93,39 @@
     ],
     "shebangs": []
   },
+  "Arturo": {
+    "complexitychecks": [
+      "loop ",
+      "map ",
+      "select ",
+      "if ",
+      "if? ",
+      "while ",
+      "function ",
+      "or? ",
+      "and? ",
+      "not? ",
+      "<> ",
+      "= "
+    ],
+    "extensions": [
+      "art"
+    ],
+    "line_comment": [
+      ";"
+    ],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\\\"",
+        "start": "\\\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
   "ASP": {
     "complexitychecks": [
       "for ",
