@@ -516,7 +516,7 @@ scc --format-multi "tabular:stdout,html:output.html,csv:output.csv"
 ```
 
 The above will run against the current directory, outputting to standard output the the default output, as well as writing
-to output.html and output.csv with the appropiate formats.
+to output.html and output.csv with the appropriate formats.
 
 #### Tabular 
 
@@ -629,7 +629,7 @@ The difference between `sql` and `sql-insert` is that `sql` will include table c
 
 Usage is 100% the same as any other `scc` command but sql output will always contain per file details. You can compute totals yourself using SQL.
 
-The below will run scc against the current directory, name the ouput as the project scc and then pipe the output to sqlite to put into the database code.db
+The below will run scc against the current directory, name the output as the project scc and then pipe the output to sqlite to put into the database code.db
 
 ```
 scc --format sql --sql-project scc . | sqlite3 code.db
