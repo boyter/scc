@@ -3598,6 +3598,27 @@
     "multi_line": [],
     "quotes": []
   },
+  "JSONC": {
+    "complexitychecks": [],
+    "extensions": [
+      "jsonc"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "JSONL": {
     "complexitychecks": [],
     "extensions": [
@@ -6304,7 +6325,7 @@
       "=== "
     ],
     "extensions": [
-      "res", 
+      "res",
       "resi"
     ],
     "line_comment": [
@@ -6312,7 +6333,7 @@
     ],
     "multi_line": [
       [
-        "/*", 
+        "/*",
         "*/"
       ]
     ],

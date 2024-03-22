@@ -1,0 +1,9 @@
+// Line comment
+{
+  /*
+   * Multi
+   * Line
+   * Comment
+   */
+  "text": "JSON with comments"
+}
