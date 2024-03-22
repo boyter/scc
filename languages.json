@@ -6304,7 +6304,7 @@
       "=== "
     ],
     "extensions": [
-      "res", 
+      "res",
       "resi"
     ],
     "line_comment": [
@@ -6312,7 +6312,7 @@
     ],
     "multi_line": [
       [
-        "/*", 
+        "/*",
         "*/"
       ]
     ],
@@ -6349,6 +6349,40 @@
         "end": "\"",
         "start": "\""
       }
+    ]
+  },
+  "Windows Resource-Definition Script": {
+    "extensions": [
+      "rc"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ],
+    "keywords": [
+      "#include",
+      "#define",
+      "RC_INVOKED",
+      "VERSIONINFO",
+      "FILEVERSION",
+      "PRODUCTVERSION",
+      "FILEOS",
+      "FILETYPE",
+      "BLOCK",
+      "VALUE",
+      "StringFileInfo",
+      "VarFileInfo"
     ]
   },
   "Robot Framework": {
