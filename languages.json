@@ -4838,6 +4838,15 @@
       }
     ]
   },
+  "MDX": {
+    "complexitychecks": [],
+    "extensions": [
+      "mdx"
+    ],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": []
+  },
   "Modula3": {
     "complexitychecks": [
       "for ",
