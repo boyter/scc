@@ -4749,7 +4749,7 @@
     "complexitychecks": [],
     "extensions": [
       "md",
-      "markdown", 
+      "markdown",
       "mdx"
     ],
     "line_comment": [],
