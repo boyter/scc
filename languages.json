@@ -4749,8 +4749,7 @@
     "complexitychecks": [],
     "extensions": [
       "md",
-      "markdown",
-      "mdx"
+      "markdown"
     ],
     "line_comment": [],
     "multi_line": [],
@@ -4838,6 +4837,15 @@
         "start": "'"
       }
     ]
+  },
+  "MDX": {
+    "complexitychecks": [],
+    "extensions": [
+      "mdx"
+    ],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": []
   },
   "Modula3": {
     "complexitychecks": [
