@@ -515,7 +515,7 @@ most useful when working in CI/CD systems where you want HTML reports as an arte
 scc --format-multi "tabular:stdout,html:output.html,csv:output.csv"
 ```
 
-The above will run against the current directory, outputting to standard output the the default output, as well as writing
+The above will run against the current directory, outputting to standard output the default output, as well as writing
 to output.html and output.csv with the appropriate formats.
 
 #### Tabular 
