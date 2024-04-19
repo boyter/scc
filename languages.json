@@ -3628,6 +3628,56 @@
     "multi_line": [],
     "quotes": []
   },
+  "Jsonnet": {
+    "complexitychecks": [
+      "for",
+      "if",
+      "else",
+      "||",
+      "&&",
+      "!=",
+      "=="
+    ],
+    "extensions": [
+      "jsonnet",
+      "libsonnet"
+    ],
+    "line_comment": [
+      "#",
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      },
+      {
+        "end": "|||",
+        "start": "|||"
+      },
+      {
+        "end": "\"",
+        "start": "@\""
+      },
+      {
+        "end": "'",
+        "start": "@'"
+      }
+    ],
+    "shebangs": [
+      "jsonnet"
+    ]
+  },
   "JSX": {
     "complexitychecks": [
       "for ",
