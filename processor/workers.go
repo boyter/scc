@@ -29,7 +29,7 @@ const (
 // SheBang is a global constant for indicating a shebang file header
 const SheBang string = "#!"
 
-// LineType what type of line are are processing
+// LineType what type of line are processing
 type LineType int32
 
 // These are not meant to be CAMEL_CASE but as it us used by an external project we cannot change it
@@ -411,7 +411,7 @@ func CountStats(fileJob *FileJob) {
 		fileJob.Hash = blake2b.New256()
 	}
 
-	// If the file has a length of 0 it is is empty then we say it has no lines
+	// If the file has a length of 0 it is empty then we say it has no lines
 	if fileJob.Bytes == 0 {
 		fileJob.Lines = 0
 		return
