@@ -14,6 +14,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/boyter/gocodewalker"
+
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -545,6 +547,24 @@ func Process() {
 		printDebug(fmt.Sprintf("NumCPU: %d", runtime.NumCPU()))
 		printDebug(fmt.Sprintf("SortBy: %s", SortBy))
 		printDebug(fmt.Sprintf("PathDenyList: %v", PathDenyList))
+	}
+
+	// spawn a walker for each dir
+	for _, f := range DirFilePaths {
+		fileListQueue := make(chan *gocodewalker.File, FileListQueueSize)
+		fileWalker := gocodewalker.NewFileWalker(f, fileListQueue)
+		fileWalker.SetErrorHandler(func(e error) bool {
+			fmt.Println("ERR", e.Error())
+			return true
+		})
+
+		go fileWalker.Start()
+
+		fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
+
+		for f := range fileListQueue {
+			fmt.Println(f.Location)
+		}
 	}
 
 	fileListQueue := make(chan *FileJob, FileListQueueSize)             // Files ready to be read from disk

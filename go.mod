@@ -3,6 +3,7 @@ module github.com/boyter/scc/v3
 go 1.20
 
 require (
+	github.com/boyter/gocodewalker v1.2.1
 	github.com/dbaggerman/cuba v0.3.2
 	github.com/json-iterator/go v1.1.12
 	github.com/mattn/go-runewidth v0.0.14
@@ -14,6 +15,7 @@ require (
 )
 
 require (
+	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
