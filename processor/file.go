@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-
-	"github.com/boyter/scc/v3/processor/gitignore"
 )
 
 // Used as quick lookup for files with the same name to avoid some processing
@@ -44,13 +42,6 @@ func getExtension(name string) string {
 	return extension.(string)
 }
 
-// DirectoryJob is a struct for dealing with directories we want to walk
-type DirectoryJob struct {
-	root    string
-	path    string
-	ignores []gitignore.IgnoreMatcher
-}
-
 func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 	if NoLarge {
 		if fileInfo.Size() >= LargeByteCount {
@@ -73,8 +64,17 @@ func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 			return nil
 		}
 
-		symPath, _ = filepath.EvalSymlinks(path)
-		fileInfo, _ = os.Lstat(symPath)
+		var err error
+		symPath, err = filepath.EvalSymlinks(path)
+		if err != nil {
+			printError(err.Error())
+			return nil
+		}
+		fileInfo, err = os.Lstat(symPath)
+		if err != nil {
+			printError(err.Error())
+			return nil
+		}
 	}
 
 	// Skip non-regular files. They are unlikely to be code and may hang if we
