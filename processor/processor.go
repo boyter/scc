@@ -548,50 +548,49 @@ func Process() {
 	printDebug(fmt.Sprintf("PathDenyList: %v", PathDenyList))
 
 	// spawn a walker for each dir
-	for _, f := range DirFilePaths {
-		potentialFilesQueue := make(chan *gocodewalker.File, FileListQueueSize) // files that pass the .gitignore checks
-		fileListQueue := make(chan *FileJob, FileListQueueSize)                 // Files ready to be read from disk
-		fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)     // Files ready to be summarised
 
-		fileWalker := gocodewalker.NewFileWalker(f, potentialFilesQueue)
-		fileWalker.SetErrorHandler(func(e error) bool {
-			printError(e.Error())
-			return true
-		})
+	potentialFilesQueue := make(chan *gocodewalker.File, FileListQueueSize) // files that pass the .gitignore checks
+	fileListQueue := make(chan *FileJob, FileListQueueSize)                 // Files ready to be read from disk
+	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)     // Files ready to be summarised
 
-		go func() {
-			err := fileWalker.Start()
-			if err != nil {
-				printError(err.Error())
-			}
-		}()
+	fileWalker := gocodewalker.NewParallelFileWalker(DirFilePaths, potentialFilesQueue)
+	fileWalker.SetErrorHandler(func(e error) bool {
+		printError(e.Error())
+		return true
+	})
 
-		go func() {
-			for fi := range potentialFilesQueue {
-				fileInfo, err := os.Lstat(fi.Location)
-				if err != nil {
-					continue
-				}
-
-				if !fileInfo.IsDir() {
-					fileJob := newFileJob(fi.Location, fi.Filename, fileInfo)
-					if fileJob != nil {
-						fileListQueue <- fileJob
-					}
-				}
-			}
-			close(fileListQueue)
-		}()
-
-		go fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
-
-		result := fileSummarize(fileSummaryJobQueue)
-		if FileOutput == "" {
-			fmt.Println(result)
-		} else {
-			_ = os.WriteFile(FileOutput, []byte(result), 0644)
-			fmt.Println("results written to " + FileOutput)
+	go func() {
+		err := fileWalker.Start()
+		if err != nil {
+			printError(err.Error())
 		}
+	}()
+
+	go func() {
+		for fi := range potentialFilesQueue {
+			fileInfo, err := os.Lstat(fi.Location)
+			if err != nil {
+				continue
+			}
+
+			if !fileInfo.IsDir() {
+				fileJob := newFileJob(fi.Location, fi.Filename, fileInfo)
+				if fileJob != nil {
+					fileListQueue <- fileJob
+				}
+			}
+		}
+		close(fileListQueue)
+	}()
+
+	go fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
+
+	result := fileSummarize(fileSummaryJobQueue)
+	if FileOutput == "" {
+		fmt.Println(result)
+	} else {
+		_ = os.WriteFile(FileOutput, []byte(result), 0644)
+		fmt.Println("results written to " + FileOutput)
 	}
 
 	//fmt.Println("//////////////")
