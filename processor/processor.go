@@ -543,11 +543,9 @@ func Process() {
 
 	SortBy = strings.ToLower(SortBy)
 
-	if Debug {
-		printDebug(fmt.Sprintf("NumCPU: %d", runtime.NumCPU()))
-		printDebug(fmt.Sprintf("SortBy: %s", SortBy))
-		printDebug(fmt.Sprintf("PathDenyList: %v", PathDenyList))
-	}
+	printDebug(fmt.Sprintf("NumCPU: %d", runtime.NumCPU()))
+	printDebug(fmt.Sprintf("SortBy: %s", SortBy))
+	printDebug(fmt.Sprintf("PathDenyList: %v", PathDenyList))
 
 	// spawn a walker for each dir
 	for _, f := range DirFilePaths {
@@ -557,64 +555,71 @@ func Process() {
 
 		fileWalker := gocodewalker.NewFileWalker(f, potentialFilesQueue)
 		fileWalker.SetErrorHandler(func(e error) bool {
-			fmt.Println("ERR", e.Error())
+			printError(e.Error())
 			return true
 		})
 
-		go fileWalker.Start()
-
-		for f := range potentialFilesQueue {
-			fileInfo, err := os.Lstat(f.Location)
+		go func() {
+			err := fileWalker.Start()
 			if err != nil {
-				continue
+				printError(err.Error())
 			}
+		}()
 
-			if !fileInfo.IsDir() {
-				fileJob := newFileJob(f.Location, filepath.Base(f.Location), fileInfo)
-				if fileJob != nil {
-					fileListQueue <- fileJob
+		go func() {
+			for fi := range potentialFilesQueue {
+				fileInfo, err := os.Lstat(fi.Location)
+				if err != nil {
+					continue
+				}
+
+				if !fileInfo.IsDir() {
+					fileJob := newFileJob(fi.Location, fi.Filename, fileInfo)
+					if fileJob != nil {
+						fileListQueue <- fileJob
+					}
 				}
 			}
-		}
+			close(fileListQueue)
+		}()
 
 		go fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
 
-		//result := fileSummarize(fileSummaryJobQueue)
-		//
-		//if FileOutput == "" {
-		//	fmt.Println(result)
-		//} else {
-		//	_ = os.WriteFile(FileOutput, []byte(result), 0644)
-		//	fmt.Println("results written to " + FileOutput)
-		//}
-	}
-
-	fmt.Println("//////////////")
-
-	fileListQueue := make(chan *FileJob, FileListQueueSize)             // Files ready to be read from disk
-	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize) // Files ready to be summarised
-
-	go func() {
-		directoryWalker := NewDirectoryWalker(fileListQueue)
-
-		for _, f := range DirFilePaths {
-			err := directoryWalker.Start(f)
-			if err != nil {
-				fmt.Printf("failed to walk %s: %v", f, err)
-				os.Exit(1)
-			}
+		result := fileSummarize(fileSummaryJobQueue)
+		if FileOutput == "" {
+			fmt.Println(result)
+		} else {
+			_ = os.WriteFile(FileOutput, []byte(result), 0644)
+			fmt.Println("results written to " + FileOutput)
 		}
-
-		directoryWalker.Run()
-	}()
-	go fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
-
-	result := fileSummarize(fileSummaryJobQueue)
-
-	if FileOutput == "" {
-		fmt.Println(result)
-	} else {
-		_ = os.WriteFile(FileOutput, []byte(result), 0644)
-		fmt.Println("results written to " + FileOutput)
 	}
+
+	//fmt.Println("//////////////")
+
+	//fileListQueue := make(chan *FileJob, FileListQueueSize)             // Files ready to be read from disk
+	//fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize) // Files ready to be summarised
+	//
+	//go func() {
+	//	directoryWalker := NewDirectoryWalker(fileListQueue)
+	//
+	//	for _, f := range DirFilePaths {
+	//		err := directoryWalker.Start(f)
+	//		if err != nil {
+	//			fmt.Printf("failed to walk %s: %v", f, err)
+	//			os.Exit(1)
+	//		}
+	//	}
+	//
+	//	directoryWalker.Run()
+	//}()
+	//go fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
+	//
+	//result := fileSummarize(fileSummaryJobQueue)
+	//
+	//if FileOutput == "" {
+	//	fmt.Println(result)
+	//} else {
+	//	_ = os.WriteFile(FileOutput, []byte(result), 0644)
+	//	fmt.Println("results written to " + FileOutput)
+	//}
 }
