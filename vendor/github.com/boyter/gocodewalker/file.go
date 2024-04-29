@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"errors"
 	"github.com/boyter/gocodewalker/go-gitignore"
+	"golang.org/x/sync/errgroup"
 	"os"
 	"path"
 	"path/filepath"
@@ -36,6 +37,7 @@ type FileWalker struct {
 	fileListQueue          chan *File
 	errorsHandler          func(error) bool // If returns true will continue to process where possible, otherwise returns if possible
 	directory              string
+	directories            []string
 	LocationExcludePattern []string // Case-sensitive patterns which exclude directory/file matches
 	IncludeDirectory       []string
 	ExcludeDirectory       []string // Paths to always ignore such as .git,.svn and .hg
@@ -64,6 +66,35 @@ func NewFileWalker(directory string, fileListQueue chan *File) *FileWalker {
 		fileListQueue:          fileListQueue,
 		errorsHandler:          func(e error) bool { return true }, // a generic one that just swallows everything
 		directory:              directory,
+		LocationExcludePattern: nil,
+		IncludeDirectory:       nil,
+		ExcludeDirectory:       nil,
+		IncludeFilename:        nil,
+		ExcludeFilename:        nil,
+		IncludeDirectoryRegex:  nil,
+		ExcludeDirectoryRegex:  nil,
+		IncludeFilenameRegex:   nil,
+		ExcludeFilenameRegex:   nil,
+		AllowListExtensions:    nil,
+		ExcludeListExtensions:  nil,
+		walkMutex:              sync.Mutex{},
+		terminateWalking:       false,
+		isWalking:              false,
+		IgnoreIgnoreFile:       false,
+		IgnoreGitIgnore:        false,
+		IncludeHidden:          false,
+		osOpen:                 os.Open,
+		osReadFile:             os.ReadFile,
+	}
+}
+
+// NewParallelFileWalker constructs a filewalker, which will walk the supplied directories in parallel
+// and output File results to the supplied queue as it finds them
+func NewParallelFileWalker(directories []string, fileListQueue chan *File) *FileWalker {
+	return &FileWalker{
+		fileListQueue:          fileListQueue,
+		errorsHandler:          func(e error) bool { return true }, // a generic one that just swallows everything
+		directories:            directories,
 		LocationExcludePattern: nil,
 		IncludeDirectory:       nil,
 		ExcludeDirectory:       nil,
@@ -122,7 +153,20 @@ func (f *FileWalker) Start() error {
 	f.isWalking = true
 	f.walkMutex.Unlock()
 
-	err := f.walkDirectoryRecursive(f.directory, []gitignore.GitIgnore{}, []gitignore.GitIgnore{})
+	var err error
+	if len(f.directories) != 0 {
+		eg := errgroup.Group{}
+		for _, directory := range f.directories {
+			eg.Go(func() error {
+				return f.walkDirectoryRecursive(directory, []gitignore.GitIgnore{}, []gitignore.GitIgnore{})
+			})
+		}
+
+		err = eg.Wait()
+	} else {
+		err = f.walkDirectoryRecursive(f.directory, []gitignore.GitIgnore{}, []gitignore.GitIgnore{})
+	}
+
 	close(f.fileListQueue)
 
 	f.walkMutex.Lock()

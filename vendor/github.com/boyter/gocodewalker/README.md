@@ -48,6 +48,19 @@ for f := range fileListQueue {
 The above by default will recursively add files to the fileListQueue respecting both .ignore and .gitignore files if found, and
 only adding files with the go extension into the queue.
 
+You can also run the walker in parallel with the results intermixed if required,
+
+```go
+fileListQueue := make(chan *gocodewalker.File, 100)
+
+fileWalker := gocodewalker.NewParallelFileWalker([]string{".", "someotherdir"}, fileListQueue)
+go fileWalker.Start()
+
+for f := range fileListQueue {
+    fmt.Println(f.Location)
+}
+```
+
 All code is dual-licenced as either MIT or Unlicence.
 
 ### Error Handler
