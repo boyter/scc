@@ -551,8 +551,11 @@ func Process() {
 
 	// spawn a walker for each dir
 	for _, f := range DirFilePaths {
-		fileListQueue := make(chan *gocodewalker.File, FileListQueueSize)
-		fileWalker := gocodewalker.NewFileWalker(f, fileListQueue)
+		potentialFilesQueue := make(chan *gocodewalker.File, FileListQueueSize) // files that pass the .gitignore checks
+		fileListQueue := make(chan *FileJob, FileListQueueSize)                 // Files ready to be read from disk
+		fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)     // Files ready to be summarised
+
+		fileWalker := gocodewalker.NewFileWalker(f, potentialFilesQueue)
 		fileWalker.SetErrorHandler(func(e error) bool {
 			fmt.Println("ERR", e.Error())
 			return true
@@ -560,12 +563,33 @@ func Process() {
 
 		go fileWalker.Start()
 
-		fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
+		for f := range potentialFilesQueue {
+			fileInfo, err := os.Lstat(f.Location)
+			if err != nil {
+				continue
+			}
 
-		for f := range fileListQueue {
-			fmt.Println(f.Location)
+			if !fileInfo.IsDir() {
+				fileJob := newFileJob(f.Location, filepath.Base(f.Location), fileInfo)
+				if fileJob != nil {
+					fileListQueue <- fileJob
+				}
+			}
 		}
+
+		go fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
+
+		//result := fileSummarize(fileSummaryJobQueue)
+		//
+		//if FileOutput == "" {
+		//	fmt.Println(result)
+		//} else {
+		//	_ = os.WriteFile(FileOutput, []byte(result), 0644)
+		//	fmt.Println("results written to " + FileOutput)
+		//}
 	}
+
+	fmt.Println("//////////////")
 
 	fileListQueue := make(chan *FileJob, FileListQueueSize)             // Files ready to be read from disk
 	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize) // Files ready to be summarised
