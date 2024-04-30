@@ -247,6 +247,7 @@ Flags:
       --ci                           enable CI output settings where stdout is ASCII
       --cocomo-project-type string   change COCOMO model type [organic, semi-detached, embedded, "custom,1,1,1,1"] (default "organic")
       --count-as string              count extension as language [e.g. jsp:htm,chead:"C Header" maps extension jsp to html and chead to C Header]
+      --count-ignore                 set to allow .gitignore and .ignore files to be counted
       --currency-symbol string       set currency symbol (default "$")
       --debug                        enable debug output
       --eaf float                    the effort adjustment factor derived from the cost drivers (1.0 if rated nominal) (default 1)

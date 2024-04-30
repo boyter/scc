@@ -96,6 +96,9 @@ var GitIgnore = false
 // Ignore disables ignore file checks
 var Ignore = false
 
+// CountIgnore should we count ignore files?
+var CountIgnore = false
+
 // DisableCheckBinary toggles checking for binary files using NUL bytes
 var DisableCheckBinary = false
 

@@ -83,6 +83,12 @@ func main() {
 		"disables .gitignore file logic",
 	)
 	flags.BoolVar(
+		&processor.CountIgnore,
+		"count-ignore",
+		false,
+		"set to allow .gitignore and .ignore files to be counted",
+	)
+	flags.BoolVar(
 		&processor.Debug,
 		"debug",
 		false,

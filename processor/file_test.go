@@ -98,6 +98,7 @@ func TestNewFileJob(t *testing.T) {
 func TestNewFileJobGitIgnore(t *testing.T) {
 	AllowListExtensions = []string{}
 	ProcessConstants()
+	CountIgnore = true
 
 	fi, _ := os.Stat("../examples/issue114/.gitignore")
 	job := newFileJob("../examples/issue114/", ".gitignore", fi)

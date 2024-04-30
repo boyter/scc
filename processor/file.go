@@ -143,6 +143,14 @@ func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 			LoadLanguageFeature(l)
 		}
 
+		if !CountIgnore {
+			for _, l := range language {
+				if l == "ignore" || l == "gitignore" {
+					return nil
+				}
+			}
+		}
+
 		return &FileJob{
 			Location:          path,
 			Symlocation:       symPath,
