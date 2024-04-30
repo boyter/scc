@@ -572,6 +572,7 @@ func Process() {
 	fileWalker.IgnoreGitIgnore = GitIgnore
 	fileWalker.IgnoreIgnoreFile = Ignore
 	fileWalker.IncludeHidden = true
+	fileWalker.ExcludeDirectory = PathDenyList
 
 	go func() {
 		err := fileWalker.Start()
