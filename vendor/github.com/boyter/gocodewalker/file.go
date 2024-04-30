@@ -164,7 +164,9 @@ func (f *FileWalker) Start() error {
 
 		err = eg.Wait()
 	} else {
-		err = f.walkDirectoryRecursive(f.directory, []gitignore.GitIgnore{}, []gitignore.GitIgnore{})
+		if f.directory != "" {
+			err = f.walkDirectoryRecursive(f.directory, []gitignore.GitIgnore{}, []gitignore.GitIgnore{})
+		}
 	}
 
 	close(f.fileListQueue)
