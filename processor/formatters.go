@@ -673,6 +673,18 @@ create table t        (
 	return str.String()
 }
 
+// var tabularWideFormatBody = "%-33s %9d %9d %8d %9d %8d %10d %16.2f\n"
+var tabularUlocFormatBody = "Total Unique Source Lines of Code (ULOC) %38d\n"
+
+func ulocDisplay(input int) string {
+	var str strings.Builder
+	str.WriteString(getTabularShortBreak())
+	str.WriteString(fmt.Sprintf(tabularUlocFormatBody, input))
+	str.WriteString(getTabularShortBreak())
+
+	return str.String()
+}
+
 func fileSummarize(input chan *FileJob) string {
 	if FormatMulti != "" {
 		return fileSummarizeMulti(input)

@@ -102,6 +102,9 @@ var CountIgnore = false
 // DisableCheckBinary toggles checking for binary files using NUL bytes
 var DisableCheckBinary = false
 
+// UlocMode toggles checking for binary files using NUL bytes
+var UlocMode = false
+
 // SortBy sets which column output in formatter should be sorted by
 var SortBy = ""
 
@@ -610,13 +613,17 @@ func Process() {
 		close(fileListQueue)
 	}()
 
-	go fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
-
-	result := fileSummarize(fileSummaryJobQueue)
-	if FileOutput == "" {
-		fmt.Println(result)
+	if UlocMode {
+		fileProcessorWorkerUloc(fileListQueue, fileSummaryJobQueue)
 	} else {
-		_ = os.WriteFile(FileOutput, []byte(result), 0644)
-		fmt.Println("results written to " + FileOutput)
+		go fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
+
+		result := fileSummarize(fileSummaryJobQueue)
+		if FileOutput == "" {
+			fmt.Println(result)
+		} else {
+			_ = os.WriteFile(FileOutput, []byte(result), 0644)
+			fmt.Println("results written to " + FileOutput)
+		}
 	}
 }

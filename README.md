@@ -287,6 +287,7 @@ Flags:
   -s, --sort string                  column to sort by [files, name, lines, blanks, code, comments, complexity] (default "files")
       --sql-project string           use supplied name as the project identifier for the current run. Only valid with the --format sql or sql-insert option
   -t, --trace                        enable trace output (not recommended when processing multiple files)
+      --uloc                         flip into uloc mode and count the number of unique lines of code
   -v, --verbose                      verbose output
       --version                      version for scc
   -w, --wide                         wider output with additional statistics (implies --complexity)

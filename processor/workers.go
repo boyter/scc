@@ -699,7 +699,70 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 			printDebug(fmt.Sprintf("milliseconds reading files into memory: %d", makeTimestampMilli()-startTime))
 		}
 	}()
+}
 
+// Processes files using ULOC - Unique lines of code
+func fileProcessorWorkerUloc(input chan *FileJob, output chan *FileJob) {
+	var startTime int64
+	var fileCount int64
+	var gcEnabled int64
+	var wg sync.WaitGroup
+
+	var ulocMutex = sync.Mutex{}
+	uloc := map[string]struct{}{}
+
+	for i := 0; i < FileProcessJobWorkers; i++ {
+		wg.Add(1)
+		go func() {
+			reader := NewFileReader()
+
+			for job := range input {
+				atomic.CompareAndSwapInt64(&startTime, 0, makeTimestampMilli())
+
+				loc := job.Location
+				if job.Symlocation != "" {
+					loc = job.Symlocation
+				}
+
+				fileStartTime := makeTimestampNano()
+				content, err := reader.ReadFile(loc, int(job.Bytes))
+				atomic.AddInt64(&fileCount, 1)
+
+				if atomic.LoadInt64(&gcEnabled) == 0 && atomic.LoadInt64(&fileCount) >= int64(GcFileCount) {
+					debug.SetGCPercent(gcPercent)
+					atomic.AddInt64(&gcEnabled, 1)
+					if Verbose {
+						printWarn("read file limit exceeded GC re-enabled")
+					}
+				}
+
+				if Trace {
+					printTrace(fmt.Sprintf("nanoseconds read into memory: %s: %d", job.Location, makeTimestampNano()-fileStartTime))
+				}
+
+				if err == nil {
+					ulocMutex.Lock()
+					for _, l := range strings.Split(string(content), "\n") {
+						uloc[l] = struct{}{}
+					}
+					ulocMutex.Unlock()
+				} else {
+					if Verbose {
+						printWarn(fmt.Sprintf("error reading: %s %s", job.Location, err))
+					}
+				}
+			}
+
+			wg.Done()
+		}()
+	}
+
+	wg.Wait()
+	if Debug {
+		printDebug(fmt.Sprintf("milliseconds reading files into memory: %d", makeTimestampMilli()-startTime))
+	}
+
+	fmt.Println(ulocDisplay(len(uloc)))
 }
 
 // Process a single file

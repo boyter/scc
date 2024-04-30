@@ -53,6 +53,12 @@ func main() {
 	flags := rootCmd.PersistentFlags()
 
 	flags.BoolVar(
+		&processor.UlocMode,
+		"uloc",
+		false,
+		"flip into uloc mode and count the number of unique lines of code",
+	)
+	flags.BoolVar(
 		&processor.DisableCheckBinary,
 		"binary",
 		false,
