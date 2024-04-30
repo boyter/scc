@@ -1361,31 +1361,31 @@
     "quotes": []
   },
   "Cairo": {
-      "complexitychecks": [
-        "loop ",
-        "if ",
-        "if(",
-        "match ",
-        "match(",
-        "else ",
-        "|| ",
-        "&& ",
-        "!= ",
-        "== "
-      ],
-      "extensions": [
-        "cairo"
-      ],
-      "line_comment": [
-        "//"
-      ],
-      "multi_line": [],
-      "quotes": [
-        {
-          "end": "'",
-          "start": "'"
-        }
-      ]
+    "complexitychecks": [
+      "loop ",
+      "if ",
+      "if(",
+      "match ",
+      "match(",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "cairo"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
   },
   "Cassius": {
     "complexitychecks": [
@@ -2256,7 +2256,7 @@
     ],
     "quotes": []
   },
-  "Factor" :{
+  "Factor": {
     "complexitychecks": [
       "if",
       "when",
@@ -2268,36 +2268,29 @@
       "?",
       "cond",
       "case",
-
       "cond>quot",
       "case>quot",
       "alist>quot",
-
       "while",
       "until",
       "loop",
-
       "0&&",
       "1&&",
       "2&&",
       "3&&",
       "n&&",
       "&&",
-
       "0||",
       "1||",
       "2||",
       "3||",
       "n||",
       "||",
-
       "and",
       "or",
       "xor",
-
       "eq",
       "=",
-
       "smart-if",
       "smart-if*",
       "smart-when",
@@ -3296,7 +3289,7 @@
         "start": "\""
       },
       {
-	"end": "`",
+        "end": "`",
         "start": "`"
       }
     ]
@@ -4376,24 +4369,24 @@
         "]]"
       ],
       [
-      "--[=[",
-      "]=]"
+        "--[=[",
+        "]=]"
       ],
       [
-      "--[==[",
-      "]==]"
+        "--[==[",
+        "]==]"
       ],
       [
-      "--[===[",
-      "]===]"
+        "--[===[",
+        "]===]"
       ],
       [
-      "--[====[",
-      "]====]"
+        "--[====[",
+        "]====]"
       ],
       [
-      "--[=====[",
-      "]=====]"
+        "--[=====[",
+        "]=====]"
       ]
     ],
     "quotes": [
@@ -4443,24 +4436,24 @@
         "]]"
       ],
       [
-      "--[=[",
-      "]=]"
+        "--[=[",
+        "]=]"
       ],
       [
-      "--[==[",
-      "]==]"
+        "--[==[",
+        "]==]"
       ],
       [
-      "--[===[",
-      "]===]"
+        "--[===[",
+        "]===]"
       ],
       [
-      "--[====[",
-      "]====]"
+        "--[====[",
+        "]====]"
       ],
       [
-      "--[=====[",
-      "]=====]"
+        "--[=====[",
+        "]=====]"
       ]
     ],
     "quotes": [
@@ -6297,7 +6290,6 @@
         "#`｢",
         "｣"
       ]
-
     ],
     "quotes": [
       {
@@ -7722,6 +7714,32 @@
     "multi_line": [],
     "quotes": []
   },
+  "TypeSpec": {
+    "complexitychecks": [],
+    "extensions": [
+      "tsp"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "\"\"\"",
+        "ignoreEscape": true,
+        "start": "\"\"\""
+      }
+    ]
+  },
   "TypeScript": {
     "complexitychecks": [
       "for ",
@@ -8988,7 +9006,7 @@
     ]
   },
   "Odin": {
-   "complexitychecks": [
+    "complexitychecks": [
       "for ",
       "for(",
       "if ",
