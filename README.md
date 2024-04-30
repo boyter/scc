@@ -232,9 +232,8 @@ Full details can be found in `scc --help` or `scc -h`. Note that the below refle
 features listed below may be missing from your installation.
 
 ```
-$ scc -h                                                                                      
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 3.2.0
+Version 3.3.0 (beta)
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
@@ -253,6 +252,7 @@ Flags:
       --eaf float                    the effort adjustment factor derived from the cost drivers (1.0 if rated nominal) (default 1)
       --exclude-dir strings          directories to exclude (default [.git,.hg,.svn])
   -x, --exclude-ext strings          ignore file extensions (overrides include-ext) [comma separated list: e.g. go,java,js]
+  -n, --exclude-file strings         ignore files with matching names (default [package-lock.json,Cargo.lock,yarn.lock,pubspec.lock,Podfile.lock])
       --file-gc-count int            number of files to parse before turning the GC on (default 10000)
   -f, --format string                set output format [tabular, wide, json, csv, csv-stream, cloc-yaml, html, html-table, sql, sql-insert, openmetrics] (default "tabular")
       --format-multi string          have multiple format output overriding --format [e.g. tabular:stdout,csv:file.csv,json:file.json]

@@ -131,8 +131,8 @@ func main() {
 		&processor.ExcludeFilename,
 		"exclude-file",
 		"n",
-		[]string{},
-		"ignore files with matching names [comma separated list: e.g. main.go,_test.go]",
+		[]string{"package-lock.json", "Cargo.lock", "yarn.lock", "pubspec.lock", "Podfile.lock"},
+		"ignore files with matching names",
 	)
 	flags.BoolVarP(
 		&processor.Languages,
