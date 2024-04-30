@@ -568,6 +568,7 @@ func Process() {
 	})
 	fileWalker.IgnoreGitIgnore = GitIgnore
 	fileWalker.IgnoreIgnoreFile = Ignore
+	fileWalker.IncludeHidden = true
 
 	go func() {
 		err := fileWalker.Start()
