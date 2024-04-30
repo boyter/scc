@@ -36,6 +36,8 @@ var tabularShortFormatBodyNoComplexity = "%-22s %11d %11d %10d %11d %9d\n"
 var tabularShortFormatFileNoComplexity = "%s %11d %10d %11d %9d\n"
 var longNameTruncate = 22
 
+var tabularUlocFormatBody = "Total Unique Source Lines of Code (ULOC) %38d\n"
+
 var tabularWideBreak = "─────────────────────────────────────────────────────────────────────────────────────────────────────────────\n"
 var tabularWideBreakCi = "-------------------------------------------------------------------------------------------------------------\n"
 var tabularWideFormatHead = "%-33s %9s %9s %8s %9s %8s %10s %16s\n"
@@ -673,18 +675,6 @@ create table t        (
 	return str.String()
 }
 
-// var tabularWideFormatBody = "%-33s %9d %9d %8d %9d %8d %10d %16.2f\n"
-var tabularUlocFormatBody = "Total Unique Source Lines of Code (ULOC) %38d\n"
-
-func ulocDisplay(input int) string {
-	var str strings.Builder
-	str.WriteString(getTabularShortBreak())
-	str.WriteString(fmt.Sprintf(tabularUlocFormatBody, input))
-	str.WriteString(getTabularShortBreak())
-
-	return str.String()
-}
-
 func fileSummarize(input chan *FileJob) string {
 	if FormatMulti != "" {
 		return fileSummarizeMulti(input)
@@ -1076,6 +1066,11 @@ func fileSummarizeShort(input chan *FileJob) string {
 		str.WriteString(fmt.Sprintf(tabularShortFormatBodyNoComplexity, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode))
 	}
 	str.WriteString(getTabularShortBreak())
+
+	if UlocMode {
+		str.WriteString(fmt.Sprintf(tabularUlocFormatBody, len(ulocGlobalCount)))
+		str.WriteString(getTabularShortBreak())
+	}
 
 	if !Cocomo {
 		if SLOCCountFormat {

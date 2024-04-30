@@ -522,6 +522,11 @@ func printLanguages() {
 	}
 }
 
+// global variables to deal with ULOC calculations
+var ulocMutex = sync.Mutex{}
+var ulocGlobalCount = map[string]struct{}{}
+var ulocLanguageCount = map[string]map[string]struct{}{}
+
 // Process is the main entry point of the command line it sets everything up and starts running
 func Process() {
 	if Languages {
