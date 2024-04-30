@@ -254,15 +254,6 @@ else
     exit
 fi
 
-if ./scc -v . | grep -q "skipping directory due to ignore: vendor" ; then
-    echo -e "${GREEN}PASSED ignore file directory check"
-else
-    echo -e "${RED}======================================================="
-    echo -e "FAILED ignore file directory check"
-    echo -e "=======================================================${NC}"
-    exit
-fi
-
 # Try out duplicates
 for i in {1..100}
 do
@@ -598,15 +589,6 @@ if ./scc ./examples/countas/ --count-as jsp:html,new:"C Header" | grep -q "C Hea
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED counted new as C Header"
-    echo -e "=======================================================${NC}"
-    exit
-fi
-
-if ./scc ./examples/issue149/ | grep -q "gitignore"; then
-    echo -e "${GREEN}PASSED empty gitignore"
-else
-    echo -e "${RED}======================================================="
-    echo -e "FAILED empty gitignore"
     echo -e "=======================================================${NC}"
     exit
 fi

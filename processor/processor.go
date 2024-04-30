@@ -14,6 +14,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/boyter/gocodewalker"
+
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -529,44 +531,84 @@ func Process() {
 		DirFilePaths = append(DirFilePaths, ".")
 	}
 
+	filePaths := []string{}
+	dirPaths := []string{}
+
 	// Check if the paths or files added exist and exit if not
 	for _, f := range DirFilePaths {
 		fpath := filepath.Clean(f)
 
-		if _, err := os.Stat(fpath); os.IsNotExist(err) {
+		s, err := os.Stat(fpath)
+		if os.IsNotExist(err) {
 			fmt.Println("file or directory does not exist: " + fpath)
 			os.Exit(1)
+		}
+
+		if s.IsDir() {
+			dirPaths = append(dirPaths, fpath)
+		} else {
+			filePaths = append(filePaths, fpath)
 		}
 	}
 
 	SortBy = strings.ToLower(SortBy)
 
-	if Debug {
-		printDebug(fmt.Sprintf("NumCPU: %d", runtime.NumCPU()))
-		printDebug(fmt.Sprintf("SortBy: %s", SortBy))
-		printDebug(fmt.Sprintf("PathDenyList: %v", PathDenyList))
-	}
+	printDebug(fmt.Sprintf("NumCPU: %d", runtime.NumCPU()))
+	printDebug(fmt.Sprintf("SortBy: %s", SortBy))
+	printDebug(fmt.Sprintf("PathDenyList: %v", PathDenyList))
 
-	fileListQueue := make(chan *FileJob, FileListQueueSize)             // Files ready to be read from disk
-	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize) // Files ready to be summarised
+	potentialFilesQueue := make(chan *gocodewalker.File, FileListQueueSize) // files that pass the .gitignore checks
+	fileListQueue := make(chan *FileJob, FileListQueueSize)                 // Files ready to be read from disk
+	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)     // Files ready to be summarised
+
+	fileWalker := gocodewalker.NewParallelFileWalker(dirPaths, potentialFilesQueue)
+	fileWalker.SetErrorHandler(func(e error) bool {
+		printError(e.Error())
+		return true
+	})
+	fileWalker.IgnoreGitIgnore = GitIgnore
+	fileWalker.IgnoreIgnoreFile = Ignore
+	fileWalker.IncludeHidden = true
 
 	go func() {
-		directoryWalker := NewDirectoryWalker(fileListQueue)
+		err := fileWalker.Start()
+		if err != nil {
+			printError(err.Error())
+		}
+	}()
 
-		for _, f := range DirFilePaths {
-			err := directoryWalker.Start(f)
+	go func() {
+		for _, f := range filePaths {
+			fileInfo, err := os.Lstat(f)
 			if err != nil {
-				fmt.Printf("failed to walk %s: %v", f, err)
-				os.Exit(1)
+				continue
+			}
+
+			fileJob := newFileJob(f, f, fileInfo)
+			if fileJob != nil {
+				fileListQueue <- fileJob
 			}
 		}
 
-		directoryWalker.Run()
+		for fi := range potentialFilesQueue {
+			fileInfo, err := os.Lstat(fi.Location)
+			if err != nil {
+				continue
+			}
+
+			if !fileInfo.IsDir() {
+				fileJob := newFileJob(fi.Location, fi.Filename, fileInfo)
+				if fileJob != nil {
+					fileListQueue <- fileJob
+				}
+			}
+		}
+		close(fileListQueue)
 	}()
+
 	go fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
 
 	result := fileSummarize(fileSummaryJobQueue)
-
 	if FileOutput == "" {
 		fmt.Println(result)
 	} else {
