@@ -56,7 +56,7 @@ func main() {
 		&processor.UlocMode,
 		"uloc",
 		false,
-		"flip into uloc mode and count the number of unique lines of code",
+		"calculate the number of unique lines of code (ULOC) for the project",
 	)
 	flags.BoolVar(
 		&processor.DisableCheckBinary,

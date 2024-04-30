@@ -613,17 +613,13 @@ func Process() {
 		close(fileListQueue)
 	}()
 
-	if UlocMode {
-		fileProcessorWorkerUloc(fileListQueue, fileSummaryJobQueue)
-	} else {
-		go fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
+	go fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
 
-		result := fileSummarize(fileSummaryJobQueue)
-		if FileOutput == "" {
-			fmt.Println(result)
-		} else {
-			_ = os.WriteFile(FileOutput, []byte(result), 0644)
-			fmt.Println("results written to " + FileOutput)
-		}
+	result := fileSummarize(fileSummaryJobQueue)
+	if FileOutput == "" {
+		fmt.Println(result)
+	} else {
+		_ = os.WriteFile(FileOutput, []byte(result), 0644)
+		fmt.Println("results written to " + FileOutput)
 	}
 }

@@ -645,6 +645,8 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 	var fileCount int64
 	var gcEnabled int64
 	var wg sync.WaitGroup
+	var ulocMutex = sync.Mutex{}
+	uloc := map[string]struct{}{}
 
 	for i := 0; i < FileProcessJobWorkers; i++ {
 		wg.Add(1)
@@ -680,6 +682,13 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 					if processFile(job) {
 						output <- job
 					}
+					if UlocMode {
+						ulocMutex.Lock()
+						for _, l := range strings.Split(string(content), "\n") {
+							uloc[l] = struct{}{}
+						}
+						ulocMutex.Unlock()
+					}
 				} else {
 					if Verbose {
 						printWarn(fmt.Sprintf("error reading: %s %s", job.Location, err))
@@ -694,6 +703,7 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 	go func() {
 		wg.Wait()
 		close(output)
+		fmt.Println(ulocDisplay(len(uloc)))
 
 		if Debug {
 			printDebug(fmt.Sprintf("milliseconds reading files into memory: %d", makeTimestampMilli()-startTime))
