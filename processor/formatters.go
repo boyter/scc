@@ -31,7 +31,7 @@ var tabularShortFormatFile = "%s %9d %8d %9d %8d %10d\n"
 var shortFormatFileTruncate = 29
 var shortNameTruncate = 20
 
-var tabularShortUlocLanguageFormatBody = "%40d            Unique Lines of Code (ULOC)\n"
+var tabularShortUlocLanguageFormatBody = "(ULOC) %33d\n"
 var tabularShortUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %12d\n"
 
 var tabularShortFormatHeadNoComplexity = "%-22s %11s %11s %10s %11s %9s\n"
@@ -67,7 +67,7 @@ var openMetricsFileRecordFormat = "scc_%s{language=\"%s\",file=\"%s\"} %d\n"
 
 func sortSummaryFiles(summary *LanguageSummary) {
 	switch {
-	case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "languages":
+	case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "languages" || SortBy == "lang":
 		sort.Slice(summary.Files, func(i, j int) bool {
 			return strings.Compare(summary.Files[i].Location, summary.Files[j].Location) < 0
 		})
@@ -87,7 +87,7 @@ func sortSummaryFiles(summary *LanguageSummary) {
 		sort.Slice(summary.Files, func(i, j int) bool {
 			return summary.Files[i].Comment > summary.Files[j].Comment
 		})
-	case SortBy == "complexity" || SortBy == "complexitys":
+	case SortBy == "complexity" || SortBy == "complexitys" || SortBy == "comp":
 		sort.Slice(summary.Files, func(i, j int) bool {
 			return summary.Files[i].Complexity > summary.Files[j].Complexity
 		})
