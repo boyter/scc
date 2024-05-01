@@ -781,6 +781,7 @@ func TestToSQLSingle(t *testing.T) {
 		Complexity:         1000,
 		WeightedComplexity: 1000,
 		Binary:             false,
+		Uloc:               99,
 	}
 	close(inputChan)
 	Files = false
@@ -800,7 +801,7 @@ func TestToSQLSingle(t *testing.T) {
 		t.Error("Expected begin transaction return", res)
 	}
 
-	if !strings.Contains(res, `insert into t values('', 'Go', './', './', 'bbbb.go', 1000, 1000, 1000, 1000, 1000);`) {
+	if !strings.Contains(res, `insert into t values('', 'Go', './', './', 'bbbb.go', 1000, 1000, 1000, 1000, 1000, 99);`) {
 		t.Error("Expected insert return", res)
 	}
 

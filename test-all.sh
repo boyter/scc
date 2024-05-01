@@ -893,7 +893,7 @@ done
 
 # Issue345 (https://github.com/boyter/scc/issues/345)
 a=$(./scc "examples/issue345/" -f csv | sed -n '2 p')
-b="C++,4,3,1,0,0,76"
+b="C++,4,3,1,0,0,76,1,0"
 if [ "$a" == "$b" ]; then
     echo -e "{GREEN}PASSED string termination check"
 else

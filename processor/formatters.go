@@ -261,6 +261,7 @@ func toCSVSummary(input chan *FileJob) string {
 			fmt.Sprint(result.Blank),
 			fmt.Sprint(result.Complexity),
 			fmt.Sprint(result.Bytes),
+			fmt.Sprint(result.Count),
 			fmt.Sprint(len(ulocLanguageCount[result.Name])),
 		})
 	}
@@ -324,6 +325,7 @@ func toCSVSummary(input chan *FileJob) string {
 		"Blanks",
 		"Complexity",
 		"Bytes",
+		"Files",
 		"ULOC",
 	}}
 
