@@ -249,6 +249,7 @@ Flags:
       --count-ignore                 set to allow .gitignore and .ignore files to be counted
       --currency-symbol string       set currency symbol (default "$")
       --debug                        enable debug output
+  -a, --dryness                      calculate the dryness/wetness of the project (implies --uloc)
       --eaf float                    the effort adjustment factor derived from the cost drivers (1.0 if rated nominal) (default 1)
       --exclude-dir strings          directories to exclude (default [.git,.hg,.svn])
   -x, --exclude-ext strings          ignore file extensions (overrides include-ext) [comma separated list: e.g. go,java,js]
@@ -287,10 +288,11 @@ Flags:
   -s, --sort string                  column to sort by [files, name, lines, blanks, code, comments, complexity] (default "files")
       --sql-project string           use supplied name as the project identifier for the current run. Only valid with the --format sql or sql-insert option
   -t, --trace                        enable trace output (not recommended when processing multiple files)
-      --uloc                         flip into uloc mode and count the number of unique lines of code
+  -u, --uloc                         calculate the number of unique lines of code (ULOC) for the project
   -v, --verbose                      verbose output
       --version                      version for scc
   -w, --wide                         wider output with additional statistics (implies --complexity)
+
 ```
 
 Output should look something like the below for the redis project
@@ -371,7 +373,7 @@ It also attempts to count the complexity of code. This is done by checking for b
 
 ### Complexity Estimates
 
-Lets take a minute to discuss the complexity estimate itself.
+Let's take a minute to discuss the complexity estimate itself.
 
 The complexity estimate is really just a number that is only comparable to files in the same language. It should not be used to compare languages directly without weighting them. The reason for this is that its calculated by looking for branch and loop statements in the code and incrementing a counter for that file.
 
@@ -390,6 +392,47 @@ In short when scc is looking through what it has identified as code if it notice
 The conditions it looks for are compiled into the code and you can get an idea for them by looking at the JSON inside the repository. See https://github.com/boyter/scc/blob/master/languages.json#L3524 for an example of what it's looking at for a file that's Java.
 
 The increment happens for each of the matching conditions and produces the number you see.
+
+### Unique Lines of Code (ULOC)
+
+ULOC stands for Unique Lines of Code and represents the unique lines across languages, files and the project itself. This idea was taken from
+https://cmcenroe.me/2018/12/14/uloc.html where the calculation is presented using standard unix tools `sort -u *.h *.c | wc -l`. This metric is 
+there to assist with the estimation of complexity within the project. Quoting the source
+
+> In my opinion, the number this produces should be a better estimate of the complexity of a project. Compared to SLOC, not only are blank lines discounted, but so are close-brace lines and other repetitive code such as common includes. On the other hand, ULOC counts comments, which require just as much maintenance as the code around them does, while avoiding inflating the result with license headers which appear in every file, for example.
+
+You can obtain the ULOC by supplying the `-u` or `--uloc` argument to `scc`.
+
+It has a corresponding metric `DRYness %` which is the percentage of ULOC to CLOC or `DRYness = ULOC / SLOC`. The 
+higher the number the more DRY (don't repeat yourself) the project can be considered. In general a higher value
+here is a better as it indicates less duplicated code.
+
+To obtain the DRYness metric you can use the `-a` or `--dryness` argument to `scc`, which will implicitly set `--uloc`.
+
+Note that there is a performance penalty when calculating the ULOC metrics which can double the runtime.
+
+Running the uloc and DRYness calculations against C code a clone of redis produces an output as follows.
+
+```
+$ scc -a -i c redis 
+───────────────────────────────────────────────────────────────────────────────
+Language                 Files     Lines   Blanks  Comments     Code Complexity
+───────────────────────────────────────────────────────────────────────────────
+C                          419    241293    27309     41292   172692      40849
+(ULOC)                            133535
+───────────────────────────────────────────────────────────────────────────────
+Total                      419    241293    27309     41292   172692      40849
+───────────────────────────────────────────────────────────────────────────────
+Unique Lines of Code (ULOC)       133535
+DRYness %                           0.55
+───────────────────────────────────────────────────────────────────────────────
+Estimated Cost to Develop (organic) $6,035,748
+Estimated Schedule Effort (organic) 27.23 months
+Estimated People Required (organic) 19.69
+───────────────────────────────────────────────────────────────────────────────
+Processed 8407821 bytes, 8.408 megabytes (SI)
+───────────────────────────────────────────────────────────────────────────────
+```
 
 ### COCOMO
 
