@@ -477,7 +477,7 @@ func toOpenMetricsFiles(input chan *FileJob) string {
 // with the express idea of lowering memory usage, see https://github.com/boyter/scc/issues/210 for
 // the background on why this might be needed
 func toCSVStream(input chan *FileJob) string {
-	fmt.Println("Language,Provider,Filename,Lines,Code,Comments,Blanks,Complexity,Bytes")
+	fmt.Println("Language,Provider,Filename,Lines,Code,Comments,Blanks,Complexity,Bytes,Uloc")
 
 	var quoteRegex = regexp.MustCompile("\"")
 
@@ -486,7 +486,7 @@ func toCSVStream(input chan *FileJob) string {
 		var location = "\"" + quoteRegex.ReplaceAllString(result.Location, "\"\"") + "\""
 		var filename = "\"" + quoteRegex.ReplaceAllString(result.Filename, "\"\"") + "\""
 
-		fmt.Println(fmt.Sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s",
+		fmt.Println(fmt.Sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
 			result.Language,
 			location,
 			filename,
@@ -496,6 +496,7 @@ func toCSVStream(input chan *FileJob) string {
 			fmt.Sprint(result.Blank),
 			fmt.Sprint(result.Complexity),
 			fmt.Sprint(result.Bytes),
+			fmt.Sprint(result.Uloc),
 		))
 	}
 
@@ -575,6 +576,7 @@ func toHtmlTable(input chan *FileJob) string {
 		<th>Code</th>
 		<th>Complexity</th>
 		<th>Bytes</th>
+		<th>Uloc</th>
 	</tr></thead>
 	<tbody>`)
 
@@ -588,7 +590,8 @@ func toHtmlTable(input chan *FileJob) string {
 		<th>%d</th>
 		<th>%d</th>
 		<th>%d</th>
-	</tr>`, r.Name, len(r.Files), r.Lines, r.Blank, r.Comment, r.Code, r.Complexity, r.Bytes))
+		<th>%d</th>
+	</tr>`, r.Name, len(r.Files), r.Lines, r.Blank, r.Comment, r.Code, r.Complexity, r.Bytes, len(ulocLanguageCount[r.Name])))
 
 		if Files {
 			sortSummaryFiles(&r)
@@ -603,7 +606,8 @@ func toHtmlTable(input chan *FileJob) string {
 		<td>%d</td>
 		<td>%d</td>
 	    <td>%d</td>
-	</tr>`, res.Location, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.Bytes))
+		<td>%d</td>
+	</tr>`, res.Location, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.Bytes, res.Uloc))
 			}
 		}
 
@@ -619,8 +623,9 @@ func toHtmlTable(input chan *FileJob) string {
 		<th>%d</th>
 		<th>%d</th>
     	<th>%d</th>
+		<th>%d</th>
 	</tr></tfoot>
-	</table>`, sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumBytes))
+	</table>`, sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumBytes, len(ulocGlobalCount)))
 
 	return str.String()
 }

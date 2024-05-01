@@ -78,7 +78,7 @@ type FileJob struct {
 	Complexity         int64
 	WeightedComplexity float64
 	Hash               hash.Hash
-	Callback           FileJobCallback
+	Callback           FileJobCallback `json:"-"`
 	Binary             bool
 	Minified           bool
 	Generated          bool
