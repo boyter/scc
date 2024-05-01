@@ -910,7 +910,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 
 		if UlocMode {
 			str.WriteString(fmt.Sprintf(tabularWideUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name])))
-			if summary.Name != language[len(language)-1].Name {
+			if !Files && summary.Name != language[len(language)-1].Name {
 				str.WriteString(tabularWideBreakCi)
 			}
 		}
@@ -1072,7 +1072,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 		if UlocMode {
 			str.WriteString(fmt.Sprintf(tabularShortUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name])))
-			if summary.Name != language[len(language)-1].Name {
+			if !Files && summary.Name != language[len(language)-1].Name {
 				str.WriteString(tabularShortBreakCi)
 			}
 		}
