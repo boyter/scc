@@ -260,7 +260,9 @@ func toCSVSummary(input chan *FileJob) string {
 			fmt.Sprint(result.Comment),
 			fmt.Sprint(result.Blank),
 			fmt.Sprint(result.Complexity),
-			fmt.Sprint(result.Bytes)})
+			fmt.Sprint(result.Bytes),
+			fmt.Sprint(len(ulocLanguageCount[result.Name])),
+		})
 	}
 
 	// Cater for the common case of adding plural even for those options that don't make sense
@@ -321,8 +323,9 @@ func toCSVSummary(input chan *FileJob) string {
 		"Comments",
 		"Blanks",
 		"Complexity",
-		"Bytes"},
-	}
+		"Bytes",
+		"ULOC",
+	}}
 
 	recordsEnd = append(recordsEnd, records...)
 
@@ -347,7 +350,9 @@ func toCSVFiles(input chan *FileJob) string {
 			fmt.Sprint(result.Comment),
 			fmt.Sprint(result.Blank),
 			fmt.Sprint(result.Complexity),
-			fmt.Sprint(result.Bytes)})
+			fmt.Sprint(result.Bytes),
+			fmt.Sprint(result.Uloc),
+		})
 	}
 
 	// Cater for the common case of adding plural even for those options that don't make sense
@@ -412,8 +417,9 @@ func toCSVFiles(input chan *FileJob) string {
 		"Comments",
 		"Blanks",
 		"Complexity",
-		"Bytes"},
-	}
+		"Bytes",
+		"ULOC",
+	}}
 
 	recordsEnd = append(recordsEnd, records...)
 
