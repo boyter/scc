@@ -83,6 +83,7 @@ type FileJob struct {
 	Minified           bool
 	Generated          bool
 	EndPoint           int
+	Uloc               int
 }
 
 // LanguageSummary is used to hold summarised results for a single language

@@ -31,12 +31,13 @@ var tabularShortFormatFile = "%s %9d %8d %9d %8d %10d\n"
 var shortFormatFileTruncate = 29
 var shortNameTruncate = 20
 
+var tabularShortUlocLanguageFormatBody = "%40d            Unique Lines of Code (ULOC)\n"
+var tabularShortUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %12d\n"
+
 var tabularShortFormatHeadNoComplexity = "%-22s %11s %11s %10s %11s %9s\n"
 var tabularShortFormatBodyNoComplexity = "%-22s %11d %11d %10d %11d %9d\n"
 var tabularShortFormatFileNoComplexity = "%s %11d %10d %11d %9d\n"
 var longNameTruncate = 22
-
-var tabularUlocFormatBody = "Total Unique Source Lines of Code (ULOC) %38d\n"
 
 var tabularWideBreak = "─────────────────────────────────────────────────────────────────────────────────────────────────────────────\n"
 var tabularWideBreakCi = "-------------------------------------------------------------------------------------------------------------\n"
@@ -1037,6 +1038,13 @@ func fileSummarizeShort(input chan *FileJob) string {
 			str.WriteString(fmt.Sprintf(tabularShortFormatBodyNoComplexity, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code))
 		}
 
+		if UlocMode {
+			str.WriteString(fmt.Sprintf(tabularShortUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name])))
+			if summary.Name != language[len(language)-1].Name {
+				str.WriteString(tabularShortBreakCi)
+			}
+		}
+
 		if Files {
 			sortSummaryFiles(&summary)
 			str.WriteString(getTabularShortBreak())
@@ -1068,7 +1076,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 	str.WriteString(getTabularShortBreak())
 
 	if UlocMode {
-		str.WriteString(fmt.Sprintf(tabularUlocFormatBody, len(ulocGlobalCount)))
+		str.WriteString(fmt.Sprintf(tabularShortUlocGlobalFormatBody, len(ulocGlobalCount)))
 		str.WriteString(getTabularShortBreak())
 	}
 

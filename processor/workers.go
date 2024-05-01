@@ -570,6 +570,14 @@ func CountStats(fileJob *FileJob) {
 		fileJob.Hash.Sum(nil)
 	}
 
+	if UlocMode && Files {
+		uloc := map[string]struct{}{}
+		for _, l := range strings.Split(string(fileJob.Content), "\n") {
+			uloc[l] = struct{}{}
+		}
+		fileJob.Uloc = len(uloc)
+	}
+
 	isGenerated := false
 
 	if Generated {
