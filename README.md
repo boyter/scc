@@ -405,7 +405,7 @@ You can obtain the ULOC by supplying the `-u` or `--uloc` argument to `scc`.
 
 It has a corresponding metric `DRYness %` which is the percentage of ULOC to CLOC or `DRYness = ULOC / SLOC`. The 
 higher the number the more DRY (don't repeat yourself) the project can be considered. In general a higher value
-here is a better as it indicates less duplicated code.
+here is a better as it indicates less duplicated code. The DRYness metric was taken from a comment by minimax https://lobste.rs/s/has9r7/uloc_unique_lines_code 
 
 To obtain the DRYness metric you can use the `-a` or `--dryness` argument to `scc`, which will implicitly set `--uloc`.
 
