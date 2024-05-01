@@ -46,6 +46,9 @@ var tabularWideFormatBody = "%-33s %9d %9d %8d %9d %8d %10d %16.2f\n"
 var tabularWideFormatFile = "%s %9d %8d %9d %8d %10d %16.2f\n"
 var wideFormatFileTruncate = 42
 
+var tabularWideUlocLanguageFormatBody = "(ULOC) %46d\n"
+var tabularWideUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %25d\n"
+
 var openMetricsMetadata = `# TYPE scc_files count
 # HELP scc_files Number of sourcecode files.
 # TYPE scc_lines count
@@ -892,6 +895,13 @@ func fileSummarizeLong(input chan *FileJob) string {
 
 		str.WriteString(fmt.Sprintf(tabularWideFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summary.WeightedComplexity))
 
+		if UlocMode {
+			str.WriteString(fmt.Sprintf(tabularWideUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name])))
+			if summary.Name != language[len(language)-1].Name {
+				str.WriteString(tabularWideBreakCi)
+			}
+		}
+
 		if Files {
 			sortSummaryFiles(&summary)
 			str.WriteString(getTabularWideBreak())
@@ -912,6 +922,15 @@ func fileSummarizeLong(input chan *FileJob) string {
 	str.WriteString(getTabularWideBreak())
 	str.WriteString(fmt.Sprintf(tabularWideFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumWeightedComplexity))
 	str.WriteString(getTabularWideBreak())
+
+	if UlocMode {
+		str.WriteString(fmt.Sprintf(tabularWideUlocGlobalFormatBody, len(ulocGlobalCount)))
+		if Dryness {
+			dryness := float64(len(ulocGlobalCount)) / float64(sumLines)
+			str.WriteString(fmt.Sprintf("DRYness %% %43.2f\n", dryness))
+		}
+		str.WriteString(getTabularWideBreak())
+	}
 
 	if !Cocomo {
 		if SLOCCountFormat {
