@@ -52,9 +52,10 @@ func main() {
 
 	flags := rootCmd.PersistentFlags()
 
-	flags.BoolVar(
+	flags.BoolVarP(
 		&processor.UlocMode,
 		"uloc",
+		"u",
 		false,
 		"calculate the number of unique lines of code (ULOC) for the project",
 	)
