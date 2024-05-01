@@ -186,6 +186,7 @@ Why use `scc`?
  - Can identify or ignore minified files
  - Able to identify many #! files ADVANCED! https://github.com/boyter/scc/issues/115
  - Can ignore large files by lines or bytes
+ - Can calculate the ULOC or unique lines of code by file, language or project
 
 Why not use `scc`?
 
