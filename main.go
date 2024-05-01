@@ -59,6 +59,13 @@ func main() {
 		false,
 		"calculate the number of unique lines of code (ULOC) for the project",
 	)
+	flags.BoolVarP(
+		&processor.Dryness,
+		"dryness",
+		"a",
+		false,
+		"calculate the dryness/wetness of the project (implies --uloc)",
+	)
 	flags.BoolVar(
 		&processor.DisableCheckBinary,
 		"binary",

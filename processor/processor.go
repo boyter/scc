@@ -105,6 +105,9 @@ var DisableCheckBinary = false
 // UlocMode toggles checking for binary files using NUL bytes
 var UlocMode = false
 
+// Dryness toggles checking for binary files using NUL bytes
+var Dryness = false
+
 // SortBy sets which column output in formatter should be sorted by
 var SortBy = ""
 
@@ -467,6 +470,10 @@ func processFlags() {
 		Generated = true
 	}
 
+	if Dryness {
+		UlocMode = true
+	}
+
 	if Debug {
 		printDebug(fmt.Sprintf("Path Deny List: %v", PathDenyList))
 		printDebug(fmt.Sprintf("Sort By: %s", SortBy))
@@ -481,6 +488,8 @@ func processFlags() {
 		printDebug(fmt.Sprintf("Minified/Generated Detection: %t/%t", Minified, Generated))
 		printDebug(fmt.Sprintf("Ignore Minified/Generated: %t/%t", IgnoreMinified, IgnoreGenerated))
 		printDebug(fmt.Sprintf("IncludeSymLinks: %t", IncludeSymLinks))
+		printDebug(fmt.Sprintf("Uloc: %t", UlocMode))
+		printDebug(fmt.Sprintf("Dryness: %t", Dryness))
 	}
 }
 

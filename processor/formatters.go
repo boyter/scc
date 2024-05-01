@@ -1077,6 +1077,10 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 	if UlocMode {
 		str.WriteString(fmt.Sprintf(tabularShortUlocGlobalFormatBody, len(ulocGlobalCount)))
+		if Dryness {
+			dryness := float64(len(ulocGlobalCount)) / float64(sumLines)
+			str.WriteString(fmt.Sprintf("DRYness %% %30.2f\n", dryness))
+		}
 		str.WriteString(getTabularShortBreak())
 	}
 
