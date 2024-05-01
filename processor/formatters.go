@@ -639,8 +639,8 @@ func toSqlInsert(input chan *FileJob) string {
 
 		dir, _ := filepath.Split(res.Location)
 
-		str.WriteString(fmt.Sprintf("\ninsert into t values('%s', '%s', '%s', '%s', '%s', %d, %d, %d, %d, %d);",
-			projectName, res.Language, res.Location, dir, res.Filename, res.Bytes, res.Blank, res.Comment, res.Code, res.Complexity))
+		str.WriteString(fmt.Sprintf("\ninsert into t values('%s', '%s', '%s', '%s', '%s', %d, %d, %d, %d, %d, %d);",
+			projectName, res.Language, res.Location, dir, res.Filename, res.Bytes, res.Blank, res.Comment, res.Code, res.Complexity, res.Uloc))
 
 		// every 1000 files commit and start a new transaction to avoid overloading
 		if count == 1000 {
@@ -649,9 +649,7 @@ func toSqlInsert(input chan *FileJob) string {
 			count = 0
 		}
 	}
-	if count != 1000 {
-		str.WriteString("\ncommit;")
-	}
+	str.WriteString("\ncommit;")
 
 	currentTime := time.Now()
 	es := float64(makeTimestampMilli()-startTimeMilli) * 0.001
@@ -679,7 +677,9 @@ create table t        (
              nBlank        integer,
              nComment      integer,
              nCode         integer,
-             nComplexity   integer   );`)
+             nComplexity   integer,
+             nUloc         integer    
+);`)
 
 	str.WriteString(toSqlInsert(input))
 	return str.String()
