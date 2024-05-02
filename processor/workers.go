@@ -757,20 +757,6 @@ func processFile(job *FileJob) bool {
 
 	CountStats(job)
 
-	if UlocMode {
-		ulocMutex.Lock()
-		for _, l := range strings.Split(string(job.Content), "\n") {
-			ulocGlobalCount[l] = struct{}{}
-
-			_, ok := ulocLanguageCount[job.Language]
-			if !ok {
-				ulocLanguageCount[job.Language] = map[string]struct{}{}
-			}
-			ulocLanguageCount[job.Language][l] = struct{}{}
-		}
-		ulocMutex.Unlock()
-	}
-
 	if Duplicates {
 		duplicates.mux.Lock()
 		jobHash := job.Hash.Sum(nil)
@@ -817,6 +803,22 @@ func processFile(job *FileJob) bool {
 			printWarn(fmt.Sprintf("skipping file identified as binary: %s", job.Location))
 		}
 		return false
+	}
+
+	// This needs to be at the end so we can ensure duplicate detection et.al run first
+	// avoiding inflating the counts
+	if UlocMode {
+		ulocMutex.Lock()
+		for _, l := range strings.Split(string(job.Content), "\n") {
+			ulocGlobalCount[l] = struct{}{}
+
+			_, ok := ulocLanguageCount[job.Language]
+			if !ok {
+				ulocLanguageCount[job.Language] = map[string]struct{}{}
+			}
+			ulocLanguageCount[job.Language][l] = struct{}{}
+		}
+		ulocMutex.Unlock()
 	}
 
 	return true
