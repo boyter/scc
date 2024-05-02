@@ -51,7 +51,7 @@ fi
 
 echo "Building HTML report..."
 
-./scc --format html -o SCC-OUTPUT-REPORT.html
+./scc --format html -a --by-file -i go -o SCC-OUTPUT-REPORT.html
 
 echo "Running integration tests..."
 
