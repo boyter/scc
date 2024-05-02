@@ -234,7 +234,7 @@ features listed below may be missing from your installation.
 
 ```
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 3.3.0 (beta)
+Version 3.3.0
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
@@ -250,7 +250,7 @@ Flags:
       --count-ignore                 set to allow .gitignore and .ignore files to be counted
       --currency-symbol string       set currency symbol (default "$")
       --debug                        enable debug output
-  -a, --dryness                      calculate the dryness/wetness of the project (implies --uloc)
+  -a, --dryness                      calculate the DRYness of the project (implies --uloc)
       --eaf float                    the effort adjustment factor derived from the cost drivers (1.0 if rated nominal) (default 1)
       --exclude-dir strings          directories to exclude (default [.git,.hg,.svn])
   -x, --exclude-ext strings          ignore file extensions (overrides include-ext) [comma separated list: e.g. go,java,js]
@@ -293,7 +293,6 @@ Flags:
   -v, --verbose                      verbose output
       --version                      version for scc
   -w, --wide                         wider output with additional statistics (implies --complexity)
-
 ```
 
 Output should look something like the below for the redis project

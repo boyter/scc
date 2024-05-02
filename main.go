@@ -64,7 +64,7 @@ func main() {
 		"dryness",
 		"a",
 		false,
-		"calculate the dryness/wetness of the project (implies --uloc)",
+		"calculate the DRYness of the project (implies --uloc)",
 	)
 	flags.BoolVar(
 		&processor.DisableCheckBinary,
