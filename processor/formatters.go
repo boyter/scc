@@ -39,6 +39,8 @@ var tabularShortFormatBodyNoComplexity = "%-22s %11d %11d %10d %11d %9d\n"
 var tabularShortFormatFileNoComplexity = "%s %11d %10d %11d %9d\n"
 var longNameTruncate = 22
 
+var tabularShortUlocLanguageFormatBodyNoComplexity = "(ULOC) %39d\n"
+
 var tabularWideBreak = "─────────────────────────────────────────────────────────────────────────────────────────────────────────────\n"
 var tabularWideBreakCi = "-------------------------------------------------------------------------------------------------------------\n"
 var tabularWideFormatHead = "%-33s %9s %9s %8s %9s %8s %10s %16s\n"
@@ -1094,7 +1096,12 @@ func fileSummarizeShort(input chan *FileJob) string {
 		}
 
 		if UlocMode {
-			str.WriteString(fmt.Sprintf(tabularShortUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name])))
+			if !Complexity {
+				str.WriteString(fmt.Sprintf(tabularShortUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name])))
+			} else {
+				str.WriteString(fmt.Sprintf(tabularShortUlocLanguageFormatBodyNoComplexity, len(ulocLanguageCount[summary.Name])))
+			}
+
 			if !Files && summary.Name != language[len(language)-1].Name {
 				str.WriteString(tabularShortBreakCi)
 			}
@@ -1207,8 +1214,7 @@ func calculateSize(sumBytes int64, str *strings.Builder) {
 		size = float64(sumBytes) / 1_024_000
 	case "xkcd-kb":
 		str.WriteString("1000 bytes during leap years, 1024 otherwise\n")
-		tim := time.Now()
-		if isLeapYear(tim.Year()) {
+		if isLeapYear(time.Now().Year()) {
 			size = float64(sumBytes) / 1_000_000
 		}
 	case "xkcd-kelly":
