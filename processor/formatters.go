@@ -240,6 +240,39 @@ func toJSON(input chan *FileJob) string {
 	return string(jsonString)
 }
 
+type Json2 struct {
+	LanguageSummary         []LanguageSummary `json:"languageSummary"`
+	EstimatedCost           float64           `json:"estimatedCost"`
+	EstimatedScheduleMonths float64           `json:"estimatedScheduleMonths"`
+	EstimatedPeople         float64           `json:"estimatedPeople"`
+}
+
+func toJSON2(input chan *FileJob) string {
+	startTime := makeTimestampMilli()
+	language := aggregateLanguageSummary(input)
+	language = sortLanguageSummary(language)
+
+	var sumCode int64
+	for _, l := range language {
+		sumCode += l.Code
+	}
+
+	cost, schedule, people := esstimateCostScheduleMonths(sumCode)
+
+	jsonString, _ := json.Marshal(Json2{
+		LanguageSummary:         language,
+		EstimatedCost:           cost,
+		EstimatedScheduleMonths: schedule,
+		EstimatedPeople:         people,
+	})
+
+	if Debug {
+		printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
+	}
+
+	return string(jsonString)
+}
+
 func toCSV(input chan *FileJob) string {
 	if Files {
 		return toCSVFiles(input)
@@ -751,6 +784,8 @@ func fileSummarize(input chan *FileJob) string {
 		return fileSummarizeLong(input)
 	case strings.ToLower(Format) == "json":
 		return toJSON(input)
+	case strings.ToLower(Format) == "json2":
+		return toJSON2(input)
 	case strings.ToLower(Format) == "cloc-yaml" || strings.ToLower(Format) == "cloc-yml":
 		return toClocYAML(input)
 	case strings.ToLower(Format) == "csv":
@@ -804,6 +839,8 @@ func fileSummarizeMulti(input chan *FileJob) string {
 				val = fileSummarizeLong(i)
 			case "json":
 				val = toJSON(i)
+			case "json2":
+				val = toJSON2(i)
 			case "cloc-yaml":
 				val = toClocYAML(i)
 			case "cloc-yml":

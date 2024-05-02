@@ -647,6 +647,15 @@ else
     exit
 fi
 
+if ./scc -f json2 | grep -q "Bytes"; then
+    echo -e "${GREEN}PASSED json2 bytes check"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED json bytes check"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 if ./scc | grep -q "megabytes"; then
     echo -e "${GREEN}PASSED bytes check"
 else
