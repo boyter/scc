@@ -157,8 +157,9 @@ func (f *FileWalker) Start() error {
 	if len(f.directories) != 0 {
 		eg := errgroup.Group{}
 		for _, directory := range f.directories {
+			d := directory // capture var
 			eg.Go(func() error {
-				return f.walkDirectoryRecursive(directory, []gitignore.GitIgnore{}, []gitignore.GitIgnore{})
+				return f.walkDirectoryRecursive(d, []gitignore.GitIgnore{}, []gitignore.GitIgnore{})
 			})
 		}
 
