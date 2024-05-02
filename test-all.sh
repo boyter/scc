@@ -728,7 +728,7 @@ else
     exit
 fi
 
-./scc --format-multi "tabular:output.tab,wide:output.wide,json:output.json,csv:output.csv,cloc-yaml:output.yaml,html:output.html,html-table:output.html2,sql:output.sql"
+./scc --format-multi "tabular:output.tab,wide:output.wide,json:output.json,json2:output2.json,csv:output.csv,cloc-yaml:output.yaml,html:output.html,html-table:output.html2,sql:output.sql"
 
 if test -f output.tab; then
     echo -e "${GREEN}PASSED output.tab check"
@@ -753,6 +753,15 @@ if test -f output.json; then
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED output.json check"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if test -f output2.json; then
+    echo -e "${GREEN}PASSED output2.json check"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED output2.json check"
     echo -e "=======================================================${NC}"
     exit
 fi
@@ -961,6 +970,7 @@ rm ./examples/ignore/ignorefile.txt
 rm ./output.tab
 rm ./output.wide
 rm ./output.json
+rm ./output2.json
 rm ./output.csv
 rm ./output.yaml
 rm ./output.html
