@@ -859,7 +859,7 @@ Summary
 
 If you enable duplicate detection expect performance to fall by about 20% in `scc`.
 
-Performance is tracked over each release and presented below. Currently, the most recent release 3.1.0 is the fastest version.
+Performance is tracked for some releases and presented below.
 
 <img alt="scc" src=https://github.com/boyter/scc/raw/master/performance-over-time.png>
 
