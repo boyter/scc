@@ -652,10 +652,12 @@ func toSqlInsert(input chan *FileJob) string {
 		projectName = strings.Join(DirFilePaths, ",")
 	}
 
+	var sumCode int64
 	str.WriteString("\nbegin transaction;")
 	count := 0
 	for res := range input {
 		count++
+		sumCode += res.Code
 
 		dir, _ := filepath.Split(res.Location)
 
@@ -675,10 +677,18 @@ func toSqlInsert(input chan *FileJob) string {
 	}
 	str.WriteString("\ncommit;")
 
+	cost, schedule, people := esstimateCostScheduleMonths(sumCode)
 	currentTime := time.Now()
 	es := float64(makeTimestampMilli()-startTimeMilli) * 0.001
 	str.WriteString("\nbegin transaction;")
-	str.WriteString(fmt.Sprintf("\ninsert into metadata values('%s', '%s', %f);", currentTime.Format("2006-01-02 15:04:05"), projectName, es))
+	str.WriteString(fmt.Sprintf("\ninsert into metadata values('%s', '%s', %f, %f, %f, %f);",
+		currentTime.Format("2006-01-02 15:04:05"),
+		projectName,
+		es,
+		cost,
+		schedule,
+		people,
+	))
 	str.WriteString("\ncommit;")
 
 	return str.String()
@@ -709,7 +719,10 @@ func toSql(input chan *FileJob) string {
 	str.WriteString(`create table metadata (   -- github.com/boyter/scc v ` + Version + `
              timestamp text,
              Project   text,
-             elapsed_s real);
+             elapsed_s real,
+             estimated_cost real,
+             estimated_schedule_months real,
+             estimated_people real);
 create table t        (
              Project       text   ,
              Language      text   ,
@@ -1198,10 +1211,7 @@ func calculateCocomoSLOCCount(sumCode int64, str *strings.Builder) {
 }
 
 func calculateCocomo(sumCode int64, str *strings.Builder) {
-	estimatedEffort := EstimateEffort(int64(sumCode), EAF)
-	estimatedCost := EstimateCost(estimatedEffort, AverageWage, Overhead)
-	estimatedScheduleMonths := EstimateScheduleMonths(estimatedEffort)
-	estimatedPeopleRequired := estimatedEffort / estimatedScheduleMonths
+	estimatedCost, estimatedScheduleMonths, estimatedPeopleRequired := esstimateCostScheduleMonths(sumCode)
 
 	p := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
 
@@ -1212,6 +1222,14 @@ func calculateCocomo(sumCode int64, str *strings.Builder) {
 	} else {
 		str.WriteString(p.Sprintf("Estimated People Required (%s) %.2f\n", CocomoProjectType, estimatedPeopleRequired))
 	}
+}
+
+func esstimateCostScheduleMonths(sumCode int64) (float64, float64, float64) {
+	estimatedEffort := EstimateEffort(int64(sumCode), EAF)
+	estimatedCost := EstimateCost(estimatedEffort, AverageWage, Overhead)
+	estimatedScheduleMonths := EstimateScheduleMonths(estimatedEffort)
+	estimatedPeopleRequired := estimatedEffort / estimatedScheduleMonths
+	return estimatedCost, estimatedScheduleMonths, estimatedPeopleRequired
 }
 
 func calculateSize(sumBytes int64, str *strings.Builder) {
