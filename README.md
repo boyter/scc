@@ -673,7 +673,7 @@ to account for scc including complexity counts and bytes.
 
 The difference between `sql` and `sql-insert` is that `sql` will include table creation while the latter will only have the insert commands.
 
-Usage is 100% the same as any other `scc` command but sql output will always contain per file details. You can compute totals yourself using SQL.
+Usage is 100% the same as any other `scc` command but sql output will always contain per file details. You can compute totals yourself using SQL, however COCOMO calculations will appear against the metadata table as the columns `estimated_cost` `estimated_schedule_months` and `estimated_people`.
 
 The below will run scc against the current directory, name the output as the project scc and then pipe the output to sqlite to put into the database code.db
 
