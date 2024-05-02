@@ -647,7 +647,11 @@ func toSqlInsert(input chan *FileJob) string {
 		dir, _ := filepath.Split(res.Location)
 
 		str.WriteString(fmt.Sprintf("\ninsert into t values('%s', '%s', '%s', '%s', '%s', %d, %d, %d, %d, %d, %d);",
-			projectName, res.Language, res.Location, dir, res.Filename, res.Bytes, res.Blank, res.Comment, res.Code, res.Complexity, res.Uloc))
+			escapeSQLString(projectName),
+			escapeSQLString(res.Language),
+			escapeSQLString(res.Location),
+			escapeSQLString(dir),
+			escapeSQLString(res.Filename), res.Bytes, res.Blank, res.Comment, res.Code, res.Complexity, res.Uloc))
 
 		// every 1000 files commit and start a new transaction to avoid overloading
 		if count == 1000 {
@@ -665,6 +669,25 @@ func toSqlInsert(input chan *FileJob) string {
 	str.WriteString("\ncommit;")
 
 	return str.String()
+}
+
+// attempt to manually escape everything that could be a problem
+func escapeSQLString(input string) string {
+	var buffer bytes.Buffer
+	for _, char := range input {
+		switch char {
+		case '\x00':
+			// Remove null characters
+			continue
+		case '\'':
+			// Escape single quote with another single quote
+			buffer.WriteRune('\'')
+			buffer.WriteRune('\'')
+		default:
+			buffer.WriteRune(char)
+		}
+	}
+	return buffer.String()
 }
 
 func toSql(input chan *FileJob) string {

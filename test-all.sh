@@ -904,7 +904,6 @@ else
     exit
 fi
 
-
 # Extra case for longer languages that are normally truncated
 for i in 'CloudFormation (YAM' 'CloudFormation (JSO'
 do
@@ -917,6 +916,17 @@ do
         exit
     fi
 done
+
+# Issue333
+if ./scc ./examples/issue333 --by-file -f sql | sqlite3 code.db; then
+  echo -e "${GREEN}PASSED sql escape check"
+else
+  echo -e "${RED}======================================================="
+  echo -e "FAILED sql escape check"
+  echo -e "=======================================================${NC}"
+exit
+fi
+
 
 echo -e  "${NC}Checking compile targets..."
 
@@ -947,6 +957,7 @@ rm ./output.yaml
 rm ./output.html
 rm ./output.html2
 rm ./output.sql
+rm ./code.db
 
 
 echo -e "${GREEN}================================================="
