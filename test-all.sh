@@ -665,7 +665,7 @@ else
     exit
 fi
 
-if ./scc -f csv | grep -q "Language,Lines,Code,Comments,Blanks,Complexity,Bytes"; then
+if ./scc -f csv | grep -q "Language,Lines,Code,Comments,Blanks,Complexity,Bytes,Files,ULOC"; then
     echo -e "${GREEN}PASSED csv summary"
 else
     echo -e "${RED}======================================================="
