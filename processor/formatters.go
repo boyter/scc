@@ -628,8 +628,19 @@ func toHtmlTable(input chan *FileJob) string {
 		<th>%d</th>
     	<th>%d</th>
 		<th>%d</th>
+	</tr>`, sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumBytes, len(ulocGlobalCount)))
+
+	if !Cocomo {
+		var sb strings.Builder
+		calculateCocomo(sumCode, &sb)
+		str.WriteString(fmt.Sprintf(`
+	<tr>
+		<th colspan="9">%s</th>
 	</tr></tfoot>
-	</table>`, sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumBytes, len(ulocGlobalCount)))
+	</table>`, strings.ReplaceAll(sb.String(), "\n", "<br>")))
+	} else {
+		str.WriteString(`</tfoot></table>`)
+	}
 
 	return str.String()
 }
