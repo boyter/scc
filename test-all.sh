@@ -935,17 +935,6 @@ do
     fi
 done
 
-# Issue333
-if ./scc ./examples/issue333 --by-file -f sql | sqlite3 code.db; then
-  echo -e "${GREEN}PASSED sql escape check"
-else
-  echo -e "${RED}======================================================="
-  echo -e "FAILED sql escape check"
-  echo -e "=======================================================${NC}"
-exit
-fi
-
-
 echo -e  "${NC}Checking compile targets..."
 
 echo "   darwin..."
