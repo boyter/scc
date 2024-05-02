@@ -234,7 +234,7 @@ features listed below may be missing from your installation.
 
 ```
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 3.3.0
+Version 3.3.2
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
