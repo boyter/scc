@@ -573,9 +573,11 @@ func Process() {
 
 	SortBy = strings.ToLower(SortBy)
 
-	printDebug(fmt.Sprintf("NumCPU: %d", runtime.NumCPU()))
-	printDebug(fmt.Sprintf("SortBy: %s", SortBy))
-	printDebug(fmt.Sprintf("PathDenyList: %v", PathDenyList))
+	if Debug {
+		printDebug(fmt.Sprintf("NumCPU: %d", runtime.NumCPU()))
+		printDebug(fmt.Sprintf("SortBy: %s", SortBy))
+		printDebug(fmt.Sprintf("PathDenyList: %v", PathDenyList))
+	}
 
 	potentialFilesQueue := make(chan *gocodewalker.File, FileListQueueSize) // files that pass the .gitignore checks
 	fileListQueue := make(chan *FileJob, FileListQueueSize)                 // Files ready to be read from disk
