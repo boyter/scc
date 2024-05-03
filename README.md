@@ -5,7 +5,7 @@ Sloc Cloc and Code (scc)
 
 A tool similar to cloc, sloccount and tokei. For counting the lines of code, blank lines, comment lines, and physical lines of source code in many programming languages.
 
-Goal is to be the fastest code counter possible, but also perform COCOMO calculation like sloccount and to estimate code complexity similar to cyclomatic complexity calculators. In short one tool to rule them all.
+Goal is to be the fastest code counter possible, but also perform COCOMO calculation like sloccount, estimate code complexity similar to cyclomatic complexity calculators and produce unique lines of code or DRYness metrics. In short one tool to rule them all.
 
 Also it has a very short name which is easy to type `scc`. 
 
@@ -187,6 +187,7 @@ Why use `scc`?
  - Able to identify many #! files ADVANCED! https://github.com/boyter/scc/issues/115
  - Can ignore large files by lines or bytes
  - Can calculate the ULOC or unique lines of code by file, language or project
+ - Supports multiple output formats for integration, csv, sql, json, html and more
 
 Why not use `scc`?
 
