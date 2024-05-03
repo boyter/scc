@@ -435,6 +435,8 @@ Processed 8407821 bytes, 8.408 megabytes (SI)
 ───────────────────────────────────────────────────────────────────────────────
 ```
 
+Futher reading about the ULOC caluclation can be found at https://boyter.org/posts/sloc-cloc-code-new-metic-uloc/
+
 ### COCOMO
 
 The COCOMO statistics displayed at the bottom of any command line run can be configured as needed.
