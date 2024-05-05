@@ -5934,7 +5934,9 @@
       "or("
     ],
     "extensions": [
-      "py"
+      "py",
+      "pyw",
+      "pyi"
     ],
     "line_comment": [
       "#"
