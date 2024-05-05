@@ -6573,6 +6573,57 @@
       }
     ]
   },
+  "LALRPOP": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== ",
+      "match "
+    ],
+    "extensions": [
+      "lalrpop"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "nestedmultiline": true,
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "\\\"",
+        "start": "\\\""
+      },
+      {
+        "end": "#\\\"",
+        "start": "\\\"#"
+      },
+      {
+        "end": "r##\\\"",
+        "start": "\\\"##"
+      },
+      {
+        "end": "r#\\\"",
+        "start": "\\\"#"
+      }
+    ]
+  },
   "SAS": {
     "complexitychecks": [
       "do",
