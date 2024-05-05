@@ -4358,7 +4358,8 @@
       "== "
     ],
     "extensions": [
-      "lua"
+      "lua",
+      "luau"
     ],
     "line_comment": [
       "--"
