@@ -20,7 +20,7 @@ import (
 )
 
 // Version indicates the version of the application
-var Version = "3.3.2"
+var Version = "3.3.3"
 
 // Flags set via the CLI which control how the output is displayed
 
