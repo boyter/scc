@@ -5979,6 +5979,75 @@
       "python3"
     ]
   },
+  "Snakemake": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "while ",
+      "while(",
+      "if ",
+      "if(",
+      "elif ",
+      "elif(",
+      "else ",
+      "else:",
+      "match ",
+      "match(",
+      "try ",
+      "try:",
+      "except ",
+      "except(",
+      "finally ",
+      "finally:",
+      "with ",
+      "with (",
+      "and ",
+      "and(",
+      "or ",
+      "or("
+    ],
+    "extensions": [
+      "smk",
+      "rules"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      },
+      {
+        "docString": true,
+        "end": "\"\"\"",
+        "start": "\"\"\""
+      },
+      {
+        "docString": true,
+        "end": "'''",
+        "start": "'''"
+      },
+      {
+        "docString": true,
+        "end": "\"\"\"",
+        "start": "r\"\"\""
+      },
+      {
+        "docString": true,
+        "end": "'''",
+        "start": "r'''"
+      }
+    ],
+    "filenames": [
+      "snakefile"
+    ]
+  },
   "PRQL": {
     "complexitychecks": [
       "case ",
