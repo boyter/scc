@@ -1315,6 +1315,36 @@
       }
     ]
   },
+  "Circom": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "while(",
+      "else ",
+      "else(",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "circom"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": []
+  },
   "Clojure": {
     "complexitychecks": [
       "(for ",
@@ -3840,39 +3870,6 @@
     ],
     "extensions": [
       "java"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
-    "quotes": [
-      {
-        "end": "\"",
-        "start": "\""
-      }
-    ]
-  },
-  "Slang": {
-    "complexitychecks": [
-      "for ",
-      "for(",
-      "if ",
-      "if(",
-      "switch ",
-      "while ",
-      "else ",
-      "|| ",
-      "&& ",
-      "!= ",
-      "== "
-    ],
-    "extensions": [
-      "slang"
     ],
     "line_comment": [
       "//"
@@ -7328,6 +7325,39 @@
     ],
     "line_comment": [
       ";"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
+  "Slang": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "slang"
+    ],
+    "line_comment": [
+      "//"
     ],
     "multi_line": [
       [
