@@ -4911,6 +4911,15 @@
       }
     ]
   },
+  "Max": {
+    "complexitychecks": [],
+    "extensions": [
+      "maxpat"
+    ],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": []
+  },
   "MDX": {
     "complexitychecks": [],
     "extensions": [
@@ -8355,31 +8364,6 @@
       }
     ]
   },
-  "ZoKrates": {
-    "complexitychecks": [
-      "for ",
-      "if ",
-      "switch ",
-      "while ",
-      "else ",
-      "|| ",
-      "&& ",
-      "!= ",
-      "== "
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
-    "extensions": [
-      "zok"
-    ]
-  },
   "Ur/Web": {
     "complexitychecks": [
       "for ",
@@ -9194,6 +9178,31 @@
         "end": "\n",
         "start": "\\\\"
       }
+    ]
+  },
+  "ZoKrates": {
+    "complexitychecks": [
+      "for ",
+      "if ",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "zok"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
     ]
   },
   "Zsh": {
