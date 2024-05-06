@@ -293,5 +293,6 @@ Xtend (xtend)
 YAML (yaml,yml)
 Yarn (yarn)
 Zig (zig)
+ZoKrates (zok)
 Zsh (zsh,zshenv,zlogin,zlogout,zprofile,zshrc,.zshenv,.zlogin,.zlogout,.zprofile,.zshrc)
 ```

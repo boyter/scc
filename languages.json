@@ -8355,6 +8355,31 @@
       }
     ]
   },
+  "ZoKrates": {
+    "complexitychecks": [
+      "for ",
+      "if ",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "extensions": [
+      "zok"
+    ]
+  },
   "Ur/Web": {
     "complexitychecks": [
       "for ",

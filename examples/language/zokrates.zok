@@ -1,0 +1,16 @@
+/*
+    This is a multi-line comment
+    written in more than just one line.
+*/
+
+def main() -> field {
+    // an inline comment
+
+    u32 mut res = 0;
+    for u32 i in 0..4 {
+        for u32 j in i..5 {
+            res = res + i;
+        }
+    }
+    return res;
+}
