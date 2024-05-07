@@ -358,6 +358,9 @@ You can also hook scc into your gitlab pipeline https://gitlab.com/guided-explor
 
 Also used by CodeQL https://github.com/boyter/scc/pull/317 and Scaleway https://twitter.com/Scaleway/status/1488087029476995074?s=20&t=N2-z6O-ISDdDzULg4o4uVQ
 
+- https://docs.linuxfoundation.org/lfx/insights/v3-beta-version-current/getting-started/landing-page/cocomo-cost-estimation-simplified
+- https://openems.io/
+
 ### Features
 
 `scc` uses a small state machine in order to determine what state the code is when it reaches a newline `\n`. As such it is aware of and able to count
