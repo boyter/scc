@@ -75,7 +75,7 @@ var More = false
 // Cocomo toggles the COCOMO calculation
 var Cocomo = false
 
-// Print a more SLOCCount like COCOMO calculation
+// SLOCCountFormat prints a more SLOCCount like COCOMO calculation
 var SLOCCountFormat = false
 
 // CocomoProjectType allows the flipping between project types which impacts the calculation
@@ -104,6 +104,9 @@ var DisableCheckBinary = false
 
 // UlocMode toggles checking for binary files using NUL bytes
 var UlocMode = false
+
+// Percent toggles checking for binary files using NUL bytes
+var Percent = false
 
 // Dryness toggles checking for binary files using NUL bytes
 var Dryness = false
@@ -168,7 +171,7 @@ var AverageWage int64 = 56286
 // Overhead is the overhead multiplier for corporate overhead (facilities, equipment, accounting, etc.)
 var Overhead float64 = 2.4
 
-// the effort adjustment factor derived from the cost drivers, i.e. 1.0 if rated nominal
+// EAF is the effort adjustment factor derived from the cost drivers, i.e. 1.0 if rated nominal
 var EAF float64 = 1.0
 
 // GcFileCount is the number of files to process before turning the GC back on

@@ -53,6 +53,13 @@ func main() {
 	flags := rootCmd.PersistentFlags()
 
 	flags.BoolVarP(
+		&processor.Percent,
+		"percent",
+		"p",
+		false,
+		"include percentage values in output",
+	)
+	flags.BoolVarP(
 		&processor.UlocMode,
 		"uloc",
 		"u",

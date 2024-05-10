@@ -32,6 +32,7 @@ var shortFormatFileTruncate = 29
 var shortNameTruncate = 20
 
 var tabularShortUlocLanguageFormatBody = "(ULOC) %33d\n"
+var tabularShortPercentLanguageFormatBody = "%29.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
 var tabularShortUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %12d\n"
 
 var tabularShortFormatHeadNoComplexity = "%-22s %11s %11s %10s %11s %9s\n"
@@ -40,6 +41,7 @@ var tabularShortFormatFileNoComplexity = "%s %11d %10d %11d %9d\n"
 var longNameTruncate = 22
 
 var tabularShortUlocLanguageFormatBodyNoComplexity = "(ULOC) %39d\n"
+var tabularShortPercentLanguageFormatBodyNoComplexity = "%33.1f%% %10.1f%% %9.1f%% %10.1f%% %8.1f%%\n"
 
 var tabularWideBreak = "─────────────────────────────────────────────────────────────────────────────────────────────────────────────\n"
 var tabularWideBreakCi = "-------------------------------------------------------------------------------------------------------------\n"
@@ -50,6 +52,7 @@ var wideFormatFileTruncate = 42
 
 var tabularWideUlocLanguageFormatBody = "(ULOC) %46d\n"
 var tabularWideUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %25d\n"
+var tabularWideFormatBodyPercent = "%42.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
 
 var openMetricsMetadata = `# TYPE scc_files count
 # HELP scc_files Number of sourcecode files.
@@ -994,6 +997,19 @@ func fileSummarizeLong(input chan *FileJob) string {
 
 		str.WriteString(fmt.Sprintf(tabularWideFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summary.WeightedComplexity))
 
+		if Percent {
+			str.WriteString(fmt.Sprintf(
+				tabularWideFormatBodyPercent,
+				float64(len(summary.Files))/float64(sumFiles)*100,
+				float64(summary.Lines)/float64(sumLines)*100,
+				float64(summary.Blank)/float64(sumBlank)*100,
+				float64(summary.Comment)/float64(sumComment)*100,
+				float64(summary.Code)/float64(sumCode)*100,
+				float64(summary.Complexity)/float64(sumComplexity)*100,
+			))
+
+		}
+
 		if UlocMode {
 			str.WriteString(fmt.Sprintf(tabularWideUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name])))
 			if !Files && summary.Name != language[len(language)-1].Name {
@@ -1156,15 +1172,26 @@ func fileSummarizeShort(input chan *FileJob) string {
 			str.WriteString(fmt.Sprintf(tabularShortFormatBodyNoComplexity, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code))
 		}
 
-		if UlocMode {
+		if Percent {
 			if !Complexity {
-				str.WriteString(fmt.Sprintf(tabularShortUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name])))
+				str.WriteString(fmt.Sprintf(
+					tabularShortPercentLanguageFormatBody,
+					float64(len(summary.Files))/float64(sumFiles)*100,
+					float64(summary.Lines)/float64(sumLines)*100,
+					float64(summary.Blank)/float64(sumBlank)*100,
+					float64(summary.Comment)/float64(sumComment)*100,
+					float64(summary.Code)/float64(sumCode)*100,
+					float64(summary.Complexity)/float64(sumComplexity)*100,
+				))
 			} else {
-				str.WriteString(fmt.Sprintf(tabularShortUlocLanguageFormatBodyNoComplexity, len(ulocLanguageCount[summary.Name])))
-			}
-
-			if !Files && summary.Name != language[len(language)-1].Name {
-				str.WriteString(tabularShortBreakCi)
+				str.WriteString(fmt.Sprintf(
+					tabularShortPercentLanguageFormatBodyNoComplexity,
+					float64(len(summary.Files))/float64(sumFiles)*100,
+					float64(summary.Lines)/float64(sumLines)*100,
+					float64(summary.Blank)/float64(sumBlank)*100,
+					float64(summary.Comment)/float64(sumComment)*100,
+					float64(summary.Code)/float64(sumCode)*100,
+				))
 			}
 		}
 
@@ -1182,6 +1209,18 @@ func fileSummarizeShort(input chan *FileJob) string {
 					tmp = unicodeAwareRightPad(tmp, 34)
 					str.WriteString(fmt.Sprintf(tabularShortFormatFileNoComplexity, tmp, res.Lines, res.Blank, res.Comment, res.Code))
 				}
+			}
+		}
+
+		if UlocMode {
+			if !Complexity {
+				str.WriteString(fmt.Sprintf(tabularShortUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name])))
+			} else {
+				str.WriteString(fmt.Sprintf(tabularShortUlocLanguageFormatBodyNoComplexity, len(ulocLanguageCount[summary.Name])))
+			}
+
+			if !Files && summary.Name != language[len(language)-1].Name {
+				str.WriteString(tabularShortBreakCi)
 			}
 		}
 	}
