@@ -84,6 +84,7 @@ type FileJob struct {
 	Generated          bool
 	EndPoint           int
 	Uloc               int
+	LineLength         []int `json:"-"`
 }
 
 // LanguageSummary is used to hold summarised results for a single language

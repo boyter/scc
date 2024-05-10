@@ -1007,7 +1007,6 @@ func fileSummarizeLong(input chan *FileJob) string {
 				float64(summary.Code)/float64(sumCode)*100,
 				float64(summary.Complexity)/float64(sumComplexity)*100,
 			))
-
 		}
 
 		if UlocMode {

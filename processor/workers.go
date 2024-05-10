@@ -578,6 +578,12 @@ func CountStats(fileJob *FileJob) {
 		fileJob.Uloc = len(uloc)
 	}
 
+	if MaxMean {
+		for _, l := range strings.Split(string(fileJob.Content), "\n") {
+			fileJob.LineLength = append(fileJob.LineLength, len(l))
+		}
+	}
+
 	isGenerated := false
 
 	if Generated {
