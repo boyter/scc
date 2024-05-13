@@ -8987,6 +8987,34 @@
       }
     ]
   },
+  "WebGPU Shading Language": {
+    "complexitychecks": [
+      "for (",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "while(",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "wgsl"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ]
+  },
   "Web Services Description Language": {
     "extensions": [
       "wsdl"
