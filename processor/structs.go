@@ -100,6 +100,7 @@ type LanguageSummary struct {
 	Count              int64
 	WeightedComplexity float64
 	Files              []*FileJob
+	LineLength         []int
 }
 
 // OpenClose is used to hold an open/close pair for matching such as multi line comments
