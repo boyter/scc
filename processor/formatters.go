@@ -1007,6 +1007,12 @@ func fileSummarizeLong(input chan *FileJob) string {
 				float64(summary.Code)/float64(sumCode)*100,
 				float64(summary.Complexity)/float64(sumComplexity)*100,
 			))
+
+			if !UlocMode {
+				if !Files && summary.Name != language[len(language)-1].Name {
+					str.WriteString(tabularWideBreakCi)
+				}
+			}
 		}
 
 		if UlocMode {
@@ -1191,6 +1197,12 @@ func fileSummarizeShort(input chan *FileJob) string {
 					float64(summary.Comment)/float64(sumComment)*100,
 					float64(summary.Code)/float64(sumCode)*100,
 				))
+			}
+
+			if !UlocMode {
+				if !Files && summary.Name != language[len(language)-1].Name {
+					str.WriteString(tabularShortBreakCi)
+				}
 			}
 		}
 
