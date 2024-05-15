@@ -885,6 +885,16 @@ else
     echo -e "${GREEN}PASSED exclude-ext check"
 fi
 
+# Issue 457
+if ./scc -M ".*" | grep -q "0.000 megabytes"; then
+    echo -e "${GREEN}PASSED issue 457"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED issue 457"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 # Try out specific languages
 for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java ' 'Boo ' 'License ' 'BASH ' 'C Shell ' 'Korn Shell ' 'Makefile ' 'Shell ' 'Zsh ' 'Rakefile ' 'Gemfile ' 'Dockerfile ' 'Yarn ' 'Sieve ' 'F# ' 'Elm ' 'Terraform ' 'Clojure ' 'C# ' 'LLVM IR ' 'HAML ' 'FXML ' 'DM ' 'Nushell ' 'Racket ' 'DOT ' 'YAML ' 'Teal ' 'FSL ' 'INI ' 'Hare ' 'Templ ' 'Cuda ' 'GraphQL ' 'Bicep ' 'Pkl ' 'TypeSpec ' 'LALRPOP ' 'Snakemake ' 'OpenQASM ' 'Typst ' 'ZoKrates ' 'Chapel ' 'Slang ' 'Circom '
 do

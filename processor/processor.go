@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"runtime/debug"
 	"sort"
@@ -595,6 +596,16 @@ func Process() {
 	fileWalker.IgnoreIgnoreFile = Ignore
 	fileWalker.IncludeHidden = true
 	fileWalker.ExcludeDirectory = PathDenyList
+
+	for _, exclude := range Exclude {
+		regexpResult, err := regexp.Compile(exclude)
+		if err == nil {
+			fileWalker.ExcludeFilenameRegex = append(fileWalker.ExcludeFilenameRegex, regexpResult)
+			fileWalker.ExcludeDirectoryRegex = append(fileWalker.ExcludeDirectoryRegex, regexpResult)
+		} else {
+			printError(err.Error())
+		}
+	}
 
 	go func() {
 		err := fileWalker.Start()
