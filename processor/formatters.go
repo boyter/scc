@@ -25,22 +25,21 @@ import (
 
 var tabularShortBreak = "───────────────────────────────────────────────────────────────────────────────\n"
 var tabularShortBreakCi = "-------------------------------------------------------------------------------\n"
+
 var tabularShortFormatHead = "%-20s %9s %9s %8s %9s %8s %10s\n"
 var tabularShortFormatBody = "%-20s %9d %9d %8d %9d %8d %10d\n"
 var tabularShortFormatFile = "%s %9d %8d %9d %8d %10d\n"
-var tabularShortFormatFileMaxMean = "MaxLine/MeanLine %d %d\n"
+var tabularShortFormatFileMaxMean = "MaxLine / MeanLine %49d %10d\n"
 var shortFormatFileTruncate = 29
 var shortNameTruncate = 20
-
 var tabularShortUlocLanguageFormatBody = "(ULOC) %33d\n"
-var tabularShortPercentLanguageFormatBody = "%29.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
+var tabularShortPercentLanguageFormatBody = "Percentage %18.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
 var tabularShortUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %12d\n"
 
 var tabularShortFormatHeadNoComplexity = "%-22s %11s %11s %10s %11s %9s\n"
 var tabularShortFormatBodyNoComplexity = "%-22s %11d %11d %10d %11d %9d\n"
 var tabularShortFormatFileNoComplexity = "%s %11d %10d %11d %9d\n"
 var longNameTruncate = 22
-
 var tabularShortUlocLanguageFormatBodyNoComplexity = "(ULOC) %39d\n"
 var tabularShortPercentLanguageFormatBodyNoComplexity = "%33.1f%% %10.1f%% %9.1f%% %10.1f%% %8.1f%%\n"
 
@@ -1168,6 +1167,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 	startTime := makeTimestampMilli()
 	for _, summary := range language {
+		addBreak := false
 		if Files {
 			str.WriteString(getTabularShortBreak())
 		}
@@ -1179,10 +1179,6 @@ func fileSummarizeShort(input chan *FileJob) string {
 			str.WriteString(fmt.Sprintf(tabularShortFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity))
 		} else {
 			str.WriteString(fmt.Sprintf(tabularShortFormatBodyNoComplexity, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code))
-		}
-
-		if MaxMean {
-			str.WriteString(fmt.Sprintf(tabularShortFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength)))
 		}
 
 		if Percent {
@@ -1207,11 +1203,12 @@ func fileSummarizeShort(input chan *FileJob) string {
 				))
 			}
 
-			if !UlocMode {
-				if !Files && summary.Name != language[len(language)-1].Name {
-					str.WriteString(tabularShortBreakCi)
-				}
-			}
+			addBreak = true
+		}
+
+		if MaxMean {
+			str.WriteString(fmt.Sprintf(tabularShortFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength)))
+			addBreak = true
 		}
 
 		if Files {
@@ -1242,6 +1239,10 @@ func fileSummarizeShort(input chan *FileJob) string {
 				str.WriteString(fmt.Sprintf(tabularShortUlocLanguageFormatBodyNoComplexity, len(ulocLanguageCount[summary.Name])))
 			}
 
+			addBreak = true
+		}
+
+		if addBreak {
 			if !Files && summary.Name != language[len(language)-1].Name {
 				str.WriteString(tabularShortBreakCi)
 			}
