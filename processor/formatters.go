@@ -1182,8 +1182,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 		}
 
 		if MaxMean {
-			str.WriteString(fmt.Sprintf("%d\n", maxIn(summary.LineLength)))
-			str.WriteString(fmt.Sprintf("%d\n", meanIn(summary.LineLength)))
+			str.WriteString(fmt.Sprintf(tabularShortFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength)))
 		}
 
 		if Percent {
