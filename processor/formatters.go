@@ -25,34 +25,35 @@ import (
 
 var tabularShortBreak = "───────────────────────────────────────────────────────────────────────────────\n"
 var tabularShortBreakCi = "-------------------------------------------------------------------------------\n"
+
 var tabularShortFormatHead = "%-20s %9s %9s %8s %9s %8s %10s\n"
 var tabularShortFormatBody = "%-20s %9d %9d %8d %9d %8d %10d\n"
 var tabularShortFormatFile = "%s %9d %8d %9d %8d %10d\n"
+var tabularShortFormatFileMaxMean = "MaxLine / MeanLine %11d %9d\n"
 var shortFormatFileTruncate = 29
 var shortNameTruncate = 20
-
 var tabularShortUlocLanguageFormatBody = "(ULOC) %33d\n"
-var tabularShortPercentLanguageFormatBody = "%29.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
+var tabularShortPercentLanguageFormatBody = "Percentage %18.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
 var tabularShortUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %12d\n"
 
 var tabularShortFormatHeadNoComplexity = "%-22s %11s %11s %10s %11s %9s\n"
 var tabularShortFormatBodyNoComplexity = "%-22s %11d %11d %10d %11d %9d\n"
 var tabularShortFormatFileNoComplexity = "%s %11d %10d %11d %9d\n"
+var tabularShortFormatFileMaxMeanNoComplexity = "MaxLine / MeanLine %15d %11d\n"
 var longNameTruncate = 22
-
 var tabularShortUlocLanguageFormatBodyNoComplexity = "(ULOC) %39d\n"
-var tabularShortPercentLanguageFormatBodyNoComplexity = "%33.1f%% %10.1f%% %9.1f%% %10.1f%% %8.1f%%\n"
+var tabularShortPercentLanguageFormatBodyNoComplexity = "Percentage %22.1f%% %10.1f%% %9.1f%% %10.1f%% %8.1f%%\n"
 
 var tabularWideBreak = "─────────────────────────────────────────────────────────────────────────────────────────────────────────────\n"
 var tabularWideBreakCi = "-------------------------------------------------------------------------------------------------------------\n"
 var tabularWideFormatHead = "%-33s %9s %9s %8s %9s %8s %10s %16s\n"
 var tabularWideFormatBody = "%-33s %9d %9d %8d %9d %8d %10d %16.2f\n"
 var tabularWideFormatFile = "%s %9d %8d %9d %8d %10d %16.2f\n"
+var tabularWideFormatFileMaxMean = "MaxLine / MeanLine %24d %9d\n"
 var wideFormatFileTruncate = 42
-
 var tabularWideUlocLanguageFormatBody = "(ULOC) %46d\n"
 var tabularWideUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %25d\n"
-var tabularWideFormatBodyPercent = "%42.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
+var tabularWideFormatBodyPercent = "Percentage %31.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
 
 var openMetricsMetadata = `# TYPE scc_files count
 # HELP scc_files Number of sourcecode files.
@@ -159,7 +160,7 @@ func getTabularWideBreak() string {
 func toClocYAML(input chan *FileJob) string {
 	startTime := makeTimestampMilli()
 
-	languages := map[string]languageSummaryCloc{}
+	langs := map[string]languageSummaryCloc{}
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
 
 	for res := range input {
@@ -170,10 +171,10 @@ func toClocYAML(input chan *FileJob) string {
 		sumBlank += res.Blank
 		sumComplexity += res.Complexity
 
-		_, ok := languages[res.Language]
+		_, ok := langs[res.Language]
 
 		if !ok {
-			languages[res.Language] = languageSummaryCloc{
+			langs[res.Language] = languageSummaryCloc{
 				Name:    res.Language,
 				Code:    res.Code,
 				Comment: res.Comment,
@@ -181,9 +182,9 @@ func toClocYAML(input chan *FileJob) string {
 				Count:   1,
 			}
 		} else {
-			tmp := languages[res.Language]
+			tmp := langs[res.Language]
 
-			languages[res.Language] = languageSummaryCloc{
+			langs[res.Language] = languageSummaryCloc{
 				Name:    res.Language,
 				Code:    tmp.Code + res.Code,
 				Comment: tmp.Comment + res.Comment,
@@ -219,7 +220,7 @@ func toClocYAML(input chan *FileJob) string {
 
 	reportYaml, _ := yaml.Marshal(reportStart)
 	sumYaml, _ := yaml.Marshal(reportEnd)
-	languageYaml, _ := yaml.Marshal(languages)
+	languageYaml, _ := yaml.Marshal(langs)
 	yamlString := "# https://github.com/boyter/scc/\n" + string(reportYaml) + string(languageYaml) + string(sumYaml)
 
 	if Debug {
@@ -891,7 +892,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 		str.WriteString(getTabularWideBreak())
 	}
 
-	languages := map[string]LanguageSummary{}
+	langs := map[string]LanguageSummary{}
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumBytes int64 = 0, 0, 0, 0, 0, 0, 0
 	var sumWeightedComplexity float64
 
@@ -911,13 +912,13 @@ func fileSummarizeLong(input chan *FileJob) string {
 		res.WeightedComplexity = weightedComplexity
 		sumWeightedComplexity += weightedComplexity
 
-		_, ok := languages[res.Language]
+		_, ok := langs[res.Language]
 
 		if !ok {
 			files := []*FileJob{}
 			files = append(files, res)
 
-			languages[res.Language] = LanguageSummary{
+			langs[res.Language] = LanguageSummary{
 				Name:               res.Language,
 				Lines:              res.Lines,
 				Code:               res.Code,
@@ -927,12 +928,14 @@ func fileSummarizeLong(input chan *FileJob) string {
 				Count:              1,
 				WeightedComplexity: weightedComplexity,
 				Files:              files,
+				LineLength:         res.LineLength,
 			}
 		} else {
-			tmp := languages[res.Language]
+			tmp := langs[res.Language]
 			files := append(tmp.Files, res)
+			lineLength := append(tmp.LineLength, res.LineLength...)
 
-			languages[res.Language] = LanguageSummary{
+			langs[res.Language] = LanguageSummary{
 				Name:               res.Language,
 				Lines:              tmp.Lines + res.Lines,
 				Code:               tmp.Code + res.Code,
@@ -942,19 +945,20 @@ func fileSummarizeLong(input chan *FileJob) string {
 				Count:              tmp.Count + 1,
 				WeightedComplexity: tmp.WeightedComplexity + weightedComplexity,
 				Files:              files,
+				LineLength:         lineLength,
 			}
 		}
 	}
 
 	language := []LanguageSummary{}
-	for _, summary := range languages {
+	for _, summary := range langs {
 		language = append(language, summary)
 	}
 
 	// Cater for the common case of adding plural even for those options that don't make sense
 	// as its quite common for those who English is not a first language to make a simple mistake
 	switch {
-	case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "languages":
+	case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "langs":
 		sort.Slice(language, func(i, j int) bool {
 			return strings.Compare(language[i].Name, language[j].Name) < 0
 		})
@@ -1008,6 +1012,15 @@ func fileSummarizeLong(input chan *FileJob) string {
 				float64(summary.Complexity)/float64(sumComplexity)*100,
 			))
 
+			if !UlocMode {
+				if !Files && summary.Name != language[len(language)-1].Name {
+					str.WriteString(tabularWideBreakCi)
+				}
+			}
+		}
+
+		if MaxMean {
+			str.WriteString(fmt.Sprintf(tabularWideFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength)))
 		}
 
 		if UlocMode {
@@ -1105,7 +1118,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 		str.WriteString(getTabularShortBreak())
 	}
 
-	languages := map[string]LanguageSummary{}
+	lang := map[string]LanguageSummary{}
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumBytes int64 = 0, 0, 0, 0, 0, 0, 0
 
 	for res := range input {
@@ -1117,13 +1130,13 @@ func fileSummarizeShort(input chan *FileJob) string {
 		sumComplexity += res.Complexity
 		sumBytes += res.Bytes
 
-		_, ok := languages[res.Language]
+		_, ok := lang[res.Language]
 
 		if !ok {
 			files := []*FileJob{}
 			files = append(files, res)
 
-			languages[res.Language] = LanguageSummary{
+			lang[res.Language] = LanguageSummary{
 				Name:       res.Language,
 				Lines:      res.Lines,
 				Code:       res.Code,
@@ -1132,12 +1145,14 @@ func fileSummarizeShort(input chan *FileJob) string {
 				Complexity: res.Complexity,
 				Count:      1,
 				Files:      files,
+				LineLength: res.LineLength,
 			}
 		} else {
-			tmp := languages[res.Language]
+			tmp := lang[res.Language]
 			files := append(tmp.Files, res)
+			lineLength := append(tmp.LineLength, res.LineLength...)
 
-			languages[res.Language] = LanguageSummary{
+			lang[res.Language] = LanguageSummary{
 				Name:       res.Language,
 				Lines:      tmp.Lines + res.Lines,
 				Code:       tmp.Code + res.Code,
@@ -1146,12 +1161,13 @@ func fileSummarizeShort(input chan *FileJob) string {
 				Complexity: tmp.Complexity + res.Complexity,
 				Count:      tmp.Count + 1,
 				Files:      files,
+				LineLength: lineLength,
 			}
 		}
 	}
 
 	language := []LanguageSummary{}
-	for _, summary := range languages {
+	for _, summary := range lang {
 		language = append(language, summary)
 	}
 
@@ -1159,6 +1175,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 	startTime := makeTimestampMilli()
 	for _, summary := range language {
+		addBreak := false
 		if Files {
 			str.WriteString(getTabularShortBreak())
 		}
@@ -1193,6 +1210,18 @@ func fileSummarizeShort(input chan *FileJob) string {
 					float64(summary.Code)/float64(sumCode)*100,
 				))
 			}
+
+			addBreak = true
+		}
+
+		if MaxMean {
+			if !Complexity {
+				str.WriteString(fmt.Sprintf(tabularShortFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength)))
+			} else {
+				str.WriteString(fmt.Sprintf(tabularShortFormatFileMaxMeanNoComplexity, maxIn(summary.LineLength), meanIn(summary.LineLength)))
+			}
+
+			addBreak = true
 		}
 
 		if Files {
@@ -1209,6 +1238,10 @@ func fileSummarizeShort(input chan *FileJob) string {
 					tmp = unicodeAwareRightPad(tmp, 34)
 					str.WriteString(fmt.Sprintf(tabularShortFormatFileNoComplexity, tmp, res.Lines, res.Blank, res.Comment, res.Code))
 				}
+
+				//if MaxMean {
+				//	str.WriteString(fmt.Sprintf(tabularShortFormatFileMaxMean, maxIn(res.LineLength), meanIn(res.LineLength)))
+				//}
 			}
 		}
 
@@ -1219,6 +1252,10 @@ func fileSummarizeShort(input chan *FileJob) string {
 				str.WriteString(fmt.Sprintf(tabularShortUlocLanguageFormatBodyNoComplexity, len(ulocLanguageCount[summary.Name])))
 			}
 
+			addBreak = true
+		}
+
+		if addBreak {
 			if !Files && summary.Name != language[len(language)-1].Name {
 				str.WriteString(tabularShortBreakCi)
 			}
@@ -1259,6 +1296,34 @@ func fileSummarizeShort(input chan *FileJob) string {
 		str.WriteString(getTabularShortBreak())
 	}
 	return str.String()
+}
+
+func maxIn(i []int) int {
+	if len(i) == 0 {
+		return 0
+	}
+
+	m := i[0]
+	for _, x := range i {
+		if x > m {
+			m = x
+		}
+	}
+
+	return m
+}
+
+func meanIn(i []int) int {
+	if len(i) == 0 {
+		return 0
+	}
+
+	sum := 0
+	for _, x := range i {
+		sum += x
+	}
+
+	return sum / len(i)
 }
 
 func trimNameShort(summary LanguageSummary, trimmedName string) string {

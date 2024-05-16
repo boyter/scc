@@ -895,6 +895,16 @@ else
     exit
 fi
 
+# Line length support
+if ./scc -m | grep -q "MaxLine / MeanLine"; then
+    echo -e "${GREEN}PASSED character option"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED character option"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 # Try out specific languages
 for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java ' 'Boo ' 'License ' 'BASH ' 'C Shell ' 'Korn Shell ' 'Makefile ' 'Shell ' 'Zsh ' 'Rakefile ' 'Gemfile ' 'Dockerfile ' 'Yarn ' 'Sieve ' 'F# ' 'Elm ' 'Terraform ' 'Clojure ' 'C# ' 'LLVM IR ' 'HAML ' 'FXML ' 'DM ' 'Nushell ' 'Racket ' 'DOT ' 'YAML ' 'Teal ' 'FSL ' 'INI ' 'Hare ' 'Templ ' 'Cuda ' 'GraphQL ' 'Bicep ' 'Pkl ' 'TypeSpec ' 'LALRPOP ' 'Snakemake ' 'OpenQASM ' 'Typst ' 'ZoKrates ' 'Chapel ' 'Slang ' 'Circom '
 do
@@ -907,7 +917,6 @@ do
         exit
     fi
 done
-
 
 # Issue339
 for i in 'MATLAB ' 'Objective C '

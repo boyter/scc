@@ -109,6 +109,9 @@ var UlocMode = false
 // Percent toggles checking for binary files using NUL bytes
 var Percent = false
 
+// MaxMean toggles checking for binary files using NUL bytes
+var MaxMean = false
+
 // Dryness toggles checking for binary files using NUL bytes
 var Dryness = false
 

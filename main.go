@@ -53,6 +53,13 @@ func main() {
 	flags := rootCmd.PersistentFlags()
 
 	flags.BoolVarP(
+		&processor.MaxMean,
+		"character",
+		"m",
+		false,
+		"calculate max and mean characters per line",
+	)
+	flags.BoolVarP(
 		&processor.Percent,
 		"percent",
 		"p",
@@ -279,7 +286,7 @@ func main() {
 	flags.StringArrayVarP(
 		&processor.Exclude,
 		"not-match",
-		"M",
+		`M`,
 		[]string{},
 		"ignore files and directories matching regular expression",
 	)
