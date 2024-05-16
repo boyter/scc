@@ -29,7 +29,7 @@ var tabularShortBreakCi = "-----------------------------------------------------
 var tabularShortFormatHead = "%-20s %9s %9s %8s %9s %8s %10s\n"
 var tabularShortFormatBody = "%-20s %9d %9d %8d %9d %8d %10d\n"
 var tabularShortFormatFile = "%s %9d %8d %9d %8d %10d\n"
-var tabularShortFormatFileMaxMean = "MaxLine / MeanLine %49d %10d\n"
+var tabularShortFormatFileMaxMean = "MaxLine / MeanLine %11d %9d\n"
 var shortFormatFileTruncate = 29
 var shortNameTruncate = 20
 var tabularShortUlocLanguageFormatBody = "(ULOC) %33d\n"
@@ -39,9 +39,10 @@ var tabularShortUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %12d\n"
 var tabularShortFormatHeadNoComplexity = "%-22s %11s %11s %10s %11s %9s\n"
 var tabularShortFormatBodyNoComplexity = "%-22s %11d %11d %10d %11d %9d\n"
 var tabularShortFormatFileNoComplexity = "%s %11d %10d %11d %9d\n"
+var tabularShortFormatFileMaxMeanNoComplexity = "MaxLine / MeanLine %15d %11d\n"
 var longNameTruncate = 22
 var tabularShortUlocLanguageFormatBodyNoComplexity = "(ULOC) %39d\n"
-var tabularShortPercentLanguageFormatBodyNoComplexity = "%33.1f%% %10.1f%% %9.1f%% %10.1f%% %8.1f%%\n"
+var tabularShortPercentLanguageFormatBodyNoComplexity = "Percentage %22.1f%% %10.1f%% %9.1f%% %10.1f%% %8.1f%%\n"
 
 var tabularWideBreak = "─────────────────────────────────────────────────────────────────────────────────────────────────────────────\n"
 var tabularWideBreakCi = "-------------------------------------------------------------------------------------------------------------\n"
@@ -1207,7 +1208,12 @@ func fileSummarizeShort(input chan *FileJob) string {
 		}
 
 		if MaxMean {
-			str.WriteString(fmt.Sprintf(tabularShortFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength)))
+			if !Complexity {
+				str.WriteString(fmt.Sprintf(tabularShortFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength)))
+			} else {
+				str.WriteString(fmt.Sprintf(tabularShortFormatFileMaxMeanNoComplexity, maxIn(summary.LineLength), meanIn(summary.LineLength)))
+			}
+
 			addBreak = true
 		}
 
@@ -1226,9 +1232,9 @@ func fileSummarizeShort(input chan *FileJob) string {
 					str.WriteString(fmt.Sprintf(tabularShortFormatFileNoComplexity, tmp, res.Lines, res.Blank, res.Comment, res.Code))
 				}
 
-				if MaxMean {
-					str.WriteString(fmt.Sprintf(tabularShortFormatFileMaxMean, maxIn(res.LineLength), meanIn(res.LineLength)))
-				}
+				//if MaxMean {
+				//	str.WriteString(fmt.Sprintf(tabularShortFormatFileMaxMean, maxIn(res.LineLength), meanIn(res.LineLength)))
+				//}
 			}
 		}
 
