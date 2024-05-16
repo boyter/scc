@@ -49,11 +49,11 @@ var tabularWideBreakCi = "------------------------------------------------------
 var tabularWideFormatHead = "%-33s %9s %9s %8s %9s %8s %10s %16s\n"
 var tabularWideFormatBody = "%-33s %9d %9d %8d %9d %8d %10d %16.2f\n"
 var tabularWideFormatFile = "%s %9d %8d %9d %8d %10d %16.2f\n"
+var tabularWideFormatFileMaxMean = "MaxLine / MeanLine %24d %9d\n"
 var wideFormatFileTruncate = 42
-
 var tabularWideUlocLanguageFormatBody = "(ULOC) %46d\n"
 var tabularWideUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %25d\n"
-var tabularWideFormatBodyPercent = "%42.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
+var tabularWideFormatBodyPercent = "Percentage %31.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
 
 var openMetricsMetadata = `# TYPE scc_files count
 # HELP scc_files Number of sourcecode files.
@@ -160,7 +160,7 @@ func getTabularWideBreak() string {
 func toClocYAML(input chan *FileJob) string {
 	startTime := makeTimestampMilli()
 
-	languages := map[string]languageSummaryCloc{}
+	langs := map[string]languageSummaryCloc{}
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity int64 = 0, 0, 0, 0, 0, 0
 
 	for res := range input {
@@ -171,10 +171,10 @@ func toClocYAML(input chan *FileJob) string {
 		sumBlank += res.Blank
 		sumComplexity += res.Complexity
 
-		_, ok := languages[res.Language]
+		_, ok := langs[res.Language]
 
 		if !ok {
-			languages[res.Language] = languageSummaryCloc{
+			langs[res.Language] = languageSummaryCloc{
 				Name:    res.Language,
 				Code:    res.Code,
 				Comment: res.Comment,
@@ -182,9 +182,9 @@ func toClocYAML(input chan *FileJob) string {
 				Count:   1,
 			}
 		} else {
-			tmp := languages[res.Language]
+			tmp := langs[res.Language]
 
-			languages[res.Language] = languageSummaryCloc{
+			langs[res.Language] = languageSummaryCloc{
 				Name:    res.Language,
 				Code:    tmp.Code + res.Code,
 				Comment: tmp.Comment + res.Comment,
@@ -220,7 +220,7 @@ func toClocYAML(input chan *FileJob) string {
 
 	reportYaml, _ := yaml.Marshal(reportStart)
 	sumYaml, _ := yaml.Marshal(reportEnd)
-	languageYaml, _ := yaml.Marshal(languages)
+	languageYaml, _ := yaml.Marshal(langs)
 	yamlString := "# https://github.com/boyter/scc/\n" + string(reportYaml) + string(languageYaml) + string(sumYaml)
 
 	if Debug {
@@ -892,7 +892,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 		str.WriteString(getTabularWideBreak())
 	}
 
-	languages := map[string]LanguageSummary{}
+	langs := map[string]LanguageSummary{}
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumBytes int64 = 0, 0, 0, 0, 0, 0, 0
 	var sumWeightedComplexity float64
 
@@ -912,13 +912,13 @@ func fileSummarizeLong(input chan *FileJob) string {
 		res.WeightedComplexity = weightedComplexity
 		sumWeightedComplexity += weightedComplexity
 
-		_, ok := languages[res.Language]
+		_, ok := langs[res.Language]
 
 		if !ok {
 			files := []*FileJob{}
 			files = append(files, res)
 
-			languages[res.Language] = LanguageSummary{
+			langs[res.Language] = LanguageSummary{
 				Name:               res.Language,
 				Lines:              res.Lines,
 				Code:               res.Code,
@@ -928,12 +928,14 @@ func fileSummarizeLong(input chan *FileJob) string {
 				Count:              1,
 				WeightedComplexity: weightedComplexity,
 				Files:              files,
+				LineLength:         res.LineLength,
 			}
 		} else {
-			tmp := languages[res.Language]
+			tmp := langs[res.Language]
 			files := append(tmp.Files, res)
+			lineLength := append(tmp.LineLength, res.LineLength...)
 
-			languages[res.Language] = LanguageSummary{
+			langs[res.Language] = LanguageSummary{
 				Name:               res.Language,
 				Lines:              tmp.Lines + res.Lines,
 				Code:               tmp.Code + res.Code,
@@ -943,19 +945,20 @@ func fileSummarizeLong(input chan *FileJob) string {
 				Count:              tmp.Count + 1,
 				WeightedComplexity: tmp.WeightedComplexity + weightedComplexity,
 				Files:              files,
+				LineLength:         lineLength,
 			}
 		}
 	}
 
 	language := []LanguageSummary{}
-	for _, summary := range languages {
+	for _, summary := range langs {
 		language = append(language, summary)
 	}
 
 	// Cater for the common case of adding plural even for those options that don't make sense
 	// as its quite common for those who English is not a first language to make a simple mistake
 	switch {
-	case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "languages":
+	case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "langs":
 		sort.Slice(language, func(i, j int) bool {
 			return strings.Compare(language[i].Name, language[j].Name) < 0
 		})
@@ -1014,6 +1017,10 @@ func fileSummarizeLong(input chan *FileJob) string {
 					str.WriteString(tabularWideBreakCi)
 				}
 			}
+		}
+
+		if MaxMean {
+			str.WriteString(fmt.Sprintf(tabularWideFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength)))
 		}
 
 		if UlocMode {
