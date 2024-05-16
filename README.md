@@ -235,7 +235,7 @@ features listed below may be missing from your installation.
 
 ```
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 3.3.3
+Version 3.3.4
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
@@ -245,6 +245,7 @@ Flags:
       --avg-wage int                 average wage value used for basic COCOMO calculation (default 56286)
       --binary                       disable binary file detection
       --by-file                      display output for every file
+  -m, --character                    calculate max and mean characters per line
       --ci                           enable CI output settings where stdout is ASCII
       --cocomo-project-type string   change COCOMO model type [organic, semi-detached, embedded, "custom,1,1,1,1"] (default "organic")
       --count-as string              count extension as language [e.g. jsp:htm,chead:"C Header" maps extension jsp to html and chead to C Header]
@@ -283,6 +284,7 @@ Flags:
   -M, --not-match stringArray        ignore files and directories matching regular expression
   -o, --output string                output filename (default stdout)
       --overhead float               set the overhead multiplier for corporate overhead (facilities, equipment, accounting, etc.) (default 2.4)
+  -p, --percent                      include percentage values in output
       --remap-all string             inspect every file and remap by checking for a string and remapping the language [e.g. "-*- C++ -*-":"C Header"]
       --remap-unknown string         inspect files of unknown type and remap by checking for a string and remapping the language [e.g. "-*- C++ -*-":"C Header"]
       --size-unit string             set size unit [si, binary, mixed, xkcd-kb, xkcd-kelly, xkcd-imaginary, xkcd-intel, xkcd-drive, xkcd-bakers] (default "si")
