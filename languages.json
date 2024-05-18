@@ -2842,7 +2842,7 @@
       }
     ]
   },
-  "FORTRAN Modern": {
+  "Fortran Modern": {
     "complexitychecks": [
       "for ",
       "for(",
