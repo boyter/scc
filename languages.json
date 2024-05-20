@@ -9044,6 +9044,38 @@
       ]
     ]
   },
+  "wenyan": {
+    "complexitychecks": [
+      "若",
+      "若非",
+      "等於",
+      "不等於",
+      "不大於",
+      "不小於",
+      "大於",
+      "小於",
+      "凡",
+      "為是",
+      "恆為是",
+      "中之",
+      "遍"
+    ],
+    "extensions": [
+      "wy"
+    ],
+    "line_comment": [
+      "批曰",
+      "注曰",
+      "疏曰"
+    ],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "「「",
+        "start": "」」"
+      }
+    ]
+  },
   "Windows Resource-Definition Script": {
     "extensions": [
       "rc"
