@@ -1213,6 +1213,17 @@
       }
     ]
   },
+  "Cap'n Proto": {
+    "complexitychecks": [],
+    "extensions": [
+      "capnp"
+    ],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [],
+    "quotes": []
+  },
   "Cassius": {
     "complexitychecks": [
       "for ",
@@ -8987,6 +8998,24 @@
       }
     ]
   },
+  "Web Services Description Language": {
+    "extensions": [
+      "wsdl"
+    ],
+    "line_comment": [],
+    "multi_line": [
+      [
+        "<!--",
+        "-->"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "WebGPU Shading Language": {
     "complexitychecks": [
       "for (",
@@ -9013,24 +9042,6 @@
         "/*",
         "*/"
       ]
-    ]
-  },
-  "Web Services Description Language": {
-    "extensions": [
-      "wsdl"
-    ],
-    "line_comment": [],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ]
-    ],
-    "quotes": [
-      {
-        "end": "\"",
-        "start": "\""
-      }
     ]
   },
   "Windows Resource-Definition Script": {
