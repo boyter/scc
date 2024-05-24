@@ -3,6 +3,7 @@
 package main
 
 import (
+	"compress/gzip"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -50,9 +51,11 @@ func generateConstants() error {
 			out.Write([]byte(strings.TrimSuffix(f.Name(), ".json") + " = `"))
 
 			enc := base64.NewEncoder(base64.StdEncoding, out)
-			if _, err := io.Copy(enc, f); err != nil {
+			gz, _ := gzip.NewWriterLevel(enc, gzip.BestSpeed)
+			if _, err := io.Copy(gz, f); err != nil {
 				return fmt.Errorf("failed to encode file '%s': %v", f.Name(), err)
 			}
+			gz.Close()
 			enc.Close()
 
 			out.Write([]byte("`\n"))

@@ -3,6 +3,8 @@
 package processor
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/base64"
 	"fmt"
 	"os"
@@ -504,13 +506,17 @@ func loadDatabase() map[string]Language {
 	var database map[string]Language
 	startTime := makeTimestampMilli()
 
-	data, err := base64.StdEncoding.DecodeString(languages)
+	gzData, err := base64.StdEncoding.DecodeString(languages)
 	if err != nil {
 		panic(fmt.Sprintf("failed to base64 decode languages: %v", err))
 	}
+	dataReader, err := gzip.NewReader(bytes.NewReader(gzData))
+	if err != nil {
+		panic(fmt.Sprintf("failed to create gzip reader: %v", err))
+	}
 
 	var json = jsoniter.ConfigCompatibleWithStandardLibrary
-	if err := json.Unmarshal(data, &database); err != nil {
+	if err := json.NewDecoder(dataReader).Decode(&database); err != nil {
 		panic(fmt.Sprintf("languages json invalid: %v", err))
 	}
 
