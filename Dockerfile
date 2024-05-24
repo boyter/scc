@@ -1,4 +1,4 @@
-FROM golang:1.22rc1-alpine3.19 as scc-get
+FROM golang:golang:1.22.3-alpine3.20 as scc-get
 
 ENV GOOS=linux \
 GOARCH=amd64 \
@@ -9,6 +9,6 @@ COPY . /scc
 WORKDIR /scc
 RUN go build -ldflags="-s -w" -o /bin/scc
 
-FROM alpine:3.19
+FROM alpine:3.20
 COPY --from=scc-get /bin/scc /bin/scc
 CMD ["/bin/scc"]
