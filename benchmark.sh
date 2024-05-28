@@ -133,6 +133,26 @@ wget https://github.com/boyter/scc/releases/download/v3.1.0/scc_3.1.0_Linux_x86_
 unzip scc_3.1.0_Linux_x86_64.tar.gz
 cp scc /usr/local/bin/scc3.1.0
 
+wget https://github.com/boyter/scc/releases/download/v3.2.0/scc_3.2.0_Linux_x86_64.tar.gz
+unzip scc_3.2.0_Linux_x86_64.tar.gz
+cp scc /usr/local/bin/scc3.2.0
+
+wget https://github.com/boyter/scc/releases/download/v3.3.0/scc_3.3.0_Linux_x86_64.tar.gz
+unzip scc_3.3.0_Linux_x86_64.tar.gz
+cp scc /usr/local/bin/scc3.3.0
+
+wget https://github.com/boyter/scc/releases/download/v3.3.0/scc_3.3.2_Linux_x86_64.tar.gz
+unzip scc_3.3.2_Linux_x86_64.tar.gz
+cp scc /usr/local/bin/scc3.3.2
+
+wget https://github.com/boyter/scc/releases/download/v3.3.0/scc_3.3.3_Linux_x86_64.tar.gz
+unzip scc_3.3.3_Linux_x86_64.tar.gz
+cp scc /usr/local/bin/scc3.3.3
+
+wget https://github.com/boyter/scc/releases/download/v3.4.0/scc_3.4.3_Linux_x86_64.tar.gz
+unzip scc_3.3.4_Linux_x86_64.tar.gz
+cp scc /usr/local/bin/scc3.3.4
+
 # Now setup the most recent as the default
 mv scc /usr/local/bin/scc
 
@@ -160,44 +180,31 @@ rm artificial/create_performance_test.py
 rm -rf redis
 rm -rf cpython
 rm -rf linux
+rm -rf sourcegraph
 
-git clone --depth=1 https://github.com/antirez/redis.git
+git clone --depth=1 https://github.com/valkey-io/valkey.git
 git clone --depth=1 https://github.com/python/cpython.git
 git clone --depth=1 https://github.com/torvalds/linux.git
-
-# Setup torture test
-#
-#echo "Copying 10 linuxes"
-#mkdir -p linux10
-#cp -R linux linux10/0
-#cp -R linux linux10/1
-#cp -R linux linux10/2
-#cp -R linux linux10/3
-#cp -R linux linux10/4
-#cp -R linux linux10/5
-#cp -R linux linux10/6
-#cp -R linux linux10/7
-#cp -R linux linux10/8
-#cp -R linux linux10/9
+git clone --depth=1 https://github.com/sourcegraph/sourcegraph.git
 
 # Regression test all versions of scc
 echo "Running regression benchmark"
-hyperfine 'scc1.0.0 linux' 'scc1.1.0 linux' 'scc1.2.0 linux' 'scc1.3.0 linux' 'scc1.4.0 linux' 'scc1.5.0 linux' 'scc1.6.0 linux' 'scc1.7.0 linux' 'scc1.8.0 linux' 'scc1.9.0 linux' 'scc1.10.0 linux' 'scc1.11.0 linux' 'scc1.12.0 linux' 'scc1.12.1 linux' 'scc2.0.0 linux' 'scc2.1.0 linux' 'scc2.2.0 linux' 'scc2.3.0 linux' 'scc2.4.0 linux' 'scc2.5.0 linux' 'scc2.6.0 linux' 'scc2.7.0 linux' 'scc2.8.0 linux' 'scc2.9.0 linux' 'scc2.9.1 linux' 'scc2.10.0 linux' 'scc2.11.0 linux' 'scc2.12.0 linux' 'scc2.13.0 linux' 'scc3.0.0 linux' 'scc3.1.0 linux' > benchmark_regression.txt
+hyperfine 'scc1.0.0 linux' 'scc1.1.0 linux' 'scc1.2.0 linux' 'scc1.3.0 linux' 'scc1.4.0 linux' 'scc1.5.0 linux' 'scc1.6.0 linux' 'scc1.7.0 linux' 'scc1.8.0 linux' 'scc1.9.0 linux' 'scc1.10.0 linux' 'scc1.11.0 linux' 'scc1.12.0 linux' 'scc1.12.1 linux' 'scc2.0.0 linux' 'scc2.1.0 linux' 'scc2.2.0 linux' 'scc2.3.0 linux' 'scc2.4.0 linux' 'scc2.5.0 linux' 'scc2.6.0 linux' 'scc2.7.0 linux' 'scc2.8.0 linux' 'scc2.9.0 linux' 'scc2.9.1 linux' 'scc2.10.0 linux' 'scc2.11.0 linux' 'scc2.12.0 linux' 'scc2.13.0 linux' 'scc3.0.0 linux' 'scc3.1.0 linux' 'scc3.2.0 linux' 'scc3.3.0 linux' 'scc3.3.2 linux' 'scc3.3.3 linux' 'scc3.3.4 linux' > benchmark_regression.txt
 
 # Benchmark against everything
 echo "Running artificial benchmark"
 hyperfine 'scc artificial' 'scc -c artificial' 'tokei artificial' 'loc artificial' 'polyglot artificial' > benchmark_artificial.txt
 
-echo "Running redis benchmark"
-hyperfine 'scc redis' 'scc -c redis' 'tokei redis' 'loc redis' 'polyglot redis' > benchmark_redis.txt
+echo "Running valkey benchmark"
+hyperfine 'scc valkey' 'scc -c valkey' 'tokei valkey' 'loc valkey' 'polyglot valkey' > benchmark_valkey.txt
 
 echo "Running cpython benchmark"
 hyperfine 'scc cpython' 'scc -c cpython' 'tokei cpython' 'loc cpython' 'polyglot cpython' > benchmark_cpython.txt
 
+echo "Running sourcegraph benchmark"
+hyperfine 'scc sourcegraph' 'scc -c sourcegraph' 'tokei sourcegraph' 'loc sourcegraph' 'polyglot sourcegraph' > benchmark_sourcegraph.txt
+
 echo "Running linux benchmark"
 hyperfine 'scc linux' 'scc -c linux' 'tokei linux' 'loc linux' 'polyglot linux' > benchmark_linux.txt
-
-#echo "Running linux10 benchmark"
-#hyperfine 'scc linux10' 'scc -c linux10' 'tokei linux10' 'loc linux10' 'polyglot linux10' > benchmark_linux10.txt
 
 echo "All done!"
