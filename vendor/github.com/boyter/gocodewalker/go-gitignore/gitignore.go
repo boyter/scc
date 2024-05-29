@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 )
 
 // use an empty GitIgnore for cached lookups
@@ -242,12 +243,25 @@ func (i *ignore) Match(path string) Match {
 	return i.Absolute(_path, _isdir)
 } // Match()
 
+var matchIsDirMutex = sync.Mutex{}
+var matchIsDirCache = map[string]string{}
+
 func (i *ignore) MatchIsDir(path string, _isdir bool) Match {
+
 	// ensure we have the absolute path for the given file
-	_path, _err := filepath.Abs(path)
-	if _err != nil {
-		i._errors(NewError(_err, Position{}))
-		return nil
+	matchIsDirMutex.Lock()
+	_path, ok := matchIsDirCache[path]
+	matchIsDirMutex.Unlock()
+	if !ok {
+		var _err error
+		_path, _err = filepath.Abs(path)
+		if _err != nil {
+			i._errors(NewError(_err, Position{}))
+			return nil
+		}
+		matchIsDirMutex.Lock()
+		matchIsDirCache[path] = _path
+		matchIsDirMutex.Unlock()
 	}
 
 	// attempt to match the absolute path

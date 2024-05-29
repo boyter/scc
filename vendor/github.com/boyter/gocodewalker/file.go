@@ -33,6 +33,8 @@ type File struct {
 	Filename string
 }
 
+var semaphoreCount = 8
+
 type FileWalker struct {
 	fileListQueue          chan *File
 	errorsHandler          func(error) bool // If returns true will continue to process where possible, otherwise returns if possible
@@ -57,6 +59,8 @@ type FileWalker struct {
 	IncludeHidden          bool // Should hidden files and directories be included/walked
 	osOpen                 func(name string) (*os.File, error)
 	osReadFile             func(name string) ([]byte, error)
+	countingSemaphore      chan bool
+	semaphoreCount         int
 }
 
 // NewFileWalker constructs a filewalker, which will walk the supplied directory
@@ -85,6 +89,8 @@ func NewFileWalker(directory string, fileListQueue chan *File) *FileWalker {
 		IncludeHidden:          false,
 		osOpen:                 os.Open,
 		osReadFile:             os.ReadFile,
+		countingSemaphore:      make(chan bool, semaphoreCount),
+		semaphoreCount:         semaphoreCount,
 	}
 }
 
@@ -114,6 +120,21 @@ func NewParallelFileWalker(directories []string, fileListQueue chan *File) *File
 		IncludeHidden:          false,
 		osOpen:                 os.Open,
 		osReadFile:             os.ReadFile,
+		countingSemaphore:      make(chan bool, semaphoreCount),
+		semaphoreCount:         semaphoreCount,
+	}
+}
+
+// SetConcurrency sets the concurrency when walking
+// which controls the number of goroutines that
+// walk directories concurrently
+// by default it is set to 8
+// must be a whole integer greater than 0
+func (f *FileWalker) SetConcurrency(i int) {
+	f.walkMutex.Lock()
+	defer f.walkMutex.Unlock()
+	if i >= 1 {
+		f.semaphoreCount = i
 	}
 }
 
@@ -153,20 +174,24 @@ func (f *FileWalker) Start() error {
 	f.isWalking = true
 	f.walkMutex.Unlock()
 
+	// we now set the counting semaphore based on the count
+	// done here because it should not change while walking
+	f.countingSemaphore = make(chan bool, semaphoreCount)
+
 	var err error
 	if len(f.directories) != 0 {
 		eg := errgroup.Group{}
 		for _, directory := range f.directories {
 			d := directory // capture var
 			eg.Go(func() error {
-				return f.walkDirectoryRecursive(d, []gitignore.GitIgnore{}, []gitignore.GitIgnore{})
+				return f.walkDirectoryRecursive(0, d, []gitignore.GitIgnore{}, []gitignore.GitIgnore{})
 			})
 		}
 
 		err = eg.Wait()
 	} else {
 		if f.directory != "" {
-			err = f.walkDirectoryRecursive(f.directory, []gitignore.GitIgnore{}, []gitignore.GitIgnore{})
+			err = f.walkDirectoryRecursive(0, f.directory, []gitignore.GitIgnore{}, []gitignore.GitIgnore{})
 		}
 	}
 
@@ -179,7 +204,14 @@ func (f *FileWalker) Start() error {
 	return err
 }
 
-func (f *FileWalker) walkDirectoryRecursive(directory string, gitignores []gitignore.GitIgnore, ignores []gitignore.GitIgnore) error {
+func (f *FileWalker) walkDirectoryRecursive(iteration int, directory string, gitignores []gitignore.GitIgnore, ignores []gitignore.GitIgnore) error {
+	if iteration == 1 {
+		f.countingSemaphore <- true
+		defer func() {
+			<-f.countingSemaphore
+		}()
+	}
+
 	// NB have to call unlock not using defer because method is recursive
 	// and will deadlock if not done manually
 	f.walkMutex.Lock()
@@ -405,6 +437,9 @@ func (f *FileWalker) walkDirectoryRecursive(directory string, gitignores []gitig
 		}
 	}
 
+	// if we are the 1st iteration IE not the root, we run in parallel
+	wg := sync.WaitGroup{}
+
 	// Now we process the directories after hopefully giving the
 	// channel some files to process
 	for _, dir := range dirs {
@@ -494,12 +529,22 @@ func (f *FileWalker) walkDirectoryRecursive(directory string, gitignores []gitig
 				}
 			}
 
-			err = f.walkDirectoryRecursive(joined, gitignores, ignores)
-			if err != nil {
-				return err
+			if iteration == 0 {
+				wg.Add(1)
+				go func(iteration int, directory string, gitignores []gitignore.GitIgnore, ignores []gitignore.GitIgnore) {
+					_ = f.walkDirectoryRecursive(iteration+1, joined, gitignores, ignores)
+					wg.Done()
+				}(iteration, joined, gitignores, ignores)
+			} else {
+				err = f.walkDirectoryRecursive(iteration+1, joined, gitignores, ignores)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
+
+	wg.Wait()
 
 	return nil
 }
