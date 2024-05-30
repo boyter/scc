@@ -395,7 +395,7 @@ The reason it's an approximation is that it's calculated almost for free from a 
 
 In short when scc is looking through what it has identified as code if it notices what are usually branch conditions it will increment a counter.
 
-The conditions it looks for are compiled into the code and you can get an idea for them by looking at the JSON inside the repository. See https://github.com/boyter/scc/blob/master/languages.json#L3524 for an example of what it's looking at for a file that's Java.
+The conditions it looks for are compiled into the code and you can get an idea for them by looking at the JSON inside the repository. See https://github.com/boyter/scc/blob/master/languages.json#L3869 for an example of what it's looking at for a file that's Java.
 
 The increment happens for each of the matching conditions and produces the number you see.
 
