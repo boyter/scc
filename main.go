@@ -159,7 +159,7 @@ func main() {
 		&processor.ExcludeFilename,
 		"exclude-file",
 		"n",
-		[]string{"package-lock.json", "Cargo.lock", "yarn.lock", "pubspec.lock", "Podfile.lock"},
+		[]string{"package-lock.json", "Cargo.lock", "yarn.lock", "pubspec.lock", "Podfile.lock", "pnpm-lock.yaml"},
 		"ignore files with matching names",
 	)
 	flags.BoolVarP(
