@@ -142,6 +142,10 @@ type languageReportEnd struct {
 }
 
 func getTabularShortBreak() string {
+	if HBorder {
+		return ""
+	}
+
 	if Ci {
 		return tabularShortBreakCi
 	}
@@ -150,6 +154,10 @@ func getTabularShortBreak() string {
 }
 
 func getTabularWideBreak() string {
+	if HBorder {
+		return ""
+	}
+
 	if Ci {
 		return tabularWideBreakCi
 	}

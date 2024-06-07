@@ -211,6 +211,12 @@ func main() {
 		false,
 		"remove size calculation output",
 	)
+	flags.BoolVar(
+		&processor.HBorder,
+		"no-hborder",
+		false,
+		"remove horizontal borders between sections",
+	)
 	flags.StringVar(
 		&processor.SizeUnit,
 		"size-unit",
