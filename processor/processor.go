@@ -659,7 +659,7 @@ func Process() {
 
 	result := fileSummarize(fileSummaryJobQueue)
 	if FileOutput == "" {
-		fmt.Println(result)
+		fmt.Print(result)
 	} else {
 		_ = os.WriteFile(FileOutput, []byte(result), 0644)
 		fmt.Println("results written to " + FileOutput)
