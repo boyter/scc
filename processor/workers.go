@@ -135,11 +135,10 @@ func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, cu
 		if fileJob.Content[i-1] == '\\' {
 			num_escapes := 0
 			for j := i - 1; j > 0; j-- {
-				if fileJob.Content[j] == '\\' {
-					num_escapes++
-				} else {
+				if fileJob.Content[j] != '\\' {
 					break
 				}
+				num_escapes++
 			}
 
 			// if number of escapes is even, all escapes are themselves escaped
