@@ -14,11 +14,6 @@ import (
 
 const constantsFile = "./processor/constants.go"
 
-func fatalf(f string, v ...interface{}) {
-	fmt.Fprintf(os.Stderr, f+"\n", v...)
-	os.Exit(1)
-}
-
 // Reads all .json files in the current folder
 // and encodes them as strings literals in constants.go
 func generateConstants() error {
