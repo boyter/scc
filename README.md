@@ -45,7 +45,7 @@ A [snap install](https://snapcraft.io/scc) exists thanks to [Ricardo](https://fe
 
 #### Homebrew
 
-Or if you have [homebrew](https://brew.sh/) installed
+Or if you have [Homebrew](https://brew.sh/) installed
 
 `$ brew install scc`
 
@@ -166,8 +166,8 @@ Interesting reading about other code counting projects tokei, loc, polyglot and 
 Further reading about processing files on the disk performance
 
  - https://blog.burntsushi.net/ripgrep/
- 
-Using `scc` to process 40 TB of files from Github/Bitbucket/Gitlab
+
+Using `scc` to process 40 TB of files from GitHub/Bitbucket/GitLab
 
  - https://boyter.org/posts/an-informal-survey-of-10-million-github-bitbucket-gitlab-projects/
 
@@ -187,7 +187,7 @@ Why use `scc`?
  - Able to identify many #! files ADVANCED! https://github.com/boyter/scc/issues/115
  - Can ignore large files by lines or bytes
  - Can calculate the ULOC or unique lines of code by file, language or project
- - Supports multiple output formats for integration, csv, sql, json, html and more
+ - Supports multiple output formats for integration, CSV, SQL, JSON, HTML and more
 
 Why not use `scc`?
 
@@ -402,7 +402,7 @@ The increment happens for each of the matching conditions and produces the numbe
 ### Unique Lines of Code (ULOC)
 
 ULOC stands for Unique Lines of Code and represents the unique lines across languages, files and the project itself. This idea was taken from
-https://cmcenroe.me/2018/12/14/uloc.html where the calculation is presented using standard unix tools `sort -u *.h *.c | wc -l`. This metric is 
+https://cmcenroe.me/2018/12/14/uloc.html where the calculation is presented using standard Unix tools `sort -u *.h *.c | wc -l`. This metric is
 there to assist with the estimation of complexity within the project. Quoting the source
 
 > In my opinion, the number this produces should be a better estimate of the complexity of a project. Compared to SLOC, not only are blank lines discounted, but so are close-brace lines and other repetitive code such as common includes. On the other hand, ULOC counts comments, which require just as much maintenance as the code around them does, while avoiding inflating the result with license headers which appear in every file, for example.
@@ -440,7 +440,7 @@ Processed 8407821 bytes, 8.408 megabytes (SI)
 ───────────────────────────────────────────────────────────────────────────────
 ```
 
-Futher reading about the ULOC caluclation can be found at https://boyter.org/posts/sloc-cloc-code-new-metic-uloc/
+Further reading about the ULOC calculation can be found at https://boyter.org/posts/sloc-cloc-code-new-metic-uloc/
 
 ### COCOMO
 
@@ -553,7 +553,7 @@ Note that in all cases if the remap rule does not apply normal #! rules will app
 
 ### Output Formats
 
-By default `scc` will output to the console. However you can produce output in other formats if you require.
+By default `scc` will output to the console. However, you can produce output in other formats if you require.
 
 The different options are `tabular, wide, json, csv, csv-stream, cloc-yaml, html, html-table, sql, sql-insert, openmetrics`. 
 
@@ -757,7 +757,7 @@ scc_bytes{language="Go",file="./bbbb.go"} 1000
 
 Generally `scc` will the fastest code counter compared to any I am aware of and have compared against. The below comparisons are taken from the fastest alternative counters. See `Other similar projects` above to see all of the other code counters compared against. It is designed to scale to as many CPU's cores as you can provide.
 
-However if you want greater performance and you have RAM to spare you can disable the garbage collector like the following on linux `GOGC=-1 scc .` which should speed things up considerably. For some repositories turning off the code complexity calculation via `-c` can reduce runtime as well.
+However if you want greater performance and you have RAM to spare you can disable the garbage collector like the following on Linux `GOGC=-1 scc .` which should speed things up considerably. For some repositories turning off the code complexity calculation via `-c` can reduce runtime as well.
 
 Benchmarks are run on fresh 32 Core CPU Optimised Digital Ocean Virtual Machine 2022/09/20 all done using [hyperfine](https://github.com/sharkdp/hyperfine) with 3 warm-up runs and 10 timed runs.
 
@@ -899,7 +899,7 @@ The `--format-multi` option is especially useful in CI/CD where you want to get 
 
 If you want to hack away feel free! PR's are accepted. Some things to keep in mind. If you want to change a language definition you need to update `languages.json` and then run `go generate` which will convert it into the `processor/constants.go` file.
 
-For all other changes ensure you run all tests before submitting. You can do so using `go test ./...`. However for maximum coverage please run `test-all.sh` which will run `gofmt`, unit tests, race detector and then all of the integration tests. All of those must pass to ensure a stable release.
+For all other changes ensure you run all tests before submitting. You can do so using `go test ./...`. However, for maximum coverage please run `test-all.sh` which will run `gofmt`, unit tests, race detector and then all of the integration tests. All of those must pass to ensure a stable release.
 
 ### API Support
 
@@ -987,7 +987,7 @@ Packaging as of version v3.1.0 is done through https://goreleaser.com/
 
 Note if you plan to run `scc` in Alpine containers you will need to build with CGO_ENABLED=0.
 
-See the below dockerfile as an example on how to achieve this based on this issue https://github.com/boyter/scc/issues/208
+See the below Dockerfile as an example on how to achieve this based on this issue https://github.com/boyter/scc/issues/208
 
 ```
 FROM golang as scc-get
@@ -1043,10 +1043,10 @@ You can find the source code for badges in the repository at https://github.com/
 
 #### A example for each supported provider
 
-- github - https://sloc.xyz/github/boyter/scc/
+- Github - https://sloc.xyz/github/boyter/scc/
 - sr.ht - https://sloc.xyz/sr.ht/~nektro/magnolia-desktop/
-- bitbucket - https://sloc.xyz/bitbucket/boyter/decodingcaptchas
-- gitlab - https://sloc.xyz/gitlab/esr/loccount
+- Bitbucket - https://sloc.xyz/bitbucket/boyter/decodingcaptchas
+- Gitlab - https://sloc.xyz/gitlab/esr/loccount
 
 ### Languages
 

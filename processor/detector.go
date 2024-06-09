@@ -107,7 +107,7 @@ func scanForSheBang(content []byte) (string, error) {
 				candidate1 = string(content[lastSlash+1 : i+1])
 			}
 
-			// between last slash and here is the first candidate which is either env or perl/php/python etc..
+			// between last slash and here is the first candidate which is either env or Perl/PHP/Python etc..
 			if isWhitespace(content[i]) {
 				// mark from lastSlash to here as first argument
 				candidate1 = string(content[lastSlash+1 : i])
