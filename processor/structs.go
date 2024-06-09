@@ -87,7 +87,7 @@ type FileJob struct {
 	LineLength         []int `json:"-"`
 }
 
-// LanguageSummary is used to hold summarised results for a single language
+// LanguageSummary is used to hold summarized results for a single language
 type LanguageSummary struct {
 	Name               string
 	Bytes              int64

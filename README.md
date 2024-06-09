@@ -562,7 +562,7 @@ write your output to. For example `scc -f html -o output.html` will run `scc` ag
 the results in html to the file `output.html`.
 
 You can also write to multiple output files, or multiple types to stdout if you want using the `--format-multi` option. This is 
-most useful when working in CI/CD systems where you want HTML reports as an artefact while also displaying the counts in stdout. 
+most useful when working in CI/CD systems where you want HTML reports as an artifact while also displaying the counts in stdout. 
 
 ```
 scc --format-multi "tabular:stdout,html:output.html,csv:output.csv"
