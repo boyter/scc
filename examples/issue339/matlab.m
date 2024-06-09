@@ -357,7 +357,7 @@ for s = {'train', 'val'}
     s = char(s) ;
     total = 0 ;
     
-    % initialize stats stucture with same fields and same order as
+    % initialize stats structure with same fields and same order as
     % stats_{1}
     stats__ = stats_{1} ;
     names = fieldnames(stats__.(s))' ;

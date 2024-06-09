@@ -25,7 +25,7 @@ func BloomHash(b byte) uint64 {
 	// The logic here is to slice a value between 0 and 63 from k, and set a
 	// single bit in the output hash based on that.
 	// Setting three bits this way seems to give the best results. Fewer bits
-	// makes the hash not unique enough, more leads to overcrowding the bloom
+	// make the hash not unique enough, more leads to overcrowding the bloom
 	// filter.
 	var hash uint64
 	for i := uint64(0); i < 3; i++ {

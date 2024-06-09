@@ -33,7 +33,7 @@ Start -> "Is your Twitter for personal or business use?";
 "Does your boss follow you?" 'Yes'
     -> "Get off Twitter";
 "Does your boss follow you?" 'No'
-    -> "Are you just using Twitter to stalk celebrites?" -> "Get off Twitter and seek help";
+    -> "Are you just using Twitter to stalk celebrities?" -> "Get off Twitter and seek help";
 
 "Are a majority of your tweets interesting,\n funny, or thought-provoking?" 'No, they are mostly pics of my lunch or my cat'
     -> "Are you a celebrity";
@@ -90,7 +90,7 @@ Start -> "Is your Twitter for personal or business use?";
  "Wait - Are you spam or a bot?" <- 'Yes' "You understand what Twitter is, right?";
 
  "How often do you tweet?" 'Hardly ever'
-    -> "Are you just using Twitter to stalk celebrites?";
+    -> "Are you just using Twitter to stalk celebrities?";
  "How often do you tweet?" '15 times a month'
     -> "Do you only keep your twitter account\n for the rush you feel when your tweet is retweeted?";
  "How often do you tweet?" 'Almost everyday'

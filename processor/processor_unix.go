@@ -41,7 +41,7 @@ func ConfigureLimitsUnix() {
 		limit.Cur = highWaterMark
 
 		// limit.Max is the hard limit. If this is still too low, we'll scale
-		// it as high as we can but we also have to scale back how many workers
+		// it as high as we can, but we also have to scale back how many workers
 		// we launch.
 		if limit.Max < highWaterMark {
 			printWarn("Scaling down workers to fit open file ulimit - performance may be sub-optimal")
