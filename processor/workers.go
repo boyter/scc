@@ -117,7 +117,7 @@ func resetState(currentState int64) int64 {
 	return currentState
 }
 
-func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, endString []byte, currentState int64, ignoreEscape bool) (int, int64) {
+func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, currentState int64, ignoreEscape bool) (int, int64) {
 	// It's not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
 	// without checking if it is out of bounds first
 	for i := index; i < endPoint; i++ {
@@ -324,7 +324,6 @@ func commentState(fileJob *FileJob, index int, endPoint int, currentState int64,
 func blankState(
 	fileJob *FileJob,
 	index int,
-	endPoint int,
 	currentState int64,
 	endComments [][]byte,
 	endString []byte,
@@ -465,7 +464,7 @@ func CountStats(fileJob *FileJob) {
 					&fileJob.Hash,
 				)
 			case SString:
-				index, currentState = stringState(fileJob, index, endPoint, langFeatures.Strings, endString, currentState, ignoreEscape)
+				index, currentState = stringState(fileJob, index, endPoint, endString, currentState, ignoreEscape)
 			case SDocString:
 				// For a docstring we can either move into blank in which case we count it as a docstring
 				// or back into code in which case it should be counted as code
@@ -486,7 +485,6 @@ func CountStats(fileJob *FileJob) {
 				index, currentState, endString, endComments, ignoreEscape = blankState(
 					fileJob,
 					index,
-					endPoint,
 					currentState,
 					endComments,
 					endString,
