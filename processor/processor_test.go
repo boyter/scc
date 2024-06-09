@@ -36,12 +36,12 @@ func TestConfigureGc(t *testing.T) {
 
 func TestConfigureLazy(t *testing.T) {
 	ConfigureLazy(true)
-	if isLazy != true {
+	if !isLazy {
 		t.Error("isLazy should be true")
 	}
 
 	ConfigureLazy(false)
-	if isLazy != false {
+	if isLazy {
 		t.Error("isLazy should be false")
 	}
 }

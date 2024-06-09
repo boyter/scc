@@ -134,9 +134,9 @@ func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, cu
 		// if there is an escape symbol before us, investigate
 		if fileJob.Content[i-1] == '\\' {
 			num_escapes := 0
-			for j := i - 1; j > 0; j -= 1 {
+			for j := i - 1; j > 0; j-- {
 				if fileJob.Content[j] == '\\' {
-					num_escapes += 1
+					num_escapes++
 				} else {
 					break
 				}
@@ -735,7 +735,7 @@ func processFile(job *FileJob) bool {
 		}
 
 		// if we didn't remap we then want to see if it's a #! map
-		if remapped == false {
+		if !remapped {
 			cutoff := 200
 
 			// To avoid runtime panic check if the content we are cutting is smaller than 200
