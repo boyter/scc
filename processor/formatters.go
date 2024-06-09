@@ -1247,9 +1247,9 @@ func fileSummarizeShort(input chan *FileJob) string {
 					str.WriteString(fmt.Sprintf(tabularShortFormatFileNoComplexity, tmp, res.Lines, res.Blank, res.Comment, res.Code))
 				}
 
-				//if MaxMean {
-				//	str.WriteString(fmt.Sprintf(tabularShortFormatFileMaxMean, maxIn(res.LineLength), meanIn(res.LineLength)))
-				//}
+				// if MaxMean {
+				// 	str.WriteString(fmt.Sprintf(tabularShortFormatFileMaxMean, maxIn(res.LineLength), meanIn(res.LineLength)))
+				// }
 			}
 		}
 
