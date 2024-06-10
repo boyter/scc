@@ -57,7 +57,7 @@ def lambda_handler(event, context):
             title = 'Blank lines'
             s = format_count(sum([x['Blank'] for x in j]))
         elif t == 'lines':
-            pass # its the default anyway
+            pass # it's the default anyway
         elif t == 'comments':
             title = 'Comments'
             s = format_count(sum([x['Comment'] for x in j]))

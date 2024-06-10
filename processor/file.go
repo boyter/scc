@@ -15,7 +15,7 @@ import (
 var extensionCache sync.Map
 
 // A custom version of extracting extensions for a file
-// which also has a case insensitive cache in order to save
+// which also has a case-insensitive cache in order to save
 // some needless processing
 func getExtension(name string) string {
 	name = strings.ToLower(name)

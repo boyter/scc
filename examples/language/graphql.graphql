@@ -21009,7 +21009,7 @@ type MergeQueueConfiguration {
   minimumEntriesToMerge: Int
 
   """
-  The amount of time in minutes to wait before ignoring the minumum number of
+  The amount of time in minutes to wait before ignoring the minimum number of
   entries in the queue requirement and merging a collection of entries
   """
   minimumEntriesToMergeWaitTime: Int
@@ -54812,12 +54812,12 @@ enum ThreadSubscriptionState {
   IGNORING_THREAD
 
   """
-  The User is not recieving notifications from this thread
+  The User is not receiving notifications from this thread
   """
   NONE
 
   """
-  The User is notified becuase they are watching the list
+  The User is notified because they are watching the list
   """
   SUBSCRIBED_TO_LIST
 

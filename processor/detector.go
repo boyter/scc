@@ -107,7 +107,7 @@ func scanForSheBang(content []byte) (string, error) {
 				candidate1 = string(content[lastSlash+1 : i+1])
 			}
 
-			// between last slash and here is the first candidate which is either env or perl/php/python etc..
+			// between last slash and here is the first candidate which is either env or Perl/PHP/Python etc..
 			if isWhitespace(content[i]) {
 				// mark from lastSlash to here as first argument
 				candidate1 = string(content[lastSlash+1 : i])
@@ -151,7 +151,7 @@ type languageGuess struct {
 // DetermineLanguage given a filename, fallback language, possible languages and content make a guess to the type.
 // If multiple possible it will guess based on keywords similar to how https://github.com/vmchale/polyglot does
 func DetermineLanguage(filename string, fallbackLanguage string, possibleLanguages []string, content []byte) string {
-	// If being called through an API its possible nothing is set here and as
+	// If being called through an API it's possible nothing is set here and as
 	// such should just return as the Language value should have already been set
 	if len(possibleLanguages) == 0 {
 		return fallbackLanguage
@@ -192,7 +192,7 @@ func DetermineLanguage(filename string, fallbackLanguage string, possibleLanguag
 		// and as such the default fallback if we don't find a suitable number of matching
 		// keywords
 		// consider YAML files for example, where cloudformation files can also be YAML
-		// YAML can have any form so its not possible to say "this is a yaml file"
+		// YAML can have any form so it's not possible to say "this is a yaml file"
 		// so we can only say "this is likely to be a cloudformation file", and as such
 		// we need to handle a fallback case, which in this case is nothing
 		if len(langFeatures.Keywords) == 0 {

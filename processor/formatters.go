@@ -314,7 +314,7 @@ func toCSVSummary(input chan *FileJob) string {
 	}
 
 	// Cater for the common case of adding plural even for those options that don't make sense
-	// as its quite common for those who English is not a first language to make a simple mistake
+	// as it's quite common for those who English is not a first language to make a simple mistake
 	switch {
 	case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "languages":
 		sort.Slice(records, func(i, j int) bool {
@@ -405,7 +405,7 @@ func toCSVFiles(input chan *FileJob) string {
 	}
 
 	// Cater for the common case of adding plural even for those options that don't make sense
-	// as its quite common for those who English is not a first language to make a simple mistake
+	// as it's quite common for those who English is not a first language to make a simple mistake
 	switch {
 	case SortBy == "name" || SortBy == "names":
 		sort.Slice(records, func(i, j int) bool {
@@ -861,7 +861,7 @@ func fileSummarizeMulti(input chan *FileJob) string {
 				val = toCSV(i)
 			case "csv-stream":
 				val = toCSVStream(i)
-				// special case where we want to ignore writing to stdout ot disk as its already done
+				// special case where we want to ignore writing to stdout to disk as it's already done
 				continue
 			case "html":
 				val = toHtml(i)
@@ -964,7 +964,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 	}
 
 	// Cater for the common case of adding plural even for those options that don't make sense
-	// as its quite common for those who English is not a first language to make a simple mistake
+	// as it's quite common for those who English is not a first language to make a simple mistake
 	switch {
 	case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "langs":
 		sort.Slice(language, func(i, j int) bool {
@@ -1498,7 +1498,7 @@ func aggregateLanguageSummary(input chan *FileJob) []LanguageSummary {
 
 func sortLanguageSummary(language []LanguageSummary) []LanguageSummary {
 	// Cater for the common case of adding plural even for those options that don't make sense
-	// as its quite common for those who English is not a first language to make a simple mistake
+	// as it's quite common for those who English is not a first language to make a simple mistake
 	// NB in any non name cases if the values are the same we sort by name to ensure
 	// deterministic output
 	switch {

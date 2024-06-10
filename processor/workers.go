@@ -118,7 +118,7 @@ func resetState(currentState int64) int64 {
 }
 
 func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, endString []byte, currentState int64, ignoreEscape bool) (int, int64) {
-	// Its not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
+	// It's not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
 	// without checking if it is out of bounds first
 	for i := index; i < endPoint; i++ {
 		index = i
@@ -163,7 +163,7 @@ func stringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, en
 // This is a special state check pretty much only ever used by Python codebases
 // but potentially it could be expanded to deal with other types
 func docStringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, endString []byte, currentState int64) (int, int64) {
-	// Its not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
+	// It's not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
 	// without checking if it is out of bounds first
 	for i := index; i < endPoint; i++ {
 		index = i
@@ -232,7 +232,7 @@ func codeState(
 
 		if shouldProcess(curByte, langFeatures.ProcessMask) {
 			if Duplicates {
-				// Technically this is wrong because we skip bytes so this is not a true
+				// Technically this is wrong because we skip bytes, so this is not a true
 				// hash of the file contents, but for duplicate files it shouldn't matter
 				// as both will skip the same way
 				digestible := []byte{fileJob.Content[index]}
@@ -736,7 +736,7 @@ func processFile(job *FileJob) bool {
 			remapped = unknownRemapLanguage(job)
 		}
 
-		// if we didn't remap we then want to see if its a #! map
+		// if we didn't remap we then want to see if it's a #! map
 		if remapped == false {
 			cutoff := 200
 

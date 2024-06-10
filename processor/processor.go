@@ -271,11 +271,11 @@ func ProcessConstants() {
 	// Configure COCOMO setting
 	_, ok := projectType[strings.ToLower(CocomoProjectType)]
 	if !ok {
-		// lets see if we can turn it into a custom one
+		// let's see if we can turn it into a custom one
 		spl := strings.Split(CocomoProjectType, ",")
 		val := []float64{}
 		if len(spl) == 5 {
-			// lets try to convert to float if we can
+			// let's try to convert to float if we can
 			for i := 1; i < 5; i++ {
 				f, err := strconv.ParseFloat(spl[i], 64)
 				if err == nil {

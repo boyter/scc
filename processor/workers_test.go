@@ -69,8 +69,8 @@ func TestCountStatsLines(t *testing.T) {
 		t.Errorf("One line expected got %d", fileJob.Lines)
 	}
 
-	// tokei counts this as 1 because its still on a single line unless something follows
-	// the newline its still 1 line
+	// tokei counts this as 1 because it's still on a single line unless something follows
+	// the newline it's still 1 line
 	fileJob.Lines = 0
 	fileJob.SetContent("1\n")
 	CountStats(&fileJob)
@@ -147,8 +147,8 @@ func TestCountStatsCode(t *testing.T) {
 		t.Errorf("One line expected got %d", fileJob.Code)
 	}
 
-	// tokei counts this as 1 because its still on a single line unless something follows
-	// the newline its still 1 line
+	// tokei counts this as 1 because it's still on a single line unless something follows
+	// the newline it's still 1 line
 	fileJob.Code = 0
 	fileJob.SetContent("1\n")
 	CountStats(&fileJob)
@@ -1313,7 +1313,7 @@ func BenchmarkCheckByteEqualityLoop(b *testing.B) {
 }
 
 // Check if the 1 offset makes a difference, which it does by ~1 ns
-func BenchmarkCheckByteEqualityLoopWithAddtional(b *testing.B) {
+func BenchmarkCheckByteEqualityLoopWithAdditional(b *testing.B) {
 	b.StopTimer()
 	one := []byte("for")
 	two := []byte("for")

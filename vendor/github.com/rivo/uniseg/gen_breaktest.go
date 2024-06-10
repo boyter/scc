@@ -132,7 +132,7 @@ var (
 // parseRuneSequence parses a rune + breaking opportunity sequence from b
 // and appends the Go code for testcase.original to orig
 // and appends the Go code for testcase.expected to exp.
-// It retuns the new orig and exp slices.
+// It returns the new orig and exp slices.
 //
 // E.g. for the input b="÷ 0020 × 0308 ÷ 1F1E6 ÷"
 // it will append
