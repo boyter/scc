@@ -1,4 +1,4 @@
-FROM golang:golang:1.22.3-alpine3.20 as scc-get
+FROM golang:1.22.4-alpine3.20 as scc-get
 
 ENV GOOS=linux \
 GOARCH=amd64 \
