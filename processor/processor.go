@@ -335,7 +335,7 @@ func setupCountAs() {
 			// See if we can identify based on language name which is the most
 			// reliable as the name should be unique
 			for name := range languageDatabase {
-				if strings.ToLower(name) == strings.ToLower(t[1]) {
+				if strings.EqualFold(name, t[1]) {
 					ExtensionToLanguage[strings.ToLower(t[0])] = []string{name}
 					identified = true
 					if Debug {
