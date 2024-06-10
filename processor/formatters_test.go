@@ -3,9 +3,10 @@
 package processor
 
 import (
-	"github.com/mattn/go-runewidth"
 	"strings"
 	"testing"
+
+	"github.com/mattn/go-runewidth"
 )
 
 func TestPrintTrace(t *testing.T) {
@@ -1316,21 +1317,36 @@ func TestGetTabularShortBreak(t *testing.T) {
 }
 
 func TestGetTabularWideBreak(t *testing.T) {
-	Ci = false
-	r := getTabularWideBreak()
-
-	if !strings.Contains(r, "─") {
-		t.Errorf("Expected to have box line")
+	{
+		Ci, HBorder = false, false
+		r := getTabularWideBreak()
+		if !strings.Contains(r, "─") {
+			t.Errorf("Expected to have box line")
+		}
+	}
+	{
+		Ci, HBorder = false, true
+		r := getTabularWideBreak()
+		if strings.Contains(r, "─") {
+			t.Errorf("Didn't expect to have box line")
+		}
+	}
+	{
+		Ci, HBorder = true, false
+		r := getTabularWideBreak()
+		if !strings.Contains(r, "-") {
+			t.Errorf("Expected to have hyphen")
+		}
+	}
+	{
+		Ci, HBorder = true, true
+		r := getTabularWideBreak()
+		if strings.Contains(r, "-") {
+			t.Errorf("Didn't expect to have hyphen")
+		}
 	}
 
-	Ci = true
-	r = getTabularWideBreak()
-
-	if !strings.Contains(r, "-") {
-		t.Errorf("Expected to have hyphen")
-	}
-
-	Ci = false
+	Ci, HBorder = false, false
 }
 
 func TestToHTML(t *testing.T) {

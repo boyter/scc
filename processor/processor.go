@@ -87,6 +87,9 @@ var CocomoProjectType = "organic"
 // Size toggles the Size calculation
 var Size = false
 
+// Draw horizontal borders between sections.
+var HBorder = false
+
 // SizeUnit determines what size calculation is used for megabytes
 var SizeUnit = "si"
 
@@ -656,7 +659,7 @@ func Process() {
 
 	result := fileSummarize(fileSummaryJobQueue)
 	if FileOutput == "" {
-		fmt.Println(result)
+		fmt.Print(result)
 	} else {
 		_ = os.WriteFile(FileOutput, []byte(result), 0644)
 		fmt.Println("results written to " + FileOutput)
