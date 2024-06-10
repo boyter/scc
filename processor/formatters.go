@@ -784,27 +784,27 @@ func fileSummarize(input chan *FileJob) string {
 	}
 
 	switch {
-	case More || strings.ToLower(Format) == "wide":
+	case More || strings.EqualFold(Format, "wide"):
 		return fileSummarizeLong(input)
-	case strings.ToLower(Format) == "json":
+	case strings.EqualFold(Format, "json"):
 		return toJSON(input)
-	case strings.ToLower(Format) == "json2":
+	case strings.EqualFold(Format, "json2"):
 		return toJSON2(input)
-	case strings.ToLower(Format) == "cloc-yaml" || strings.ToLower(Format) == "cloc-yml":
+	case strings.EqualFold(Format, "cloc-yaml") || strings.EqualFold(Format, "cloc-yml"):
 		return toClocYAML(input)
-	case strings.ToLower(Format) == "csv":
+	case strings.EqualFold(Format, "csv"):
 		return toCSV(input)
-	case strings.ToLower(Format) == "csv-stream":
+	case strings.EqualFold(Format, "csv-stream"):
 		return toCSVStream(input)
-	case strings.ToLower(Format) == "html":
+	case strings.EqualFold(Format, "html"):
 		return toHtml(input)
-	case strings.ToLower(Format) == "html-table":
+	case strings.EqualFold(Format, "html-table"):
 		return toHtmlTable(input)
-	case strings.ToLower(Format) == "sql":
+	case strings.EqualFold(Format, "sql"):
 		return toSql(input)
-	case strings.ToLower(Format) == "sql-insert":
+	case strings.EqualFold(Format, "sql-insert"):
 		return toSqlInsert(input)
-	case strings.ToLower(Format) == "openmetrics":
+	case strings.EqualFold(Format, "openmetrics"):
 		return toOpenMetrics(input)
 	}
 
@@ -1413,7 +1413,7 @@ func calculateSize(sumBytes int64, str *strings.Builder) {
 		SizeUnit = "SI"
 	}
 
-	if strings.ToLower(SizeUnit) != "xkcd-imaginary" {
+	if !strings.EqualFold(SizeUnit, "xkcd-imaginary") {
 		str.WriteString(fmt.Sprintf("Processed %d bytes, %.3f megabytes (%s)\n", sumBytes, size, strings.ToUpper(SizeUnit)))
 	}
 }
