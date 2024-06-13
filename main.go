@@ -13,9 +13,9 @@ import (
 
 //go:generate go run scripts/include.go
 func main() {
-	//f, _ := os.Create("scc.pprof")
-	//pprof.StartCPUProfile(f)
-	//defer pprof.StopCPUProfile()
+	// f, _ := os.Create("scc.pprof")
+	// pprof.StartCPUProfile(f)
+	// defer pprof.StopCPUProfile()
 
 	if len(os.Args) == 2 && strings.HasPrefix(os.Args[1], "@") {
 		// handle "scc @flags.txt" syntax

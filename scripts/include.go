@@ -14,11 +14,6 @@ import (
 
 const constantsFile = "./processor/constants.go"
 
-func fatalf(f string, v ...interface{}) {
-	fmt.Fprintf(os.Stderr, f+"\n", v...)
-	os.Exit(1)
-}
-
 // Reads all .json files in the current folder
 // and encodes them as strings literals in constants.go
 func generateConstants() error {
@@ -30,7 +25,7 @@ func generateConstants() error {
 	defer os.Remove(out.Name())
 
 	// Open constants
-	out.Write([]byte("package processor \n\nconst (\n"))
+	out.WriteString("package processor \n\nconst (\n")
 
 	for _, f := range files {
 		if strings.HasPrefix(f.Name(), "languages") && strings.HasSuffix(f.Name(), ".json") {
@@ -48,7 +43,7 @@ func generateConstants() error {
 			f.Seek(0, io.SeekStart)
 
 			// The constant variable name
-			out.Write([]byte(strings.TrimSuffix(f.Name(), ".json") + " = `"))
+			out.WriteString(strings.TrimSuffix(f.Name(), ".json") + " = `")
 
 			enc := base64.NewEncoder(base64.StdEncoding, out)
 			gz, _ := gzip.NewWriterLevel(enc, gzip.BestSpeed)
@@ -58,12 +53,12 @@ func generateConstants() error {
 			gz.Close()
 			enc.Close()
 
-			out.Write([]byte("`\n"))
+			out.WriteString("`\n")
 		}
 	}
 
 	// Close out constants
-	out.Write([]byte(")\n"))
+	out.WriteString(")\n")
 	out.Close()
 
 	if err := os.Rename(out.Name(), constantsFile); err != nil {
