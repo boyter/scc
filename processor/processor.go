@@ -543,7 +543,7 @@ func printLanguages() {
 	})
 
 	for _, name := range names {
-		fmt.Println(fmt.Sprintf("%s (%s)", name, strings.Join(append(database[name].Extensions, database[name].FileNames...), ",")))
+		fmt.Printf("%s (%s)\n", name, strings.Join(append(database[name].Extensions, database[name].FileNames...), ","))
 	}
 }
 
