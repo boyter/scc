@@ -91,29 +91,6 @@ docker run --rm -it -v "$PWD:/pwd"  ghcr.io/lhoupert/scc:master scc /pwd
 
 Binaries for Windows, GNU/Linux and macOS for both i386 and x86_64 machines are available from the [releases](https://github.com/boyter/scc/releases) page.
 
-#### GitHub Action workflow
-
-https://github.com/marketplace/actions/scc-docker-action https://github.com/iRyanBell/scc-docker-action
-
-_.github/workflows/main.yml_
-
-```
-on: [push]
-
-jobs:
-  scc_job:
-    runs-on: ubuntu-latest
-    name: A job to count the lines of code.
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Get the lines of code.
-        id: scc
-        uses: iryanbell/scc-docker-action@v1.0.2
-        with:
-          args: ${{ env.workspace }} -i js,go,html,css
-```
-
 #### GitLab
 
 https://about.gitlab.com/blog/2023/02/15/code-counting-in-gitlab/
