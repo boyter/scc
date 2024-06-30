@@ -1400,6 +1400,56 @@
     ],
     "quotes": []
   },
+  "Clipper": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "do while ",
+      "while ",
+      "else ",
+      "elseif ",
+      "else(",
+      "switch ",
+      "case ",
+      "otherwise ",
+      "begin sequence ",
+      "end sequence ",
+      "begin sequence(",
+      "try ",
+      "catch ",
+      "finally ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "prg",
+      "ch"
+    ],
+    "line_comment": [
+      "//",
+      "&&"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
   "Clojure": {
     "complexitychecks": [
       "(for ",
