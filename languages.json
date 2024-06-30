@@ -1213,6 +1213,50 @@
       }
     ]
   },
+  "Cangjie": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "cj"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "'",
+        "start": "'"
+      },
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "\"\"\"",
+        "start": "\"\"\""
+      },
+      {
+        "end": "'''",
+        "start": "'''"
+      }
+    ]
+  },
   "Cap'n Proto": {
     "complexitychecks": [],
     "extensions": [
