@@ -310,7 +310,7 @@ func ProcessConstants() {
 	}
 
 	// Fix for https://github.com/boyter/scc/issues/250
-	fixedPath := []string{}
+	fixedPath := make([]string, 0, len(PathDenyList))
 	for _, path := range PathDenyList {
 		fixedPath = append(fixedPath, strings.TrimRight(path, "/"))
 	}
@@ -532,8 +532,8 @@ func loadDatabase() map[string]Language {
 
 func printLanguages() {
 	database := loadDatabase()
-	var names []string
 
+	names := make([]string, 0, len(database))
 	for key := range database {
 		names = append(names, key)
 	}

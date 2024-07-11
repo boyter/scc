@@ -175,7 +175,7 @@ func DetermineLanguage(filename string, fallbackLanguage string, possibleLanguag
 
 	primary := ""
 
-	toSort := []languageGuess{}
+	toSort := make([]languageGuess, 0, len(possibleLanguages))
 	for _, lan := range possibleLanguages {
 		LanguageFeaturesMutex.Lock()
 		langFeatures := LanguageFeatures[lan]

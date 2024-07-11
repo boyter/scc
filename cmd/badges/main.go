@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/boyter/scc/v3/processor"
-	"github.com/rs/zerolog/log"
 	"math"
 	"net/http"
 	"net/url"
@@ -16,6 +14,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/boyter/scc/v3/processor"
+	"github.com/rs/zerolog/log"
 )
 
 var uniqueCode = "unique_code"
@@ -299,7 +300,7 @@ func processPath(s string) string {
 		return ""
 	}
 
-	sp := []string{}
+	sp := make([]string, 0, len(split))
 
 	for _, s := range split {
 		sp = append(sp, cleanString(s))

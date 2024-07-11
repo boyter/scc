@@ -297,7 +297,7 @@ func toCSVSummary(input chan *FileJob) string {
 	language := aggregateLanguageSummary(input)
 	language = sortLanguageSummary(language)
 
-	records := [][]string{}
+	records := make([][]string, 0, len(language))
 
 	for _, result := range language {
 		records = append(records, []string{
@@ -606,7 +606,7 @@ func toHtmlTable(input chan *FileJob) string {
 		}
 	}
 
-	language := []LanguageSummary{}
+	language := make([]LanguageSummary, 0, len(languages))
 	for _, summary := range languages {
 		language = append(language, summary)
 	}
@@ -958,7 +958,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 		}
 	}
 
-	language := []LanguageSummary{}
+	language := make([]LanguageSummary, 0, len(langs))
 	for _, summary := range langs {
 		language = append(language, summary)
 	}
@@ -1174,7 +1174,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 		}
 	}
 
-	language := []LanguageSummary{}
+	language := make([]LanguageSummary, 0, len(lang))
 	for _, summary := range lang {
 		language = append(language, summary)
 	}
@@ -1488,7 +1488,7 @@ func aggregateLanguageSummary(input chan *FileJob) []LanguageSummary {
 		}
 	}
 
-	language := []LanguageSummary{}
+	language := make([]LanguageSummary, 0, len(languages))
 	for _, summary := range languages {
 		language = append(language, summary)
 	}
