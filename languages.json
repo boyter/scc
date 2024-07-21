@@ -6667,7 +6667,10 @@
       "#"
     ],
     "multi_line": [],
-    "quotes": []
+    "quotes": [],
+    "shebangs": [
+      "Rscript"
+    ]
   },
   "Racket": {
     "complexitychecks": [
