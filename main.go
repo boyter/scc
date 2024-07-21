@@ -27,7 +27,7 @@ func main() {
 		}
 
 		args := strings.Split(string(b), "\n")
-		var newArgs []string
+		newArgs := make([]string, 0, len(args))
 		for _, x := range args {
 			newArgs = append(newArgs, strings.TrimSpace(x))
 		}
