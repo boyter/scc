@@ -1,6 +1,6 @@
 package processor
 
-import "math/rand"
+import "math/rand/v2"
 
 var BloomTable [256]uint64
 
@@ -15,7 +15,7 @@ func BloomHash(b byte) uint64 {
 	// characters) the values are not well distributed through the 0-255 byte
 	// range. math/rand gives us a way to generate a value with more well
 	// distributed randomness.
-	k := rand.New(rand.NewSource(int64(b))).Uint64()
+	k := rand.New(rand.NewPCG(uint64(b), uint64(b))).Uint64()
 
 	// Mask to slice out a 0-63 value
 	var mask64 uint64 = 0b00111111
