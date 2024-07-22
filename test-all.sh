@@ -935,13 +935,48 @@ done
 a=$(./scc "examples/issue345/" -f csv | sed -n '2 p')
 b="C++,4,3,1,0,0,76,1,0"
 if [ "$a" == "$b" ]; then
-    echo -e "{GREEN}PASSED string termination check"
+    echo -e "${GREEN}PASSED string termination check"
 else
     echo -e "$a"
     echo -e "${RED}======================================================="
     echo -e "FAILED Should terminate the string properly"
     echo -e "=======================================================${NC}"
     exit
+fi
+
+# Regression issue https://github.com/boyter/scc/issues/379
+Issue379Line=$(./scc -f csv "examples/issue379/" | grep 'Python' | cut -d ',' -f 2)
+Issue379Code=$(./scc -f csv "examples/issue379/" | grep 'Python' | cut -d ',' -f 3)
+Issue379Comments=$(./scc -f csv "examples/issue379/" | grep 'Python' | cut -d ',' -f 4)
+Issue379Blanks=$(./scc -f csv "examples/issue379/" | grep 'Python' | cut -d ',' -f 5)
+Issue379Complexity=$(./scc -f csv "examples/issue379/" | grep 'Python' | cut -d ',' -f 6)
+if [ $Issue379Line -ne 7 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue379 line counting"
+    echo -e "=======================================================${NC}"
+    exit
+elif [ $Issue379Code -ne 4 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue379 code counting"
+    echo -e "=======================================================${NC}"
+    exit
+elif [ $Issue379Comments -ne 2 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue379 comments counting"
+    echo -e "=======================================================${NC}"
+    exit
+elif [ $Issue379Blanks -ne 1 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue379 blanks counting"
+    echo -e "=======================================================${NC}"
+    exit
+elif [ $Issue379Complexity -ne 1 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue379 complexity counting"
+    echo -e "=======================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED Issue379 Regression Check"
 fi
 
 # Extra case for longer languages that are normally truncated

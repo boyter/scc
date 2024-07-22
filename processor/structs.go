@@ -183,11 +183,20 @@ func (root *Trie) Match(token []byte) (int, int, []byte) {
 	var c byte
 
 	node = root
+	var prevClosedNode *Trie
+	var prevClosedDepth int
 	for depth, c = range token {
 		if node.Table[c] == nil {
-			return node.Type, depth, node.Close
+			break
 		}
 		node = node.Table[c]
+		if len(node.Close) > 0 {
+			prevClosedNode = node
+			prevClosedDepth = depth
+		}
+	}
+	if len(node.Close) == 0 && prevClosedNode != nil {
+		return prevClosedNode.Type, prevClosedDepth, prevClosedNode.Close
 	}
 	return node.Type, depth, node.Close
 }
