@@ -5,6 +5,7 @@ package processor
 import (
 	"bytes"
 	"hash"
+	"slices"
 	"sync"
 )
 
@@ -129,15 +130,10 @@ func (c *CheckDuplicates) Add(key int64, hash []byte) {
 // Check is a non thread safe check to see if the key exists already need to use mutex inside struct before calling this
 func (c *CheckDuplicates) Check(key int64, hash []byte) bool {
 	hashes, ok := c.hashes[key]
-	if ok {
-		for _, h := range hashes {
-			if bytes.Equal(h, hash) {
-				return true
-			}
-		}
-	}
 
-	return false
+	return ok && slices.ContainsFunc(hashes, func(h []byte) bool {
+		return bytes.Equal(h, hash)
+	})
 }
 
 // Trie is a structure used to store matches efficiently

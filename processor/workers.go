@@ -5,12 +5,13 @@ package processor
 import (
 	"bytes"
 	"fmt"
-	"github.com/minio/blake2b-simd"
 	"hash"
 	"runtime/debug"
 	"strings"
 	"sync"
 	"sync/atomic"
+
+	"github.com/minio/blake2b-simd"
 )
 
 // The below are used as identifiers for the code state machine
@@ -91,18 +92,11 @@ func isWhitespace(currentByte byte) bool {
 // Check if this file is binary by checking for nul byte and if so bail out
 // this is how GNU Grep, git and ripgrep check for binary files
 func isBinary(index int, currentByte byte) bool {
-	if index < 10000 && !DisableCheckBinary && currentByte == 0 {
-		return true
-	}
-
-	return false
+	return index < 10000 && !DisableCheckBinary && currentByte == 0
 }
 
 func shouldProcess(currentByte, processBytesMask byte) bool {
-	if currentByte&processBytesMask != currentByte {
-		return false
-	}
-	return true
+	return currentByte&processBytesMask == currentByte
 }
 
 func resetState(currentState int64) int64 {

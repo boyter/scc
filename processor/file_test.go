@@ -3,7 +3,7 @@
 package processor
 
 import (
-	"math/rand"
+	"math/rand/v2"
 	"os"
 	"testing"
 )
@@ -207,7 +207,7 @@ const letterBytes = "abcdefghijklmnopqrstuvwxyz"
 func randStringBytes(n int) string {
 	b := make([]byte, n)
 	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+		b[i] = letterBytes[rand.IntN(len(letterBytes))]
 	}
 	return string(b)
 }

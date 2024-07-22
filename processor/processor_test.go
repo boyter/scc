@@ -96,7 +96,7 @@ func TestSetupCountAsLanguage(t *testing.T) {
 	ProcessConstants()
 	CountAs = "boyter:C Header"
 	setupCountAs()
-	v, _ := ExtensionToLanguage["boyter"]
+	v := ExtensionToLanguage["boyter"]
 
 	if v[0] != "C Header" {
 		t.Error("Expected boyter to map to C Header")
@@ -109,7 +109,7 @@ func TestSetupCountAsLanguageCase(t *testing.T) {
 	ProcessConstants()
 	CountAs = "BoYtER:C Header"
 	setupCountAs()
-	v, _ := ExtensionToLanguage["boyter"]
+	v := ExtensionToLanguage["boyter"]
 
 	if v[0] != "C Header" {
 		t.Error("Expected boyter to map to C Header")
@@ -122,7 +122,7 @@ func TestSetupCountAsExtension(t *testing.T) {
 	ProcessConstants()
 	CountAs = "boyter:j2"
 	setupCountAs()
-	v, _ := ExtensionToLanguage["boyter"]
+	v := ExtensionToLanguage["boyter"]
 
 	if v[0] != "Jinja" {
 		t.Error("Expected boyter to map to Jinja")
@@ -135,13 +135,13 @@ func TestSetupCountAsMultiple(t *testing.T) {
 	ProcessConstants()
 	CountAs = "boyter:j2,retyob:JAVA"
 	setupCountAs()
-	v, _ := ExtensionToLanguage["boyter"]
+	v := ExtensionToLanguage["boyter"]
 
 	if v[0] != "Jinja" {
 		t.Error("Expected boyter to map to Jinja")
 	}
 
-	v, _ = ExtensionToLanguage["retyob"]
+	v = ExtensionToLanguage["retyob"]
 
 	if v[0] != "Java" {
 		t.Error("Expected retyob to map to Java")

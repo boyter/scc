@@ -3,9 +3,10 @@
 package processor
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -32,7 +33,7 @@ func DetectLanguage(name string) ([]string, string) {
 	// Convert from d.ts to ts and check that in case of multiple extensions
 	if !ok {
 		extension = getExtension(extension)
-		language, _ = ExtensionToLanguage[extension]
+		language = ExtensionToLanguage[extension]
 	}
 
 	return language, extension
@@ -72,11 +73,9 @@ func DetectSheBang(content string) (string, error) {
 	}
 
 	for k, v := range ShebangLookup {
-		for _, x := range v {
+		if slices.Contains(v, cmd) {
 			// detects both full path and env usage
-			if x == cmd {
-				return k, nil
-			}
+			return k, nil
 		}
 	}
 
@@ -202,12 +201,11 @@ func DetermineLanguage(filename string, fallbackLanguage string, possibleLanguag
 		toSort = append(toSort, languageGuess{Name: lan, Count: count})
 	}
 
-	sort.Slice(toSort, func(i, j int) bool {
-		if toSort[i].Count == toSort[j].Count {
-			return strings.Compare(toSort[i].Name, toSort[j].Name) < 0
+	slices.SortFunc(toSort, func(a, b languageGuess) int {
+		if order := cmp.Compare(b.Count, a.Count); order != 0 {
+			return order
 		}
-
-		return toSort[i].Count > toSort[j].Count
+		return strings.Compare(a.Name, b.Name)
 	})
 
 	// fmt.Println(toSort)

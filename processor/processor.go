@@ -12,7 +12,7 @@ import (
 	"regexp"
 	"runtime"
 	"runtime/debug"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -538,8 +538,8 @@ func printLanguages() {
 		names = append(names, key)
 	}
 
-	sort.Slice(names, func(i, j int) bool {
-		return strings.Compare(strings.ToLower(names[i]), strings.ToLower(names[j])) < 0
+	slices.SortFunc(names, func(a, b string) int {
+		return strings.Compare(strings.ToLower(a), strings.ToLower(b))
 	})
 
 	for _, name := range names {
