@@ -102,6 +102,7 @@ type LanguageSummary struct {
 	WeightedComplexity float64
 	Files              []*FileJob
 	LineLength         []int
+	ULOC               int
 }
 
 // OpenClose is used to hold an open/close pair for matching such as multi line comments
