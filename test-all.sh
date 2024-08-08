@@ -650,6 +650,15 @@ else
     exit
 fi
 
+if ./scc -f json  -a | grep -q "ULOC"; then
+    echo -e "${GREEN}PASSED json uloc check"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED json uloc check"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 if ./scc -f json2 | grep -q "Bytes"; then
     echo -e "${GREEN}PASSED json2 bytes check"
 else

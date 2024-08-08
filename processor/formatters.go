@@ -631,7 +631,7 @@ func toHtmlTable(input chan *FileJob) string {
 	<tbody>`)
 
 	for _, r := range language {
-		fmt.Fprintf(str, `<tr>
+		_, _ = fmt.Fprintf(str, `<tr>
 		<th>%s</th>
 		<th>%d</th>
 		<th>%d</th>
@@ -647,7 +647,7 @@ func toHtmlTable(input chan *FileJob) string {
 			sortSummaryFiles(&r)
 
 			for _, res := range r.Files {
-				fmt.Fprintf(str, `<tr>
+				_, _ = fmt.Fprintf(str, `<tr>
 		<td>%s</td>
 		<td></td>
 		<td>%d</td>
@@ -663,7 +663,7 @@ func toHtmlTable(input chan *FileJob) string {
 
 	}
 
-	fmt.Fprintf(str, `</tbody>
+	_, _ = fmt.Fprintf(str, `</tbody>
 	<tfoot><tr>
 		<th>Total</th>
 		<th>%d</th>
@@ -679,7 +679,7 @@ func toHtmlTable(input chan *FileJob) string {
 	if !Cocomo {
 		var sb strings.Builder
 		calculateCocomo(sumCode, &sb)
-		fmt.Fprintf(str, `
+		_, _ = fmt.Fprintf(str, `
 	<tr>
 		<th colspan="9">%s</th>
 	</tr></tfoot>
@@ -707,7 +707,7 @@ func toSqlInsert(input chan *FileJob) string {
 
 		dir, _ := filepath.Split(res.Location)
 
-		fmt.Fprintf(str, "\ninsert into t values('%s', '%s', '%s', '%s', '%s', %d, %d, %d, %d, %d, %d);",
+		_, _ = fmt.Fprintf(str, "\ninsert into t values('%s', '%s', '%s', '%s', '%s', %d, %d, %d, %d, %d, %d);",
 			escapeSQLString(projectName),
 			escapeSQLString(res.Language),
 			escapeSQLString(res.Location),
@@ -727,7 +727,7 @@ func toSqlInsert(input chan *FileJob) string {
 	currentTime := time.Now()
 	es := float64(makeTimestampMilli()-startTimeMilli) * 0.001
 	str.WriteString("\nbegin transaction;")
-	fmt.Fprintf(str, "\ninsert into metadata values('%s', '%s', %f, %f, %f, %f);",
+	_, _ = fmt.Fprintf(str, "\ninsert into metadata values('%s', '%s', %f, %f, %f, %f);",
 		currentTime.Format("2006-01-02 15:04:05"),
 		projectName,
 		es,
@@ -1193,14 +1193,14 @@ func fileSummarizeShort(input chan *FileJob) string {
 		trimmedName = trimNameShort(summary, trimmedName)
 
 		if !Complexity {
-			fmt.Fprintf(str, tabularShortFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity)
+			_, _ = fmt.Fprintf(str, tabularShortFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity)
 		} else {
-			fmt.Fprintf(str, tabularShortFormatBodyNoComplexity, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code)
+			_, _ = fmt.Fprintf(str, tabularShortFormatBodyNoComplexity, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code)
 		}
 
 		if Percent {
 			if !Complexity {
-				fmt.Fprintf(str,
+				_, _ = fmt.Fprintf(str,
 					tabularShortPercentLanguageFormatBody,
 					float64(len(summary.Files))/float64(sumFiles)*100,
 					float64(summary.Lines)/float64(sumLines)*100,
@@ -1210,7 +1210,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 					float64(summary.Complexity)/float64(sumComplexity)*100,
 				)
 			} else {
-				fmt.Fprintf(str,
+				_, _ = fmt.Fprintf(str,
 					tabularShortPercentLanguageFormatBodyNoComplexity,
 					float64(len(summary.Files))/float64(sumFiles)*100,
 					float64(summary.Lines)/float64(sumLines)*100,
@@ -1225,9 +1225,9 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 		if MaxMean {
 			if !Complexity {
-				fmt.Fprintf(str, tabularShortFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength))
+				_, _ = fmt.Fprintf(str, tabularShortFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength))
 			} else {
-				fmt.Fprintf(str, tabularShortFormatFileMaxMeanNoComplexity, maxIn(summary.LineLength), meanIn(summary.LineLength))
+				_, _ = fmt.Fprintf(str, tabularShortFormatFileMaxMeanNoComplexity, maxIn(summary.LineLength), meanIn(summary.LineLength))
 			}
 
 			addBreak = true
@@ -1242,23 +1242,19 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 				if !Complexity {
 					tmp = unicodeAwareRightPad(tmp, 30)
-					fmt.Fprintf(str, tabularShortFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity)
+					_, _ = fmt.Fprintf(str, tabularShortFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity)
 				} else {
 					tmp = unicodeAwareRightPad(tmp, 34)
-					fmt.Fprintf(str, tabularShortFormatFileNoComplexity, tmp, res.Lines, res.Blank, res.Comment, res.Code)
+					_, _ = fmt.Fprintf(str, tabularShortFormatFileNoComplexity, tmp, res.Lines, res.Blank, res.Comment, res.Code)
 				}
-
-				// if MaxMean {
-				// 	fmt.Fprintf(str, tabularShortFormatFileMaxMean, maxIn(res.LineLength), meanIn(res.LineLength))
-				// }
 			}
 		}
 
 		if UlocMode {
 			if !Complexity {
-				fmt.Fprintf(str, tabularShortUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name]))
+				_, _ = fmt.Fprintf(str, tabularShortUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name]))
 			} else {
-				fmt.Fprintf(str, tabularShortUlocLanguageFormatBodyNoComplexity, len(ulocLanguageCount[summary.Name]))
+				_, _ = fmt.Fprintf(str, tabularShortUlocLanguageFormatBodyNoComplexity, len(ulocLanguageCount[summary.Name]))
 			}
 
 			addBreak = true
@@ -1277,17 +1273,17 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 	str.WriteString(getTabularShortBreak())
 	if !Complexity {
-		fmt.Fprintf(str, tabularShortFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity)
+		_, _ = fmt.Fprintf(str, tabularShortFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity)
 	} else {
-		fmt.Fprintf(str, tabularShortFormatBodyNoComplexity, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode)
+		_, _ = fmt.Fprintf(str, tabularShortFormatBodyNoComplexity, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode)
 	}
 	str.WriteString(getTabularShortBreak())
 
 	if UlocMode {
-		fmt.Fprintf(str, tabularShortUlocGlobalFormatBody, len(ulocGlobalCount))
+		_, _ = fmt.Fprintf(str, tabularShortUlocGlobalFormatBody, len(ulocGlobalCount))
 		if Dryness {
 			dryness := float64(len(ulocGlobalCount)) / float64(sumLines)
-			fmt.Fprintf(str, "DRYness %% %30.2f\n", dryness)
+			_, _ = fmt.Fprintf(str, "DRYness %% %30.2f\n", dryness)
 		}
 		str.WriteString(getTabularShortBreak())
 	}
@@ -1446,10 +1442,10 @@ func isLeapYear(year int) bool {
 }
 
 func aggregateLanguageSummary(input chan *FileJob) []LanguageSummary {
-	languages := map[string]LanguageSummary{}
+	langs := map[string]LanguageSummary{}
 
 	for res := range input {
-		_, ok := languages[res.Language]
+		_, ok := langs[res.Language]
 
 		if !ok {
 			files := []*FileJob{}
@@ -1457,7 +1453,7 @@ func aggregateLanguageSummary(input chan *FileJob) []LanguageSummary {
 				files = append(files, res)
 			}
 
-			languages[res.Language] = LanguageSummary{
+			langs[res.Language] = LanguageSummary{
 				Name:       res.Language,
 				Lines:      res.Lines,
 				Code:       res.Code,
@@ -1467,15 +1463,16 @@ func aggregateLanguageSummary(input chan *FileJob) []LanguageSummary {
 				Count:      1,
 				Files:      files,
 				Bytes:      res.Bytes,
+				ULOC:       len(ulocLanguageCount[res.Language]),
 			}
 		} else {
-			tmp := languages[res.Language]
+			tmp := langs[res.Language]
 			files := tmp.Files
 			if Files {
 				files = append(files, res)
 			}
 
-			languages[res.Language] = LanguageSummary{
+			langs[res.Language] = LanguageSummary{
 				Name:       res.Language,
 				Lines:      tmp.Lines + res.Lines,
 				Code:       tmp.Code + res.Code,
@@ -1485,12 +1482,13 @@ func aggregateLanguageSummary(input chan *FileJob) []LanguageSummary {
 				Count:      tmp.Count + 1,
 				Files:      files,
 				Bytes:      res.Bytes + tmp.Bytes,
+				ULOC:       len(ulocLanguageCount[res.Language]),
 			}
 		}
 	}
 
-	language := make([]LanguageSummary, 0, len(languages))
-	for _, summary := range languages {
+	language := make([]LanguageSummary, 0, len(langs))
+	for _, summary := range langs {
 		language = append(language, summary)
 	}
 
