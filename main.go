@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT OR Unlicense
+// SPDX-License-Identifier: MIT
 
 package main
 

@@ -17,7 +17,7 @@ If you don't like sloc cloc and code feel free to use the name `Succinct Code Co
 [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/)](https://github.com/boyter/scc/)
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
-Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
+Licensed under MIT licence.
 
 ### Support
 

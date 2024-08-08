@@ -12,7 +12,7 @@
 
 * Ensure the PR description clearly describes the problem and solution. Include the relevant issue number if applicable.
 
-* Before submitting, please specify that you explicitly licence your contribution under MIT AND The Unlicense.
+* Before submitting, please specify that you explicitly licence your contribution under MIT licence.
 
 
 #### **Always remember**

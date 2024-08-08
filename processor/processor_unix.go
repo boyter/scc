@@ -1,7 +1,7 @@
 //go:build linux || darwin
 // +build linux darwin
 
-// SPDX-License-Identifier: MIT OR Unlicense
+// SPDX-License-Identifier: MIT
 
 package processor
 
