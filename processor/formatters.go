@@ -1463,7 +1463,7 @@ func aggregateLanguageSummary(input chan *FileJob) []LanguageSummary {
 				Count:      1,
 				Files:      files,
 				Bytes:      res.Bytes,
-				ULOC:       len(ulocLanguageCount[res.Language]),
+				ULOC:       0,
 			}
 		} else {
 			tmp := langs[res.Language]
@@ -1482,13 +1482,14 @@ func aggregateLanguageSummary(input chan *FileJob) []LanguageSummary {
 				Count:      tmp.Count + 1,
 				Files:      files,
 				Bytes:      res.Bytes + tmp.Bytes,
-				ULOC:       len(ulocLanguageCount[res.Language]),
+				ULOC:       0,
 			}
 		}
 	}
 
 	language := make([]LanguageSummary, 0, len(langs))
 	for _, summary := range langs {
+		summary.ULOC = len(ulocLanguageCount[summary.Name]) // for #498
 		language = append(language, summary)
 	}
 
