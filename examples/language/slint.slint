@@ -1,0 +1,72 @@
+// an example from https://releases.slint.dev/1.7.2/docs/slint/src/recipes/recipes#custom-table-view
+// 2 comments 5 blanks 9 Complexity 65 code
+
+import { VerticalBox, ListView } from "std-widgets.slint";
+
+component TableView inherits Rectangle {
+    in property <[string]> columns;
+    in property <[[string]]> values;
+
+    private property <length> e: self.width / root.columns.length;
+    private property <[length]> column_sizes: [
+        root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e,
+        root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e,
+        root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e, root.e,
+    ];
+
+    VerticalBox {
+        padding: 5px;
+        HorizontalLayout {
+            padding: 5px; spacing: 5px;
+            vertical-stretch: 0;
+            for title[idx] in root.columns : HorizontalLayout {
+                width: root.column_sizes[idx];
+                Text { overflow: elide; text: title; }
+                Rectangle {
+                    width: 1px;
+                    background: gray;
+                    TouchArea {
+                        width: 10px;
+                        x: (parent.width - self.width) / 2;
+                        property <length> cached;
+                        pointer-event(event) => {
+                            if (event.button == PointerEventButton.left && event.kind == PointerEventKind.down) {
+                                self.cached = root.column_sizes[idx];
+                            }
+                        }
+                        moved => {
+                            if (self.pressed) {
+                                root.column_sizes[idx] += (self.mouse-x - self.pressed-x);
+                                if (root.column_sizes[idx] < 0) {
+                                    root.column_sizes[idx] = 0;
+                                }
+                            }
+                        }
+                        mouse-cursor: ew-resize;
+                    }
+                }
+            }
+        }
+        ListView {
+            for r in root.values : HorizontalLayout {
+                padding: 5px;
+                spacing: 5px;
+                for t[idx] in r : HorizontalLayout {
+                    width: root.column_sizes[idx];
+                    Text { overflow: elide; text: t; }
+                }
+            }
+        }
+    }
+}
+
+export component Example inherits Window {
+   TableView {
+       columns: ["Device", "Mount Point", "Total", "Free"];
+       values: [
+            ["/dev/sda1", "/", "255GB", "82.2GB"] ,
+            ["/dev/sda2", "/tmp", "60.5GB", "44.5GB"] ,
+            ["/dev/sdb1", "/home", "255GB", "32.2GB"] ,
+       ];
+   }
+}

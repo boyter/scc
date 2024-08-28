@@ -7480,6 +7480,38 @@
       }
     ]
   },
+  "Slint": {
+    "complexitychecks": [
+      "for ",
+      "if ",
+      "if(",
+      "states ",
+      "states[",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": [
+      "slint"
+    ],
+    "line_comment": [
+      "//"
+    ],
+    "multi_line": [
+      [
+        "/*",
+        "*/"
+      ]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "Smarty Template": {
     "complexitychecks": [
       "for ",
