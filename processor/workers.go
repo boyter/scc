@@ -11,7 +11,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/minio/blake2b-simd"
+	"golang.org/x/crypto/blake2b"
 )
 
 // The below are used as identifiers for the code state machine
@@ -400,7 +400,7 @@ func CountStats(fileJob *FileJob) {
 	// crypto secure here either so no need to eat the performance cost of a better
 	// hash method
 	if Duplicates {
-		fileJob.Hash = blake2b.New256()
+		fileJob.Hash, _ = blake2b.New256(nil)
 	}
 
 	// If the file has a length of 0 it is empty then we say it has no lines
@@ -555,10 +555,6 @@ func CountStats(fileJob *FileJob) {
 				}
 			}
 		}
-	}
-
-	if Duplicates {
-		fileJob.Hash.Sum(nil)
 	}
 
 	if UlocMode && Files {
