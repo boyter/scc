@@ -56,19 +56,19 @@ var tabularWideUlocLanguageFormatBody = "(ULOC) %46d\n"
 var tabularWideUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %25d\n"
 var tabularWideFormatBodyPercent = "Percentage %31.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
 
-var openMetricsMetadata = `# TYPE scc_files count
+var openMetricsMetadata = `# TYPE scc_files gauge
 # HELP scc_files Number of sourcecode files.
-# TYPE scc_lines count
+# TYPE scc_lines gauge
 # HELP scc_lines Number of lines.
-# TYPE scc_code count
+# TYPE scc_code gauge
 # HELP scc_code Number of lines of actual code.
-# TYPE scc_comments count
+# TYPE scc_comments gauge
 # HELP scc_comments Number of comments.
-# TYPE scc_blanks count
+# TYPE scc_blanks gauge
 # HELP scc_blanks Number of blank lines.
-# TYPE scc_complexity count
+# TYPE scc_complexity gauge
 # HELP scc_complexity Code complexity.
-# TYPE scc_bytes count
+# TYPE scc_bytes gauge
 # UNIT scc_bytes bytes
 # HELP scc_bytes Size in bytes.
 `
