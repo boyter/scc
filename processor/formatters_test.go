@@ -738,19 +738,19 @@ func TestToOpenMetricsMultiple(t *testing.T) {
 	res := toOpenMetrics(inputChan)
 	Debug = false
 
-	var expectedResult = `# TYPE scc_files count
+	var expectedResult = `# TYPE scc_files gauge
 # HELP scc_files Number of sourcecode files.
-# TYPE scc_lines count
+# TYPE scc_lines gauge
 # HELP scc_lines Number of lines.
-# TYPE scc_code count
+# TYPE scc_code gauge
 # HELP scc_code Number of lines of actual code.
-# TYPE scc_comments count
+# TYPE scc_comments gauge
 # HELP scc_comments Number of comments.
-# TYPE scc_blanks count
+# TYPE scc_blanks gauge
 # HELP scc_blanks Number of blank lines.
-# TYPE scc_complexity count
+# TYPE scc_complexity gauge
 # HELP scc_complexity Code complexity.
-# TYPE scc_bytes count
+# TYPE scc_bytes gauge
 # UNIT scc_bytes bytes
 # HELP scc_bytes Size in bytes.
 scc_files{language="Go"} 2
@@ -971,19 +971,19 @@ func TestFileSummarizeOpenMetrics(t *testing.T) {
 	More = false
 	res := fileSummarize(inputChan)
 
-	var expectedResult = `# TYPE scc_files count
+	var expectedResult = `# TYPE scc_files gauge
 # HELP scc_files Number of sourcecode files.
-# TYPE scc_lines count
+# TYPE scc_lines gauge
 # HELP scc_lines Number of lines.
-# TYPE scc_code count
+# TYPE scc_code gauge
 # HELP scc_code Number of lines of actual code.
-# TYPE scc_comments count
+# TYPE scc_comments gauge
 # HELP scc_comments Number of comments.
-# TYPE scc_blanks count
+# TYPE scc_blanks gauge
 # HELP scc_blanks Number of blank lines.
-# TYPE scc_complexity count
+# TYPE scc_complexity gauge
 # HELP scc_complexity Code complexity.
-# TYPE scc_bytes count
+# TYPE scc_bytes gauge
 # UNIT scc_bytes bytes
 # HELP scc_bytes Size in bytes.
 scc_files{language="Go"} 1
@@ -1023,19 +1023,19 @@ func TestFileSummarizeOpenMetricsPerFile(t *testing.T) {
 	Files = true
 	res := fileSummarize(inputChan)
 
-	var expectedResult = `# TYPE scc_files count
+	var expectedResult = `# TYPE scc_files gauge
 # HELP scc_files Number of sourcecode files.
-# TYPE scc_lines count
+# TYPE scc_lines gauge
 # HELP scc_lines Number of lines.
-# TYPE scc_code count
+# TYPE scc_code gauge
 # HELP scc_code Number of lines of actual code.
-# TYPE scc_comments count
+# TYPE scc_comments gauge
 # HELP scc_comments Number of comments.
-# TYPE scc_blanks count
+# TYPE scc_blanks gauge
 # HELP scc_blanks Number of blank lines.
-# TYPE scc_complexity count
+# TYPE scc_complexity gauge
 # HELP scc_complexity Code complexity.
-# TYPE scc_bytes count
+# TYPE scc_bytes gauge
 # UNIT scc_bytes bytes
 # HELP scc_bytes Size in bytes.
 scc_lines{language="Go",file="C:\\bbbb.go"} 1000
