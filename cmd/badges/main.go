@@ -20,7 +20,7 @@ import (
 )
 
 var uniqueCode = "unique_code"
-var cache = NewSimpleCache(1000)
+var cache = NewSimpleCache(1000, 86400)
 var countingSemaphore = make(chan bool, 1)
 
 func main() {
