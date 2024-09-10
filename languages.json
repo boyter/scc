@@ -514,7 +514,21 @@
     "quotes": []
   },
   "AWK": {
-    "complexitychecks": [],
+    "complexitychecks": [
+      "else ",
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "switch(",
+      "while ",
+      "while(",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
     "extensions": [
       "awk"
     ],
@@ -531,7 +545,8 @@
     "shebangs": [
       "awk",
       "gawk",
-      "mawk"
+      "mawk",
+      "nawk"
     ]
   },
   "bait": {
@@ -953,7 +968,9 @@
       "if ",
       "if(",
       "switch ",
+      "switch(",
       "while ",
+      "while(",
       "else ",
       "|| ",
       "&& ",
@@ -988,7 +1005,9 @@
       "if ",
       "if(",
       "switch ",
+      "switch(",
       "while ",
+      "while(",
       "else ",
       "|| ",
       "&& ",
@@ -1090,7 +1109,9 @@
       "if ",
       "if(",
       "switch ",
+      "switch(",
       "while ",
+      "while(",
       "else ",
       "|| ",
       "&& ",
@@ -1128,7 +1149,9 @@
       "if ",
       "if(",
       "switch ",
+      "switch(",
       "while ",
+      "while(",
       "else ",
       "|| ",
       "&& ",
