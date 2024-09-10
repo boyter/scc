@@ -915,9 +915,82 @@ else
 fi
 
 # Try out specific languages
-for i in 'Bosque ' 'Flow9 ' 'Bitbucket Pipeline ' 'Docker ignore ' 'Q# ' 'Futhark ' 'Alloy ' 'Wren ' 'Monkey C ' 'Alchemist ' 'Luna ' 'ignore ' 'XML Schema ' 'Web Services' 'Go ' 'Java ' 'Boo ' 'License ' 'BASH ' 'C Shell ' 'Korn Shell ' 'Makefile ' 'Shell ' 'Zsh ' 'Rakefile ' 'Gemfile ' 'Dockerfile ' 'Yarn ' 'Sieve ' 'F# ' 'Elm ' 'Terraform ' 'Clojure ' 'C# ' 'LLVM IR ' 'HAML ' 'FXML ' 'DM ' 'Nushell ' 'R ' 'Racket ' 'DOT ' 'YAML ' 'Teal ' 'FSL ' 'INI ' 'Hare ' 'Templ ' 'Cuda ' 'GraphQL ' 'Bicep ' 'Pkl ' 'TypeSpec ' 'LALRPOP ' 'Snakemake ' 'OpenQASM ' 'Typst ' 'ZoKrates ' 'Chapel ' 'Slang ' 'Circom ' 'Proto ' 'wenyan ' 'Cangjie ' 'Clipper ' 'Slint '
+specificLanguages=(
+    'Alchemist '
+    'Alloy '
+    'Arturo '
+    'AWK '
+    'BASH '
+    'Bicep '
+    'Bitbucket Pipeline '
+    'Boo '
+    'Bosque '
+    'C Shell '
+    'C# '
+    'Cairo '
+    'Cangjie '
+    'Chapel '
+    'Circom '
+    'Clipper '
+    'Clojure '
+    'Cuda '
+    'DM '
+    'Docker ignore '
+    'Dockerfile '
+    'DOT '
+    'Elm '
+    'F# '
+    'Factor '
+    'Flow9 '
+    'FSL '
+    'Futhark '
+    'FXML '
+    'Gemfile '
+    'Go '
+    'GraphQL '
+    'HAML '
+    'Hare '
+    'ignore '
+    'INI '
+    'Java '
+    'JSONC '
+    'Korn Shell '
+    'LALRPOP '
+    'License '
+    'LLVM IR '
+    'Luna '
+    'Makefile '
+    'Monkey C '
+    'Nushell '
+    'OpenQASM '
+    'Pkl '
+    'Proto '
+    'Q# '
+    'R '
+    'Racket '
+    'Rakefile '
+    'Shell '
+    'Sieve '
+    'Slang '
+    'Slint '
+    'Snakemake '
+    'Teal '
+    'Templ '
+    'Terraform '
+    'TypeSpec '
+    'Typst '
+    'Web Services '
+    'wenyan '
+    'Wren '
+    'XML Schema '
+    'YAML '
+    'Yarn '
+    'ZoKrates '
+    'Zsh '
+)
+for i in "${specificLanguages[@]}"
 do
-    if ./scc "examples/language/" | grep -q "$i "; then
+    if ./scc "examples/language/" | grep -q "$i"; then
         echo -e "${GREEN}PASSED $i Language Check"
     else
         echo -e "${RED}======================================================="
@@ -944,7 +1017,7 @@ done
 a=$(./scc "examples/issue345/" -f csv | sed -n '2 p')
 b="C++,4,3,1,0,0,76,1,0"
 if [ "$a" == "$b" ]; then
-    echo -e "${GREEN}PASSED string termination check"
+    echo -e "${GREEN}PASSED String Termination Check"
 else
     echo -e "$a"
     echo -e "${RED}======================================================="
