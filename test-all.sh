@@ -1061,6 +1061,30 @@ else
     echo -e "${GREEN}PASSED Issue379 Regression Check"
 fi
 
+Issue507GoFilesWithoutExclude=$(./scc -f csv "examples/issue507/" | grep 'Go' | cut -d ',' -f 8)
+Issue507PythonFilesWithoutExclude=$(./scc -f csv "examples/issue507/" | grep 'Python' | cut -d ',' -f 8)
+excludeContent="^(#|//) *exclude-content test.+, DO NOT EDIT."
+Issue507GoFilesExcluded=$(./scc -f csv --exclude-content="${excludeContent}" "examples/issue507/" | grep 'Go' | cut -d ',' -f 8)
+Issue507PythonFilesExcluded=$(./scc -f csv --exclude-content="${excludeContent}" "examples/issue507/" | grep 'Python' | cut -d ',' -f 8)
+if [ ${Issue507GoFilesWithoutExclude:-0} -ne 1 ] || [ ${Issue507PythonFilesWithoutExclude:-0} -ne 2 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue507 should contains 1 Go file and 2 Python files"
+    echo -e "=======================================================${NC}"
+    exit
+elif [ ${Issue507GoFilesExcluded:-0} -ne 0 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue507 exclude Go files by contents"
+    echo -e "=======================================================${NC}"
+    exit
+elif [ ${Issue507PythonFilesExcluded:-0} -ne 1 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue507 exclude Python files by contents"
+    echo -e "=======================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED Issue507 Exclude Content Check"
+fi
+
 # Extra case for longer languages that are normally truncated
 for i in 'CloudFormation (YAM' 'CloudFormation (JSO'
 do

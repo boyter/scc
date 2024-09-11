@@ -174,6 +174,10 @@ var ExcludeListExtensions = []string{}
 // ExcludeFilename is a list of filenames which should be ignored
 var ExcludeFilename = []string{}
 
+// ExcludeContent is a regular expression which is used to exclude files containing text that matches it
+var ExcludeContent string
+var excludeContentPattern *regexp.Regexp
+
 // AverageWage is the average wage in dollars used for the COCOMO cost estimate
 var AverageWage int64 = 56286
 
@@ -486,6 +490,14 @@ func processFlags() {
 		UlocMode = true
 	}
 
+	if ExcludeContent != "" {
+		var err error
+		excludeContentPattern, err = regexp.Compile(ExcludeContent)
+		if err != nil {
+			printError("ExcludeContent: " + err.Error())
+		}
+	}
+
 	if Debug {
 		printDebug(fmt.Sprintf("Path Deny List: %v", PathDenyList))
 		printDebug(fmt.Sprintf("Sort By: %s", SortBy))
@@ -502,6 +514,7 @@ func processFlags() {
 		printDebug(fmt.Sprintf("IncludeSymLinks: %t", IncludeSymLinks))
 		printDebug(fmt.Sprintf("Uloc: %t", UlocMode))
 		printDebug(fmt.Sprintf("Dryness: %t", Dryness))
+		printDebug(fmt.Sprintf("ExcludeContent: %s", ExcludeContent))
 	}
 }
 

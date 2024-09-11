@@ -391,6 +391,12 @@ func main() {
 		"$",
 		"set currency symbol",
 	)
+	flags.StringVar(
+		&processor.ExcludeContent,
+		"exclude-content",
+		"",
+		"exclude files containing text that matches the given regular expression",
+	)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

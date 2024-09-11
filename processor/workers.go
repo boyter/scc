@@ -3,6 +3,7 @@
 package processor
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"hash"
@@ -639,6 +640,20 @@ func checkBomSkip(fileJob *FileJob) int {
 	return 0
 }
 
+func excludeByContents(data []byte) bool {
+	if excludeContentPattern == nil {
+		return false
+	}
+
+	scanner := bufio.NewScanner(bytes.NewReader(data))
+	for scanner.Scan() {
+		if excludeContentPattern.Match(scanner.Bytes()) {
+			return true
+		}
+	}
+	return false
+}
+
 // Reads and processes files from input chan in parallel, and sends results to
 // output chan
 func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
@@ -662,6 +677,13 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 
 				fileStartTime := makeTimestampNano()
 				content, err := reader.ReadFile(loc, int(job.Bytes))
+				if excludeByContents(content) {
+					if Verbose {
+						printWarnf("exclude %s by its content", loc)
+					}
+					continue
+				}
+
 				atomic.AddInt64(&fileCount, 1)
 
 				if atomic.LoadInt64(&gcEnabled) == 0 && atomic.LoadInt64(&fileCount) >= int64(GcFileCount) {
