@@ -1,8 +1,10 @@
-﻿* Instructions
-** To build
-
+﻿# Instructions
+## Build
+```bash
 cpack
+```
 
-** To Install
-
+## Install
+```bash
 chocolatey install scc -fdv -s "'.;https://chocolatey.org/api/v2/'" --version x.y.z
+```
