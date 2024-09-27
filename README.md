@@ -129,7 +129,7 @@ Other similar projects,
  - [gocloc](https://github.com/hhatto/gocloc) a sloc counter in Go inspired by tokei
  - [loc](https://github.com/cgag/loc) rust implementation similar to tokei but often faster
  - [loccount](https://gitlab.com/esr/loccount) Go implementation written and maintained by ESR
- - [ployglot](https://github.com/vmchale/polyglot) ATS sloc counter
+ - [polyglot](https://github.com/vmchale/polyglot) ATS sloc counter
  - [tokei](https://github.com/XAMPPRocky/tokei) fast, accurate and written in rust
  - [sloc](https://github.com/flosse/sloc) coffeescript code counter
 
