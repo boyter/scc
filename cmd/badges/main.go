@@ -67,7 +67,10 @@ func main() {
 
 	addr := ":8080"
 	log.Info().Str(uniqueCode, "1876ce1e").Str("addr", addr).Msg("serving")
-	http.ListenAndServe(addr, nil).Error()
+	if err := http.ListenAndServe(addr, nil); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Error().Str(uniqueCode, "c28556e8").Err(err).Send()
+		os.Exit(1)
+	}
 }
 
 func calculate(category string, wage int, res []processor.LanguageSummary) (string, int64) {

@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bytes"
 	"compress/gzip"
 	"encoding/base64"
 	"encoding/json"
@@ -18,14 +19,10 @@ const constantsFile = "./processor/constants.go"
 // and encodes them as strings literals in constants.go
 func generateConstants() error {
 	files, _ := os.ReadDir(".")
-	out, err := os.CreateTemp(".", "temp_constants")
-	if err != nil {
-		return fmt.Errorf("failed to open temp file: %v", err)
-	}
-	defer os.Remove(out.Name())
+	buf := &bytes.Buffer{}
 
 	// Open constants
-	out.WriteString("package processor \n\nconst (\n")
+	_, _ = buf.WriteString("package processor\n\nconst (\n")
 
 	for _, f := range files {
 		if strings.HasPrefix(f.Name(), "languages") && strings.HasSuffix(f.Name(), ".json") {
@@ -33,6 +30,7 @@ func generateConstants() error {
 			if err != nil {
 				return fmt.Errorf("failed to open file '%s': %v", f.Name(), err)
 			}
+			defer f.Close()
 
 			// validate the json by decoding into an empty struct
 			if err := json.NewDecoder(f).Decode(&struct{}{}); err != nil {
@@ -40,12 +38,15 @@ func generateConstants() error {
 			}
 
 			// Reset position
-			f.Seek(0, io.SeekStart)
+			if _, err := f.Seek(0, io.SeekStart); err != nil {
+				return fmt.Errorf("failed to reset file position '%s': %v", f.Name(), err)
+			}
 
 			// The constant variable name
-			out.WriteString(strings.TrimSuffix(f.Name(), ".json") + " = `")
+			_ = buf.WriteByte('\t')
+			_, _ = buf.WriteString(strings.TrimSuffix(f.Name(), ".json") + " = `")
 
-			enc := base64.NewEncoder(base64.StdEncoding, out)
+			enc := base64.NewEncoder(base64.StdEncoding, buf)
 			gz, _ := gzip.NewWriterLevel(enc, gzip.BestSpeed)
 			if _, err := io.Copy(gz, f); err != nil {
 				return fmt.Errorf("failed to encode file '%s': %v", f.Name(), err)
@@ -53,16 +54,21 @@ func generateConstants() error {
 			gz.Close()
 			enc.Close()
 
-			out.WriteString("`\n")
+			_, _ = buf.WriteString("`\n")
 		}
 	}
 
 	// Close out constants
-	out.WriteString(")\n")
-	out.Close()
+	_, _ = buf.WriteString(")\n")
 
-	if err := os.Rename(out.Name(), constantsFile); err != nil {
-		return fmt.Errorf("%v", err)
+	out, err := os.OpenFile(constantsFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open constants file: %v", err)
+	}
+	defer out.Close()
+
+	if _, err := io.Copy(out, buf); err != nil {
+		return fmt.Errorf("failed to write constants file %v", err)
 	}
 
 	return nil

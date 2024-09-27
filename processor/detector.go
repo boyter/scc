@@ -89,6 +89,7 @@ func scanForSheBang(content []byte) (string, error) {
 	candidate1 := ""
 	candidate2 := ""
 
+loop:
 	for i := range content {
 		switch state {
 		case 0: // Deals with whitespace after #! and before first /
@@ -128,7 +129,7 @@ func scanForSheBang(content []byte) (string, error) {
 				state = 4
 			}
 		case 4:
-			break
+			break loop
 		}
 	}
 
