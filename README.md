@@ -323,6 +323,14 @@ Note that you don't have to specify the directory you want to run against. Runni
 
 You can also run against multiple files or directories `scc directory1 directory2 file1 file2` with the results aggregated in the output.
 
+Since `scc` writes to standard output, there are many ways to easily share the results. For example, using [netcat](https://manpages.org/nc)
+and [one of many pastebins](https://paste.c-net.org/) gives a public URL:
+
+```
+$ scc | nc paste.c-net.org 9999
+https://paste.c-net.org/Example
+```
+
 ### Ignore Files
 
 `scc` mostly supports .ignore files inside directories that it scans. This is similar to how ripgrep, ag and tokei work. .ignore files are 100% the same as .gitignore files with the same syntax, and as such `scc` will ignore files and directories listed in them. You can add .ignore files to ignore things like vendored dependency checked in files and such. The idea is allowing you to add a file or folder to git and have ignored in the count.
