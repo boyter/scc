@@ -67,6 +67,12 @@ Or if you are using [Chocolatey](https://chocolatey.org/) on Windows
 
 `$ choco install scc`
 
+#### WinGet
+
+Or if you are using [WinGet](https://github.com/microsoft/winget-cli) on Windows
+
+`winget install benboyter.scc`
+
 #### FreeBSD
 
 On FreeBSD, scc is available as a package
