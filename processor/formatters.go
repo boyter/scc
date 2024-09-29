@@ -843,7 +843,7 @@ func fileSummarizeMulti(input chan *FileJob) string {
 			}
 			close(i)
 
-			var val = ""
+			var val string
 
 			switch strings.ToLower(t[0]) {
 			case "tabular":
@@ -861,8 +861,8 @@ func fileSummarizeMulti(input chan *FileJob) string {
 			case "csv":
 				val = toCSV(i)
 			case "csv-stream":
-				val = toCSVStream(i)
 				// special case where we want to ignore writing to stdout to disk as it's already done
+				_ = toCSVStream(i)
 				continue
 			case "html":
 				val = toHtml(i)
