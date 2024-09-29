@@ -61,7 +61,7 @@ for f := range fileListQueue {
 }
 ```
 
-All code is dual-licenced as either MIT or Unlicence.
+All code is licenced as MIT.
 
 ### Error Handler
 

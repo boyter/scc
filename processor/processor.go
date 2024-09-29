@@ -23,7 +23,7 @@ import (
 )
 
 // Version indicates the version of the application
-var Version = "3.4.0 (beta)"
+var Version = "3.4.0"
 
 // Flags set via the CLI which control how the output is displayed
 
@@ -98,6 +98,9 @@ var Ci = false
 
 // GitIgnore disables .gitignore checks
 var GitIgnore = false
+
+// GitModuleIgnore disables .gitmodules checks
+var GitModuleIgnore = false
 
 // Ignore disables ignore file checks
 var Ignore = false
@@ -606,6 +609,7 @@ func Process() {
 	})
 	fileWalker.IgnoreGitIgnore = GitIgnore
 	fileWalker.IgnoreIgnoreFile = Ignore
+	fileWalker.IgnoreGitModules = GitModuleIgnore
 	fileWalker.IncludeHidden = true
 	fileWalker.ExcludeDirectory = PathDenyList
 

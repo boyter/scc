@@ -111,6 +111,12 @@ func main() {
 		"disables .gitignore file logic",
 	)
 	flags.BoolVar(
+		&processor.GitModuleIgnore,
+		"no-gitmodule",
+		false,
+		"disables .gitmodules file logic",
+	)
+	flags.BoolVar(
 		&processor.CountIgnore,
 		"count-ignore",
 		false,

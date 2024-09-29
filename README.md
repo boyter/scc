@@ -219,7 +219,7 @@ features listed below may be missing from your installation.
 
 ```
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 3.3.4
+Version 3.4.0
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
@@ -260,6 +260,8 @@ Flags:
   -d, --no-duplicates                remove duplicate files from stats and output
       --no-gen                       ignore generated files in output (implies --gen)
       --no-gitignore                 disables .gitignore file logic
+      --no-gitmodule                 disables .gitmodules file logic
+      --no-hborder                   remove horizontal borders between sections
       --no-ignore                    disables .ignore file logic
       --no-large                     ignore files over certain byte and line size set by max-line-count and max-byte-count
       --no-min                       ignore minified files in output (implies --min)
