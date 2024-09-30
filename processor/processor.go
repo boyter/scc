@@ -156,9 +156,6 @@ var FileOutput = ""
 // PathDenyList sets the paths that should be skipped
 var PathDenyList = []string{}
 
-// DirectoryWalkerJobWorkers is the number of workers which will walk the directory tree
-var DirectoryWalkerJobWorkers = runtime.NumCPU()
-
 // FileListQueueSize is the queue of files found and ready to be read into memory
 var FileListQueueSize = runtime.NumCPU()
 
