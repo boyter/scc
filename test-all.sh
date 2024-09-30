@@ -922,6 +922,7 @@ specificLanguages=(
     'Astro '
     'AWK '
     'BASH '
+    'Bean '
     'Bicep '
     'Bitbucket Pipeline '
     'Boo '
