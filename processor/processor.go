@@ -617,6 +617,10 @@ func Process() {
 	fileWalker.ExcludeDirectory = PathDenyList
 	fileWalker.SetConcurrency(DirectoryWalkerJobWorkers)
 
+	if !SccIgnore {
+		fileWalker.CustomIgnore = []string{".sccignore"}
+	}
+
 	for _, exclude := range Exclude {
 		regexpResult, err := regexp.Compile(exclude)
 		if err == nil {
