@@ -6082,6 +6082,36 @@
       }
     ]
   },
+  "TTCN-3": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "from ",
+      "if ",
+      "if(",
+      "select ",
+      "case ",
+      "while ",
+      "do ",
+      "goto ",
+      "stop ",
+      "break ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": ["ttcn", "ttcn3", "ttcnpp"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "TaskPaper": {
     "complexitychecks": [],
     "extensions": ["taskpaper"],
