@@ -1,0 +1,17 @@
+2014-02-05 * "Moving money to Isle of Man" ^transfers-offshore-17
+  Assets:WellsFargo:Savings          -40000.00 USD
+  Assets:WellsFargo:Checking          40000.00 USD
+
+2014-02-09 * "Wire to FX broker" ^transfers-offshore-17
+  Assets:WellsFargo:Checking         -40025.00 USD
+  Expenses:Fees:WireTransfers            25.00 USD
+  Assets:OANDA:USDollar               40000.00
+
+2014-03-16 * "Conversion to offshore beans" ^transfers-offshore-17
+  Assets:OANDA:USDollar          -40000.00 USD
+  Assets:OANDA:GBPounds           23391.81 GBP @ 1.71 USD
+
+2014-03-16 * "God save the Queen (and taxes)" ^transfers-offshore-17
+  Assets:OANDA:GBPounds             -23391.81 GBP
+  Expenses:Fees:WireTransfers           15.00 GBP
+  Assets:Brittania:PrivateBanking    23376.81 GBP

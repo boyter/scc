@@ -527,6 +527,18 @@
       }
     ]
   },
+  "Bean": {
+    "complexitychecks": [],
+    "extensions": ["bean", "beancount"],
+    "line_comment": [";"],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "Bicep": {
     "complexitychecks": [
       "@minLength(",
@@ -2483,6 +2495,18 @@
     "multi_line": [],
     "quotes": []
   },
+  "Gleam": {
+    "complexitychecks": ["fn ", "case ", "-> ", "if "],
+    "extensions": ["gleam"],
+    "line_comment": ["//", "///", "////"],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "Go": {
     "complexitychecks": [
       "go ",
@@ -2994,23 +3018,6 @@
     "extensions": ["java"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
-    "quotes": [
-      {
-        "end": "\"",
-        "start": "\""
-      }
-    ]
-  },
-  "Gleam": {
-    "complexitychecks": [
-      "fn ",
-      "case ",
-      "-> ",
-      "if "
-    ],
-    "extensions": ["gleam"],
-    "line_comment": ["//", "///", "////"],
-    "multi_line": [],
     "quotes": [
       {
         "end": "\"",
