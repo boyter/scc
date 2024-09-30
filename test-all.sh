@@ -982,6 +982,7 @@ specificLanguages=(
     'Teal '
     'Templ '
     'Terraform '
+    'TTCN-3 '
     'TypeSpec '
     'Typst '
     'Web Services '

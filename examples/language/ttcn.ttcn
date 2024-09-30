@@ -1,0 +1,61 @@
+module TestSystem {
+
+// Define a subtype of integer
+type integer myNewType (0..50)
+
+// Declare Request struct type with 2 fields
+type record Request {
+  myNewType param1,
+  charstring param2
+  }
+
+// Declare Answer struct type with one field
+type record Answer {
+  myNewType param1
+  }
+
+// Declare a message based communication port
+type port cEnv_type message {
+  out Request;
+  in Answer;
+  }
+
+// Declare the component on which the test case will run
+type component sSystem {
+  port cEnv_type cEnv;
+  }
+
+// The templates define the outgoing parameter values
+// and verify the incoming parameter values
+template Request Good_Req := {param1 := 42, param2 := "hello !" };
+template Answer All_is_OK := {param1 := 0};
+
+// Define testcase1 that will run on sSystem component
+testcase testcase1() runs on sSystem
+  {
+  // Send Request message with (42, "hello !") as parmeters
+  cEnv.send(Good_Req);
+  // An alternative for the 2 possible answers
+  alt
+    {
+    // Do we receive Answer with 0 as parameter
+    []cEnv.receive(All_is_OK)
+      {
+      // Pass verdict !
+      setverdict(pass)
+      }
+    // Or do we receive something else
+    []cEnv.receive
+      {
+      // Fail verdict
+      setverdict(fail)
+      }
+    }
+  }
+
+// Control part chains test cases execution automatically
+control {
+  var verdicttype verdict1;
+  verdict1 := execute(testcase1());
+  }
+}
