@@ -751,111 +751,120 @@ scc_bytes{language="Go",file="./bbbb.go"} 1000
 
 Generally `scc` will the fastest code counter compared to any I am aware of and have compared against. The below comparisons are taken from the fastest alternative counters. See `Other similar projects` above to see all of the other code counters compared against. It is designed to scale to as many CPU's cores as you can provide.
 
-However if you want greater performance and you have RAM to spare you can disable the garbage collector like the following on Linux `GOGC=-1 scc .` which should speed things up considerably. For some repositories turning off the code complexity calculation via `-c` can reduce runtime as well.
+However, if you want greater performance and you have RAM to spare you can disable the garbage collector like the following on Linux `GOGC=-1 scc .` which should speed things up considerably. For some repositories turning off the code complexity calculation via `-c` can reduce runtime as well.
 
-Benchmarks are run on fresh 32 Core CPU Optimised Digital Ocean Virtual Machine 2022/09/20 all done using [hyperfine](https://github.com/sharkdp/hyperfine) with 3 warm-up runs and 10 timed runs.
-
-```
-scc v3.1.0
-tokei v12.1.2
-loc v0.5.0
-polyglot v0.5.29
-```
+Benchmarks are run on fresh 48 Core CPU Optimised Digital Ocean Virtual Machine 2024/09/30 all done using [hyperfine](https://github.com/sharkdp/hyperfine).
 
 See https://github.com/boyter/scc/blob/master/benchmark.sh to see how the benchmarks are run.
 
 
-#### Redis https://github.com/antirez/redis/
+#### Valkey https://github.com/valkey-io/valkey
 
 ```shell
-Benchmark 1: scc redis
-  Time (mean ± σ):      20.2 ms ±   1.7 ms    [User: 127.1 ms, System: 47.0 ms]
-  Range (min … max):    16.8 ms …  25.8 ms    132 runs
+Benchmark 1: scc valkey
+  Time (mean ± σ):      28.0 ms ±   1.6 ms    [User: 166.1 ms, System: 55.0 ms]
+  Range (min … max):    24.7 ms …  31.5 ms    114 runs
  
-Benchmark 2: scc -c redis
-  Time (mean ± σ):      17.0 ms ±   1.4 ms    [User: 91.6 ms, System: 32.7 ms]
-  Range (min … max):    14.3 ms …  21.6 ms    169 runs
+Benchmark 2: scc -c valkey
+  Time (mean ± σ):      25.8 ms ±   1.7 ms    [User: 123.7 ms, System: 53.2 ms]
+  Range (min … max):    23.3 ms …  29.3 ms    114 runs
  
-Benchmark 3: tokei redis
-  Time (mean ± σ):      33.7 ms ±   5.0 ms    [User: 246.4 ms, System: 55.0 ms]
-  Range (min … max):    24.2 ms …  47.5 ms    76 runs
+Benchmark 3: tokei valkey
+  Time (mean ± σ):      63.0 ms ±   3.8 ms    [User: 433.8 ms, System: 244.3 ms]
+  Range (min … max):    46.7 ms …  67.6 ms    44 runs
  
-Benchmark 4: loc redis
-  Time (mean ± σ):      36.9 ms ±  30.6 ms    [User: 756.5 ms, System: 20.7 ms]
-  Range (min … max):     9.9 ms … 123.9 ms    71 runs
- 
-Benchmark 5: polyglot redis
-  Time (mean ± σ):      21.8 ms ±   0.9 ms    [User: 32.1 ms, System: 46.3 ms]
-  Range (min … max):    20.0 ms …  28.4 ms    138 runs
+Benchmark 4: polyglot valkey
+  Time (mean ± σ):      27.4 ms ±   0.8 ms    [User: 46.5 ms, System: 79.0 ms]
+  Range (min … max):    25.7 ms …  29.5 ms    108 runs
  
 Summary
-  'scc -c redis' ran
-    1.19 ± 0.14 times faster than 'scc redis'
-    1.28 ± 0.12 times faster than 'polyglot redis'
-    1.98 ± 0.33 times faster than 'tokei redis'
-    2.17 ± 1.81 times faster than 'loc redis'
+  scc -c valkey ran
+    1.06 ± 0.08 times faster than polyglot valkey
+    1.08 ± 0.09 times faster than scc valkey
+    2.44 ± 0.22 times faster than tokei valkey
 ```
 
 #### CPython https://github.com/python/cpython
 
 ```shell
 Benchmark 1: scc cpython
-  Time (mean ± σ):      52.6 ms ±   3.8 ms    [User: 624.3 ms, System: 121.5 ms]
-  Range (min … max):    45.3 ms …  62.3 ms    47 runs
+  Time (mean ± σ):      81.9 ms ±   4.2 ms    [User: 789.6 ms, System: 164.6 ms]
+  Range (min … max):    74.0 ms …  89.6 ms    36 runs
  
 Benchmark 2: scc -c cpython
-  Time (mean ± σ):      46.0 ms ±   3.8 ms    [User: 468.0 ms, System: 111.2 ms]
-  Range (min … max):    40.0 ms …  58.0 ms    67 runs
+  Time (mean ± σ):      75.4 ms ±   4.6 ms    [User: 621.9 ms, System: 152.6 ms]
+  Range (min … max):    68.4 ms …  84.5 ms    37 runs
  
 Benchmark 3: tokei cpython
-  Time (mean ± σ):     110.4 ms ±   6.6 ms    [User: 1239.8 ms, System: 114.5 ms]
-  Range (min … max):    98.3 ms … 123.6 ms    26 runs
+  Time (mean ± σ):     162.1 ms ±   3.4 ms    [User: 1824.0 ms, System: 420.4 ms]
+  Range (min … max):   156.7 ms … 168.9 ms    18 runs
  
-Benchmark 4: loc cpython
-  Time (mean ± σ):      52.9 ms ±  25.2 ms    [User: 1103.0 ms, System: 57.4 ms]
-  Range (min … max):    30.0 ms … 118.9 ms    49 runs
- 
-Benchmark 5: polyglot cpython
-  Time (mean ± σ):      82.4 ms ±   3.0 ms    [User: 153.3 ms, System: 168.8 ms]
-  Range (min … max):    74.8 ms …  88.7 ms    36 runs
+Benchmark 4: polyglot cpython
+  Time (mean ± σ):      94.2 ms ±   3.0 ms    [User: 210.3 ms, System: 260.3 ms]
+  Range (min … max):    88.3 ms …  99.4 ms    30 runs
  
 Summary
-  'scc -c cpython' ran
-    1.14 ± 0.13 times faster than 'scc cpython'
-    1.15 ± 0.56 times faster than 'loc cpython'
-    1.79 ± 0.16 times faster than 'polyglot cpython'
-    2.40 ± 0.24 times faster than 'tokei cpython'
+  scc -c cpython ran
+    1.09 ± 0.09 times faster than scc cpython
+    1.25 ± 0.09 times faster than polyglot cpython
+    2.15 ± 0.14 times faster than tokei cpython
 ```
 
 #### Linux Kernel https://github.com/torvalds/linux
 
 ```shell
 Benchmark 1: scc linux
-  Time (mean ± σ):     743.0 ms ±  18.8 ms    [User: 17133.4 ms, System: 1280.2 ms]
-  Range (min … max):   709.4 ms … 778.8 ms    10 runs
+  Time (mean ± σ):      1.070 s ±  0.036 s    [User: 15.253 s, System: 1.962 s]
+  Range (min … max):    1.011 s …  1.133 s    10 runs
  
 Benchmark 2: scc -c linux
-  Time (mean ± σ):     528.8 ms ±  11.8 ms    [User: 10272.0 ms, System: 1236.9 ms]
-  Range (min … max):   508.9 ms … 543.1 ms    10 runs
+  Time (mean ± σ):      1.007 s ±  0.039 s    [User: 9.822 s, System: 1.937 s]
+  Range (min … max):    0.915 s …  1.043 s    10 runs
  
 Benchmark 3: tokei linux
-  Time (mean ± σ):     736.5 ms ±  18.2 ms    [User: 13098.3 ms, System: 2276.0 ms]
-  Range (min … max):   699.3 ms … 760.8 ms    10 runs
+  Time (mean ± σ):      1.094 s ±  0.019 s    [User: 19.416 s, System: 11.085 s]
+  Range (min … max):    1.067 s …  1.135 s    10 runs
  
-Benchmark 4: loc linux
-  Time (mean ± σ):     567.1 ms ± 113.4 ms    [User: 15984.5 ms, System: 1037.0 ms]
-  Range (min … max):   381.8 ms … 656.3 ms    10 runs
- 
-Benchmark 5: polyglot linux
-  Time (mean ± σ):      1.241 s ±  0.027 s    [User: 2.973 s, System: 2.636 s]
-  Range (min … max):    1.196 s …  1.299 s    10 runs
+Benchmark 4: polyglot linux
+  Time (mean ± σ):      1.387 s ±  0.028 s    [User: 3.775 s, System: 3.212 s]
+  Range (min … max):    1.359 s …  1.433 s    10 runs
  
 Summary
-  'scc -c linux' ran
-    1.07 ± 0.22 times faster than 'loc linux'
-    1.39 ± 0.05 times faster than 'tokei linux'
-    1.41 ± 0.05 times faster than 'scc linux'
-    2.35 ± 0.07 times faster than 'polyglot linux'
+  scc -c linux ran
+    1.06 ± 0.05 times faster than scc linux
+    1.09 ± 0.05 times faster than tokei linux
+    1.38 ± 0.06 times faster than polyglot linux
+```
+
+#### Sourcegraph https://github.com/SINTEF/sourcegraph.git
+
+Sourcegraph has gone dark since I last ran these benchmarks hence using a clone taken before this occured.
+The reason for this is to track what appears to be a performance regression in tokei.
+
+
+```shell
+Benchmark 1: scc sourcegraph
+  Time (mean ± σ):     125.1 ms ±   8.0 ms    [User: 638.1 ms, System: 218.0 ms]
+  Range (min … max):   116.7 ms … 141.3 ms    24 runs
+ 
+Benchmark 2: scc -c sourcegraph
+  Time (mean ± σ):     119.8 ms ±   8.3 ms    [User: 554.8 ms, System: 208.6 ms]
+  Range (min … max):   111.9 ms … 138.4 ms    22 runs
+ 
+Benchmark 3: tokei sourcegraph
+  Time (mean ± σ):     23.888 s ±  1.416 s    [User: 73.858 s, System: 630.906 s]
+  Range (min … max):   22.292 s … 27.010 s    10 runs
+ 
+Benchmark 4: polyglot sourcegraph
+  Time (mean ± σ):     113.3 ms ±   4.1 ms    [User: 237.7 ms, System: 791.8 ms]
+  Range (min … max):   107.9 ms … 124.3 ms    26 runs
+ 
+Summary
+  polyglot sourcegraph ran
+    1.06 ± 0.08 times faster than scc -c sourcegraph
+    1.10 ± 0.08 times faster than scc sourcegraph
+  210.86 ± 14.66 times faster than tokei sourcegraph
+
 ```
 
 If you enable duplicate detection expect performance to fall by about 20% in `scc`.
@@ -864,7 +873,10 @@ Performance is tracked for some releases and presented below.
 
 <img alt="scc" src=https://github.com/boyter/scc/raw/master/performance-over-time.png>
 
-https://jsfiddle.net/m1w7kgqv/
+The decrease in performance from the 3.3.0 release was due to accurate .gitignore, .ignore and .gitmodule support.
+Current work is focussed on resolving this.
+
+https://jsfiddle.net/mw21h9va/
 
 ### CI/CD Support
 

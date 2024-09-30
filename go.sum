@@ -1,5 +1,3 @@
-github.com/boyter/gocodewalker v1.3.3 h1:yPSbWT1wGmPSC73jASY0GaJu4EDN3FROfwYUDQjTmuE=
-github.com/boyter/gocodewalker v1.3.3/go.mod h1:hXG8xzR1uURS+99P5/3xh3uWHjaV2XfoMMmvPyhrCDg=
 github.com/boyter/gocodewalker v1.3.4 h1:52rQJhVKwTLbbwJqAvDogbILLz8GIMO2b5oWR2ikhAM=
 github.com/boyter/gocodewalker v1.3.4/go.mod h1:hXG8xzR1uURS+99P5/3xh3uWHjaV2XfoMMmvPyhrCDg=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
