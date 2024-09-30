@@ -947,6 +947,7 @@ specificLanguages=(
     'Futhark '
     'FXML '
     'Gemfile '
+    'Gleam '
     'Go '
     'GraphQL '
     'Gwion '
