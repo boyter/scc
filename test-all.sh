@@ -980,6 +980,7 @@ specificLanguages=(
     'Snakemake '
     'Stan '
     'Teal '
+    'Tera '
     'Templ '
     'Terraform '
     'TTCN-3 '

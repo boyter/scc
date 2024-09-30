@@ -6201,6 +6201,23 @@
     "multi_line": [["[%#", "%]"]],
     "quotes": []
   },
+  "Tera": {
+    "complexitychecks": [
+      "{% include ",
+      "{% macro ",
+      "{% block ",
+      "{% extends ",
+      "{% for ",
+      "{% set ",
+      "{% if ",
+      "{% elif ",
+      "{% else "
+    ],
+    "extensions": ["tera"],
+    "line_comment": [],
+    "multi_line": [["<!--", "-->"], ["{#", "#}"]],
+    "quotes": []
+  },
   "Terraform": {
     "complexitychecks": [
       "count",
