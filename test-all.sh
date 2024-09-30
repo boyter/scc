@@ -368,8 +368,8 @@ else
 fi
 
 touch ./examples/ignore/ignorefile.txt
-a=$(./scc --by-file | grep ignorefile)
-b=$(./scc --by-file --no-ignore | grep ignorefile)
+a=$(./scc --by-file --no-scc-ignore | grep ignorefile)
+b=$(./scc --by-file --no-ignore --no-scc-ignore | grep ignorefile)
 if [ "$a" == "$b" ]; then
     echo "$a"
     echo "$b"
@@ -382,8 +382,8 @@ else
 fi
 
 touch ./examples/ignore/gitignorefile.txt
-a=$(./scc --by-file | grep gitignorefile)
-b=$(./scc --by-file --no-gitignore | grep gitignorefile)
+a=$(./scc --by-file --no-scc-ignore | grep gitignorefile)
+b=$(./scc --by-file --no-gitignore --no-scc-ignore | grep gitignorefile)
 if [ "$a" == "$b" ]; then
     echo "$a"
     echo "$b"
@@ -404,8 +404,8 @@ else
     echo -e "${GREEN}PASSED include-ext option"
 fi
 
-a=$(./scc -i js ./examples/minified/)
-b=$(./scc -i js -z ./examples/minified/)
+a=$(./scc -i js ./examples/minified/ --no-scc-ignore)
+b=$(./scc -i js -z ./examples/minified/ --no-scc-ignore)
 if [ "$a" == "$b" ]; then
     echo "$a"
     echo "$b"
@@ -417,8 +417,8 @@ else
     echo -e "${GREEN}PASSED minified check"
 fi
 
-a=$(./scc -i js -z ./examples/minified/)
-b=$(./scc -i js -z --no-min-gen ./examples/minified/)
+a=$(./scc -i js -z ./examples/minified/ --no-scc-ignore)
+b=$(./scc -i js -z --no-min-gen ./examples/minified/ --no-scc-ignore)
 if [ "$a" == "$b" ]; then
     echo "$a"
     echo "$b"
@@ -430,8 +430,8 @@ else
     echo -e "${GREEN}PASSED minified ignored check"
 fi
 
-a=$(./scc ./examples/symlink/)
-b=$(./scc --include-symlinks ./examples/symlink/)
+a=$(./scc ./examples/symlink/ --no-scc-ignore)
+b=$(./scc --include-symlinks ./examples/symlink/ --no-scc-ignore)
 if [ "$a" == "$b" ]; then
     echo "$a"
     echo "$b"
@@ -443,7 +443,7 @@ else
     echo -e "${GREEN}PASSED minified ignored check"
 fi
 
-if ./scc ./examples/minified/ --no-min-gen | grep -q "\$0"; then
+if ./scc ./examples/minified/ --no-min-gen --no-scc-ignore | grep -q "\$0"; then
     echo -e "${GREEN}PASSED removed min"
 else
     echo -e "${RED}======================================================="
@@ -452,7 +452,7 @@ else
     exit
 fi
 
-if ./scc ./examples/generated/ --no-min-gen | grep -q "\$0"; then
+if ./scc ./examples/generated/ --no-min-gen --no-scc-ignore | grep -q "\$0"; then
     echo -e "${GREEN}PASSED removed gen"
 else
     echo -e "${RED}======================================================="
@@ -461,7 +461,7 @@ else
     exit
 fi
 
-if ./scc -z ./examples/generated/ | grep -q "C Header (gen)"; then
+if ./scc -z ./examples/generated/ --no-scc-ignore | grep -q "C Header (gen)"; then
     echo -e "${GREEN}PASSED flagged as gen"
 else
     echo -e "${RED}======================================================="
@@ -470,7 +470,7 @@ else
     exit
 fi
 
-if ./scc ./examples/minified/ -i js -z | grep -q "JavaScript (min)"; then
+if ./scc ./examples/minified/ -i js -z --no-scc-ignore | grep -q "JavaScript (min)"; then
     echo -e "${GREEN}PASSED flagged as min"
 else
     echo -e "${RED}======================================================="
@@ -949,6 +949,7 @@ specificLanguages=(
     'Gemfile '
     'Go '
     'GraphQL '
+    'Gwion '
     'HAML '
     'Hare '
     'ignore '
@@ -991,7 +992,7 @@ specificLanguages=(
 )
 for i in "${specificLanguages[@]}"
 do
-    if ./scc "examples/language/" | grep -q "$i"; then
+    if ./scc "examples/language/" --no-scc-ignore | grep -q "$i"; then
         echo -e "${GREEN}PASSED $i Language Check"
     else
         echo -e "${RED}======================================================="
@@ -1004,7 +1005,7 @@ done
 # Issue339
 for i in 'MATLAB ' 'Objective C '
 do
-    if ./scc "examples/issue339/" | grep -q "$i "; then
+    if ./scc "examples/issue339/" --no-scc-ignore | grep -q "$i "; then
         echo -e "${GREEN}PASSED $i Language Check"
     else
         echo -e "${RED}======================================================="
@@ -1015,7 +1016,7 @@ do
 done
 
 # Issue345 (https://github.com/boyter/scc/issues/345)
-a=$(./scc "examples/issue345/" -f csv | sed -n '2 p')
+a=$(./scc "examples/issue345/" -f csv --no-scc-ignore | sed -n '2 p')
 b="C++,4,3,1,0,0,76,1,0"
 if [ "$a" == "$b" ]; then
     echo -e "${GREEN}PASSED String Termination Check"
@@ -1028,11 +1029,11 @@ else
 fi
 
 # Regression issue https://github.com/boyter/scc/issues/379
-Issue379Line=$(./scc -f csv "examples/issue379/" | grep 'Python' | cut -d ',' -f 2)
-Issue379Code=$(./scc -f csv "examples/issue379/" | grep 'Python' | cut -d ',' -f 3)
-Issue379Comments=$(./scc -f csv "examples/issue379/" | grep 'Python' | cut -d ',' -f 4)
-Issue379Blanks=$(./scc -f csv "examples/issue379/" | grep 'Python' | cut -d ',' -f 5)
-Issue379Complexity=$(./scc -f csv "examples/issue379/" | grep 'Python' | cut -d ',' -f 6)
+Issue379Line=$(./scc -f csv "examples/issue379/" --no-scc-ignore | grep 'Python' | cut -d ',' -f 2)
+Issue379Code=$(./scc -f csv "examples/issue379/" --no-scc-ignore | grep 'Python' | cut -d ',' -f 3)
+Issue379Comments=$(./scc -f csv "examples/issue379/" --no-scc-ignore | grep 'Python' | cut -d ',' -f 4)
+Issue379Blanks=$(./scc -f csv "examples/issue379/" --no-scc-ignore | grep 'Python' | cut -d ',' -f 5)
+Issue379Complexity=$(./scc -f csv "examples/issue379/" --no-scc-ignore | grep 'Python' | cut -d ',' -f 6)
 if [ $Issue379Line -ne 7 ] ; then
     echo -e "${RED}======================================================="
     echo -e "FAILED Issue379 line counting"
@@ -1065,7 +1066,7 @@ fi
 # Extra case for longer languages that are normally truncated
 for i in 'CloudFormation (YAM' 'CloudFormation (JSO'
 do
-    if ./scc "examples/language/" | grep -q "$i"; then
+    if ./scc "examples/language/" --no-scc-ignore | grep -q "$i"; then
         echo -e "${GREEN}PASSED $i Language Check"
     else
         echo -e "${RED}======================================================="

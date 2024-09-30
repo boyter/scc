@@ -1,0 +1,35 @@
+#import Std
+#import Math
+#import Modules
+
+fun int get_ncycles() {
+  if(me.args())
+    return me.arg(0) => Std.atoi;
+  return 2;
+}
+
+fun float get_user_duration() {
+  if(me.args() > 1)
+    return me.arg(1) => Std.atof;
+  return 1;
+}
+
+fun dur get_duration() {
+  return get_user_duration()::second;
+}
+
+
+get_ncycles() :=> const int ncycles;
+get_duration() :=> var dur duration;
+
+1 :=> var int compensate;
+const SinOsc s ~> dac;
+
+while(duration >= samp) {
+  repeat(ncycles * compensate) {
+    Math.rand2f(220, 880) :=> s.freq;
+    duration => now;
+  }
+  duration/2. :=> duration;
+  2 *=> compensate;
+}
