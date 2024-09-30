@@ -165,6 +165,9 @@ var FileProcessJobWorkers = runtime.NumCPU() * 4
 // FileSummaryJobQueueSize is the queue used to hold processed file statistics before formatting
 var FileSummaryJobQueueSize = runtime.NumCPU()
 
+// DirectoryWalkerJobWorkers is the number of workers which will walk the directory tree
+var DirectoryWalkerJobWorkers = 8
+
 // AllowListExtensions is a list of extensions which are allowed to be processed
 var AllowListExtensions = []string{}
 
@@ -609,6 +612,7 @@ func Process() {
 	fileWalker.IgnoreGitModules = GitModuleIgnore
 	fileWalker.IncludeHidden = true
 	fileWalker.ExcludeDirectory = PathDenyList
+	fileWalker.SetConcurrency(DirectoryWalkerJobWorkers)
 
 	for _, exclude := range Exclude {
 		regexpResult, err := regexp.Compile(exclude)

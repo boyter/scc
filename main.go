@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/boyter/scc/v3/processor"
@@ -139,6 +140,30 @@ func main() {
 		"file-gc-count",
 		10000,
 		"number of files to parse before turning the GC on",
+	)
+	flags.IntVar(
+		&processor.FileListQueueSize,
+		"file-list-queue-size",
+		runtime.NumCPU(),
+		"the size of the queue of files found and ready to be read into memory",
+	)
+	flags.IntVar(
+		&processor.FileProcessJobWorkers,
+		"file-process-job-workers",
+		runtime.NumCPU(),
+		"number of goroutine workers that process files collecting stats",
+	)
+	flags.IntVar(
+		&processor.FileSummaryJobQueueSize,
+		"file-summary-job-queue-size",
+		runtime.NumCPU(),
+		"the size of the queue used to hold processed file statistics before formatting",
+	)
+	flags.IntVar(
+		&processor.DirectoryWalkerJobWorkers,
+		"directory-walker-job-workers",
+		8,
+		"controls the maximum number of workers which will walk the directory tree",
 	)
 	flags.StringVarP(
 		&processor.Format,
