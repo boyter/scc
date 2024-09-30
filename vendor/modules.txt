@@ -1,4 +1,4 @@
-# github.com/boyter/gocodewalker v1.3.4
+# github.com/boyter/gocodewalker v1.3.5
 ## explicit; go 1.20
 github.com/boyter/gocodewalker
 github.com/boyter/gocodewalker/go-gitignore

@@ -106,6 +106,12 @@ func main() {
 		"disables .ignore file logic",
 	)
 	flags.BoolVar(
+		&processor.SccIgnore,
+		"no-scc-ignore",
+		false,
+		"disables .sccignore file logic",
+	)
+	flags.BoolVar(
 		&processor.GitIgnore,
 		"no-gitignore",
 		false,

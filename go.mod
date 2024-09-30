@@ -3,7 +3,7 @@ module github.com/boyter/scc/v3
 go 1.22
 
 require (
-	github.com/boyter/gocodewalker v1.3.4
+	github.com/boyter/gocodewalker v1.3.5
 	github.com/json-iterator/go v1.1.12
 	github.com/mattn/go-runewidth v0.0.15
 	github.com/rs/zerolog v1.30.0

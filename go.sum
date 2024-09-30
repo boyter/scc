@@ -1,5 +1,7 @@
 github.com/boyter/gocodewalker v1.3.4 h1:52rQJhVKwTLbbwJqAvDogbILLz8GIMO2b5oWR2ikhAM=
 github.com/boyter/gocodewalker v1.3.4/go.mod h1:hXG8xzR1uURS+99P5/3xh3uWHjaV2XfoMMmvPyhrCDg=
+github.com/boyter/gocodewalker v1.3.5 h1:0FIqU/EGscYzDG9o9770CRhb0esbaDeiaBEYZ4dSCpg=
+github.com/boyter/gocodewalker v1.3.5/go.mod h1:hXG8xzR1uURS+99P5/3xh3uWHjaV2XfoMMmvPyhrCDg=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 h1:y5HC9v93H5EPKqaS1UYVg1uYah5Xf51mBfIoWehClUQ=

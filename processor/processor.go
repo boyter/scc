@@ -105,6 +105,9 @@ var GitModuleIgnore = false
 // Ignore disables ignore file checks
 var Ignore = false
 
+// SccIgnore disables sccignore file checks
+var SccIgnore = false
+
 // CountIgnore should we count ignore files?
 var CountIgnore = false
 
