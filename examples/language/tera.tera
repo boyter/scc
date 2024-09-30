@@ -1,0 +1,8 @@
+{% set map = section.pages | group_by(attribute="year") %}
+{% set_global years = [] %}
+{% for year, ignored in map %}
+    {% set_global years = years | concat(with=year) %}
+{% endfor %}
+{% for year in years | reverse %}
+    {% set posts = map[year] %}
+{% endfor %}
