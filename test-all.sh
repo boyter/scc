@@ -919,6 +919,7 @@ specificLanguages=(
     'Alchemist '
     'Alloy '
     'Arturo '
+    'Astro '
     'AWK '
     'BASH '
     'Bicep '
