@@ -3001,6 +3001,23 @@
       }
     ]
   },
+  "Gleam": {
+    "complexitychecks": [
+      "fn ",
+      "case ",
+      "-> ",
+      "if "
+    ],
+    "extensions": ["gleam"],
+    "line_comment": ["//", "///", "////"],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "JavaScript": {
     "complexitychecks": [
       "for ",
