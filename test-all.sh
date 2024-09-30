@@ -949,6 +949,7 @@ specificLanguages=(
     'Gemfile '
     'Go '
     'GraphQL '
+    'Gwion '
     'HAML '
     'Hare '
     'ignore '

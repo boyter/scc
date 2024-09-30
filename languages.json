@@ -1,4 +1,24 @@
 {
+  "Gwion": {
+    "complexitychecks": [
+      "fun ",
+      "while(",
+      "while (",
+      "repeat(",
+      "repeat (",
+      "if (",
+      "if("
+    ],
+    "extensions": ["gw"],
+    "line_comment": ["#!"],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "ABAP": {
     "complexitychecks": [
       "for ",
@@ -13,13 +33,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "abap"
-    ],
-    "line_comment": [
-      "*",
-      "\\\""
-    ],
+    "extensions": ["abap"],
+    "line_comment": ["*", "\\\""],
     "multi_line": [],
     "quotes": []
   },
@@ -37,18 +52,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "as"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["as"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -70,15 +76,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "ada",
-      "adb",
-      "ads",
-      "pad"
-    ],
-    "line_comment": [
-      "--"
-    ],
+    "extensions": ["ada", "adb", "ads", "pad"],
+    "line_comment": ["--"],
     "multi_line": [],
     "quotes": []
   },
@@ -96,40 +95,21 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "agda"
-    ],
-    "line_comment": [
-      "--"
-    ],
-    "multi_line": [
-      [
-        "{-",
-        "-}"
-      ]
-    ],
+    "extensions": ["agda"],
+    "line_comment": ["--"],
+    "multi_line": [["{-", "-}"]],
     "quotes": []
   },
   "Alchemist": {
-    "complexitychecks": [
-      "+",
-      "->",
-      "!"
-    ],
-    "extensions": [
-      "crn"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "complexitychecks": ["+", "->", "!"],
+    "extensions": ["crn"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": []
   },
   "Alex": {
     "complexitychecks": [],
-    "extensions": [
-      "x"
-    ],
+    "extensions": ["x"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -146,19 +126,9 @@
       "<= ",
       ">= "
     ],
-    "extensions": [
-      "als"
-    ],
-    "line_comment": [
-      "//",
-      "--"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["als"],
+    "line_comment": ["//", "--"],
+    "multi_line": [["/*", "*/"]],
     "quotes": []
   },
   "Android Interface Definition Language": {
@@ -175,22 +145,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "aidl"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/**",
-        "*/"
-      ],
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["aidl"],
+    "line_comment": ["//"],
+    "multi_line": [["/**", "*/"], ["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -215,16 +172,8 @@
       "=",
       ":"
     ],
-    "extensions": [
-      "apl",
-      "aplf",
-      "apln",
-      "aplc",
-      "dyalog"
-    ],
-    "line_comment": [
-      "⍝"
-    ],
+    "extensions": ["apl", "aplf", "apln", "aplc", "dyalog"],
+    "line_comment": ["⍝"],
     "multi_line": [],
     "quotes": [
       {
@@ -247,19 +196,9 @@
       "and ",
       "or "
     ],
-    "extensions": [
-      "applescript"
-    ],
-    "line_comment": [
-      "#",
-      "--"
-    ],
-    "multi_line": [
-      [
-        "(*",
-        "*)"
-      ]
-    ],
+    "extensions": ["applescript"],
+    "line_comment": ["#", "--"],
+    "multi_line": [["(*", "*)"]],
     "quotes": [
       {
         "end": "\"",
@@ -283,12 +222,8 @@
       "<> ",
       "= "
     ],
-    "extensions": [
-      "art"
-    ],
-    "line_comment": [
-      ";"
-    ],
+    "extensions": ["art"],
+    "line_comment": [";"],
     "multi_line": [],
     "quotes": [
       {
@@ -303,9 +238,7 @@
   },
   "AsciiDoc": {
     "complexitychecks": [],
-    "extensions": [
-      "adoc"
-    ],
+    "extensions": ["adoc"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -324,14 +257,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "asa",
-      "asp"
-    ],
-    "line_comment": [
-      "'",
-      "REM"
-    ],
+    "extensions": ["asa", "asp"],
+    "line_comment": ["'", "REM"],
     "multi_line": [],
     "quotes": []
   },
@@ -359,16 +286,7 @@
       "webinfo"
     ],
     "line_comment": [],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ],
-      [
-        "<%--",
-        "-->"
-      ]
-    ],
+    "multi_line": [["<!--", "-->"], ["<%--", "-->"]],
     "quotes": []
   },
   "Assembly": {
@@ -385,19 +303,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "s",
-      "asm"
-    ],
-    "line_comment": [
-      ";"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["s", "asm"],
+    "line_comment": [";"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\\\"",
@@ -424,22 +332,9 @@
       "== ",
       ".map"
     ],
-    "extensions": [
-      "astro"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ],
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["astro"],
+    "line_comment": ["//"],
+    "multi_line": [["<!--", "-->"], ["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -462,28 +357,12 @@
       "let ",
       "and "
     ],
-    "extensions": [
-      "dats",
-      "sats",
-      "ats",
-      "hats"
-    ],
-    "line_comment": [
-      "//"
-    ],
+    "extensions": ["dats", "sats", "ats", "hats"],
+    "line_comment": ["//"],
     "multi_line": [
-      [
-        "/*",
-        "*/"
-      ],
-      [
-        "(*",
-        "*)"
-      ],
-      [
-        "////",
-        "THISSHOULDNEVERAPPEARWEHOPE"
-      ]
+      ["/*", "*/"],
+      ["(*", "*)"],
+      ["////", "THISSHOULDNEVERAPPEARWEHOPE"]
     ],
     "quotes": [
       {
@@ -506,13 +385,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "in"
-    ],
-    "line_comment": [
-      "#",
-      "dnl"
-    ],
+    "extensions": ["in"],
+    "line_comment": ["#", "dnl"],
     "multi_line": [],
     "quotes": []
   },
@@ -530,27 +404,14 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "ahk"
-    ],
-    "line_comment": [
-      ";"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["ahk"],
+    "line_comment": [";"],
+    "multi_line": [["/*", "*/"]],
     "quotes": []
   },
   "Avro": {
     "complexitychecks": [],
-    "extensions": [
-      "avdl",
-      "avpr",
-      "avsc"
-    ],
+    "extensions": ["avdl", "avpr", "avsc"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -571,12 +432,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "awk"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["awk"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -584,26 +441,11 @@
         "start": "\""
       }
     ],
-    "shebangs": [
-      "awk",
-      "gawk",
-      "mawk",
-      "nawk"
-    ]
+    "shebangs": ["awk", "gawk", "mawk", "nawk"]
   },
   "bait": {
-    "complexitychecks": [
-      "for ",
-      "if ",
-      "else ",
-      " or ",
-      " and ",
-      "!= ",
-      "== "
-    ],
-    "extensions": [
-      "bt"
-    ],
+    "complexitychecks": ["for ", "if ", "else ", " or ", " and ", "!= ", "== "],
+    "extensions": ["bt"],
     "keywords": [
       "and",
       "break",
@@ -618,15 +460,8 @@
       "return",
       "struct "
     ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "nestedmultiline": true,
     "quotes": [
       {
@@ -664,15 +499,8 @@
       "bash_profile",
       "bashrc"
     ],
-    "filenames": [
-      ".bash_login",
-      ".bash_logout",
-      ".bash_profile",
-      ".bashrc"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "filenames": [".bash_login", ".bash_logout", ".bash_profile", ".bashrc"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -684,9 +512,7 @@
         "start": "'"
       }
     ],
-    "shebangs": [
-      "bash"
-    ]
+    "shebangs": ["bash"]
   },
   "Basic": {
     "complexitychecks": [
@@ -703,12 +529,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "bas"
-    ],
-    "line_comment": [
-      "'"
-    ],
+    "extensions": ["bas"],
+    "line_comment": ["'"],
     "multi_line": [],
     "quotes": [
       {
@@ -731,15 +553,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "bat",
-      "btm",
-      "cmd"
-    ],
-    "line_comment": [
-      "REM",
-      "::"
-    ],
+    "extensions": ["bat", "btm", "cmd"],
+    "line_comment": ["REM", "::"],
     "multi_line": [],
     "quotes": []
   },
@@ -757,15 +572,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "bzl",
-      "build.bazel",
-      "build",
-      "workspace"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["bzl", "build.bazel", "build", "workspace"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -790,18 +598,9 @@
       "type ",
       "func "
     ],
-    "extensions": [
-      "bicep"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["bicep"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "'",
@@ -823,14 +622,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "bb",
-      "bbappend",
-      "bbclass"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["bb", "bbappend", "bbclass"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -841,12 +634,8 @@
   },
   "Bitbucket Pipeline": {
     "complexitychecks": [],
-    "extensions": [
-      "bitbucket-pipelines.yml"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["bitbucket-pipelines.yml"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": []
   },
@@ -882,20 +671,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "blade.php"
-    ],
+    "extensions": ["blade.php"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "{{--",
-        "--}}"
-      ],
-      [
-        "<!--",
-        "-->"
-      ]
-    ],
+    "multi_line": [["{{--", "--}}"], ["<!--", "-->"]],
     "quotes": []
   },
   "Boo": {
@@ -913,18 +691,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "boo"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["boo"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -956,12 +725,8 @@
       "== ",
       "=== "
     ],
-    "extensions": [
-      "bsq"
-    ],
-    "line_comment": [
-      "//"
-    ],
+    "extensions": ["bsq"],
+    "line_comment": ["//"],
     "multi_line": [],
     "quotes": [
       {
@@ -975,31 +740,16 @@
     ]
   },
   "Brainfuck": {
-    "complexitychecks": [
-      "[",
-      "]",
-      "<",
-      ">",
-      "+",
-      "-",
-      ".",
-      ","
-    ],
-    "extensions": [
-      "bf"
-    ],
+    "complexitychecks": ["[", "]", "<", ">", "+", "-", ".", ","],
+    "extensions": ["bf"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
   },
   "BuildStream": {
     "complexitychecks": [],
-    "extensions": [
-      "bst"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["bst"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": []
   },
@@ -1019,20 +769,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "c",
-      "ec",
-      "pgc"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["c", "ec", "pgc"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -1056,18 +795,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "h"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["h"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -1089,21 +819,12 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "csh"
-    ],
-    "filenames": [
-      ".cshrc"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["csh"],
+    "filenames": [".cshrc"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [],
-    "shebangs": [
-      "csh",
-      "tcsh"
-    ]
+    "shebangs": ["csh", "tcsh"]
   },
   "C#": {
     "complexitychecks": [
@@ -1119,19 +840,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "cs",
-      "csx"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["cs", "csx"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -1160,23 +871,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "cc",
-      "cpp",
-      "cxx",
-      "c++",
-      "pcc",
-      "ino"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["cc", "cpp", "cxx", "c++", "pcc", "ino"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -1200,22 +897,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "hh",
-      "hpp",
-      "hxx",
-      "inl",
-      "ipp"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["hh", "hpp", "hxx", "inl", "ipp"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -1237,18 +921,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "cabal"
-    ],
-    "line_comment": [
-      "--"
-    ],
-    "multi_line": [
-      [
-        "{-",
-        "-}"
-      ]
-    ],
+    "extensions": ["cabal"],
+    "line_comment": ["--"],
+    "multi_line": [["{-", "-}"]],
     "quotes": []
   },
   "Cairo": {
@@ -1264,12 +939,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "cairo"
-    ],
-    "line_comment": [
-      "//"
-    ],
+    "extensions": ["cairo"],
+    "line_comment": ["//"],
     "multi_line": [],
     "quotes": [
       {
@@ -1291,18 +962,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "cj"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["cj"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "'",
@@ -1324,12 +986,8 @@
   },
   "Cap'n Proto": {
     "complexitychecks": [],
-    "extensions": [
-      "capnp"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["capnp"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": []
   },
@@ -1347,18 +1005,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "cassius"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["cassius"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -1380,18 +1029,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "ceylon"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["ceylon"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -1412,18 +1052,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "chpl"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["chpl"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -1451,18 +1082,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "circom"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["circom"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": []
   },
   "Clipper": {
@@ -1490,20 +1112,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "prg",
-      "ch"
-    ],
-    "line_comment": [
-      "//",
-      "&&"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["prg", "ch"],
+    "line_comment": ["//", "&&"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -1531,13 +1142,8 @@
       "(not= ",
       "(recur "
     ],
-    "extensions": [
-      "clj",
-      "cljc"
-    ],
-    "line_comment": [
-      ";"
-    ],
+    "extensions": ["clj", "cljc"],
+    "line_comment": [";"],
     "multi_line": [],
     "quotes": []
   },
@@ -1555,12 +1161,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "cljs"
-    ],
-    "line_comment": [
-      ";"
-    ],
+    "extensions": ["cljs"],
+    "line_comment": [";"],
     "multi_line": [],
     "quotes": []
   },
@@ -1582,22 +1184,9 @@
       "?: ",
       "? : "
     ],
-    "extensions": [
-      "soy"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/**",
-        "*/"
-      ],
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["soy"],
+    "line_comment": ["//"],
+    "multi_line": [["/**", "*/"], ["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -1633,9 +1222,7 @@
       "Fn::Sub",
       "Fn::Transform"
     ],
-    "extensions": [
-      "json"
-    ],
+    "extensions": ["json"],
     "keywords": [
       "\"AWSTemplateFormatVersion\"",
       "AWS::",
@@ -1694,10 +1281,7 @@
       "Fn::Sub",
       "Fn::Transform"
     ],
-    "extensions": [
-      "yaml",
-      "yml"
-    ],
+    "extensions": ["yaml", "yml"],
     "keywords": [
       "Resources:",
       "AWSTemplateFormatVersion:",
@@ -1731,9 +1315,7 @@
       "Fn::Sub",
       "Fn::Transform"
     ],
-    "line_comment": [
-      "#"
-    ],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": []
   },
@@ -1751,13 +1333,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "cmake",
-      "cmakelists.txt"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["cmake", "cmakelists.txt"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -1780,16 +1357,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "cob",
-      "cbl",
-      "ccp",
-      "cobol",
-      "cpy"
-    ],
-    "line_comment": [
-      "*"
-    ],
+    "extensions": ["cob", "cbl", "ccp", "cobol", "cpy"],
+    "line_comment": ["*"],
     "multi_line": [],
     "quotes": []
   },
@@ -1816,19 +1385,9 @@
       "strictsum(",
       "sum("
     ],
-    "extensions": [
-      "ql",
-      "qll"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["ql", "qll"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -1850,18 +1409,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "coffee"
-    ],
-    "line_comment": [
-      "#"
-    ],
-    "multi_line": [
-      [
-        "###",
-        "###"
-      ]
-    ],
+    "extensions": ["coffee"],
+    "line_comment": ["#"],
+    "multi_line": [["###", "###"]],
     "quotes": [
       {
         "end": "\\\"",
@@ -1887,12 +1437,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "cogent"
-    ],
-    "line_comment": [
-      "--"
-    ],
+    "extensions": ["cogent"],
+    "line_comment": ["--"],
     "multi_line": [],
     "quotes": []
   },
@@ -1910,16 +1456,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "cfm"
-    ],
+    "extensions": ["cfm"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "<!---",
-        "--->"
-      ]
-    ],
+    "multi_line": [["<!---", "--->"]],
     "quotes": [
       {
         "end": "\\\"",
@@ -1945,18 +1484,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "cfc"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["cfc"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -1978,9 +1508,7 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "v"
-    ],
+    "extensions": ["v"],
     "keywords": [
       "Require",
       "Hypothesis",
@@ -2001,12 +1529,7 @@
       "From Coq"
     ],
     "line_comment": [],
-    "multi_line": [
-      [
-        "(*",
-        "*)"
-      ]
-    ],
+    "multi_line": [["(*", "*)"]],
     "quotes": [
       {
         "end": "\"",
@@ -2016,9 +1539,7 @@
   },
   "Creole": {
     "complexitychecks": [],
-    "extensions": [
-      "creole"
-    ],
+    "extensions": ["creole"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -2037,12 +1558,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "cr"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["cr"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -2069,18 +1586,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "css"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["css"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -2090,9 +1598,7 @@
   },
   "CSV": {
     "complexitychecks": [],
-    "extensions": [
-      "csv"
-    ],
+    "extensions": ["csv"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -2111,18 +1617,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "cu"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["cu"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -2144,14 +1641,8 @@
       "not ",
       "in "
     ],
-    "extensions": [
-      "pyx",
-      "pxi",
-      "pxd"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["pyx", "pxi", "pxd"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -2186,22 +1677,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "d"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ],
-      [
-        "/+",
-        "+/"
-      ]
-    ],
+    "extensions": ["d"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"], ["/+", "+/"]],
     "nestedmultiline": true,
     "quotes": [
       {
@@ -2213,9 +1691,7 @@
         "start": "'"
       }
     ],
-    "shebangs": [
-      "rdmd"
-    ]
+    "shebangs": ["rdmd"]
   },
   "Dart": {
     "complexitychecks": [
@@ -2231,18 +1707,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "dart"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["dart"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -2264,19 +1731,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "dts",
-      "dtsi"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["dts", "dtsi"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -2286,18 +1743,9 @@
   },
   "Dhall": {
     "complexitychecks": [],
-    "extensions": [
-      "dhall"
-    ],
-    "line_comment": [
-      "--"
-    ],
-    "multi_line": [
-      [
-        "{-",
-        "-}"
-      ]
-    ],
+    "extensions": ["dhall"],
+    "line_comment": ["--"],
+    "multi_line": [["{-", "-}"]],
     "quotes": [
       {
         "end": "\"",
@@ -2323,18 +1771,9 @@
       "==",
       "in "
     ],
-    "extensions": [
-      "dm"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["dm"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "nestedmultiline": true,
     "quotes": [
       {
@@ -2350,13 +1789,8 @@
   "Docker ignore": {
     "complexitychecks": [],
     "extensions": [],
-    "filenames": [
-      ".dockerignore"
-    ],
-    "line_comment": [
-      "#",
-      "//"
-    ],
+    "filenames": [".dockerignore"],
+    "line_comment": ["#", "//"],
     "multi_line": [],
     "quotes": []
   },
@@ -2374,15 +1808,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "dockerfile"
-    ],
-    "filenames": [
-      "dockerfile"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["dockerfile"],
+    "filenames": ["dockerfile"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -2397,29 +1825,16 @@
   },
   "Document Type Definition": {
     "complexitychecks": [],
-    "extensions": [
-      "dtd"
-    ],
+    "extensions": ["dtd"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
   },
   "DOT": {
     "complexitychecks": [],
-    "extensions": [
-      "dot",
-      "gv"
-    ],
-    "line_comment": [
-      "//",
-      "#"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["dot", "gv"],
+    "line_comment": ["//", "#"],
+    "multi_line": [["/*", "*/"]],
     "quotes": []
   },
   "Elixir": {
@@ -2436,13 +1851,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "ex",
-      "exs"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["ex", "exs"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -2477,18 +1887,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "elm"
-    ],
-    "line_comment": [
-      "--"
-    ],
-    "multi_line": [
-      [
-        "{-",
-        "-}"
-      ]
-    ],
+    "extensions": ["elm"],
+    "line_comment": ["--"],
+    "multi_line": [["{-", "-}"]],
     "quotes": [
       {
         "end": "\"",
@@ -2510,12 +1911,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "ede"
-    ],
-    "line_comment": [
-      ";"
-    ],
+    "extensions": ["ede"],
+    "line_comment": [";"],
     "multi_line": [],
     "quotes": []
   },
@@ -2533,12 +1930,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "el"
-    ],
-    "line_comment": [
-      ";"
-    ],
+    "extensions": ["el"],
+    "line_comment": [";"],
     "multi_line": [],
     "quotes": []
   },
@@ -2556,18 +1949,11 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "erl",
-      "hrl"
-    ],
-    "line_comment": [
-      "%"
-    ],
+    "extensions": ["erl", "hrl"],
+    "line_comment": ["%"],
     "multi_line": [],
     "quotes": [],
-    "shebangs": [
-      "escript"
-    ]
+    "shebangs": ["escript"]
   },
   "Expect": {
     "complexitychecks": [
@@ -2583,12 +1969,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "exp"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["exp"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -2603,10 +1985,7 @@
   },
   "Extensible Stylesheet Language Transformations": {
     "complexitychecks": [],
-    "extensions": [
-      "xslt",
-      "xsl"
-    ],
+    "extensions": ["xslt", "xsl"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -2625,21 +2004,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "fs",
-      "fsi",
-      "fsx",
-      "fsscript"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "(*",
-        "*)"
-      ]
-    ],
+    "extensions": ["fs", "fsi", "fsx", "fsscript"],
+    "line_comment": ["//"],
+    "multi_line": [["(*", "*)"]],
     "quotes": []
   },
   "F*": {
@@ -2656,16 +2023,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "fst"
-    ],
+    "extensions": ["fst"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "(*",
-        "*)"
-      ]
-    ],
+    "multi_line": [["(*", "*)"]],
     "quotes": [
       {
         "end": "\"",
@@ -2715,49 +2075,18 @@
       "smart-unless",
       "smart-unless*"
     ],
-    "extensions": [
-      "factor"
-    ],
-    "line_comment": [
-      "!"
-    ],
+    "extensions": ["factor"],
+    "line_comment": ["!"],
     "multi_line": [
-      [
-        "![[",
-        "]]"
-      ],
-      [
-        "![=[",
-        "]=]"
-      ],
-      [
-        "![==[",
-        "]==]"
-      ],
-      [
-        "![===[",
-        "]===]"
-      ],
-      [
-        "![====[",
-        "]====]"
-      ],
-      [
-        "![=====[",
-        "]=====]"
-      ],
-      [
-        "![======[",
-        "]======]"
-      ],
-      [
-        "/*",
-        "*/"
-      ],
-      [
-        "((",
-        "))"
-      ]
+      ["![[", "]]"],
+      ["![=[", "]=]"],
+      ["![==[", "]==]"],
+      ["![===[", "]===]"],
+      ["![====[", "]====]"],
+      ["![=====[", "]=====]"],
+      ["![======[", "]======]"],
+      ["/*", "*/"],
+      ["((", "))"]
     ],
     "quotes": [
       {
@@ -2812,12 +2141,8 @@
       "(and",
       "(or"
     ],
-    "extensions": [
-      "fnl"
-    ],
-    "line_comment": [
-      ";"
-    ],
+    "extensions": ["fnl"],
+    "line_comment": [";"],
     "multi_line": [],
     "quotes": [
       {
@@ -2844,18 +2169,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "fidl"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["fidl"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -2877,12 +2193,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "fish"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["fish"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -2894,9 +2206,7 @@
         "start": "'"
       }
     ],
-    "shebangs": [
-      "fish"
-    ]
+    "shebangs": ["fish"]
   },
   "Flow9": {
     "complexitychecks": [
@@ -2916,18 +2226,9 @@
       "== ",
       "|> "
     ],
-    "extensions": [
-      "flow"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["flow"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -2962,15 +2263,8 @@
       "rx",
       "ft"
     ],
-    "line_comment": [
-      "\\\\"
-    ],
-    "multi_line": [
-      [
-        "( ",
-        ")"
-      ]
-    ],
+    "line_comment": ["\\\\"],
+    "multi_line": [["( ", ")"]],
     "quotes": []
   },
   "FORTRAN Legacy": {
@@ -2987,19 +2281,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "f",
-      "for",
-      "ftn",
-      "f77",
-      "pfo"
-    ],
-    "line_comment": [
-      "c",
-      "C",
-      "!",
-      "*"
-    ],
+    "extensions": ["f", "for", "ftn", "f77", "pfo"],
+    "line_comment": ["c", "C", "!", "*"],
     "multi_line": [],
     "quotes": [
       {
@@ -3026,15 +2309,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "f03",
-      "f08",
-      "f90",
-      "f95"
-    ],
-    "line_comment": [
-      "!"
-    ],
+    "extensions": ["f03", "f08", "f90", "f95"],
+    "line_comment": ["!"],
     "multi_line": [],
     "quotes": [
       {
@@ -3057,18 +2333,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "fsh"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["fsh"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -3091,29 +2358,15 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "ftl"
-    ],
+    "extensions": ["ftl"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "<#--",
-        "-->"
-      ]
-    ],
+    "multi_line": [["<#--", "-->"]],
     "quotes": []
   },
   "FSL": {
-    "complexitychecks": [
-      "->",
-      "<-"
-    ],
-    "extensions": [
-      "fsl"
-    ],
-    "line_comment": [
-      "//"
-    ],
+    "complexitychecks": ["->", "<-"],
+    "extensions": ["fsl"],
+    "line_comment": ["//"],
     "multi_line": [],
     "quotes": []
   },
@@ -3131,26 +2384,15 @@
       ">= ",
       "<= "
     ],
-    "extensions": [
-      "fut"
-    ],
-    "line_comment": [
-      "--"
-    ],
+    "extensions": ["fut"],
+    "line_comment": ["--"],
     "multi_line": [],
     "quotes": []
   },
   "FXML": {
-    "extensions": [
-      "fxml"
-    ],
+    "extensions": ["fxml"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ]
-    ],
+    "multi_line": [["<!--", "-->"]],
     "quotes": [
       {
         "end": "\"",
@@ -3176,19 +2418,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "gml"
-    ],
-    "line_comment": [
-      "//",
-      "///"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["gml"],
+    "line_comment": ["//", "///"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -3198,9 +2430,7 @@
   },
   "Game Maker Project": {
     "complexitychecks": [],
-    "extensions": [
-      "yyp"
-    ],
+    "extensions": ["yyp"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -3219,12 +2449,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "gd"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["gd"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -3244,12 +2470,8 @@
   "Gemfile": {
     "complexitychecks": [],
     "extensions": [],
-    "filenames": [
-      "gemfile"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "filenames": ["gemfile"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -3263,30 +2485,17 @@
     ]
   },
   "Gherkin Specification": {
-    "complexitychecks": [
-      "given",
-      "when",
-      "then",
-      "and"
-    ],
-    "extensions": [
-      "feature"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "complexitychecks": ["given", "when", "then", "and"],
+    "extensions": ["feature"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": []
   },
   "gitignore": {
     "complexitychecks": [],
     "extensions": [],
-    "filenames": [
-      ".gitignore"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "filenames": [".gitignore"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": []
   },
@@ -3304,23 +2513,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "vert",
-      "tesc",
-      "tese",
-      "geom",
-      "frag",
-      "comp"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["vert", "tesc", "tese", "geom", "frag", "comp"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -3341,13 +2536,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "gn",
-      "gni"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["gn", "gni"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -3372,18 +2562,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "go"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["go"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -3407,28 +2588,15 @@
       "{{with",
       "{{ with"
     ],
-    "extensions": [
-      "tmpl",
-      "gohtml",
-      "gotxt"
-    ],
+    "extensions": ["tmpl", "gohtml", "gotxt"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "{{/*",
-        "*/}}"
-      ]
-    ],
+    "multi_line": [["{{/*", "*/}}"]],
     "quotes": []
   },
   "Gradle": {
     "complexitychecks": [],
-    "extensions": [
-      "gradle"
-    ],
-    "line_comment": [
-      "//"
-    ],
+    "extensions": ["gradle"],
+    "line_comment": ["//"],
     "multi_line": [],
     "quotes": [
       {
@@ -3455,18 +2623,9 @@
       "union ",
       "fragment "
     ],
-    "extensions": [
-      "graphql"
-    ],
-    "line_comment": [
-      "#"
-    ],
-    "multi_line": [
-      [
-        "\"\"\"",
-        "\"\"\""
-      ]
-    ],
+    "extensions": ["graphql"],
+    "line_comment": ["#"],
+    "multi_line": [["\"\"\"", "\"\"\""]],
     "quotes": [
       {
         "end": "\"",
@@ -3493,21 +2652,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "groovy",
-      "grt",
-      "gtpl",
-      "gvy"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["groovy", "grt", "gtpl", "gvy"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -3516,12 +2663,8 @@
     ]
   },
   "HAML": {
-    "extensions": [
-      "haml"
-    ],
-    "line_comment": [
-      "-#"
-    ],
+    "extensions": ["haml"],
+    "line_comment": ["-#"],
     "multi_line": [],
     "quotes": []
   },
@@ -3539,16 +2682,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "hamlet"
-    ],
+    "extensions": ["hamlet"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ]
-    ],
+    "multi_line": [["<!--", "-->"]],
     "quotes": [
       {
         "end": "\"",
@@ -3570,21 +2706,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "hbs",
-      "handlebars"
-    ],
+    "extensions": ["hbs", "handlebars"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ],
-      [
-        "{{!",
-        "}}"
-      ]
-    ],
+    "multi_line": [["<!--", "-->"], ["{{!", "}}"]],
     "quotes": [
       {
         "end": "\\\"",
@@ -3598,10 +2722,7 @@
   },
   "Happy": {
     "complexitychecks": [],
-    "extensions": [
-      "y",
-      "ly"
-    ],
+    "extensions": ["y", "ly"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -3618,12 +2739,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "ha"
-    ],
-    "line_comment": [
-      "//"
-    ],
+    "extensions": ["ha"],
+    "line_comment": ["//"],
     "quotes": [
       {
         "end": "\"",
@@ -3648,18 +2765,9 @@
       "do {",
       "forall "
     ],
-    "extensions": [
-      "hs"
-    ],
-    "line_comment": [
-      "--"
-    ],
-    "multi_line": [
-      [
-        "{-",
-        "-}"
-      ]
-    ],
+    "extensions": ["hs"],
+    "line_comment": ["--"],
+    "multi_line": [["{-", "-}"]],
     "quotes": []
   },
   "Haxe": {
@@ -3676,18 +2784,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "hx"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["hx"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -3697,9 +2796,7 @@
   },
   "HEX": {
     "complexitychecks": [],
-    "extensions": [
-      "hex"
-    ],
+    "extensions": ["hex"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -3748,12 +2845,8 @@
       "=(",
       "!=("
     ],
-    "extensions": [
-      "hoon"
-    ],
-    "line_comment": [
-      "::"
-    ],
+    "extensions": ["hoon"],
+    "line_comment": ["::"],
     "multi_line": [],
     "quotes": [
       {
@@ -3771,17 +2864,9 @@
     ]
   },
   "HTML": {
-    "extensions": [
-      "html",
-      "htm"
-    ],
+    "extensions": ["html", "htm"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ]
-    ],
+    "multi_line": [["<!--", "-->"]],
     "quotes": [
       {
         "end": "\"",
@@ -3803,20 +2888,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "idl",
-      "webidl",
-      "widl"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["idl", "webidl", "widl"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -3838,19 +2912,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "idr",
-      "lidr"
-    ],
-    "line_comment": [
-      "--"
-    ],
-    "multi_line": [
-      [
-        "{-",
-        "-}"
-      ]
-    ],
+    "extensions": ["idr", "lidr"],
+    "line_comment": ["--"],
+    "multi_line": [["{-", "-}"]],
     "nestedmultiline": true,
     "quotes": [
       {
@@ -3866,31 +2930,20 @@
   "ignore": {
     "complexitychecks": [],
     "extensions": [],
-    "filenames": [
-      ".ignore"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "filenames": [".ignore"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": []
   },
   "INI": {
-    "extensions": [
-      "ini"
-    ],
-    "line_comment": [
-      "#",
-      ";"
-    ],
+    "extensions": ["ini"],
+    "line_comment": ["#", ";"],
     "multi_line": [],
     "quotes": []
   },
   "Intel HEX": {
     "complexitychecks": [],
-    "extensions": [
-      "ihex"
-    ],
+    "extensions": ["ihex"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -3909,29 +2962,13 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "thy"
-    ],
-    "line_comment": [
-      "--"
-    ],
+    "extensions": ["thy"],
+    "line_comment": ["--"],
     "multi_line": [
-      [
-        "{*",
-        "*}"
-      ],
-      [
-        "(*",
-        "*)"
-      ],
-      [
-        "‹",
-        "›"
-      ],
-      [
-        "\\\\<open>",
-        "\\\\<close>"
-      ]
+      ["{*", "*}"],
+      ["(*", "*)"],
+      ["‹", "›"],
+      ["\\\\<open>", "\\\\<close>"]
     ],
     "quotes": [
       {
@@ -3941,17 +2978,9 @@
     ]
   },
   "Jade": {
-    "complexitychecks": [
-      "if ",
-      "else if ",
-      "unless "
-    ],
-    "extensions": [
-      "jade"
-    ],
-    "line_comment": [
-      "//-"
-    ],
+    "complexitychecks": ["if ", "else if ", "unless "],
+    "extensions": ["jade"],
+    "line_comment": ["//-"],
     "multi_line": [],
     "quotes": []
   },
@@ -3969,18 +2998,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "jai"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["jai"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "nestedmultiline": true,
     "quotes": [
       {
@@ -4001,12 +3021,8 @@
       "(loop ",
       "(case "
     ],
-    "extensions": [
-      "janet"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["janet"],
+    "line_comment": ["#"],
     "multi_line": [],
     "nestedmultiline": false,
     "quotes": [
@@ -4038,18 +3054,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "java"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["java"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -4071,28 +3078,16 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "js",
-      "mjs"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["js", "mjs"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
         "start": "\""
       }
     ],
-    "shebangs": [
-      "node"
-    ]
+    "shebangs": ["node"]
   },
   "JavaServer Pages": {
     "complexitychecks": [
@@ -4108,18 +3103,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "jsp"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["jsp"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -4133,9 +3119,7 @@
   },
   "Jenkins Buildfile": {
     "complexitychecks": [],
-    "extensions": [
-      "jenkinsfile"
-    ],
+    "extensions": ["jenkinsfile"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -4161,43 +3145,23 @@
       "{% extends ",
       "{% with "
     ],
-    "extensions": [
-      "jinja",
-      "j2",
-      "jinja2"
-    ],
+    "extensions": ["jinja", "j2", "jinja2"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "{#",
-        "#}"
-      ]
-    ],
+    "multi_line": [["{#", "#}"]],
     "quotes": []
   },
   "JSON": {
     "complexitychecks": [],
-    "extensions": [
-      "json"
-    ],
+    "extensions": ["json"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
   },
   "JSONC": {
     "complexitychecks": [],
-    "extensions": [
-      "jsonc"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["jsonc"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -4207,37 +3171,16 @@
   },
   "JSONL": {
     "complexitychecks": [],
-    "extensions": [
-      "jsonl"
-    ],
+    "extensions": ["jsonl"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
   },
   "Jsonnet": {
-    "complexitychecks": [
-      "for",
-      "if",
-      "else",
-      "||",
-      "&&",
-      "!=",
-      "=="
-    ],
-    "extensions": [
-      "jsonnet",
-      "libsonnet"
-    ],
-    "line_comment": [
-      "#",
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "complexitychecks": ["for", "if", "else", "||", "&&", "!=", "=="],
+    "extensions": ["jsonnet", "libsonnet"],
+    "line_comment": ["#", "//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -4260,9 +3203,7 @@
         "start": "@'"
       }
     ],
-    "shebangs": [
-      "jsonnet"
-    ]
+    "shebangs": ["jsonnet"]
   },
   "JSX": {
     "complexitychecks": [
@@ -4278,18 +3219,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "jsx"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["jsx"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -4313,18 +3245,9 @@
       "|| ",
       "&& "
     ],
-    "extensions": [
-      "jl"
-    ],
-    "line_comment": [
-      "#"
-    ],
-    "multi_line": [
-      [
-        "#=",
-        "=#"
-      ]
-    ],
+    "extensions": ["jl"],
+    "line_comment": ["#"],
+    "multi_line": [["#=", "=#"]],
     "nestedmultiline": true,
     "quotes": [
       {
@@ -4351,18 +3274,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "julius"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["julius"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -4372,10 +3286,7 @@
   },
   "Jupyter": {
     "complexitychecks": [],
-    "extensions": [
-      "ipynb",
-      "jpynb"
-    ],
+    "extensions": ["ipynb", "jpynb"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -4394,12 +3305,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "justfile"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["justfile"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -4409,24 +3316,9 @@
     ]
   },
   "K": {
-    "complexitychecks": [
-      "'",
-      "/",
-      "\\",
-      "':",
-      "/:",
-      "\\:",
-      "|",
-      "&",
-      "!",
-      "="
-    ],
-    "extensions": [
-      "k"
-    ],
-    "line_comment": [
-      "/"
-    ],
+    "complexitychecks": ["'", "/", "\\", "':", "/:", "\\:", "|", "&", "!", "="],
+    "extensions": ["k"],
+    "line_comment": ["/"],
     "quotes": [
       {
         "end": "\"",
@@ -4448,15 +3340,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "ksh"
-    ],
-    "filenames": [
-      ".kshrc"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["ksh"],
+    "filenames": [".kshrc"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -4468,9 +3354,7 @@
         "start": "'"
       }
     ],
-    "shebangs": [
-      "ksh"
-    ]
+    "shebangs": ["ksh"]
   },
   "Kotlin": {
     "complexitychecks": [
@@ -4486,19 +3370,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "kt",
-      "kts"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["kt", "kts"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "nestedmultiline": true,
     "quotes": [
       {
@@ -4522,18 +3396,9 @@
       "== ",
       "match "
     ],
-    "extensions": [
-      "lalrpop"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["lalrpop"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "nestedmultiline": true,
     "quotes": [
       {
@@ -4560,12 +3425,8 @@
   },
   "LaTeX": {
     "complexitychecks": [],
-    "extensions": [
-      "tex"
-    ],
-    "line_comment": [
-      "%"
-    ],
+    "extensions": ["tex"],
+    "line_comment": ["%"],
     "multi_line": [],
     "quotes": []
   },
@@ -4583,18 +3444,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "lds"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["lds"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -4616,36 +3468,17 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "lean",
-      "hlean"
-    ],
-    "line_comment": [
-      "--"
-    ],
-    "multi_line": [
-      [
-        "/-",
-        "-/"
-      ]
-    ],
+    "extensions": ["lean", "hlean"],
+    "line_comment": ["--"],
+    "multi_line": [["/-", "-/"]],
     "nestedmultiline": true,
     "quotes": []
   },
   "LESS": {
     "complexitychecks": [],
-    "extensions": [
-      "less"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["less"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -4655,16 +3488,9 @@
   },
   "LEX": {
     "complexitychecks": [],
-    "extensions": [
-      "l"
-    ],
+    "extensions": ["l"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "multi_line": [["/*", "*/"]],
     "quotes": []
   },
   "License": {
@@ -4699,24 +3525,12 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "lisp",
-      "lsp"
-    ],
-    "line_comment": [
-      ";"
-    ],
-    "multi_line": [
-      [
-        "#|",
-        "|#"
-      ]
-    ],
+    "extensions": ["lisp", "lsp"],
+    "line_comment": [";"],
+    "multi_line": [["#|", "|#"]],
     "nestedmultiline": true,
     "quotes": [],
-    "shebangs": [
-      "sbcl"
-    ]
+    "shebangs": ["sbcl"]
   },
   "LLVM IR": {
     "complexitychecks": [
@@ -4737,12 +3551,8 @@
       "or ",
       "xor "
     ],
-    "extensions": [
-      "ll"
-    ],
-    "line_comment": [
-      ";"
-    ],
+    "extensions": ["ll"],
+    "line_comment": [";"],
     "multi_line": [],
     "quotes": [
       {
@@ -4763,19 +3573,9 @@
       "WTF?",
       "WTF? "
     ],
-    "extensions": [
-      "lol",
-      "lols"
-    ],
-    "line_comment": [
-      "BTW"
-    ],
-    "multi_line": [
-      [
-        "OBTW",
-        "TLDR"
-      ]
-    ],
+    "extensions": ["lol", "lols"],
+    "line_comment": ["BTW"],
+    "multi_line": [["OBTW", "TLDR"]],
     "quotes": [
       {
         "end": "\"",
@@ -4800,38 +3600,15 @@
       "~= ",
       "== "
     ],
-    "extensions": [
-      "lua",
-      "luau"
-    ],
-    "line_comment": [
-      "--"
-    ],
+    "extensions": ["lua", "luau"],
+    "line_comment": ["--"],
     "multi_line": [
-      [
-        "--[[",
-        "]]"
-      ],
-      [
-        "--[=[",
-        "]=]"
-      ],
-      [
-        "--[==[",
-        "]==]"
-      ],
-      [
-        "--[===[",
-        "]===]"
-      ],
-      [
-        "--[====[",
-        "]====]"
-      ],
-      [
-        "--[=====[",
-        "]=====]"
-      ]
+      ["--[[", "]]"],
+      ["--[=[", "]=]"],
+      ["--[==[", "]==]"],
+      ["--[===[", "]===]"],
+      ["--[====[", "]====]"],
+      ["--[=====[", "]=====]"]
     ],
     "quotes": [
       {
@@ -4847,9 +3624,7 @@
         "start": "]]"
       }
     ],
-    "shebangs": [
-      "lua"
-    ]
+    "shebangs": ["lua"]
   },
   "Luau": {
     "complexitychecks": [
@@ -4868,37 +3643,15 @@
       "~= ",
       "== "
     ],
-    "extensions": [
-      "luau"
-    ],
-    "line_comment": [
-      "--"
-    ],
+    "extensions": ["luau"],
+    "line_comment": ["--"],
     "multi_line": [
-      [
-        "--[[",
-        "]]"
-      ],
-      [
-        "--[=[",
-        "]=]"
-      ],
-      [
-        "--[==[",
-        "]==]"
-      ],
-      [
-        "--[===[",
-        "]===]"
-      ],
-      [
-        "--[====[",
-        "]====]"
-      ],
-      [
-        "--[=====[",
-        "]=====]"
-      ]
+      ["--[[", "]]"],
+      ["--[=[", "]=]"],
+      ["--[==[", "]==]"],
+      ["--[===[", "]===]"],
+      ["--[====[", "]====]"],
+      ["--[=====[", "]=====]"]
     ],
     "quotes": [
       {
@@ -4918,9 +3671,7 @@
         "start": "]]"
       }
     ],
-    "shebangs": [
-      "luau"
-    ]
+    "shebangs": ["luau"]
   },
   "Lucius": {
     "complexitychecks": [
@@ -4936,18 +3687,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "lucius"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["lucius"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -4957,12 +3699,8 @@
   },
   "Luna": {
     "complexitychecks": [],
-    "extensions": [
-      "luna"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["luna"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -4977,20 +3715,14 @@
   },
   "m4": {
     "complexitychecks": [],
-    "extensions": [
-      "m4"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["m4"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": []
   },
   "Macromedia eXtensible Markup Language": {
     "complexitychecks": [],
-    "extensions": [
-      "mxml"
-    ],
+    "extensions": ["mxml"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -5009,18 +3741,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "mad"
-    ],
-    "line_comment": [
-      "#"
-    ],
-    "multi_line": [
-      [
-        "{#",
-        "#}"
-      ]
-    ],
+    "extensions": ["mad"],
+    "line_comment": ["#"],
+    "multi_line": [["{#", "#}"]],
     "quotes": []
   },
   "Makefile": {
@@ -5037,19 +3760,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "makefile",
-      "mak",
-      "mk",
-      "bp"
-    ],
-    "filenames": [
-      "makefile",
-      "gnumakefile"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["makefile", "mak", "mk", "bp"],
+    "filenames": ["makefile", "gnumakefile"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": []
   },
@@ -5067,27 +3780,14 @@
       "<%namespace ",
       "<%inherit "
     ],
-    "extensions": [
-      "mako",
-      "mao"
-    ],
-    "line_comment": [
-      "##"
-    ],
-    "multi_line": [
-      [
-        "<%doc>",
-        "</%doc>"
-      ]
-    ],
+    "extensions": ["mako", "mao"],
+    "line_comment": ["##"],
+    "multi_line": [["<%doc>", "</%doc>"]],
     "quotes": []
   },
   "Markdown": {
     "complexitychecks": [],
-    "extensions": [
-      "md",
-      "markdown"
-    ],
+    "extensions": ["md", "markdown"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -5102,9 +3802,7 @@
       "for ",
       "while "
     ],
-    "extensions": [
-      "m"
-    ],
+    "extensions": ["m"],
     "keywords": [
       "eye(",
       "zeros(",
@@ -5131,15 +3829,8 @@
       "%",
       "fprintf("
     ],
-    "line_comment": [
-      "%"
-    ],
-    "multi_line": [
-      [
-        "%{",
-        "}%"
-      ]
-    ],
+    "line_comment": ["%"],
+    "multi_line": [["%{", "}%"]],
     "quotes": [
       {
         "end": "'",
@@ -5149,18 +3840,14 @@
   },
   "Max": {
     "complexitychecks": [],
-    "extensions": [
-      "maxpat"
-    ],
+    "extensions": ["maxpat"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
   },
   "MDX": {
     "complexitychecks": [],
-    "extensions": [
-      "mdx"
-    ],
+    "extensions": ["mdx"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -5175,13 +3862,8 @@
       "or ",
       "else "
     ],
-    "extensions": [
-      "meson.build",
-      "meson_options.txt"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["meson.build", "meson_options.txt"],
+    "line_comment": ["#"],
     "quotes": [
       {
         "end": "'",
@@ -5207,21 +3889,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "m3",
-      "mg",
-      "ig",
-      "i3"
-    ],
-    "line_comment": [
-      "#"
-    ],
-    "multi_line": [
-      [
-        "(*",
-        "*)"
-      ]
-    ],
+    "extensions": ["m3", "mg", "ig", "i3"],
+    "line_comment": ["#"],
+    "multi_line": [["(*", "*)"]],
     "quotes": [
       {
         "end": "\"",
@@ -5243,12 +3913,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "def"
-    ],
-    "line_comment": [
-      ";"
-    ],
+    "extensions": ["def"],
+    "line_comment": [";"],
     "multi_line": [],
     "quotes": []
   },
@@ -5266,18 +3932,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "mc"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["mc"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -5299,18 +3956,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "mqh"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["mqh"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -5332,18 +3980,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "mq4"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["mq4"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -5365,18 +4004,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "mq5"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["mq5"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -5385,9 +4015,7 @@
     ]
   },
   "MSBuild": {
-    "complexitychecks": [
-      "Condition"
-    ],
+    "complexitychecks": ["Condition"],
     "extensions": [
       "csproj",
       "vbproj",
@@ -5405,12 +4033,7 @@
       "targets"
     ],
     "line_comment": [],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ]
-    ],
+    "multi_line": [["<!--", "-->"]],
     "quotes": [
       {
         "end": "\"",
@@ -5432,12 +4055,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "mps"
-    ],
-    "line_comment": [
-      ";"
-    ],
+    "extensions": ["mps"],
+    "line_comment": [";"],
     "multi_line": [],
     "quotes": [
       {
@@ -5460,16 +4079,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "mustache"
-    ],
+    "extensions": ["mustache"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "{{!",
-        "}}"
-      ]
-    ],
+    "multi_line": [["{{!", "}}"]],
     "quotes": [
       {
         "end": "\\\"",
@@ -5495,12 +4107,8 @@
       "~= ",
       "unequal "
     ],
-    "extensions": [
-      "ndf"
-    ],
-    "line_comment": [
-      "%"
-    ],
+    "extensions": ["ndf"],
+    "line_comment": ["%"],
     "multi_line": [],
     "quotes": [
       {
@@ -5523,12 +4131,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "nim"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["nim"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -5555,18 +4159,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "nix"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["nix"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -5585,12 +4180,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "nu"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["nu"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -5602,21 +4193,12 @@
         "start": "'"
       }
     ],
-    "shebangs": [
-      "nu"
-    ]
+    "shebangs": ["nu"]
   },
   "nuspec": {
-    "extensions": [
-      "nuspec"
-    ],
+    "extensions": ["nuspec"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ]
-    ],
+    "multi_line": [["<!--", "-->"]],
     "quotes": [
       {
         "end": "\"",
@@ -5638,9 +4220,7 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "m"
-    ],
+    "extensions": ["m"],
     "keywords": [
       "#include",
       "printf",
@@ -5658,15 +4238,8 @@
       "@end",
       "//"
     ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -5688,18 +4261,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "mm"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["mm"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -5721,17 +4285,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "ml",
-      "mli"
-    ],
+    "extensions": ["ml", "mli"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "(*",
-        "*)"
-      ]
-    ],
+    "multi_line": [["(*", "*)"]],
     "quotes": [
       {
         "end": "\"",
@@ -5754,18 +4310,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "odin"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["odin"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -5787,18 +4334,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "opa"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["opa"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -5822,18 +4360,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "qasm"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["qasm"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -5855,12 +4384,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "org"
-    ],
-    "line_comment": [
-      "# "
-    ],
+    "extensions": ["org"],
+    "line_comment": ["# "],
     "multi_line": [],
     "quotes": []
   },
@@ -5878,18 +4403,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "oz"
-    ],
-    "line_comment": [
-      "%"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["oz"],
+    "line_comment": ["%"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -5911,22 +4427,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "pas"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "{",
-        "}"
-      ],
-      [
-        "(*",
-        "*)"
-      ]
-    ],
+    "extensions": ["pas"],
+    "line_comment": ["//"],
+    "multi_line": [["{", "}"], ["(*", "*)"]],
     "quotes": [
       {
         "end": "'",
@@ -5936,9 +4439,7 @@
   },
   "Patch": {
     "complexitychecks": [],
-    "extensions": [
-      "patch"
-    ],
+    "extensions": ["patch"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -5957,19 +4458,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "pl",
-      "pm"
-    ],
-    "line_comment": [
-      "#"
-    ],
-    "multi_line": [
-      [
-        "=pod",
-        "=cut"
-      ]
-    ],
+    "extensions": ["pl", "pm"],
+    "line_comment": ["#"],
+    "multi_line": [["=pod", "=cut"]],
     "quotes": [
       {
         "end": "\\\"",
@@ -5980,10 +4471,7 @@
         "start": "'"
       }
     ],
-    "shebangs": [
-      "perl",
-      "perl5"
-    ]
+    "shebangs": ["perl", "perl5"]
   },
   "PHP": {
     "complexitychecks": [
@@ -5999,19 +4487,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "php"
-    ],
-    "line_comment": [
-      "#",
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["php"],
+    "line_comment": ["#", "//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\\\"",
@@ -6022,10 +4500,7 @@
         "start": "'"
       }
     ],
-    "shebangs": [
-      "php",
-      "php5"
-    ]
+    "shebangs": ["php", "php5"]
   },
   "Picat": {
     "complexitychecks": [
@@ -6043,18 +4518,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "pi"
-    ],
-    "line_comment": [
-      "%"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["pi"],
+    "line_comment": ["%"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -6064,9 +4530,7 @@
   },
   "PKGBUILD": {
     "complexitychecks": [],
-    "extensions": [
-      "pkgbuild"
-    ],
+    "extensions": ["pkgbuild"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -6084,18 +4548,9 @@
       "when ",
       "..."
     ],
-    "extensions": [
-      "pkl"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["pkl"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -6136,23 +4591,9 @@
       "= ",
       "=("
     ],
-    "extensions": [
-      "fnc",
-      "pkb",
-      "pks",
-      "prc",
-      "trg",
-      "vw"
-    ],
-    "line_comment": [
-      "--"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["fnc", "pkb", "pks", "prc", "trg", "vw"],
+    "line_comment": ["--"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "'",
@@ -6162,10 +4603,7 @@
   },
   "Plain Text": {
     "complexitychecks": [],
-    "extensions": [
-      "text",
-      "txt"
-    ],
+    "extensions": ["text", "txt"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -6184,16 +4622,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "polly"
-    ],
+    "extensions": ["polly"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ]
-    ],
+    "multi_line": [["<!--", "-->"]],
     "quotes": [
       {
         "end": "\"",
@@ -6216,18 +4647,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "pony"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["pony"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -6265,19 +4687,9 @@
       "-contains",
       "-notcontains"
     ],
-    "extensions": [
-      "ps1",
-      "psm1"
-    ],
-    "line_comment": [
-      "#"
-    ],
-    "multi_line": [
-      [
-        "<#",
-        "#>"
-      ]
-    ],
+    "extensions": ["ps1", "psm1"],
+    "line_comment": ["#"],
+    "multi_line": [["<#", "#>"]],
     "quotes": [
       {
         "end": "\"",
@@ -6299,18 +4711,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "pde"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["pde"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -6332,19 +4735,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "p",
-      "pro"
-    ],
-    "line_comment": [
-      "%"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["p", "pro"],
+    "line_comment": ["%"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -6354,12 +4747,8 @@
   },
   "Properties File": {
     "complexitychecks": [],
-    "extensions": [
-      "properties"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["properties"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": []
   },
@@ -6377,35 +4766,15 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "proto"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["proto"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": []
   },
   "PRQL": {
-    "complexitychecks": [
-      "case ",
-      "&& ",
-      "|| ",
-      "!= ",
-      "== ",
-      "~= "
-    ],
-    "extensions": [
-      "prql"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "complexitychecks": ["case ", "&& ", "|| ", "!= ", "== ", "~= "],
+    "extensions": ["prql"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -6452,18 +4821,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "psl"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["psl"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -6485,18 +4845,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "pp"
-    ],
-    "line_comment": [
-      "#"
-    ],
-    "multi_line": [
-      [
-        "=begin",
-        "=end"
-      ]
-    ],
+    "extensions": ["pp"],
+    "line_comment": ["#"],
+    "multi_line": [["=begin", "=end"]],
     "quotes": [
       {
         "end": "\\\"",
@@ -6522,18 +4873,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "purs"
-    ],
-    "line_comment": [
-      "--"
-    ],
-    "multi_line": [
-      [
-        "{-",
-        "-}"
-      ]
-    ],
+    "extensions": ["purs"],
+    "line_comment": ["--"],
+    "multi_line": [["{-", "-}"]],
     "quotes": []
   },
   "Python": {
@@ -6563,14 +4905,8 @@
       "or ",
       "or("
     ],
-    "extensions": [
-      "py",
-      "pyw",
-      "pyi"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["py", "pyw", "pyi"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -6602,11 +4938,7 @@
         "start": "r'''"
       }
     ],
-    "shebangs": [
-      "python",
-      "python2",
-      "python3"
-    ]
+    "shebangs": ["python", "python2", "python3"]
   },
   "Q#": {
     "complexitychecks": [
@@ -6631,12 +4963,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "qs"
-    ],
-    "line_comment": [
-      "//"
-    ],
+    "extensions": ["qs"],
+    "line_comment": ["//"],
     "multi_line": [],
     "quotes": [
       {
@@ -6659,18 +4987,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "qcl"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["qcl"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -6692,18 +5011,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "qml"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["qml"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -6725,17 +5035,11 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "r"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["r"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [],
-    "shebangs": [
-      "Rscript"
-    ]
+    "shebangs": ["Rscript"]
   },
   "Racket": {
     "complexitychecks": [
@@ -6755,18 +5059,9 @@
       "(shared",
       "(case"
     ],
-    "extensions": [
-      "rkt"
-    ],
-    "line_comment": [
-      ";"
-    ],
-    "multi_line": [
-      [
-        "|#",
-        "#|"
-      ]
-    ],
+    "extensions": ["rkt"],
+    "line_comment": [";"],
+    "multi_line": [["|#", "#|"]],
     "nestedmultiline": true,
     "quotes": [
       {
@@ -6774,9 +5069,7 @@
         "start": "\""
       }
     ],
-    "shebangs": [
-      "racket"
-    ]
+    "shebangs": ["racket"]
   },
   "Rakefile": {
     "complexitychecks": [
@@ -6793,19 +5086,9 @@
       "== "
     ],
     "extensions": [],
-    "filenames": [
-      "rake",
-      "rakefile"
-    ],
-    "line_comment": [
-      "#"
-    ],
-    "multi_line": [
-      [
-        "=begin",
-        "=end"
-      ]
-    ],
+    "filenames": ["rake", "rakefile"],
+    "line_comment": ["#"],
+    "multi_line": [["=begin", "=end"]],
     "quotes": [
       {
         "end": "\\\"",
@@ -6888,37 +5171,14 @@
       "with ",
       "without "
     ],
-    "extensions": [
-      "raku",
-      "rakumod",
-      "rakutest",
-      "rakudoc",
-      "t"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["raku", "rakumod", "rakutest", "rakudoc", "t"],
+    "line_comment": ["#"],
     "multi_line": [
-      [
-        "=begin",
-        "=end"
-      ],
-      [
-        "#`(",
-        ")"
-      ],
-      [
-        "#`[",
-        "]"
-      ],
-      [
-        "#`{",
-        "}"
-      ],
-      [
-        "#`｢",
-        "｣"
-      ]
+      ["=begin", "=end"],
+      ["#`(", ")"],
+      ["#`[", "]"],
+      ["#`{", "}"],
+      ["#`｢", "｣"]
     ],
     "quotes": [
       {
@@ -6954,9 +5214,7 @@
         "start": "｢"
       }
     ],
-    "shebangs": [
-      "raku"
-    ]
+    "shebangs": ["raku"]
   },
   "Razor": {
     "complexitychecks": [
@@ -6972,21 +5230,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "cshtml",
-      "razor"
-    ],
+    "extensions": ["cshtml", "razor"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ],
-      [
-        "@*",
-        "*@"
-      ]
-    ],
+    "multi_line": [["<!--", "-->"], ["@*", "*@"]],
     "quotes": []
   },
   "ReasonML": {
@@ -7003,19 +5249,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "re",
-      "rei"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["re", "rei"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -7025,16 +5261,9 @@
   },
   "Report Definition Language": {
     "complexitychecks": [],
-    "extensions": [
-      "rdl"
-    ],
+    "extensions": ["rdl"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ]
-    ],
+    "multi_line": [["<!--", "-->"]],
     "quotes": [
       {
         "end": "\"",
@@ -7057,19 +5286,9 @@
       "== ",
       "=== "
     ],
-    "extensions": [
-      "res",
-      "resi"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["res", "resi"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -7079,18 +5298,14 @@
   },
   "ReStructuredText": {
     "complexitychecks": [],
-    "extensions": [
-      "rst"
-    ],
+    "extensions": ["rst"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
   },
   "Robot Framework": {
     "complexitychecks": [],
-    "extensions": [
-      "robot"
-    ],
+    "extensions": ["robot"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -7109,18 +5324,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "rb"
-    ],
-    "line_comment": [
-      "#"
-    ],
-    "multi_line": [
-      [
-        "=begin",
-        "=end"
-      ]
-    ],
+    "extensions": ["rb"],
+    "line_comment": ["#"],
+    "multi_line": [["=begin", "=end"]],
     "quotes": [
       {
         "end": "\\\"",
@@ -7131,9 +5337,7 @@
         "start": "'"
       }
     ],
-    "shebangs": [
-      "ruby"
-    ]
+    "shebangs": ["ruby"]
   },
   "Ruby HTML": {
     "complexitychecks": [
@@ -7149,17 +5353,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "rhtml",
-      "erb"
-    ],
+    "extensions": ["rhtml", "erb"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ]
-    ],
+    "multi_line": [["<!--", "-->"]],
     "quotes": [
       {
         "end": "\"",
@@ -7182,18 +5378,9 @@
       "== ",
       "match "
     ],
-    "extensions": [
-      "rs"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["rs"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "nestedmultiline": true,
     "quotes": [
       {
@@ -7219,18 +5406,9 @@
       "ne",
       "eq"
     ],
-    "extensions": [
-      "sas"
-    ],
-    "line_comment": [
-      "*"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["sas"],
+    "line_comment": ["*"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -7256,19 +5434,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "sass",
-      "scss"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["sass", "scss"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -7290,19 +5458,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "sc",
-      "scala"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["sc", "scala"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -7324,19 +5482,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "scm",
-      "ss"
-    ],
-    "line_comment": [
-      ";"
-    ],
-    "multi_line": [
-      [
-        "#|",
-        "|#"
-      ]
-    ],
+    "extensions": ["scm", "ss"],
+    "line_comment": [";"],
+    "multi_line": [["#|", "|#"]],
     "nestedmultiline": true,
     "quotes": [],
     "shebangs": []
@@ -7355,14 +5503,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "csig",
-      "sconstruct",
-      "sconscript"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["csig", "sconstruct", "sconscript"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -7397,17 +5539,11 @@
       "not ",
       "in "
     ],
-    "extensions": [
-      "sed"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["sed"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [],
-    "shebangs": [
-      "sed"
-    ]
+    "shebangs": ["sed"]
   },
   "Shell": {
     "complexitychecks": [
@@ -7423,15 +5559,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "sh"
-    ],
-    "filenames": [
-      ".tcshrc"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["sh"],
+    "filenames": [".tcshrc"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -7443,9 +5573,7 @@
         "start": "'"
       }
     ],
-    "shebangs": [
-      "sh"
-    ]
+    "shebangs": ["sh"]
   },
   "Sieve": {
     "complexitychecks": [
@@ -7460,18 +5588,9 @@
       "allof(",
       "anyof("
     ],
-    "extensions": [
-      "sieve"
-    ],
-    "line_comment": [
-      "#"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["sieve"],
+    "line_comment": ["#"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -7493,18 +5612,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "il"
-    ],
-    "line_comment": [
-      ";"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["il"],
+    "line_comment": [";"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -7526,18 +5636,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "slang"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["slang"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -7558,18 +5659,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "slint"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["slint"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -7592,16 +5684,9 @@
       "== ",
       "include "
     ],
-    "extensions": [
-      "tpl"
-    ],
+    "extensions": ["tpl"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "{*",
-        "*}"
-      ]
-    ],
+    "multi_line": [["{*", "*}"]],
     "quotes": []
   },
   "Snakemake": {
@@ -7631,16 +5716,9 @@
       "or ",
       "or("
     ],
-    "extensions": [
-      "smk",
-      "rules"
-    ],
-    "filenames": [
-      "snakefile"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["smk", "rules"],
+    "filenames": ["snakefile"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -7674,19 +5752,9 @@
     ]
   },
   "SNOBOL": {
-    "complexitychecks": [
-      ":(",
-      ":s(",
-      ":f(",
-      "eq ",
-      "ne "
-    ],
-    "extensions": [
-      "sno"
-    ],
-    "line_comment": [
-      "*"
-    ],
+    "complexitychecks": [":(", ":s(", ":f(", "eq ", "ne "],
+    "extensions": ["sno"],
+    "line_comment": ["*"],
     "quotes": [
       {
         "end": "\"",
@@ -7713,12 +5781,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "sbl"
-    ],
-    "line_comment": [
-      "'"
-    ],
+    "extensions": ["sbl"],
+    "line_comment": ["'"],
     "multi_line": [],
     "quotes": [
       {
@@ -7745,18 +5809,9 @@
       "unchecked ",
       "unchecked{"
     ],
-    "extensions": [
-      "sol"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["sol"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -7766,9 +5821,7 @@
   },
   "SPDX": {
     "complexitychecks": [],
-    "extensions": [
-      "spdx"
-    ],
+    "extensions": ["spdx"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -7787,19 +5840,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "e"
-    ],
-    "line_comment": [
-      "--",
-      "//"
-    ],
-    "multi_line": [
-      [
-        "'>",
-        "<'"
-      ]
-    ],
+    "extensions": ["e"],
+    "line_comment": ["--", "//"],
+    "multi_line": [["'>", "<'"]],
     "quotes": []
   },
   "Spice Netlist": {
@@ -7816,12 +5859,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "ckt"
-    ],
-    "line_comment": [
-      "*"
-    ],
+    "extensions": ["ckt"],
+    "line_comment": ["*"],
     "multi_line": [],
     "quotes": []
   },
@@ -7839,21 +5878,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "sql",
-      "dml",
-      "ddl",
-      "dql"
-    ],
-    "line_comment": [
-      "--"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["sql", "dml", "ddl", "dql"],
+    "line_comment": ["--"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "'",
@@ -7875,12 +5902,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "srt"
-    ],
-    "line_comment": [
-      ";;"
-    ],
+    "extensions": ["srt"],
+    "line_comment": [";;"],
     "multi_line": [],
     "quotes": []
   },
@@ -7898,16 +5921,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "sml"
-    ],
+    "extensions": ["sml"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "(*",
-        "*)"
-      ]
-    ],
+    "multi_line": [["(*", "*)"]],
     "quotes": [
       {
         "end": "\"",
@@ -7928,20 +5944,9 @@
       "!=",
       "=="
     ],
-    "extensions": [
-      "do",
-      "ado"
-    ],
-    "line_comment": [
-      "//",
-      "*"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["do", "ado"],
+    "line_comment": ["//", "*"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -7964,18 +5969,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "styl"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["styl"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -7997,22 +5993,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "svelte"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ],
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["svelte"],
+    "line_comment": ["//"],
+    "multi_line": [["<!--", "-->"], ["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -8034,16 +6017,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "svg"
-    ],
+    "extensions": ["svg"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ]
-    ],
+    "multi_line": [["<!--", "-->"]],
     "quotes": [
       {
         "end": "\"",
@@ -8065,18 +6041,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "swift"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["swift"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "nestedmultiline": true,
     "quotes": [
       {
@@ -8087,16 +6054,9 @@
   },
   "Swig": {
     "complexitychecks": [],
-    "extensions": [
-      "i"
-    ],
+    "extensions": ["i"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -8154,26 +6114,10 @@
       "with",
       "event "
     ],
-    "extensions": [
-      "sv",
-      "svh"
-    ],
-    "keywords": [
-      "endmodule",
-      "posedge",
-      "edge",
-      "always",
-      "wire"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["sv", "svh"],
+    "keywords": ["endmodule", "posedge", "edge", "always", "wire"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -8183,9 +6127,7 @@
   },
   "TaskPaper": {
     "complexitychecks": [],
-    "extensions": [
-      "taskpaper"
-    ],
+    "extensions": ["taskpaper"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -8204,12 +6146,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "tcl"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["tcl"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -8221,9 +6159,7 @@
         "start": "'"
       }
     ],
-    "shebangs": [
-      "tcl"
-    ]
+    "shebangs": ["tcl"]
   },
   "Teal": {
     "complexitychecks": [
@@ -8236,12 +6172,8 @@
       "<=",
       ">="
     ],
-    "extensions": [
-      "teal"
-    ],
-    "line_comment": [
-      "//"
-    ],
+    "extensions": ["teal"],
+    "line_comment": ["//"],
     "multi_line": [],
     "quotes": []
   },
@@ -8258,18 +6190,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "templ"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["templ"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -8296,17 +6219,9 @@
       "[% UNLESS",
       "[% WRAPPER"
     ],
-    "extensions": [
-      "tt",
-      "tt2"
-    ],
+    "extensions": ["tt", "tt2"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "[%#",
-        "%]"
-      ]
-    ],
+    "multi_line": [["[%#", "%]"]],
     "quotes": []
   },
   "Terraform": {
@@ -8326,20 +6241,9 @@
       "<= ",
       "== "
     ],
-    "extensions": [
-      "tf",
-      "tf.json"
-    ],
-    "line_comment": [
-      "#",
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["tf", "tf.json"],
+    "line_comment": ["#", "//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": []
   },
   "TeX": {
@@ -8356,47 +6260,23 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "tex",
-      "sty"
-    ],
-    "line_comment": [
-      "%"
-    ],
+    "extensions": ["tex", "sty"],
+    "line_comment": ["%"],
     "multi_line": [],
     "quotes": []
   },
   "Textile": {
     "complexitychecks": [],
-    "extensions": [
-      "textile"
-    ],
-    "line_comment": [
-      "###. "
-    ],
-    "multi_line": [
-      [
-        "###.. ",
-        "p. "
-      ]
-    ],
+    "extensions": ["textile"],
+    "line_comment": ["###. "],
+    "multi_line": [["###.. ", "p. "]],
     "quotes": []
   },
   "Thrift": {
     "complexitychecks": [],
-    "extensions": [
-      "thrift"
-    ],
-    "line_comment": [
-      "//",
-      "#"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["thrift"],
+    "line_comment": ["//", "#"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -8410,19 +6290,9 @@
   },
   "TL": {
     "complexitychecks": [],
-    "extensions": [
-      "tl"
-    ],
-    "line_comment": [
-      "//",
-      "///"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["tl"],
+    "line_comment": ["//", "///"],
+    "multi_line": [["/*", "*/"]],
     "quotes": []
   },
   "TOML": {
@@ -8439,12 +6309,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "toml"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["toml"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -8466,15 +6332,8 @@
     ]
   },
   "Twig Template": {
-    "complexitychecks": [
-      "{% for ",
-      "{% if ",
-      "{% else ",
-      "{% elseif "
-    ],
-    "extensions": [
-      "twig"
-    ],
+    "complexitychecks": ["{% for ", "{% if ", "{% else ", "{% elseif "],
+    "extensions": ["twig"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -8511,19 +6370,9 @@
       "inside",
       "with"
     ],
-    "extensions": [
-      "ts",
-      "tsx"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["ts", "tsx"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -8563,18 +6412,9 @@
       "inside",
       "with"
     ],
-    "extensions": [
-      "d.ts"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["d.ts"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -8588,18 +6428,9 @@
   },
   "TypeSpec": {
     "complexitychecks": [],
-    "extensions": [
-      "tsp"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["tsp"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -8613,18 +6444,9 @@
     ]
   },
   "Typst": {
-    "extensions": [
-      "typ"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["typ"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "nestedmultiline": true,
     "quotes": [
       {
@@ -8647,20 +6469,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "uc",
-      "uci",
-      "upkg"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["uc", "uci", "upkg"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -8682,17 +6493,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "ur",
-      "urs"
-    ],
+    "extensions": ["ur", "urs"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "(*",
-        "*)"
-      ]
-    ],
+    "multi_line": [["(*", "*)"]],
     "quotes": [
       {
         "end": "\"",
@@ -8714,12 +6517,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "urp"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["urp"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": []
   },
@@ -8737,9 +6536,7 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "v"
-    ],
+    "extensions": ["v"],
     "keywords": [
       "break",
       "const ",
@@ -8760,9 +6557,7 @@
       "struct ",
       "type "
     ],
-    "line_comment": [
-      "//"
-    ],
+    "line_comment": ["//"],
     "multi_line": [],
     "quotes": [
       {
@@ -8789,18 +6584,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "vala"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["vala"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -8810,19 +6596,9 @@
   },
   "Varnish Configuration": {
     "complexitychecks": [],
-    "extensions": [
-      "vcl"
-    ],
-    "line_comment": [
-      "#",
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["vcl"],
+    "line_comment": ["#", "//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": []
   },
   "Verilog": {
@@ -8839,11 +6615,7 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "vg",
-      "vh",
-      "v"
-    ],
+    "extensions": ["vg", "vh", "v"],
     "keywords": [
       "module",
       "endmodule",
@@ -8868,15 +6640,8 @@
       "generate",
       "genvar"
     ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -8886,10 +6651,7 @@
   },
   "Verilog Args File": {
     "complexitychecks": [],
-    "extensions": [
-      "irunargs",
-      "xrunargs"
-    ],
+    "extensions": ["irunargs", "xrunargs"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -8908,18 +6670,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "vsh"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["vsh"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -8941,10 +6694,7 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "vhd",
-      "vhdl"
-    ],
+    "extensions": ["vhd", "vhdl"],
     "keywords": [
       "abs",
       "access",
@@ -9044,9 +6794,7 @@
       "xnor",
       "xor"
     ],
-    "line_comment": [
-      "--"
-    ],
+    "line_comment": ["--"],
     "multi_line": [],
     "quotes": []
   },
@@ -9064,23 +6812,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "vim",
-      "vimrc",
-      "gvimrc"
-    ],
-    "filenames": [
-      "_vimrc",
-      ".vimrc",
-      "_gvimrc",
-      ".gvimrc",
-      "vimrc",
-      "gvimrc"
-    ],
-    "line_comment": [
-      "\"",
-      "#"
-    ],
+    "extensions": ["vim", "vimrc", "gvimrc"],
+    "filenames": ["_vimrc", ".vimrc", "_gvimrc", ".gvimrc", "vimrc", "gvimrc"],
+    "line_comment": ["\"", "#"],
     "multi_line": [],
     "quotes": [
       {
@@ -9108,12 +6842,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "vb"
-    ],
-    "line_comment": [
-      "'"
-    ],
+    "extensions": ["vb"],
+    "line_comment": ["'"],
     "multi_line": [],
     "quotes": [
       {
@@ -9137,12 +6867,8 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "cls"
-    ],
-    "line_comment": [
-      "'"
-    ],
+    "extensions": ["cls"],
+    "line_comment": ["'"],
     "multi_line": [],
     "quotes": [
       {
@@ -9165,22 +6891,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "vue"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ],
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["vue"],
+    "line_comment": ["//"],
+    "multi_line": [["<!--", "-->"], ["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -9193,16 +6906,9 @@
     ]
   },
   "Web Services Description Language": {
-    "extensions": [
-      "wsdl"
-    ],
+    "extensions": ["wsdl"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ]
-    ],
+    "multi_line": [["<!--", "-->"]],
     "quotes": [
       {
         "end": "\"",
@@ -9225,18 +6931,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "wgsl"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ]
+    "extensions": ["wgsl"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]]
   },
   "wenyan": {
     "complexitychecks": [
@@ -9254,14 +6951,8 @@
       "中之",
       "遍"
     ],
-    "extensions": [
-      "wy"
-    ],
-    "line_comment": [
-      "批曰",
-      "注曰",
-      "疏曰"
-    ],
+    "extensions": ["wy"],
+    "line_comment": ["批曰", "注曰", "疏曰"],
     "multi_line": [],
     "quotes": [
       {
@@ -9271,9 +6962,7 @@
     ]
   },
   "Windows Resource-Definition Script": {
-    "extensions": [
-      "rc"
-    ],
+    "extensions": ["rc"],
     "keywords": [
       "#include",
       "#define",
@@ -9288,15 +6977,8 @@
       "StringFileInfo",
       "VarFileInfo"
     ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -9318,17 +7000,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "nb",
-      "wl"
-    ],
+    "extensions": ["nb", "wl"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "(*",
-        "*)"
-      ]
-    ],
+    "multi_line": [["(*", "*)"]],
     "quotes": [
       {
         "end": "\"",
@@ -9350,18 +7024,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "wren"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["wren"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "nestedmultiline": true,
     "quotes": [
       {
@@ -9384,16 +7049,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "xaml"
-    ],
+    "extensions": ["xaml"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ]
-    ],
+    "multi_line": [["<!--", "-->"]],
     "quotes": [
       {
         "end": "\"",
@@ -9403,26 +7061,15 @@
   },
   "Xcode Config": {
     "complexitychecks": [],
-    "extensions": [
-      "xcconfig"
-    ],
-    "line_comment": [
-      "//"
-    ],
+    "extensions": ["xcconfig"],
+    "line_comment": ["//"],
     "multi_line": [],
     "quotes": []
   },
   "XML": {
-    "extensions": [
-      "xml"
-    ],
+    "extensions": ["xml"],
     "line_comment": [],
-    "multi_line": [
-      [
-        "<!--",
-        "-->"
-      ]
-    ],
+    "multi_line": [["<!--", "-->"]],
     "quotes": [
       {
         "end": "\"",
@@ -9432,9 +7079,7 @@
   },
   "XML Schema": {
     "complexitychecks": [],
-    "extensions": [
-      "xsd"
-    ],
+    "extensions": ["xsd"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -9453,18 +7098,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "xtend"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ],
+    "extensions": ["xtend"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
@@ -9474,13 +7110,8 @@
   },
   "YAML": {
     "complexitychecks": [],
-    "extensions": [
-      "yaml",
-      "yml"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["yaml", "yml"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": []
   },
@@ -9508,9 +7139,7 @@
       " || ",
       " or "
     ],
-    "extensions": [
-      "yarn"
-    ],
+    "extensions": ["yarn"],
     "line_comment": [],
     "quotes": []
   },
@@ -9527,12 +7156,8 @@
       "!=",
       "=="
     ],
-    "extensions": [
-      "zig"
-    ],
-    "line_comment": [
-      "//"
-    ],
+    "extensions": ["zig"],
+    "line_comment": ["//"],
     "quotes": [
       {
         "end": "\\\"",
@@ -9556,18 +7181,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "zok"
-    ],
-    "line_comment": [
-      "//"
-    ],
-    "multi_line": [
-      [
-        "/*",
-        "*/"
-      ]
-    ]
+    "extensions": ["zok"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]]
   },
   "Zsh": {
     "complexitychecks": [
@@ -9583,24 +7199,9 @@
       "!= ",
       "== "
     ],
-    "extensions": [
-      "zsh",
-      "zshenv",
-      "zlogin",
-      "zlogout",
-      "zprofile",
-      "zshrc"
-    ],
-    "filenames": [
-      ".zshenv",
-      ".zlogin",
-      ".zlogout",
-      ".zprofile",
-      ".zshrc"
-    ],
-    "line_comment": [
-      "#"
-    ],
+    "extensions": ["zsh", "zshenv", "zlogin", "zlogout", "zprofile", "zshrc"],
+    "filenames": [".zshenv", ".zlogin", ".zlogout", ".zprofile", ".zshrc"],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
@@ -9612,8 +7213,6 @@
         "start": "'"
       }
     ],
-    "shebangs": [
-      "zsh"
-    ]
+    "shebangs": ["zsh"]
   }
 }
