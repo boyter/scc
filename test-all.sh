@@ -976,6 +976,7 @@ specificLanguages=(
     'Slang '
     'Slint '
     'Snakemake '
+    'Stan '
     'Teal '
     'Templ '
     'Terraform '
