@@ -936,6 +936,7 @@ specificLanguages=(
     'Clipper '
     'Clojure '
     'Cuda '
+    'DAML '
     'DM '
     'Docker ignore '
     'Dockerfile '

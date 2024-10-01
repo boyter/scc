@@ -1650,6 +1650,24 @@
     ],
     "shebangs": ["rdmd"]
   },
+  "DAML": {
+    "complexitychecks": [
+      "if ",
+      "then ",
+      "else ",
+      "|| ",
+      "&& ",
+      "/= ",
+      "== ",
+      "case ",
+      "do {",
+      "forall "
+    ],
+    "extensions": ["daml"],
+    "line_comment": ["--"],
+    "multi_line": [["{-", "-}"]],
+    "quotes": []
+  },
   "DM": {
     "complexitychecks": [
       "for ",
