@@ -982,6 +982,7 @@ specificLanguages=(
     'Sieve '
     'Slang '
     'Slint '
+    'Smalltalk '
     'Snakemake '
     'Stan '
     'Teal '
