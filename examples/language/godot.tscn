@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3 uid="uid://bam4cbdd6h24e"]
+
+[ext_resource type="Texture2D" uid="uid://dw1aad3whrra0" path="res://assets/sprites/cavesofgallet_tiles.png" id="1_27u2s"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_2rh4h"]
+size = Vector2(9, 1)
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_72i7s"]
+polygon = PackedVector2Array(-4, 0, 4, 0, 4, -1, -4, -1)
+
+[node name="Sprite2D" type="Sprite2D"]
+texture = ExtResource("1_27u2s")
+region_enabled = true
+region_rect = Rect2(49, 8, 9, 1)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+shape = SubResource("RectangleShape2D_2rh4h")
+one_way_collision = true
+
+[node name="LightOccluder2D" type="LightOccluder2D" parent="."]
+position = Vector2(0, 1)
+occluder = SubResource("OccluderPolygon2D_72i7s")

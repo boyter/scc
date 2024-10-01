@@ -2401,16 +2401,16 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
         "start": "'"
       },
       {
-        "end": "\\\"\\\"\\\"",
-        "start": "\\\"\\\"\\\""
+        "end": "\"\"\"",
+        "start": "\"\"\""
       }
     ]
   },
@@ -2577,6 +2577,13 @@
     "extensions": ["tmpl", "gohtml", "gotxt"],
     "line_comment": [],
     "multi_line": [["{{/*", "*/}}"]],
+    "quotes": []
+  },
+  "Godot Scene": {
+    "complexitychecks": [],
+    "extensions": ["tscn"],
+    "line_comment": [],
+    "multi_line": [],
     "quotes": []
   },
   "Gradle": {

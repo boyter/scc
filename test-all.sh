@@ -952,6 +952,7 @@ specificLanguages=(
     'Gemfile '
     'Gleam '
     'Go '
+    'Godot Scene '
     'GraphQL '
     'Gwion '
     'HAML '
