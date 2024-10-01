@@ -1066,3 +1066,12 @@ You can find the source code for badges in the repository at https://github.com/
 List of supported languages. The master version of `scc` supports 239 languages at last count. Note that this is always assumed that you built from master, and it might trail behind what is actually supported. To see what your version of `scc` supports run `scc --languages`
 
 [Click here to view all languages supported by master](LANGUAGES.md)
+
+
+### Release Checklist
+
+- Update version
+- Push code with release number
+- Tag off
+- Release via goreleaser
+- Update dockerfile
