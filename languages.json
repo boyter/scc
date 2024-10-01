@@ -5716,6 +5716,35 @@
       }
     ]
   },
+  "Smalltalk": {
+    "complexitychecks": [
+      "bitAnd ",
+      "bitOr ",
+      "bitXor ",
+      "bitInvert ",
+      "bitShift ",
+      "bitAt ",
+      "highbit ",
+      "allMask ",
+      "anyMask ",
+      "noMask ",
+      "ifTrue ",
+      "ifFalse ",
+      "switch ",
+      "whileTrue ",
+      "whileFalse ",
+      "to: "
+    ],
+    "extensions": ["cs.st", "pck.st"],
+    "line_comment": [],
+    "multi_line": [["\"", "\""]],
+    "quotes": [
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
   "Smarty Template": {
     "complexitychecks": [
       "for ",
