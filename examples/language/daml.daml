@@ -1,0 +1,14 @@
+applyFilter (filter : Int -> Int -> Bool)
+    (x : Int)
+    (y : Int) = filter x y
+
+compute = script do
+    applyFilter (<) 3 2 === False
+    applyFilter (/=) 3 2 === True
+
+    round (2.5 : Decimal) === 3
+    round (3.5 : Decimal) === 4
+
+    explode "me" === ["m", "e"]
+
+    applyFilter (\a b -> a /= b) 3 2 === True
