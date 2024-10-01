@@ -962,6 +962,7 @@ specificLanguages=(
     'Korn Shell '
     'LALRPOP '
     'License '
+    'LiveScript '
     'LLVM IR '
     'Luna '
     'Makefile '
