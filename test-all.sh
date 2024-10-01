@@ -976,6 +976,7 @@ specificLanguages=(
     'R '
     'Racket '
     'Rakefile '
+    'Redscript '
     'Shell '
     'Sieve '
     'Slang '

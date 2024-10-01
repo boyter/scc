@@ -5248,6 +5248,27 @@
       }
     ]
   },
+  "Redscript": {
+    "complexitychecks": [
+      "for ",
+      "@if(",
+      "switch ",
+      "while ",
+      "else ",
+      "func ",
+      "-> "
+    ],
+    "extensions": ["reds"],
+    "line_comment": ["//", "///"],
+    "multi_line": [["/*", "*/"]],
+    "nestedmultiline": true,
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "Report Definition Language": {
     "complexitychecks": [],
     "extensions": ["rdl"],
