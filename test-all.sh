@@ -916,6 +916,7 @@ fi
 
 # Try out specific languages
 specificLanguages=(
+    'ABNF '
     'Alchemist '
     'Alloy '
     'Arturo '
