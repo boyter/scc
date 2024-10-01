@@ -18,6 +18,13 @@
     "multi_line": [],
     "quotes": []
   },
+  "ABNF": {
+    "complexitychecks": ["=/ ", "/ ", "% ", "( "],
+    "extensions": ["abnf"],
+    "line_comment": [";"],
+    "multi_line": [],
+    "quotes": []
+  },
   "APL": {
     "complexitychecks": [
       ":For ",
@@ -3068,45 +3075,6 @@
     ],
     "shebangs": ["node"]
   },
-  "LiveScript": {
-    "complexitychecks": [
-      "for ",
-      "for(",
-      "if ",
-      "if(",
-      "switch ",
-      "case ",
-      "while ",
-      "when ",
-      "else ",
-      "|| ",
-      "&& ",
-      "!= ",
-      "!== ",
-      "xor ",
-      "and ",
-      "or ",
-      "|> ",
-      "<< ",
-      "<<< ",
-      "<<<< ",
-      ">> ",
-      "== "
-    ],
-    "extensions": ["ls"],
-    "line_comment": ["#"],
-    "multi_line": [["/*", "*/"]],
-    "quotes": [
-      {
-        "end": "\"",
-        "start": "\""
-      },
-      {
-        "end": "'",
-        "start": "'"
-      }
-    ]
-  },
   "JavaServer Pages": {
     "complexitychecks": [
       "for ",
@@ -3550,6 +3518,45 @@
     "nestedmultiline": true,
     "quotes": [],
     "shebangs": ["sbcl"]
+  },
+  "LiveScript": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "case ",
+      "while ",
+      "when ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "!== ",
+      "xor ",
+      "and ",
+      "or ",
+      "|> ",
+      "<< ",
+      "<<< ",
+      "<<<< ",
+      ">> ",
+      "== "
+    ],
+    "extensions": ["ls"],
+    "line_comment": ["#"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
   },
   "Lua": {
     "complexitychecks": [
