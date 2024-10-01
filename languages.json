@@ -4546,8 +4546,8 @@
     "multi_line": [["=pod", "=cut"]],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -7318,6 +7318,35 @@
     "line_comment": ["#"],
     "multi_line": [],
     "quotes": []
+  },
+  "jq": {
+    "complexitychecks": [
+      ".",
+      "if ",
+      "elif ",
+      "else ",
+      "!= ",
+      "== ",
+      ">= ",
+      "<= ",
+      "< ",
+      "> ",
+      "and ",
+      "or ",
+      "not ",
+      "// ",
+      "try ",
+      "break "
+    ],
+    "extensions": ["jq"],
+    "line_comment": ["#"],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
   },
   "m4": {
     "complexitychecks": [],

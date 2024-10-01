@@ -960,6 +960,7 @@ specificLanguages=(
     'INI '
     'Java '
     'JSONC '
+    'jq '
     'Korn Shell '
     'LALRPOP '
     'License '
