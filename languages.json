@@ -4033,6 +4033,31 @@
       }
     ]
   },
+  "Moonbit": {
+    "complexitychecks": [
+      "for ",
+      "if ",
+      "switch ",
+      "while ",
+      "else ",
+      "loop ",
+      "guard ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== ",
+      "match "
+    ],
+    "extensions": ["mbt"],
+    "line_comment": ["//"],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "Mustache": {
     "complexitychecks": [
       "for ",

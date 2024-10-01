@@ -969,6 +969,7 @@ specificLanguages=(
     'Luna '
     'Makefile '
     'Monkey C '
+    'Moonbit '
     'Nushell '
     'OpenQASM '
     'Pkl '
