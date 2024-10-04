@@ -314,56 +314,7 @@ func toCSVSummary(input chan *FileJob) string {
 		})
 	}
 
-	// Cater for the common case of adding plural even for those options that don't make sense
-	// as it's quite common for those who English is not a first language to make a simple mistake
-	switch {
-	case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "languages":
-		slices.SortFunc(records, func(a, b []string) int {
-			return strings.Compare(a[0], b[0])
-		})
-	case SortBy == "line" || SortBy == "lines":
-		slices.SortFunc(records, func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[1], 10, 64)
-			i2, _ := strconv.ParseInt(b[1], 10, 64)
-			return cmp.Compare(i2, i1)
-		})
-	case SortBy == "blank" || SortBy == "blanks":
-		slices.SortFunc(records, func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[4], 10, 64)
-			i2, _ := strconv.ParseInt(b[4], 10, 64)
-			return cmp.Compare(i2, i1)
-		})
-	case SortBy == "code" || SortBy == "codes":
-		slices.SortFunc(records, func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[2], 10, 64)
-			i2, _ := strconv.ParseInt(b[2], 10, 64)
-			return cmp.Compare(i2, i1)
-		})
-	case SortBy == "comment" || SortBy == "comments":
-		slices.SortFunc(records, func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[3], 10, 64)
-			i2, _ := strconv.ParseInt(b[3], 10, 64)
-			return cmp.Compare(i2, i1)
-		})
-	case SortBy == "complexity" || SortBy == "complexitys":
-		slices.SortFunc(records, func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[5], 10, 64)
-			i2, _ := strconv.ParseInt(b[5], 10, 64)
-			return cmp.Compare(i2, i1)
-		})
-	case SortBy == "byte" || SortBy == "bytes":
-		slices.SortFunc(records, func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[6], 10, 64)
-			i2, _ := strconv.ParseInt(b[6], 10, 64)
-			return cmp.Compare(i2, i1)
-		})
-	default:
-		slices.SortFunc(records, func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[1], 10, 64)
-			i2, _ := strconv.ParseInt(b[1], 10, 64)
-			return cmp.Compare(i2, i1)
-		})
-	}
+	slices.SortFunc(records, getRecordsSortFunc())
 
 	recordsEnd := [][]string{{
 		"Language",
@@ -387,6 +338,61 @@ func toCSVSummary(input chan *FileJob) string {
 	return b.String()
 }
 
+func getRecordsSortFunc() func(a, b []string) int {
+	// Cater for the common case of adding plural even for those options that don't make sense
+	// as it's quite common for those who English is not a first language to make a simple mistake
+	switch {
+	case SortBy == "name" || SortBy == "names":
+		return func(a, b []string) int {
+			return strings.Compare(a[2], b[2])
+		}
+	case SortBy == "language" || SortBy == "languages":
+		return func(a, b []string) int {
+			return strings.Compare(a[0], b[0])
+		}
+	case SortBy == "line" || SortBy == "lines":
+		return func(a, b []string) int {
+			i1, _ := strconv.ParseInt(a[3], 10, 64)
+			i2, _ := strconv.ParseInt(b[3], 10, 64)
+			return cmp.Compare(i2, i1)
+		}
+	case SortBy == "blank" || SortBy == "blanks":
+		return func(a, b []string) int {
+			i1, _ := strconv.ParseInt(a[6], 10, 64)
+			i2, _ := strconv.ParseInt(b[6], 10, 64)
+			return cmp.Compare(i2, i1)
+		}
+	case SortBy == "code" || SortBy == "codes":
+		return func(a, b []string) int {
+			i1, _ := strconv.ParseInt(a[4], 10, 64)
+			i2, _ := strconv.ParseInt(b[4], 10, 64)
+			return cmp.Compare(i2, i1)
+		}
+	case SortBy == "comment" || SortBy == "comments":
+		return func(a, b []string) int {
+			i1, _ := strconv.ParseInt(a[5], 10, 64)
+			i2, _ := strconv.ParseInt(b[5], 10, 64)
+			return cmp.Compare(i2, i1)
+		}
+	case SortBy == "complexity" || SortBy == "complexitys":
+		return func(a, b []string) int {
+			i1, _ := strconv.ParseInt(a[7], 10, 64)
+			i2, _ := strconv.ParseInt(b[7], 10, 64)
+			return cmp.Compare(i2, i1)
+		}
+	case SortBy == "byte" || SortBy == "bytes":
+		return func(a, b []string) int {
+			i1, _ := strconv.ParseInt(a[8], 10, 64)
+			i2, _ := strconv.ParseInt(b[8], 10, 64)
+			return cmp.Compare(i2, i1)
+		}
+	default:
+		return func(a, b []string) int {
+			return strings.Compare(a[2], b[2])
+		}
+	}
+}
+
 func toCSVFiles(input chan *FileJob) string {
 	records := [][]string{}
 
@@ -405,58 +411,7 @@ func toCSVFiles(input chan *FileJob) string {
 		})
 	}
 
-	// Cater for the common case of adding plural even for those options that don't make sense
-	// as it's quite common for those who English is not a first language to make a simple mistake
-	switch {
-	case SortBy == "name" || SortBy == "names":
-		slices.SortFunc(records, func(a, b []string) int {
-			return strings.Compare(a[2], b[2])
-		})
-	case SortBy == "language" || SortBy == "languages":
-		slices.SortFunc(records, func(a, b []string) int {
-			return strings.Compare(a[0], b[0])
-		})
-	case SortBy == "line" || SortBy == "lines":
-		slices.SortFunc(records, func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[3], 10, 64)
-			i2, _ := strconv.ParseInt(b[3], 10, 64)
-			return cmp.Compare(i2, i1)
-		})
-	case SortBy == "blank" || SortBy == "blanks":
-		slices.SortFunc(records, func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[6], 10, 64)
-			i2, _ := strconv.ParseInt(b[6], 10, 64)
-			return cmp.Compare(i2, i1)
-		})
-	case SortBy == "code" || SortBy == "codes":
-		slices.SortFunc(records, func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[4], 10, 64)
-			i2, _ := strconv.ParseInt(b[4], 10, 64)
-			return cmp.Compare(i2, i1)
-		})
-	case SortBy == "comment" || SortBy == "comments":
-		slices.SortFunc(records, func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[5], 10, 64)
-			i2, _ := strconv.ParseInt(b[5], 10, 64)
-			return cmp.Compare(i2, i1)
-		})
-	case SortBy == "complexity" || SortBy == "complexitys":
-		slices.SortFunc(records, func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[7], 10, 64)
-			i2, _ := strconv.ParseInt(b[7], 10, 64)
-			return cmp.Compare(i2, i1)
-		})
-	case SortBy == "byte" || SortBy == "bytes":
-		slices.SortFunc(records, func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[8], 10, 64)
-			i2, _ := strconv.ParseInt(b[8], 10, 64)
-			return cmp.Compare(i2, i1)
-		})
-	default:
-		slices.SortFunc(records, func(a, b []string) int {
-			return strings.Compare(a[2], b[2])
-		})
-	}
+	slices.SortFunc(records, getRecordsSortFunc())
 
 	recordsEnd := [][]string{{
 		"Language",
