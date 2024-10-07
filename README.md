@@ -71,7 +71,7 @@ Or if you are using [Chocolatey](https://chocolatey.org/) on Windows
 
 Or if you are using [WinGet](https://github.com/microsoft/winget-cli) on Windows
 
-`winget install benboyter.scc`
+`winget install --id benboyter.scc --source winget`
 
 #### FreeBSD
 
