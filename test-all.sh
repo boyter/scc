@@ -960,6 +960,7 @@ specificLanguages=(
     'ignore '
     'INI '
     'Java '
+    'JSON5 '
     'JSONC '
     'jq '
     'Korn Shell '
