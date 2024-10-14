@@ -2952,6 +2952,13 @@
     "multi_line": [],
     "quotes": []
   },
+  "JSON5": {
+    "complexitychecks": [],
+    "extensions": ["json5"],
+    "line_comment": ["//"],
+    "multi_line": [],
+    "quotes": []
+  },
   "JSONC": {
     "complexitychecks": [],
     "extensions": ["jsonc"],
