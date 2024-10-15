@@ -581,8 +581,8 @@ func Process() {
 		fpath := filepath.Clean(f)
 
 		s, err := os.Stat(fpath)
-		if os.IsNotExist(err) {
-			fmt.Println("file or directory does not exist: " + fpath)
+		if err != nil {
+			fmt.Println("file or directory could not be read: " + fpath)
 			os.Exit(1)
 		}
 
