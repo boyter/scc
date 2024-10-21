@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -19,9 +20,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var uniqueCode = "unique_code"
-var cache = NewSimpleCache(1000, 86400)
-var countingSemaphore = make(chan bool, 1)
+var (
+	uniqueCode        = "unique_code"
+	cache             = NewSimpleCache(1000, 86400)
+	countingSemaphore = make(chan bool, 1)
+	tmpDir            = os.TempDir()
+)
 
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -210,15 +214,8 @@ func process(id int, s location) ([]byte, error) {
 	}
 
 	// Clean target just to be sure
-	cmdArgs := []string{
-		"-rf",
-		"/tmp/scc-tmp-path-" + strconv.Itoa(id),
-	}
-
-	cmd := exec.Command("rm", cmdArgs...)
-	err := cmd.Run()
-
-	if err != nil {
+	targetPath := filepath.Join(tmpDir, "scc-tmp-path-"+strconv.Itoa(id))
+	if err := os.RemoveAll(targetPath); err != nil {
 		return nil, err
 	}
 
@@ -227,10 +224,10 @@ func process(id int, s location) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
 
-	cmd = exec.CommandContext(ctx, "git", "clone", "--depth=1", s.String(), "/tmp/scc-tmp-path-"+strconv.Itoa(id))
+	cmd := exec.CommandContext(ctx, "git", "clone", "--depth=1", s.String(), targetPath)
 
 	cmd.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
-	_, err = cmd.Output()
+	_, err := cmd.Output()
 
 	if ctx.Err() == context.DeadlineExceeded {
 		return nil, err
@@ -242,17 +239,18 @@ func process(id int, s location) ([]byte, error) {
 
 	// Run scc against what we just cloned
 	fileName := processPath(s.String())
+	filePath := filepath.Join(tmpDir, fileName)
 
 	if fileName == "" {
 		return nil, errors.New("processPath returned empty")
 	}
 
-	cmdArgs = []string{
+	cmdArgs := []string{
 		"-f",
 		"json",
 		"-o",
-		"/tmp/" + fileName,
-		"/tmp/scc-tmp-path-" + strconv.Itoa(id),
+		filePath,
+		targetPath,
 	}
 
 	cmd = exec.Command("scc", cmdArgs...)
@@ -261,34 +259,18 @@ func process(id int, s location) ([]byte, error) {
 		return nil, err
 	}
 
-	file, err := os.ReadFile("/tmp/" + fileName)
+	file, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
 	cache.Add(s.String(), file)
 
 	// Cleanup
-	cmdArgs = []string{
-		"-rf",
-		"/tmp/" + fileName,
-	}
-
-	cmd = exec.Command("rm", cmdArgs...)
-	err = cmd.Run()
-
-	if err != nil {
+	if err := os.RemoveAll(filePath); err != nil {
 		return nil, err
 	}
 
-	cmdArgs = []string{
-		"-rf",
-		"/tmp/scc-tmp-path-" + strconv.Itoa(id),
-	}
-
-	cmd = exec.Command("rm", cmdArgs...)
-	err = cmd.Run()
-
-	if err != nil {
+	if err := os.RemoveAll(targetPath); err != nil {
 		return nil, err
 	}
 
