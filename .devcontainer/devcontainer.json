@@ -1,0 +1,21 @@
+{
+    "name": "Go",
+    "image": "mcr.microsoft.com/devcontainers/go:1.22",
+    "customizations": {
+        "codespaces": {
+            "openFiles": [
+                "CODE_OF_CONDUCT.md",
+                "CONTRIBUTING.md",
+                "README.md",
+                "languages.json"
+            ]
+        },
+        "vscode": {
+            "extensions": ["golang.go"],
+            "settings": {
+                "go.gopath": "/go"
+            }
+        }
+    },
+    "remoteUser": "vscode"
+}
