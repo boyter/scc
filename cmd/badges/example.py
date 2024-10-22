@@ -9,6 +9,8 @@ import string
 from datetime import datetime, timedelta
 import time
 import math
+from shutil import rmtree
+from tempfile import gettempdir
 
 # s3 = boto3.client('s3')
 bucket_name = 'sloccloccode'
@@ -40,7 +42,7 @@ def lambda_handler(event, context):
 
     get_process_file(filename=filename, url=url, path=path)
 
-    with open('/tmp/' + filename, encoding='utf-8') as f:
+    with open(Path(gettempdir()) / filename, encoding='utf-8') as f:
         content = f.read()
 
     j = json.loads(content)
@@ -100,7 +102,7 @@ def get_process_file(filename, url, path):
 
     diff = int(time.time() - unixtime)
     if diff < 86400:
-        o.download_file('/tmp/' + filename)
+        o.download_file(Path(gettempdir()) / filename)
     else:
         clone_and_process(filename=filename, url=url, path=path)
 
@@ -110,25 +112,25 @@ def clone_and_process(filename, url, path):
 
     download_scc()
 
-    os.chdir('/tmp')
+    os.chdir(gettempdir())
 
-    os.system('rm -rf /tmp/scc-tmp-path')
-    git.exec_command('clone', '--depth=1', url, 'scc-tmp-path',cwd='/tmp')
+    rmtree(Path(gettempdir()) / 'scc-tmp-path')
+    git.exec_command('clone', '--depth=1', url, 'scc-tmp-path', cwd='/tmp')
 
-    os.system('./scc -f json -o /tmp/' + filename + ' scc-tmp-path')
+    os.system('./scc -f json -o ' + str(Path(gettempdir()) / filename) + ' scc-tmp-path')
 
-    with open('/tmp/' + filename, 'rb') as f:
+    with open(Path(gettempdir()) / filename, 'rb') as f:
         s3.upload_fileobj(f, bucket_name, filename)
 
-    os.system('rm -rf /tmp/scc-tmp-path')
+    rmtree(Path(gettempdir()) / 'scc-tmp-path')
 
 
 def download_scc():
-    my_file = Path("/tmp/scc")
-    if os.path.exists('/tmp/scc') == False:
-        with open('/tmp/scc', 'wb') as f:
+    my_file = Path(gettempdir()) / 'scc'
+    if my_file.exists() == False:
+        with open(my_file, 'wb') as f:
             s3.download_fileobj(bucket_name, 'scc', f)
-    os.system('chmod +x /tmp/scc')
+    my_file.chmod(0o755)
 
 
 def s3time_to_unix(last_modified):
