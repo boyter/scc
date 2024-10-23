@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/url"
 	"reflect"
 	"testing"
 )
@@ -117,6 +118,81 @@ func Test_processPath(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("processUrlPath() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+func Test_parseBadgeSettings(t *testing.T) {
+
+	defaultSettings := &badgeSettings{
+		FontColor:            "fff",
+		TextShadowColor:      "010101",
+		TopShadowAccentColor: "bbb",
+		TitleBackgroundColor: "555",
+		BadgeBackgroundColor: "4c1",
+	}
+
+	tests := []struct {
+		name   string
+		values url.Values
+		want   *badgeSettings
+	}{
+		{
+			name:   "default settings",
+			values: url.Values{},
+			want:   defaultSettings,
+		},
+		{
+			name: "valid custom settings",
+			values: url.Values{
+				"font-color":              []string{"abcdef"},
+				"font-shadow-color":       []string{"def"},
+				"top-shadow-accent-color": []string{"321def"},
+				"title-bg-color":          []string{"456"},
+				"badge-bg-color":          []string{"789"},
+			},
+			want: &badgeSettings{
+				FontColor:            "abcdef",
+				TextShadowColor:      "def",
+				TopShadowAccentColor: "321def",
+				TitleBackgroundColor: "456",
+				BadgeBackgroundColor: "789",
+			},
+		},
+		{
+			name: "partially-valid custom settings",
+			values: url.Values{
+				"font-color":              []string{"123321"},
+				"font-shadow-color":       []string{"invalid"},
+				"top-shadow-accent-color": []string{"5a534332"},
+				"title-bg-color":          []string{"dd"},
+				"badge-bg-color":          []string{"X&^%^#$^$@%20"},
+			},
+			want: &badgeSettings{
+				FontColor:            "123321",
+				TextShadowColor:      defaultSettings.TextShadowColor,
+				TopShadowAccentColor: "5a534332",
+				TitleBackgroundColor: defaultSettings.TitleBackgroundColor,
+				BadgeBackgroundColor: defaultSettings.BadgeBackgroundColor,
+			},
+		},
+		{
+			name: "invalid custom settings",
+			values: url.Values{
+				"font-color":              []string{"invalid"},
+				"font-shadow-color":       []string{"invalid"},
+				"top-shadow-accent-color": []string{"invalid"},
+				"title-bg-color":          []string{"invalid"},
+				"badge-bg-color":          []string{"invalid"},
+			},
+			want: defaultSettings,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := parseBadgeSettings(tt.values); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parseBadgeSettings() = %v, want %v", got, tt.want)
 			}
 		})
 	}
