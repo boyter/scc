@@ -64,9 +64,11 @@ func main() {
 			textLength = "200"
 		}
 
+		bs := parseBadgeSettings(r.URL.Query())
+
 		log.Info().Str(uniqueCode, "42c5269c").Str("loc", loc.String()).Str("category", category).Send()
 		w.Header().Set("Content-Type", "image/svg+xml;charset=utf-8")
-		_, _ = w.Write([]byte(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="20"><linearGradient id="b" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><clipPath id="a"><rect width="100" height="20" rx="3" fill="#fff"/></clipPath><g clip-path="url(#a)"><path fill="#555" d="M0 0h69v20H0z"/><path fill="#4c1" d="M69 0h31v20H69z"/><path fill="url(#b)" d="M0 0h100v20H0z"/></g><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="110"> <text x="355" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="590">` + title + `</text><text x="355" y="140" transform="scale(.1)" textLength="590">` + title + `</text><text x="835" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="` + textLength + `">` + s + `</text><text x="835" y="140" transform="scale(.1)" textLength="` + textLength + `">` + s + `</text></g> </svg>`))
+		_, _ = w.Write([]byte(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="20"><linearGradient id="b" x2="0" y2="100%"><stop offset="0" stop-color="` + bs.TopShadowAccentColor + `" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><clipPath id="a"><rect width="100" height="20" rx="3" fill="#` + bs.FontColor + `"/></clipPath><g clip-path="url(#a)"><path fill="#` + bs.TitleBackgroundColor + `" d="M0 0h69v20H0z"/><path fill="#` + bs.BadgeBackgroundColor + `" d="M69 0h31v20H69z"/><path fill="url(#b)" d="M0 0h100v20H0z"/></g><g fill="#` + bs.FontColor + `" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="110"> <text x="355" y="150" fill="#` + bs.TextShadowColor + `" fill-opacity=".3" transform="scale(.1)" textLength="590">` + title + `</text><text x="355" y="140" transform="scale(.1)" textLength="590">` + title + `</text><text x="835" y="150" fill="#` + bs.TextShadowColor + `" fill-opacity=".3" transform="scale(.1)" textLength="` + textLength + `">` + s + `</text><text x="835" y="140" transform="scale(.1)" textLength="` + textLength + `">` + s + `</text></g> </svg>`))
 	})
 
 	addr := ":8080"
@@ -168,6 +170,55 @@ func processUrlPath(path string) (location, error) {
 		User:     s[1],
 		Repo:     s[2],
 	}, nil
+}
+
+type badgeSettings struct {
+	FontColor            string
+	TextShadowColor      string
+	TopShadowAccentColor string
+	TitleBackgroundColor string
+	BadgeBackgroundColor string
+}
+
+// Parses badge settings from url query params
+// if error, ignore and return default badge settings
+func parseBadgeSettings(values url.Values) *badgeSettings {
+	bs := badgeSettings{
+		FontColor:            "fff",
+		TextShadowColor:      "010101",
+		TopShadowAccentColor: "bbb",
+		TitleBackgroundColor: "555",
+		BadgeBackgroundColor: "4c1",
+	}
+
+	fontColor := strings.ToLower(values.Get("font-color"))
+	textShadowColor := strings.ToLower(values.Get("font-shadow-color"))
+	topShadowAccentColor := strings.ToLower(values.Get("top-shadow-accent-color"))
+	titleBackgroundColor := strings.ToLower(values.Get("title-bg-color"))
+	badgeBackgroundColor := strings.ToLower(values.Get("badge-bg-color"))
+
+	// Ensure valid colors
+	r, err := regexp.Compile(`^(?:(?:[\da-f]{3}){1,2}|(?:[\da-f]{4}){1,2})$`)
+	if err != nil {
+		return &bs
+	}
+	if r.MatchString(fontColor) {
+		bs.FontColor = fontColor
+	}
+	if r.MatchString(textShadowColor) {
+		bs.TextShadowColor = textShadowColor
+	}
+	if r.MatchString(topShadowAccentColor) {
+		bs.TopShadowAccentColor = topShadowAccentColor
+	}
+	if r.MatchString(titleBackgroundColor) {
+		bs.TitleBackgroundColor = titleBackgroundColor
+	}
+	if r.MatchString(badgeBackgroundColor) {
+		bs.BadgeBackgroundColor = badgeBackgroundColor
+	}
+
+	return &bs
 }
 
 // formatCount turns a float into a string usable for display
