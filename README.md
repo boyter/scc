@@ -33,6 +33,7 @@ Licensed under MIT licence.
 - [Performance](#performance)
 - [Development](#development)
 - [Adding/Modifying Languages](#addingmodifying-languages)
+- [Issues](#issues)
 - [Badges (beta)](#badges-beta)
 - [Language Support](LANGUAGES.md)
 
