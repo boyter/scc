@@ -57,6 +57,10 @@ func main() {
 		wage := tryParseInt(strings.TrimSpace(strings.ToLower(r.URL.Query().Get("avg-wage"))), 56286)
 		title, value := calculate(category, wage, res)
 
+		if r.URL.Query().Get("lower") != "" {
+			title = strings.ToLower(title)
+		}
+
 		s := formatCount(float64(value))
 
 		textLength := "250"
