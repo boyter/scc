@@ -19,6 +19,23 @@ If you don't like sloc cloc and code feel free to use the name `Succinct Code Co
 
 Licensed under MIT licence.
 
+## Table of Contents
+
+- [Support](#support)
+- [Install](#install)
+- [Background](#background)
+- [Pitch](#pitch)
+- [Usage](#usage)
+- [Complexity Estimates](#complexity-estimates)
+- [Unique Lines of Code (ULOC)](#unique-lines-of-code-uloc)
+- [COCOMO](#cocomo)
+- [Output Formats](#output-formats)
+- [Performance](#performance)
+- [Development](#development)
+- [Adding/Modifying Languages](#addingmodifying-languages)
+- [Badges (beta)](#badges-beta)
+- [Language Support](LANGUAGES.md)
+
 ### Support
 
 Using `scc` commercially? If you want priority support for `scc` you can purchase a years worth https://boyter.gumroad.com/l/kgenuv which entitles you to priority direct email support from the developer.
@@ -1078,7 +1095,7 @@ You can find the source code for badges in the repository at https://github.com/
 
 ### Languages
 
-List of supported languages. The master version of `scc` supports 239 languages at last count. Note that this is always assumed that you built from master, and it might trail behind what is actually supported. To see what your version of `scc` supports run `scc --languages`
+List of supported languages. The master version of `scc` supports 322 languages at last count. Note that this is always assumed that you built from master, and it might trail behind what is actually supported. To see what your version of `scc` supports run `scc --languages`
 
 [Click here to view all languages supported by master](LANGUAGES.md)
 
