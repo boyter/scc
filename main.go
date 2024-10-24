@@ -369,7 +369,7 @@ func main() {
 		&processor.NoLarge,
 		"no-large",
 		false,
-		"ignore files over certain byte and line size set by max-line-count and max-byte-count",
+		"ignore files over certain byte and line size set by large-line-count and large-byte-count",
 	)
 	flags.BoolVar(
 		&processor.IncludeSymLinks,

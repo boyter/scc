@@ -267,7 +267,7 @@ Flags:
       --no-gitmodule                       disables .gitmodules file logic
       --no-hborder                         remove horizontal borders between sections
       --no-ignore                          disables .ignore file logic
-      --no-large                           ignore files over certain byte and line size set by max-line-count and max-byte-count
+      --no-large                           ignore files over certain byte and line size set by large-line-count and large-byte-count
       --no-min                             ignore minified files in output (implies --min)
       --no-min-gen                         ignore minified or generated files in output (implies --min-gen)
       --no-scc-ignore                      disables .sccignore file logic
