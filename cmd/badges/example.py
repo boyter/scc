@@ -115,7 +115,7 @@ def clone_and_process(filename, url, path):
     os.chdir(gettempdir())
 
     rmtree(Path(gettempdir()) / 'scc-tmp-path')
-    git.exec_command('clone', '--depth=1', url, 'scc-tmp-path', cwd='/tmp')
+    git.exec_command('clone', '--depth=1', url, 'scc-tmp-path', cwd=gettempdir())
 
     os.system('./scc -f json -o ' + str(Path(gettempdir()) / filename) + ' scc-tmp-path')
 

@@ -88,23 +88,17 @@ func calculate(category string, wage int, res []processor.LanguageSummary) (stri
 	var value int64
 
 	switch category {
-	case "codes":
-		fallthrough
-	case "code":
+	case "code", "codes":
 		title = "Code lines"
 		for _, x := range res {
 			value += x.Code
 		}
-	case "blank":
-		fallthrough
-	case "blanks":
+	case "blank", "blanks":
 		title = "Blank lines"
 		for _, x := range res {
 			value += x.Blank
 		}
-	case "comment":
-		fallthrough
-	case "comments":
+	case "comment", "comments":
 		title = "Comments"
 		for _, x := range res {
 			value += x.Comment
@@ -116,9 +110,7 @@ func calculate(category string, wage int, res []processor.LanguageSummary) (stri
 		}
 
 		value = int64(estimateCost(value, wage))
-	case "lines": // lines is the default
-		fallthrough
-	case "line": // lines is the default
+	case "line", "lines": // lines is the default
 		fallthrough
 	default:
 		//
