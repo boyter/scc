@@ -76,28 +76,28 @@ var openMetricsSummaryRecordFormat = "scc_%s{language=\"%s\"} %d\n"
 var openMetricsFileRecordFormat = "scc_%s{language=\"%s\",file=\"%s\"} %d\n"
 
 func sortSummaryFiles(summary *LanguageSummary) {
-	switch {
-	case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "languages" || SortBy == "lang":
+	switch SortBy {
+	case "name", "names", "language", "languages", "lang", "langs":
 		slices.SortFunc(summary.Files, func(a, b *FileJob) int {
 			return strings.Compare(a.Location, b.Location)
 		})
-	case SortBy == "line" || SortBy == "lines":
+	case "line", "lines":
 		slices.SortFunc(summary.Files, func(a, b *FileJob) int {
 			return cmp.Compare(b.Lines, a.Lines)
 		})
-	case SortBy == "blank" || SortBy == "blanks":
+	case "blank", "blanks":
 		slices.SortFunc(summary.Files, func(a, b *FileJob) int {
 			return cmp.Compare(b.Blank, a.Blank)
 		})
-	case SortBy == "code" || SortBy == "codes":
+	case "code", "codes":
 		slices.SortFunc(summary.Files, func(a, b *FileJob) int {
 			return cmp.Compare(b.Code, a.Code)
 		})
-	case SortBy == "comment" || SortBy == "comments":
+	case "comment", "comments":
 		slices.SortFunc(summary.Files, func(a, b *FileJob) int {
 			return cmp.Compare(b.Comment, a.Comment)
 		})
-	case SortBy == "complexity" || SortBy == "complexitys" || SortBy == "comp":
+	case "complexity", "complexitys", "comp":
 		slices.SortFunc(summary.Files, func(a, b *FileJob) int {
 			return cmp.Compare(b.Complexity, a.Complexity)
 		})
@@ -341,46 +341,46 @@ func toCSVSummary(input chan *FileJob) string {
 func getRecordsSortFunc() func(a, b []string) int {
 	// Cater for the common case of adding plural even for those options that don't make sense
 	// as it's quite common for those who English is not a first language to make a simple mistake
-	switch {
-	case SortBy == "name" || SortBy == "names":
+	switch SortBy {
+	case "name", "names":
 		return func(a, b []string) int {
 			return strings.Compare(a[2], b[2])
 		}
-	case SortBy == "language" || SortBy == "languages":
+	case "language", "languages", "lang", "langs":
 		return func(a, b []string) int {
 			return strings.Compare(a[0], b[0])
 		}
-	case SortBy == "line" || SortBy == "lines":
+	case "line", "lines":
 		return func(a, b []string) int {
 			i1, _ := strconv.ParseInt(a[3], 10, 64)
 			i2, _ := strconv.ParseInt(b[3], 10, 64)
 			return cmp.Compare(i2, i1)
 		}
-	case SortBy == "blank" || SortBy == "blanks":
+	case "blank", "blanks":
 		return func(a, b []string) int {
 			i1, _ := strconv.ParseInt(a[6], 10, 64)
 			i2, _ := strconv.ParseInt(b[6], 10, 64)
 			return cmp.Compare(i2, i1)
 		}
-	case SortBy == "code" || SortBy == "codes":
+	case "code", "codes":
 		return func(a, b []string) int {
 			i1, _ := strconv.ParseInt(a[4], 10, 64)
 			i2, _ := strconv.ParseInt(b[4], 10, 64)
 			return cmp.Compare(i2, i1)
 		}
-	case SortBy == "comment" || SortBy == "comments":
+	case "comment", "comments":
 		return func(a, b []string) int {
 			i1, _ := strconv.ParseInt(a[5], 10, 64)
 			i2, _ := strconv.ParseInt(b[5], 10, 64)
 			return cmp.Compare(i2, i1)
 		}
-	case SortBy == "complexity" || SortBy == "complexitys":
+	case "complexity", "complexitys":
 		return func(a, b []string) int {
 			i1, _ := strconv.ParseInt(a[7], 10, 64)
 			i2, _ := strconv.ParseInt(b[7], 10, 64)
 			return cmp.Compare(i2, i1)
 		}
-	case SortBy == "byte" || SortBy == "bytes":
+	case "byte", "bytes":
 		return func(a, b []string) int {
 			i1, _ := strconv.ParseInt(a[8], 10, 64)
 			i2, _ := strconv.ParseInt(b[8], 10, 64)
@@ -919,38 +919,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 		language = append(language, summary)
 	}
 
-	// Cater for the common case of adding plural even for those options that don't make sense
-	// as it's quite common for those who English is not a first language to make a simple mistake
-	switch {
-	case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "langs":
-		slices.SortFunc(language, func(a, b LanguageSummary) int {
-			return strings.Compare(a.Name, b.Name)
-		})
-	case SortBy == "line" || SortBy == "lines":
-		slices.SortFunc(language, func(a, b LanguageSummary) int {
-			return cmp.Compare(b.Lines, a.Lines)
-		})
-	case SortBy == "blank" || SortBy == "blanks":
-		slices.SortFunc(language, func(a, b LanguageSummary) int {
-			return cmp.Compare(b.Blank, a.Blank)
-		})
-	case SortBy == "code" || SortBy == "codes":
-		slices.SortFunc(language, func(a, b LanguageSummary) int {
-			return cmp.Compare(b.Code, a.Code)
-		})
-	case SortBy == "comment" || SortBy == "comments":
-		slices.SortFunc(language, func(a, b LanguageSummary) int {
-			return cmp.Compare(b.Comment, a.Comment)
-		})
-	case SortBy == "complexity" || SortBy == "complexitys":
-		slices.SortFunc(language, func(a, b LanguageSummary) int {
-			return cmp.Compare(b.Complexity, a.Complexity)
-		})
-	default:
-		slices.SortFunc(language, func(a, b LanguageSummary) int {
-			return cmp.Compare(b.Count, a.Count)
-		})
-	}
+	language = sortLanguageSummary(language)
 
 	startTime := makeTimestampMilli()
 	for _, summary := range language {
@@ -1263,14 +1232,7 @@ func maxIn(i []int) int {
 		return 0
 	}
 
-	m := i[0]
-	for _, x := range i {
-		if x > m {
-			m = x
-		}
-	}
-
-	return m
+	return slices.Max(i)
 }
 
 func meanIn(i []int) int {
@@ -1382,16 +1344,10 @@ func isLeapYear(year int) bool {
 	leapFlag := false
 	if year%4 == 0 {
 		if year%100 == 0 {
-			if year%400 == 0 {
-				leapFlag = true
-			} else {
-				leapFlag = false
-			}
+			leapFlag = year%400 == 0
 		} else {
 			leapFlag = true
 		}
-	} else {
-		leapFlag = false
 	}
 	return leapFlag
 }
@@ -1456,40 +1412,40 @@ func sortLanguageSummary(language []LanguageSummary) []LanguageSummary {
 	// as it's quite common for those who English is not a first language to make a simple mistake
 	// NB in any non name cases if the values are the same we sort by name to ensure
 	// deterministic output
-	switch {
-	case SortBy == "name" || SortBy == "names" || SortBy == "language" || SortBy == "languages":
+	switch SortBy {
+	case "name", "names", "language", "languages", "lang", "langs":
 		slices.SortFunc(language, func(a, b LanguageSummary) int {
 			return strings.Compare(a.Name, b.Name)
 		})
-	case SortBy == "line" || SortBy == "lines":
+	case "line", "lines":
 		slices.SortFunc(language, func(a, b LanguageSummary) int {
 			if order := cmp.Compare(b.Lines, a.Lines); order != 0 {
 				return order
 			}
 			return strings.Compare(a.Name, b.Name)
 		})
-	case SortBy == "blank" || SortBy == "blanks":
+	case "blank", "blanks":
 		slices.SortFunc(language, func(a, b LanguageSummary) int {
 			if order := cmp.Compare(b.Blank, a.Blank); order != 0 {
 				return order
 			}
 			return strings.Compare(a.Name, b.Name)
 		})
-	case SortBy == "code" || SortBy == "codes":
+	case "code", "codes":
 		slices.SortFunc(language, func(a, b LanguageSummary) int {
 			if order := cmp.Compare(b.Code, a.Code); order != 0 {
 				return order
 			}
 			return strings.Compare(a.Name, b.Name)
 		})
-	case SortBy == "comment" || SortBy == "comments":
+	case "comment", "comments":
 		slices.SortFunc(language, func(a, b LanguageSummary) int {
 			if order := cmp.Compare(b.Comment, a.Comment); order != 0 {
 				return order
 			}
 			return strings.Compare(a.Name, b.Name)
 		})
-	case SortBy == "complexity" || SortBy == "complexitys":
+	case "complexity", "complexitys":
 		slices.SortFunc(language, func(a, b LanguageSummary) int {
 			if order := cmp.Compare(b.Complexity, a.Complexity); order != 0 {
 				return order
