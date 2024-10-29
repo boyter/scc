@@ -43,15 +43,19 @@ Using `scc` commercially? If you want priority support for `scc` you can purchas
 
 ### Install
 
-#### Go Get
+#### Go Install
 
-If you are comfortable using Go and have >= 1.17 installed:
+You can install `scc` by using the standard go toolchain.
+
+To install the latest stable version of scc:
 
 `go install github.com/boyter/scc/v3@latest`
 
-or bleeding edge with
+To install a development version:
 
-`go install github.com/boyter/scc@master`
+`go install github.com/boyter/scc/v3@master`
+
+Note that `scc` needs go version >= 1.22.
 
 #### Snap
 
