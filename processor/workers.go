@@ -559,14 +559,14 @@ func CountStats(fileJob *FileJob) {
 
 	if UlocMode && Files {
 		uloc := map[string]struct{}{}
-		for _, l := range strings.Split(string(fileJob.Content), "\n") {
+		for _, l := range strings.Split(strings.TrimRight(string(fileJob.Content), "\n"), "\n") {
 			uloc[l] = struct{}{}
 		}
 		fileJob.Uloc = len(uloc)
 	}
 
 	if MaxMean {
-		for _, l := range strings.Split(string(fileJob.Content), "\n") {
+		for _, l := range strings.Split(strings.TrimRight(string(fileJob.Content), "\n"), "\n") {
 			fileJob.LineLength = append(fileJob.LineLength, len(l))
 		}
 	}
@@ -802,7 +802,8 @@ func processFile(job *FileJob) bool {
 	// avoiding inflating the counts
 	if UlocMode {
 		ulocMutex.Lock()
-		for _, l := range strings.Split(string(job.Content), "\n") {
+
+		for _, l := range strings.Split(strings.TrimRight(string(job.Content), "\n"), "\n") {
 			ulocGlobalCount[l] = struct{}{}
 
 			_, ok := ulocLanguageCount[job.Language]
