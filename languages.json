@@ -7485,5 +7485,46 @@
         "start": "」」"
       }
     ]
+  },
+  "SPL": {
+    "complexitychecks": [
+      "construct",
+      "foreach",
+      "map",
+      "while",
+      "if",
+      "include",
+      "catch",
+      "and",
+      "or",
+      "not",
+      "call",
+      "<|",
+      "<{",
+      "dup",
+      "swap"
+    ],
+    "extensions": ["spl"],
+    "line_comment": [],
+    "multi_line": [["\"", "\";"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": " ",
+        "start": "^"
+      },
+      {
+        "end": ">",
+        "start": "^"
+      },
+      {
+        "end": ":",
+        "start": "^"
+      }
+    ],
+    "shebangs": ["spl"]
   }
 }
