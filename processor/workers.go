@@ -22,7 +22,7 @@ const (
 	SCommentCode       int64 = 4 // Indicates comment after code
 	SMulticomment      int64 = 5
 	SMulticommentCode  int64 = 6 // Indicates multi comment after code
-	SMulticommentBlank int64 = 7 // Indicates multi comment ended with blank afterwards
+	SMulticommentBlank int64 = 7 // Indicates multi comment ended with blank afterward
 	SString            int64 = 8
 	SDocString         int64 = 9
 )
