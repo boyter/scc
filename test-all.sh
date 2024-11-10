@@ -995,6 +995,7 @@ specificLanguages=(
     'TTCN-3 '
     'TypeSpec '
     'Typst '
+    'Up '
     'Web Services '
     'wenyan '
     'Wren '
