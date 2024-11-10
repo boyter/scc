@@ -6613,6 +6613,35 @@
     "multi_line": [],
     "quotes": []
   },
+  "Up": {
+    "complexitychecks": [
+      "for ",
+      "if ",
+      "switch ",
+      "while ",
+      "else ",
+      "try ",
+      "func ",
+      "up ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": ["up"],
+    "line_comment": ["//"],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "`",
+        "start": "`"
+      }
+    ]
+  },
   "V": {
     "complexitychecks": [
       "for ",

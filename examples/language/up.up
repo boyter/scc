@@ -1,0 +1,24 @@
+// func => function definition keyword (reserved word)
+// function_a => function name (user-defined)
+// int1 => parameter name (user-defined)
+// [variable_name]: int => parameter data type (int is a reserved word)
+// [function] -> string => return data type (string is a reserved word)
+// nilStr => variable name (user-defined)
+// "nil" => variable value (user-defined)
+func function_a(int1: int) -> string {
+    nilStr = "nil"
+    return nilStr + int1
+}
+
+// func => function definition keyword (reserved word)
+// integer_mul => function name (user-defined)
+// integer => parameter name (user-defined)
+// [variable_name]: int => parameter data type (int is a reserved word)
+// [function] -> int => return data type (int is a reserved word)
+func integer_mul(integer: int) -> int {
+    return integer * 2
+}
+
+func main() -> nil {
+    print(function_a(3) + integer_mul())
+}
