@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -17,6 +16,7 @@ import (
 	"time"
 
 	"github.com/boyter/scc/v3/processor"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/rs/zerolog/log"
 )
 
@@ -25,6 +25,7 @@ var (
 	cache             = NewSimpleCache(1000, 86400)
 	countingSemaphore = make(chan bool, 1)
 	tmpDir            = os.TempDir()
+	json              = jsoniter.ConfigCompatibleWithStandardLibrary
 )
 
 func main() {

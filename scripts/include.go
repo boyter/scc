@@ -6,14 +6,17 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"strings"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 const constantsFile = "./processor/constants.go"
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // Reads all .json files in the current folder
 // and encodes them as strings literals in constants.go

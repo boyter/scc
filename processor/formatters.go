@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"cmp"
 	"encoding/csv"
-	"encoding/json"
 	"fmt"
 	"math"
 	"os"
@@ -17,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/mattn/go-runewidth"
 
 	glanguage "golang.org/x/text/language"
@@ -244,6 +244,7 @@ func toJSON(input chan *FileJob) string {
 	language := aggregateLanguageSummary(input)
 	language = sortLanguageSummary(language)
 
+	json := jsoniter.ConfigCompatibleWithStandardLibrary
 	jsonString, _ := json.Marshal(language)
 
 	if Debug {
@@ -272,6 +273,7 @@ func toJSON2(input chan *FileJob) string {
 
 	cost, schedule, people := esstimateCostScheduleMonths(sumCode)
 
+	json := jsoniter.ConfigCompatibleWithStandardLibrary
 	jsonString, _ := json.Marshal(Json2{
 		LanguageSummary:         language,
 		EstimatedCost:           cost,
