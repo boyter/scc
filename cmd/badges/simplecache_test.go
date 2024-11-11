@@ -30,7 +30,7 @@ func TestSimpleCache_Multiple(t *testing.T) {
 		simpleCache.Add(fmt.Sprintf("%d", i), []byte{})
 	}
 
-	simpleCache.Add("10", []byte{})
+	simpleCache.Add("test-key", []byte{})
 
 	if len(simpleCache.items) != 10 {
 		t.Errorf("expected 10 items got %v", len(simpleCache.items))
