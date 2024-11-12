@@ -1917,6 +1917,29 @@
     "multi_line": [],
     "quotes": []
   },
+  "EmiT": {
+    "complexitychecks": [
+      "if ",
+      "if(",
+      "warp ",
+      "time ",
+      "kills ",
+      "collapse ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": ["emit"],
+    "line_comment": ["//"],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "Erlang": {
     "complexitychecks": [
       "for ",
@@ -5489,6 +5512,47 @@
     "multi_line": [],
     "quotes": []
   },
+  "SPL": {
+    "complexitychecks": [
+      "construct",
+      "foreach",
+      "map",
+      "while",
+      "if",
+      "include",
+      "catch",
+      "and",
+      "or",
+      "not",
+      "call",
+      "<|",
+      "<{",
+      "dup",
+      "swap"
+    ],
+    "extensions": ["spl"],
+    "line_comment": [],
+    "multi_line": [["\"", "\";"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": " ",
+        "start": "^"
+      },
+      {
+        "end": ">",
+        "start": "^"
+      },
+      {
+        "end": ":",
+        "start": "^"
+      }
+    ],
+    "shebangs": ["spl"]
+  },
   "SQL": {
     "complexitychecks": [
       "for ",
@@ -6570,6 +6634,35 @@
       }
     ]
   },
+  "Up": {
+    "complexitychecks": [
+      "for ",
+      "if ",
+      "switch ",
+      "while ",
+      "else ",
+      "try ",
+      "func ",
+      "up ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": ["up"],
+    "line_comment": ["//"],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "`",
+        "start": "`"
+      }
+    ]
+  },
   "Ur/Web": {
     "complexitychecks": [
       "for ",
@@ -6612,35 +6705,6 @@
     "line_comment": ["#"],
     "multi_line": [],
     "quotes": []
-  },
-  "Up": {
-    "complexitychecks": [
-      "for ",
-      "if ",
-      "switch ",
-      "while ",
-      "else ",
-      "try ",
-      "func ",
-      "up ",
-      "|| ",
-      "&& ",
-      "!= ",
-      "== "
-    ],
-    "extensions": ["up"],
-    "line_comment": ["//"],
-    "multi_line": [],
-    "quotes": [
-      {
-        "end": "\"",
-        "start": "\""
-      },
-      {
-        "end": "`",
-        "start": "`"
-      }
-    ]
   },
   "V": {
     "complexitychecks": [
@@ -7514,46 +7578,5 @@
         "start": "」」"
       }
     ]
-  },
-  "SPL": {
-    "complexitychecks": [
-      "construct",
-      "foreach",
-      "map",
-      "while",
-      "if",
-      "include",
-      "catch",
-      "and",
-      "or",
-      "not",
-      "call",
-      "<|",
-      "<{",
-      "dup",
-      "swap"
-    ],
-    "extensions": ["spl"],
-    "line_comment": [],
-    "multi_line": [["\"", "\";"]],
-    "quotes": [
-      {
-        "end": "\"",
-        "start": "\""
-      },
-      {
-        "end": " ",
-        "start": "^"
-      },
-      {
-        "end": ">",
-        "start": "^"
-      },
-      {
-        "end": ":",
-        "start": "^"
-      }
-    ],
-    "shebangs": ["spl"]
   }
 }
