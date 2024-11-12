@@ -943,6 +943,7 @@ specificLanguages=(
     'Dockerfile '
     'DOT '
     'Elm '
+    'EmiT '
     'F# '
     'Factor '
     'Flow9 '
