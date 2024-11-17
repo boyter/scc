@@ -476,7 +476,7 @@ func toOpenMetricsFiles(input chan *FileJob) string {
 		fmt.Fprintf(sb, openMetricsFileRecordFormat, "complexity", file.Language, filename, file.Complexity)
 		fmt.Fprintf(sb, openMetricsFileRecordFormat, "bytes", file.Language, filename, file.Bytes)
 	}
-	sb.WriteString("# EOF")
+	sb.WriteString("# EOF\n")
 	return sb.String()
 }
 
@@ -513,7 +513,7 @@ func toCSVStream(input chan *FileJob) string {
 func toHtml(input chan *FileJob) string {
 	return `<html lang="en"><head><meta charset="utf-8" /><title>scc html output</title><style>table { border-collapse: collapse; }td, th { border: 1px solid #999; padding: 0.5rem; text-align: left;}</style></head><body>` +
 		toHtmlTable(input) +
-		`</body></html>`
+		"</body></html>\n"
 }
 
 func toHtmlTable(input chan *FileJob) string {
@@ -612,7 +612,7 @@ func toHtmlTable(input chan *FileJob) string {
 		<td>%d</td>
 		<td>%d</td>
 		<td>%d</td>
-	    <td>%d</td>
+		<td>%d</td>
 		<td>%d</td>
 	</tr>`, res.Location, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.Bytes, res.Uloc)
 			}
@@ -629,7 +629,7 @@ func toHtmlTable(input chan *FileJob) string {
 		<th>%d</th>
 		<th>%d</th>
 		<th>%d</th>
-    	<th>%d</th>
+		<th>%d</th>
 		<th>%d</th>
 	</tr>`, sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumBytes, len(ulocGlobalCount))
 

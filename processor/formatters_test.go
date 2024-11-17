@@ -1044,7 +1044,8 @@ scc_comments{language="Go",file="C:\\bbbb.go"} 1000
 scc_blanks{language="Go",file="C:\\bbbb.go"} 1000
 scc_complexity{language="Go",file="C:\\bbbb.go"} 1000
 scc_bytes{language="Go",file="C:\\bbbb.go"} 1000
-# EOF`
+# EOF
+`
 
 	if res != expectedResult {
 		t.Error("Expected OpenMetrics return", res)
