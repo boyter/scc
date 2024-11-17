@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"hash"
 	"runtime/debug"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -560,6 +561,12 @@ func CountStats(fileJob *FileJob) {
 	if UlocMode && Files {
 		uloc := map[string]struct{}{}
 		for _, l := range strings.Split(strings.TrimRight(string(fileJob.Content), "\n"), "\n") {
+			if UlocIgnore {
+				// if uloc ignore is enabled we want to ignore certain lines which can inflate the uloc score
+				if slices.Contains(UlocIgnores, l) {
+					continue
+				}
+			}
 			uloc[l] = struct{}{}
 		}
 		fileJob.Uloc = len(uloc)
@@ -804,6 +811,13 @@ func processFile(job *FileJob) bool {
 		ulocMutex.Lock()
 
 		for _, l := range strings.Split(strings.TrimRight(string(job.Content), "\n"), "\n") {
+			if UlocIgnore {
+				// if uloc ignore is enabled we want to ignore certain lines which can inflate the uloc score
+				if slices.Contains(UlocIgnores, l) {
+					continue
+				}
+			}
+
 			ulocGlobalCount[l] = struct{}{}
 
 			_, ok := ulocLanguageCount[job.Language]

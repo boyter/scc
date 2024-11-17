@@ -71,6 +71,18 @@ func main() {
 		false,
 		"calculate the number of unique lines of code (ULOC) for the project",
 	)
+	flags.BoolVar(
+		&processor.UlocIgnore,
+		"uloc-ignore",
+		false,
+		"toggle if uloc-ignores should be used",
+	)
+	flags.StringSliceVar(
+		&processor.UlocIgnores,
+		"uloc-ignores",
+		[]string{"{", "}", ""},
+		"lines to be ignored when calculating unique lines of code (ULOC)",
+	)
 	flags.BoolVarP(
 		&processor.Dryness,
 		"dryness",

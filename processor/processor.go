@@ -114,17 +114,23 @@ var CountIgnore = false
 // DisableCheckBinary toggles checking for binary files using NUL bytes
 var DisableCheckBinary = false
 
-// UlocMode toggles checking for binary files using NUL bytes
+// UlocMode enables ULOC calculation
 var UlocMode = false
 
-// Percent toggles checking for binary files using NUL bytes
+// UlocIgnore should the UlocIgnores be checked and ignored
+var UlocIgnore = false
+
+// UlocIgnores if UlocIgnore is set lines matching these will be ignored from the uloc caluclation
+var UlocIgnores = []string{"{", "}", ""}
+
+// Dryness enableds DRYness caluculation and implies UlocMode
+var Dryness = false
+
+// Percent toggles % of project display
 var Percent = false
 
-// MaxMean toggles checking for binary files using NUL bytes
+// MaxMean toggles display of max and mean values of languages
 var MaxMean = false
-
-// Dryness toggles checking for binary files using NUL bytes
-var Dryness = false
 
 // SortBy sets which column output in formatter should be sorted by
 var SortBy = ""

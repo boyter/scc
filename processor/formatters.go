@@ -33,7 +33,7 @@ var tabularShortFormatFile = "%s %9d %8d %9d %8d %10d\n"
 var tabularShortFormatFileMaxMean = "MaxLine / MeanLine %11d %9d\n"
 var shortFormatFileTruncate = 29
 var shortNameTruncate = 20
-var tabularShortUlocLanguageFormatBody = "(ULOC) %33d\n"
+var tabularShortUlocLanguageFormatBody = "ULOC %35d\n"
 var tabularShortPercentLanguageFormatBody = "Percentage %18.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
 var tabularShortUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %12d\n"
 
@@ -52,7 +52,7 @@ var tabularWideFormatBody = "%-33s %9d %9d %8d %9d %8d %10d %16.2f\n"
 var tabularWideFormatFile = "%s %9d %8d %9d %8d %10d %16.2f\n"
 var tabularWideFormatFileMaxMean = "MaxLine / MeanLine %24d %9d\n"
 var wideFormatFileTruncate = 42
-var tabularWideUlocLanguageFormatBody = "(ULOC) %46d\n"
+var tabularWideUlocLanguageFormatBody = "ULOC %48d\n"
 var tabularWideUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %25d\n"
 var tabularWideFormatBodyPercent = "Percentage %31.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
 
@@ -453,13 +453,13 @@ func toOpenMetricsSummary(input chan *FileJob) string {
 	sb := &strings.Builder{}
 	sb.WriteString(openMetricsMetadata)
 	for _, result := range language {
-		fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "files", result.Name, result.Count)
-		fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "lines", result.Name, result.Lines)
-		fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "code", result.Name, result.Code)
-		fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "comments", result.Name, result.Comment)
-		fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "blanks", result.Name, result.Blank)
-		fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "complexity", result.Name, result.Complexity)
-		fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "bytes", result.Name, result.Bytes)
+		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "files", result.Name, result.Count)
+		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "lines", result.Name, result.Lines)
+		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "code", result.Name, result.Code)
+		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "comments", result.Name, result.Comment)
+		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "blanks", result.Name, result.Blank)
+		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "complexity", result.Name, result.Complexity)
+		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "bytes", result.Name, result.Bytes)
 	}
 	return sb.String()
 }
@@ -469,12 +469,12 @@ func toOpenMetricsFiles(input chan *FileJob) string {
 	sb.WriteString(openMetricsMetadata)
 	for file := range input {
 		var filename = strings.ReplaceAll(file.Location, "\\", "\\\\")
-		fmt.Fprintf(sb, openMetricsFileRecordFormat, "lines", file.Language, filename, file.Lines)
-		fmt.Fprintf(sb, openMetricsFileRecordFormat, "code", file.Language, filename, file.Code)
-		fmt.Fprintf(sb, openMetricsFileRecordFormat, "comments", file.Language, filename, file.Comment)
-		fmt.Fprintf(sb, openMetricsFileRecordFormat, "blanks", file.Language, filename, file.Blank)
-		fmt.Fprintf(sb, openMetricsFileRecordFormat, "complexity", file.Language, filename, file.Complexity)
-		fmt.Fprintf(sb, openMetricsFileRecordFormat, "bytes", file.Language, filename, file.Bytes)
+		_, _ = fmt.Fprintf(sb, openMetricsFileRecordFormat, "lines", file.Language, filename, file.Lines)
+		_, _ = fmt.Fprintf(sb, openMetricsFileRecordFormat, "code", file.Language, filename, file.Code)
+		_, _ = fmt.Fprintf(sb, openMetricsFileRecordFormat, "comments", file.Language, filename, file.Comment)
+		_, _ = fmt.Fprintf(sb, openMetricsFileRecordFormat, "blanks", file.Language, filename, file.Blank)
+		_, _ = fmt.Fprintf(sb, openMetricsFileRecordFormat, "complexity", file.Language, filename, file.Complexity)
+		_, _ = fmt.Fprintf(sb, openMetricsFileRecordFormat, "bytes", file.Language, filename, file.Bytes)
 	}
 	sb.WriteString("# EOF\n")
 	return sb.String()
@@ -852,7 +852,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 	str := &strings.Builder{}
 
 	str.WriteString(getTabularWideBreak())
-	fmt.Fprintf(str, tabularWideFormatHead, "Language", "Files", "Lines", "Blanks", "Comments", "Code", "Complexity", "Complexity/Lines")
+	_, _ = fmt.Fprintf(str, tabularWideFormatHead, "Language", "Files", "Lines", "Blanks", "Comments", "Code", "Complexity", "Complexity/Lines")
 
 	if !Files {
 		str.WriteString(getTabularWideBreak())
@@ -934,10 +934,10 @@ func fileSummarizeLong(input chan *FileJob) string {
 			trimmedName = summary.Name[:longNameTruncate-1] + "…"
 		}
 
-		fmt.Fprintf(str, tabularWideFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summary.WeightedComplexity)
+		_, _ = fmt.Fprintf(str, tabularWideFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summary.WeightedComplexity)
 
 		if Percent {
-			fmt.Fprintf(str,
+			_, _ = fmt.Fprintf(str,
 				tabularWideFormatBodyPercent,
 				float64(len(summary.Files))/float64(sumFiles)*100,
 				float64(summary.Lines)/float64(sumLines)*100,
@@ -955,11 +955,11 @@ func fileSummarizeLong(input chan *FileJob) string {
 		}
 
 		if MaxMean {
-			fmt.Fprintf(str, tabularWideFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength))
+			_, _ = fmt.Fprintf(str, tabularWideFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength))
 		}
 
 		if UlocMode {
-			fmt.Fprintf(str, tabularWideUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name]))
+			_, _ = fmt.Fprintf(str, tabularWideUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name]))
 			if !Files && summary.Name != language[len(language)-1].Name {
 				str.WriteString(tabularWideBreakCi)
 			}
@@ -973,7 +973,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 				tmp := unicodeAwareTrim(res.Location, wideFormatFileTruncate)
 				tmp = unicodeAwareRightPad(tmp, 43)
 
-				fmt.Fprintf(str, tabularWideFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.WeightedComplexity)
+				_, _ = fmt.Fprintf(str, tabularWideFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.WeightedComplexity)
 			}
 		}
 	}
@@ -983,14 +983,14 @@ func fileSummarizeLong(input chan *FileJob) string {
 	}
 
 	str.WriteString(getTabularWideBreak())
-	fmt.Fprintf(str, tabularWideFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumWeightedComplexity)
+	_, _ = fmt.Fprintf(str, tabularWideFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumWeightedComplexity)
 	str.WriteString(getTabularWideBreak())
 
 	if UlocMode {
-		fmt.Fprintf(str, tabularWideUlocGlobalFormatBody, len(ulocGlobalCount))
+		_, _ = fmt.Fprintf(str, tabularWideUlocGlobalFormatBody, len(ulocGlobalCount))
 		if Dryness {
 			dryness := float64(len(ulocGlobalCount)) / float64(sumLines)
-			fmt.Fprintf(str, "DRYness %% %43.2f\n", dryness)
+			_, _ = fmt.Fprintf(str, "DRYness %% %43.2f\n", dryness)
 		}
 		str.WriteString(getTabularWideBreak())
 	}
@@ -1044,9 +1044,9 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 	str.WriteString(getTabularShortBreak())
 	if !Complexity {
-		fmt.Fprintf(str, tabularShortFormatHead, "Language", "Files", "Lines", "Blanks", "Comments", "Code", "Complexity")
+		_, _ = fmt.Fprintf(str, tabularShortFormatHead, "Language", "Files", "Lines", "Blanks", "Comments", "Code", "Complexity")
 	} else {
-		fmt.Fprintf(str, tabularShortFormatHeadNoComplexity, "Language", "Files", "Lines", "Blanks", "Comments", "Code")
+		_, _ = fmt.Fprintf(str, tabularShortFormatHeadNoComplexity, "Language", "Files", "Lines", "Blanks", "Comments", "Code")
 	}
 
 	if !Files {
@@ -1265,14 +1265,14 @@ func calculateCocomoSLOCCount(sumCode int64, str *strings.Builder) {
 
 	p := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
 
-	p.Fprintf(str, "Total Physical Source Lines of Code (SLOC)                     = %d\n", sumCode)
-	p.Fprintf(str, "Development Effort Estimate, Person-Years (Person-Months)      = %.2f (%.2f)\n", estimatedEffort/12, estimatedEffort)
-	p.Fprintf(str, " (Basic COCOMO model, Person-Months = %.2f*(KSLOC**%.2f)*%.2f)\n", projectType[CocomoProjectType][0], projectType[CocomoProjectType][1], EAF)
-	p.Fprintf(str, "Schedule Estimate, Years (Months)                              = %.2f (%.2f)\n", estimatedScheduleMonths/12, estimatedScheduleMonths)
-	p.Fprintf(str, " (Basic COCOMO model, Months = %.2f*(person-months**%.2f))\n", projectType[CocomoProjectType][2], projectType[CocomoProjectType][3])
-	p.Fprintf(str, "Estimated Average Number of Developers (Effort/Schedule)       = %.2f\n", estimatedPeopleRequired)
-	p.Fprintf(str, "Total Estimated Cost to Develop                                = %s%.0f\n", CurrencySymbol, estimatedCost)
-	p.Fprintf(str, " (average salary = %s%d/year, overhead = %.2f)\n", CurrencySymbol, AverageWage, Overhead)
+	_, _ = p.Fprintf(str, "Total Physical Source Lines of Code (SLOC)                     = %d\n", sumCode)
+	_, _ = p.Fprintf(str, "Development Effort Estimate, Person-Years (Person-Months)      = %.2f (%.2f)\n", estimatedEffort/12, estimatedEffort)
+	_, _ = p.Fprintf(str, " (Basic COCOMO model, Person-Months = %.2f*(KSLOC**%.2f)*%.2f)\n", projectType[CocomoProjectType][0], projectType[CocomoProjectType][1], EAF)
+	_, _ = p.Fprintf(str, "Schedule Estimate, Years (Months)                              = %.2f (%.2f)\n", estimatedScheduleMonths/12, estimatedScheduleMonths)
+	_, _ = p.Fprintf(str, " (Basic COCOMO model, Months = %.2f*(person-months**%.2f))\n", projectType[CocomoProjectType][2], projectType[CocomoProjectType][3])
+	_, _ = p.Fprintf(str, "Estimated Average Number of Developers (Effort/Schedule)       = %.2f\n", estimatedPeopleRequired)
+	_, _ = p.Fprintf(str, "Total Estimated Cost to Develop                                = %s%.0f\n", CurrencySymbol, estimatedCost)
+	_, _ = p.Fprintf(str, " (average salary = %s%d/year, overhead = %.2f)\n", CurrencySymbol, AverageWage, Overhead)
 }
 
 func calculateCocomo(sumCode int64, str *strings.Builder) {
@@ -1280,12 +1280,12 @@ func calculateCocomo(sumCode int64, str *strings.Builder) {
 
 	p := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
 
-	p.Fprintf(str, "Estimated Cost to Develop (%s) %s%d\n", CocomoProjectType, CurrencySymbol, int64(estimatedCost))
-	p.Fprintf(str, "Estimated Schedule Effort (%s) %.2f months\n", CocomoProjectType, estimatedScheduleMonths)
+	_, _ = p.Fprintf(str, "Estimated Cost to Develop (%s) %s%d\n", CocomoProjectType, CurrencySymbol, int64(estimatedCost))
+	_, _ = p.Fprintf(str, "Estimated Schedule Effort (%s) %.2f months\n", CocomoProjectType, estimatedScheduleMonths)
 	if math.IsNaN(estimatedPeopleRequired) {
-		p.Fprintf(str, "Estimated People Required 1 Grandparent\n")
+		_, _ = p.Fprintf(str, "Estimated People Required 1 Grandparent\n")
 	} else {
-		p.Fprintf(str, "Estimated People Required (%s) %.2f\n", CocomoProjectType, estimatedPeopleRequired)
+		_, _ = p.Fprintf(str, "Estimated People Required (%s) %.2f\n", CocomoProjectType, estimatedPeopleRequired)
 	}
 }
 
@@ -1316,7 +1316,7 @@ func calculateSize(sumBytes int64, str *strings.Builder) {
 		size = float64(sumBytes) / (1012 * 1012)
 	case "xkcd-imaginary":
 		str.WriteString("used in quantum computing\n")
-		fmt.Fprintf(str, "Processed %d bytes, %s megabytes (%s)\n", sumBytes, `¯\_(ツ)_/¯`, strings.ToUpper(SizeUnit))
+		_, _ = fmt.Fprintf(str, "Processed %d bytes, %s megabytes (%s)\n", sumBytes, `¯\_(ツ)_/¯`, strings.ToUpper(SizeUnit))
 	case "xkcd-intel":
 		str.WriteString("calculated on pentium F.P.U.\n")
 		size = float64(sumBytes) / (1023.937528 * 1023.937528)
@@ -1338,7 +1338,7 @@ func calculateSize(sumBytes int64, str *strings.Builder) {
 	}
 
 	if !strings.EqualFold(SizeUnit, "xkcd-imaginary") {
-		fmt.Fprintf(str, "Processed %d bytes, %.3f megabytes (%s)\n", sumBytes, size, strings.ToUpper(SizeUnit))
+		_, _ = fmt.Fprintf(str, "Processed %d bytes, %.3f megabytes (%s)\n", sumBytes, size, strings.ToUpper(SizeUnit))
 	}
 }
 
