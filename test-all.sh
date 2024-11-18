@@ -971,6 +971,7 @@ specificLanguages=(
     'LLVM IR '
     'Luna '
     'Makefile '
+    'Metal '
     'Monkey C '
     'Moonbit '
     'Nushell '
