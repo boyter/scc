@@ -2451,7 +2451,7 @@
       "!= ",
       "== "
     ],
-    "extensions": ["vert", "tesc", "tese", "geom", "frag", "comp"],
+    "extensions": ["vert", "tesc", "tese", "geom", "frag", "comp", "glsl"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
     "quotes": [
