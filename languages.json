@@ -6903,10 +6903,14 @@
     "complexitychecks": [
       "for ",
       "for(",
+      "foreach ",
+      "foreach(",
       "if ",
       "if(",
       "switch ",
+      "switch(",
       "while ",
+      "while(",
       "else ",
       "|| ",
       "&& ",
@@ -6920,6 +6924,15 @@
       {
         "end": "\"",
         "start": "\""
+      },
+      {
+        "end": "\"",
+        "start": "@\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"\"\"",
+        "start": "\"\"\""
       }
     ]
   },

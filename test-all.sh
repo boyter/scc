@@ -998,6 +998,7 @@ specificLanguages=(
     'TypeSpec '
     'Typst '
     'Up '
+    'Vala '
     'Web Services '
     'wenyan '
     'Wren '
