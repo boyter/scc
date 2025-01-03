@@ -43,7 +43,9 @@ type Language struct {
 type LanguageFeature struct {
 	Complexity            *Trie
 	MultiLineComments     *Trie
+	MultiLine             [][]string // in case someone needs the actual value
 	SingleLineComments    *Trie
+	LineComment           []string // in case someone needs the actual value
 	Strings               *Trie
 	Tokens                *Trie
 	Nested                bool

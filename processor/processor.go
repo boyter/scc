@@ -443,7 +443,9 @@ func processLanguageFeature(name string, value Language) {
 	LanguageFeatures[name] = LanguageFeature{
 		Complexity:            complexityTrie,
 		MultiLineComments:     mlCommentTrie,
+		MultiLine:             value.MultiLine,
 		SingleLineComments:    slCommentTrie,
+		LineComment:           value.LineComment,
 		Strings:               stringTrie,
 		Tokens:                tokenTrie,
 		Nested:                value.NestedMultiLine,
