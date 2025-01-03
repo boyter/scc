@@ -2968,6 +2968,13 @@
       }
     ]
   },
+  "WISE Jobfile": {
+    "complexitychecks": [],
+    "extensions": ["fgmj"],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": []
+  },
   "JSON": {
     "complexitychecks": [],
     "extensions": ["json"],
