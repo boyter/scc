@@ -305,14 +305,14 @@ func toCSVSummary(input chan *FileJob) string {
 	for _, result := range language {
 		records = append(records, []string{
 			result.Name,
-			fmt.Sprint(result.Lines),
-			fmt.Sprint(result.Code),
-			fmt.Sprint(result.Comment),
-			fmt.Sprint(result.Blank),
-			fmt.Sprint(result.Complexity),
-			fmt.Sprint(result.Bytes),
-			fmt.Sprint(result.Count),
-			fmt.Sprint(len(ulocLanguageCount[result.Name])),
+			strconv.FormatInt(result.Lines, 10),
+			strconv.FormatInt(result.Code, 10),
+			strconv.FormatInt(result.Comment, 10),
+			strconv.FormatInt(result.Blank, 10),
+			strconv.FormatInt(result.Complexity, 10),
+			strconv.FormatInt(result.Bytes, 10),
+			strconv.FormatInt(result.Count, 10),
+			strconv.Itoa(len(ulocLanguageCount[result.Name])),
 		})
 	}
 
@@ -403,13 +403,13 @@ func toCSVFiles(input chan *FileJob) string {
 			result.Language,
 			result.Location,
 			result.Filename,
-			fmt.Sprint(result.Lines),
-			fmt.Sprint(result.Code),
-			fmt.Sprint(result.Comment),
-			fmt.Sprint(result.Blank),
-			fmt.Sprint(result.Complexity),
-			fmt.Sprint(result.Bytes),
-			fmt.Sprint(result.Uloc),
+			strconv.FormatInt(result.Lines, 10),
+			strconv.FormatInt(result.Code, 10),
+			strconv.FormatInt(result.Comment, 10),
+			strconv.FormatInt(result.Blank, 10),
+			strconv.FormatInt(result.Complexity, 10),
+			strconv.FormatInt(result.Bytes, 10),
+			strconv.Itoa(result.Uloc),
 		})
 	}
 
@@ -493,17 +493,17 @@ func toCSVStream(input chan *FileJob) string {
 		var location = "\"" + quoteRegex.ReplaceAllString(result.Location, "\"\"") + "\""
 		var filename = "\"" + quoteRegex.ReplaceAllString(result.Filename, "\"\"") + "\""
 
-		fmt.Printf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+		fmt.Printf("%s,%s,%s,%d,%d,%d,%d,%d,%d,%d\n",
 			result.Language,
 			location,
 			filename,
-			fmt.Sprint(result.Lines),
-			fmt.Sprint(result.Code),
-			fmt.Sprint(result.Comment),
-			fmt.Sprint(result.Blank),
-			fmt.Sprint(result.Complexity),
-			fmt.Sprint(result.Bytes),
-			fmt.Sprint(result.Uloc),
+			result.Lines,
+			result.Code,
+			result.Comment,
+			result.Blank,
+			result.Complexity,
+			result.Bytes,
+			result.Uloc,
 		)
 	}
 
