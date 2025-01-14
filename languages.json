@@ -6520,6 +6520,33 @@
       }
     ]
   },
+  "Treetop": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": ["treetop", "tt"],
+    "line_comment": ["#"],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
   "Twig Template": {
     "complexitychecks": ["{% for ", "{% if ", "{% else ", "{% elseif "],
     "extensions": ["twig"],
