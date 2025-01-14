@@ -1081,6 +1081,59 @@ else
     echo -e "${GREEN}PASSED Issue379 Regression Check"
 fi
 
+# Regression tests for https://github.com/boyter/scc/issues/564
+Issue564GoCount=$(./scc -f csv "examples/issue564/" --no-scc-ignore | grep 'Go' | cut -d ',' -f 8)
+Issue564PyCount=$(./scc -f csv "examples/issue564/" --no-scc-ignore | grep 'Python' | cut -d ',' -f 8)
+Issue564GoExcludeCount=$(./scc -f csv "examples/issue564/" --no-scc-ignore --exclude-dir=level2 | grep 'Go' | cut -d ',' -f 8)
+Issue564PyExcludeCount=$(./scc -f csv "examples/issue564/" --no-scc-ignore --exclude-dir=level2 | grep 'Python' | cut -d ',' -f 8)
+Issue564GoExclude2Count=$(./scc -f csv "examples/issue564/" --no-scc-ignore --exclude-dir=level1 | grep 'Go' | cut -d ',' -f 8)
+Issue564PyExclude2Count=$(./scc -f csv "examples/issue564/" --no-scc-ignore --exclude-dir=level1 | grep 'Python' | cut -d ',' -f 8)
+Issue564GoExcludeMultiCount=$(./scc -f csv "examples/issue564/" --no-scc-ignore --exclude-dir=level1/level2 | grep 'Go' | cut -d ',' -f 8)
+Issue564PyExcludeMultiCount=$(./scc -f csv "examples/issue564/" --no-scc-ignore --exclude-dir=level1/level2 | grep 'Python' | cut -d ',' -f 8)
+if [ $Issue564GoCount -ne 2 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue564 Go file counting"
+    echo -e "=======================================================${NC}"
+    exit
+elif [ $Issue564PyCount -ne 3 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue564 Python file counting"
+    echo -e "=======================================================${NC}"
+    exit
+elif [ "$Issue564PyExcludeCount" != "" ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue564 exclude level2 Python file counting"
+    echo -e "=======================================================${NC}"
+    exit
+elif [ $Issue564GoExcludeCount -ne 2 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue564 exclude level2 Go file counting"
+    echo -e "=======================================================${NC}"
+    exit
+elif [ $Issue564PyExclude2Count -ne 1 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue564 exclude level1 Python file counting"
+    echo -e "=======================================================${NC}"
+    exit
+elif [ $Issue564GoExclude2Count -ne 1 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue564 exclude level1 Go file counting"
+    echo -e "=======================================================${NC}"
+    exit
+elif [ $Issue564GoExcludeMultiCount -ne 2 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue564 exclude level1/level2 Go file counting"
+    echo -e "=======================================================${NC}"
+    exit
+elif [ $Issue564PyExcludeMultiCount -ne 1 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue564 exclude level1/level2 Python file counting"
+    echo -e "=======================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED Issue564 Regression Check"
+fi
+
 # Extra case for longer languages that are normally truncated
 for i in 'CloudFormation (YAM' 'CloudFormation (JSO'
 do
