@@ -1,9 +1,10 @@
 module github.com/boyter/scc/v3
 
-go 1.22
+go 1.23.3
 
 require (
 	github.com/boyter/gocodewalker v1.4.0
+	github.com/boyter/simplecache v0.0.0-20250113230110-8a4c9201822a
 	github.com/json-iterator/go v1.1.12
 	github.com/mattn/go-runewidth v0.0.16
 	github.com/rs/zerolog v1.30.0
