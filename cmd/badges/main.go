@@ -16,17 +16,29 @@ import (
 	"time"
 
 	"github.com/boyter/scc/v3/processor"
+	"github.com/boyter/simplecache"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/rs/zerolog/log"
 )
 
 var (
-	uniqueCode        = "unique_code"
-	cache             = NewSimpleCache(1000, 86400)
+	uniqueCode = "unique_code"
+	cache      = simplecache.New[[]processor.LanguageSummary](simplecache.Option{
+		MaxItems: intPtr(1000),
+		MaxAge:   timePtr(time.Hour * 72),
+	})
 	countingSemaphore = make(chan bool, 1)
 	tmpDir            = os.TempDir()
 	json              = jsoniter.ConfigCompatibleWithStandardLibrary
 )
+
+func intPtr(i int) *int {
+	return &i
+}
+
+func timePtr(t time.Duration) *time.Duration {
+	return &t
+}
 
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -37,18 +49,9 @@ func main() {
 			return
 		}
 
-		data, err := process(1, loc)
+		res, err := process(1, loc)
 		if err != nil {
 			log.Error().Str(uniqueCode, "03ec75c3").Err(err).Str("loc", loc.String()).Send()
-			w.WriteHeader(http.StatusBadRequest)
-			_, _ = w.Write([]byte("something bad happened sorry"))
-			return
-		}
-
-		var res []processor.LanguageSummary
-		err = json.Unmarshal(data, &res)
-		if err != nil {
-			log.Error().Str(uniqueCode, "9192cad8").Err(err).Send()
 			w.WriteHeader(http.StatusBadRequest)
 			_, _ = w.Write([]byte("something bad happened sorry"))
 			return
@@ -250,7 +253,7 @@ func formatCount(count float64) string {
 	return fmt.Sprintf("%v", math.Round(count))
 }
 
-func process(id int, s location) ([]byte, error) {
+func process(id int, s location) ([]processor.LanguageSummary, error) {
 	countingSemaphore <- true
 	defer func() {
 		<-countingSemaphore // remove one to free up concurrency
@@ -277,7 +280,7 @@ func process(id int, s location) ([]byte, error) {
 	cmd.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
 	_, err := cmd.Output()
 
-	if ctx.Err() == context.DeadlineExceeded {
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 		return nil, err
 	}
 
@@ -307,11 +310,17 @@ func process(id int, s location) ([]byte, error) {
 		return nil, err
 	}
 
-	file, err := os.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
-	cache.Add(s.String(), file)
+
+	var res []processor.LanguageSummary
+	err = json.Unmarshal(data, &res)
+	if err != nil {
+		return nil, err
+	}
+	_ = cache.Set(s.String(), res)
 
 	// Cleanup
 	if err := os.RemoveAll(filePath); err != nil {
@@ -322,7 +331,7 @@ func process(id int, s location) ([]byte, error) {
 		return nil, err
 	}
 
-	return file, nil
+	return res, nil
 }
 
 func processPath(s string) string {

@@ -2,6 +2,9 @@
 ## explicit; go 1.20
 github.com/boyter/gocodewalker
 github.com/boyter/gocodewalker/go-gitignore
+# github.com/boyter/simplecache v0.0.0-20250113230110-8a4c9201822a
+## explicit; go 1.23.3
+github.com/boyter/simplecache
 # github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964
 ## explicit
 github.com/danwakefield/fnmatch
