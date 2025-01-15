@@ -104,6 +104,11 @@ func appendLocationLog(log string) {
 	locationLogMutex.Lock()
 	defer locationLogMutex.Unlock()
 
+	for _, l := range locationLog {
+		if l == log {
+			return
+		}
+	}
 	locationLog = append(locationLog, log)
 
 	if len(locationLog) > 100 {
