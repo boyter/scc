@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/boyter/scc/v3/processor"
@@ -30,6 +31,8 @@ var (
 	countingSemaphore = make(chan bool, 1)
 	tmpDir            = os.TempDir()
 	json              = jsoniter.ConfigCompatibleWithStandardLibrary
+	locationLog       = []string{}
+	locationLogMutex  = sync.Mutex{}
 )
 
 func intPtr(i int) *int {
@@ -41,6 +44,14 @@ func timePtr(t time.Duration) *time.Duration {
 }
 
 func main() {
+	http.HandleFunc("/health-check/", func(w http.ResponseWriter, r *http.Request) {
+		locationLogMutex.Lock()
+		for _, l := range locationLog {
+			_, _ = w.Write([]byte(l + "\n"))
+		}
+		locationLogMutex.Unlock()
+	})
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		loc, err := processUrlPath(r.URL.Path)
 		if err != nil {
@@ -48,6 +59,8 @@ func main() {
 			_, _ = w.Write([]byte("you be invalid"))
 			return
 		}
+
+		appendLocationLog(loc.String())
 
 		res, err := process(1, loc)
 		if err != nil {
@@ -84,6 +97,17 @@ func main() {
 	if err := http.ListenAndServe(addr, nil); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Error().Str(uniqueCode, "c28556e8").Err(err).Send()
 		os.Exit(1)
+	}
+}
+
+func appendLocationLog(log string) {
+	locationLogMutex.Lock()
+	defer locationLogMutex.Unlock()
+
+	locationLog = append(locationLog, log)
+
+	if len(locationLog) > 100 {
+		locationLog = locationLog[1:]
 	}
 }
 
