@@ -59,6 +59,11 @@ func main() {
 			return
 		}
 
+		if filterBad(loc) {
+			log.Error().Str(uniqueCode, "bfee4bd8").Str("loc", loc.String()).Msg("filter bad")
+			return
+		}
+
 		appendLocationLog(loc.String())
 
 		res, err := process(1, loc)
@@ -97,6 +102,23 @@ func main() {
 		log.Error().Str(uniqueCode, "c28556e8").Err(err).Send()
 		os.Exit(1)
 	}
+}
+
+func filterBad(loc location) bool {
+	l := loc.String()
+	bad := []string{"wp-content.com", "wp-admin.com", ".well-known", "wp-includes.com", ".php"}
+	count := 0
+	for _, b := range bad {
+		if strings.Contains(l, b) {
+			count++
+		}
+	}
+
+	if count >= 2 {
+		return true
+	}
+
+	return false
 }
 
 func appendLocationLog(log string) {
