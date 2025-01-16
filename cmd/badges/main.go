@@ -55,8 +55,7 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		loc, err := processUrlPath(r.URL.Path)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			_, _ = w.Write([]byte("you be invalid"))
+			http.Redirect(w, r, "https://github.com/boyter/scc/?tab=readme-ov-file#badges-beta", http.StatusTemporaryRedirect)
 			return
 		}
 
