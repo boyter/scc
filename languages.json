@@ -1821,17 +1821,23 @@
   },
   "Elixir": {
     "complexitychecks": [
-      "for ",
-      "for(",
+      "case ",
+      "cond ",
       "if ",
-      "if(",
-      "switch ",
-      "while ",
+      "for ",
+      "with ",
+      "try ",
+      "catch ",
+      "rescue ",
       "else ",
+      "and ",
+      "or ",
+      "not ",
       "|| ",
       "&& ",
       "!= ",
-      "== "
+      "== ",
+      "|> "
     ],
     "extensions": ["ex", "exs"],
     "line_comment": ["#"],
@@ -2703,6 +2709,36 @@
     "line_comment": ["-#"],
     "multi_line": [],
     "quotes": []
+  },
+  "HEEx": {
+    "complexitychecks": [
+      "case ",
+      "cond ",
+      "if ",
+      "for ",
+      "with ",
+      "try ",
+      "catch ",
+      "rescue ",
+      "else ",
+      "and ",
+      "or ",
+      "not ",
+      "!= ",
+      "== ",
+      "|| ",
+      "&& ",
+      "|> "
+    ],
+    "extensions": ["heex"],
+    "line_comment": [],
+    "multi_line": [["<%!--", "--%>"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
   },
   "HEX": {
     "complexitychecks": [],
