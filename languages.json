@@ -835,7 +835,7 @@
       "!= ",
       "== "
     ],
-    "extensions": ["cc", "cpp", "cxx", "c++", "pcc", "ino"],
+    "extensions": ["cc", "cpp", "cxx", "c++", "pcc", "ino", "ccm", "cppm", "cxxm", "c++m", "mxx"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
     "quotes": [
@@ -861,7 +861,7 @@
       "!= ",
       "== "
     ],
-    "extensions": ["hh", "hpp", "hxx", "inl", "ipp"],
+    "extensions": ["hh", "hpp", "hxx", "inl", "ipp", "ixx"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
     "quotes": [
@@ -6214,6 +6214,9 @@
       "switch ",
       "while ",
       "else ",
+      "catch ",
+      "guard ",
+      "?",
       "|| ",
       "&& ",
       "!= ",
