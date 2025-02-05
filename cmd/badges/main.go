@@ -32,6 +32,7 @@ var (
 	tmpDir            = os.TempDir()
 	json              = jsoniter.ConfigCompatibleWithStandardLibrary
 	locationLog       = []string{}
+	locationTracker   = map[string]int{}
 	locationLogMutex  = sync.Mutex{}
 )
 
@@ -46,8 +47,8 @@ func timePtr(t time.Duration) *time.Duration {
 func main() {
 	http.HandleFunc("/health-check/", func(w http.ResponseWriter, r *http.Request) {
 		locationLogMutex.Lock()
-		for _, l := range locationLog {
-			_, _ = w.Write([]byte(l + "\n"))
+		for k, v := range locationTracker {
+			_, _ = w.Write([]byte(fmt.Sprintf("%s:%d\n", k, v)))
 		}
 		locationLogMutex.Unlock()
 	})
@@ -131,6 +132,7 @@ func appendLocationLog(log string) {
 		}
 	}
 	locationLog = append(locationLog, log)
+	locationTracker[log] = locationTracker[log] + 1
 
 	if len(locationLog) > 100 {
 		locationLog = locationLog[1:]
