@@ -731,7 +731,7 @@ See the cloc documentation for more examples.
 
 [OpenMetrics](https://openmetrics.io/) is a metric reporting format specification extending the Prometheus exposition text format.
 
-The produced output is natively supported by [Prometheus](https://prometheus.io/) and [GitLab CI](https://docs.gitlab.com/ee/ci/metrics_reports.html)
+The produced output is natively supported by [Prometheus](https://prometheus.io/) and [GitLab CI](https://docs.gitlab.com/ee/ci/testing/metrics_reports.html)
 
 Note that OpenMetrics respects `--by-file` and as such will return a summary by default.
 
