@@ -1005,6 +1005,7 @@ specificLanguages=(
     'XML Schema '
     'YAML '
     'Yarn '
+    'Zig '
     'ZoKrates '
     'Zsh '
 )

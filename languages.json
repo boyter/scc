@@ -7416,12 +7416,15 @@
   },
   "Zig": {
     "complexitychecks": [
+      "catch ",
       "while ",
       "for ",
       "if ",
       "else ",
-      "defer ",
-      "switch",
+      "errdefer ",
+      "try ",
+      "switch ",
+      "orelse ",
       "||",
       "&&",
       "!=",
