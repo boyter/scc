@@ -187,3 +187,26 @@ a =
 		t.Errorf("Expected 5 lines got %d", fileJob.Blank)
 	}
 }
+
+func TestCountStatsComplexityLines(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Go",
+	}
+
+	fileJob.SetContent(`fileJob.Comment++
+				if fileJob.Callback != nil {
+					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
+						return
+					}
+				}
+				if Trace {
+					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState))
+				}`)
+
+	CountStats(&fileJob)
+
+	if len(fileJob.ComplexityLine) != int(fileJob.Lines) {
+		t.Errorf("Expected %d lines got %d", fileJob.Lines, len(fileJob.ComplexityLine))
+	}
+}
