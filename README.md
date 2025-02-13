@@ -71,6 +71,12 @@ Or if you have [Homebrew](https://brew.sh/) installed
 
 `$ brew install scc`
 
+#### Fedora
+
+Fedora Linux users can use a [COPR repository](https://copr.fedorainfracloud.org/coprs/lihaohong/scc/):
+
+`$ sudo dnf copr enable lihaohong/scc && sudo dnf install scc`
+
 #### MacPorts
 
 On macOS, you can also install via [MacPorts](https://www.macports.org)
