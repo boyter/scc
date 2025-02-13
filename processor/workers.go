@@ -559,14 +559,14 @@ func CountStats(fileJob *FileJob) {
 
 	if UlocMode && Files {
 		uloc := map[string]struct{}{}
-		for _, l := range strings.Split(strings.TrimRight(string(fileJob.Content), "\n"), "\n") {
+		for l := range strings.SplitSeq(strings.TrimRight(string(fileJob.Content), "\n"), "\n") {
 			uloc[l] = struct{}{}
 		}
 		fileJob.Uloc = len(uloc)
 	}
 
 	if MaxMean {
-		for _, l := range strings.Split(strings.TrimRight(string(fileJob.Content), "\n"), "\n") {
+		for l := range strings.SplitSeq(strings.TrimRight(string(fileJob.Content), "\n"), "\n") {
 			fileJob.LineLength = append(fileJob.LineLength, len(l))
 		}
 	}
@@ -803,7 +803,7 @@ func processFile(job *FileJob) bool {
 	if UlocMode {
 		ulocMutex.Lock()
 
-		for _, l := range strings.Split(strings.TrimRight(string(job.Content), "\n"), "\n") {
+		for l := range strings.SplitSeq(strings.TrimRight(string(job.Content), "\n"), "\n") {
 			ulocGlobalCount[l] = struct{}{}
 
 			_, ok := ulocLanguageCount[job.Language]
@@ -820,7 +820,7 @@ func processFile(job *FileJob) bool {
 
 func hardRemapLanguage(job *FileJob) bool {
 	remapped := false
-	for _, s := range strings.Split(RemapAll, ",") {
+	for s := range strings.SplitSeq(RemapAll, ",") {
 		t := strings.Split(s, ":")
 		if len(t) == 2 {
 			cutoff := 1000 // 1000 bytes into the file to look
@@ -846,7 +846,7 @@ func hardRemapLanguage(job *FileJob) bool {
 
 func unknownRemapLanguage(job *FileJob) bool {
 	remapped := false
-	for _, s := range strings.Split(RemapUnknown, ",") {
+	for s := range strings.SplitSeq(RemapUnknown, ",") {
 		t := strings.Split(s, ":")
 		if len(t) == 2 {
 			cutoff := 1000 // 1000 bytes into the file to look

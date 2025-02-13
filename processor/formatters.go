@@ -790,7 +790,7 @@ func fileSummarizeMulti(input chan *FileJob) string {
 	var str strings.Builder
 
 	// for each output pump the results into
-	for _, s := range strings.Split(FormatMulti, ",") {
+	for s := range strings.SplitSeq(FormatMulti, ",") {
 		t := strings.Split(s, ":")
 		if len(t) == 2 {
 			i := make(chan *FileJob, len(results))
