@@ -2704,6 +2704,29 @@
       }
     ]
   },
+  "HCL": {
+    "complexitychecks": [
+      "for_each ",
+      "for ",
+      "count ",
+      "coalesce(",
+      "== ",
+      "!= ",
+      "> ",
+      "< ",
+      "&& ",
+      "|| "
+    ],
+    "extensions": ["hcl"],
+    "line_comment": ["#"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "HAML": {
     "extensions": ["haml"],
     "line_comment": ["-#"],
