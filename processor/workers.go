@@ -603,6 +603,8 @@ func CountStats(fileJob *FileJob) {
 		avgLineByteCount := len(fileJob.Content) / int(fileJob.Lines)
 		minifiedGeneratedCheck(avgLineByteCount, fileJob)
 	}
+
+	fileJob.ComplexityLine = fileJob.ComplexityLine[:fileJob.Lines]
 }
 
 func minifiedGeneratedCheck(avgLineByteCount int, fileJob *FileJob) {
