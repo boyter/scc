@@ -958,6 +958,7 @@ specificLanguages=(
     'Gwion '
     'HAML '
     'Hare '
+    'HCL '
     'ignore '
     'INI '
     'Java '
