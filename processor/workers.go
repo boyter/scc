@@ -263,6 +263,7 @@ func codeState(
 			case TComplexity:
 				if index == 0 || isWhitespace(fileJob.Content[index-1]) {
 					fileJob.Complexity++
+					fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] = fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] + 1
 				}
 			}
 		}
@@ -351,6 +352,7 @@ func blankState(
 		currentState = SCode
 		if index == 0 || isWhitespace(fileJob.Content[index-1]) {
 			fileJob.Complexity++
+			fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] = fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] + 1
 		}
 
 	default:
@@ -436,6 +438,7 @@ func CountStats(fileJob *FileJob) {
 
 	// TODO needs to be set via langFeatures.Quotes[0].IgnoreEscape for the matching feature
 	ignoreEscape := false
+	fileJob.ComplexityLine = append(fileJob.ComplexityLine, 0)
 
 	for index := checkBomSkip(fileJob); index < int(fileJob.Bytes); index++ {
 		// Based on our current state determine if the state should change by checking
@@ -503,6 +506,7 @@ func CountStats(fileJob *FileJob) {
 		// we are currently in
 		if fileJob.Content[index] == '\n' || index >= endPoint {
 			fileJob.Lines++
+			fileJob.ComplexityLine = append(fileJob.ComplexityLine, 0)
 
 			if NoLarge && fileJob.Lines >= LargeLineCount {
 				// Save memory by unsetting the content as we no longer require it
@@ -599,6 +603,8 @@ func CountStats(fileJob *FileJob) {
 		avgLineByteCount := len(fileJob.Content) / int(fileJob.Lines)
 		minifiedGeneratedCheck(avgLineByteCount, fileJob)
 	}
+
+	fileJob.ComplexityLine = fileJob.ComplexityLine[:fileJob.Lines]
 }
 
 func minifiedGeneratedCheck(avgLineByteCount int, fileJob *FileJob) {

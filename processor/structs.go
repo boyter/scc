@@ -79,6 +79,7 @@ type FileJob struct {
 	Comment            int64
 	Blank              int64
 	Complexity         int64
+	ComplexityLine     []int64
 	WeightedComplexity float64
 	Hash               hash.Hash
 	Callback           FileJobCallback `json:"-"`
