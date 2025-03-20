@@ -15,6 +15,7 @@ If you don't like sloc cloc and code feel free to use the name `Succinct Code Co
 [![Go Report Card](https://goreportcard.com/badge/github.com/boyter/scc)](https://goreportcard.com/report/github.com/boyter/scc)
 [![Coverage Status](https://coveralls.io/repos/github/boyter/scc/badge.svg?branch=master)](https://coveralls.io/github/boyter/scc?branch=master)
 [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/)](https://github.com/boyter/scc/)
+![](https://img.shields.io/github/downloads/boyter/scc/total?label=downloads%20%28GH%29)
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
 Licensed under MIT licence.
