@@ -1844,6 +1844,98 @@
     "multi_line": [],
     "quotes": [
       {
+        "end": "\"\"\"",
+        "start": "\"\"\""
+      },
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "'''",
+        "start": "'''"
+      },
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
+  "Elixir Template": {
+    "complexitychecks": [
+      "case ",
+      "cond ",
+      "if ",
+      "for ",
+      "with ",
+      "try ",
+      "catch ",
+      "rescue ",
+      "else ",
+      "and ",
+      "or ",
+      "not ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== ",
+      "|> ",
+      "<% "
+    ],
+    "extensions": ["eex"],
+    "line_comment": [
+      "#"
+    ],
+    "multi_line": [["<!--", "-->"]],
+    "quotes": [
+      {
+        "end": "\"\"\"",
+        "start": "\"\"\""
+      },
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "'''",
+        "start": "'''"
+      },
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
+  "Phoenix LiveView": {
+    "complexitychecks": [
+      "case ",
+      "cond ",
+      "if ",
+      "for ",
+      "with ",
+      "try ",
+      "catch ",
+      "rescue ",
+      "else ",
+      "and ",
+      "or ",
+      "not ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== ",
+      "|> ",
+      "<% ",
+      "<. "
+    ],
+    "extensions": ["heex", "leex"],
+    "line_comment": [
+      "#",
+      "<!--"
+    ],
+    "multi_line": [["<!--", "-->"]],
+    "quotes": [
+      {
         "end": "\\\"\\\"\\\"",
         "start": "\\\"\\\"\\\""
       },

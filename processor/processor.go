@@ -120,7 +120,7 @@ var UlocMode = false
 // Percent toggles checking for binary files using NUL bytes
 var Percent = false
 
-// MaxMean toggles checking for binary files using NUL bytes
+// MaxMean sets the calculation of the max and mean line length
 var MaxMean = false
 
 // Dryness toggles checking for binary files using NUL bytes

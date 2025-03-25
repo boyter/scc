@@ -942,6 +942,7 @@ specificLanguages=(
     'Docker ignore '
     'Dockerfile '
     'DOT '
+    'Elixir Template'
     'Elm '
     'EmiT '
     'F# '
