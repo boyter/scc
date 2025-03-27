@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -48,7 +49,7 @@ func main() {
 	http.HandleFunc("/health-check/", func(w http.ResponseWriter, r *http.Request) {
 		locationLogMutex.Lock()
 		for k, v := range locationTracker {
-			_, _ = w.Write([]byte(fmt.Sprintf("%s:%d\n", k, v)))
+			_, _ = fmt.Fprintf(w, "%s:%d\n", k, v)
 		}
 		locationLogMutex.Unlock()
 	})
@@ -115,21 +116,15 @@ func filterBad(loc location) bool {
 		}
 	}
 
-	if count >= 2 {
-		return true
-	}
-
-	return false
+	return count >= 2
 }
 
 func appendLocationLog(log string) {
 	locationLogMutex.Lock()
 	defer locationLogMutex.Unlock()
 
-	for _, l := range locationLog {
-		if l == log {
-			return
-		}
+	if slices.Contains(locationLog, log) {
+		return
 	}
 	locationLog = append(locationLog, log)
 	locationTracker[log] = locationTracker[log] + 1
@@ -400,10 +395,10 @@ func processPath(s string) string {
 		sp = append(sp, cleanString(s))
 	}
 
-	filename := strings.Replace(sp[2], ".com", "", -1)
-	filename = strings.Replace(filename, ".org", "", -1)
+	filename := strings.ReplaceAll(sp[2], ".com", "")
+	filename = strings.ReplaceAll(filename, ".org", "")
 	filename += "." + sp[3]
-	filename += "." + strings.Replace(sp[4], ".git", "", -1) + ".json"
+	filename += "." + strings.ReplaceAll(sp[4], ".git", "") + ".json"
 
 	return filename
 }
