@@ -6523,6 +6523,26 @@
       }
     ]
   },
+  "Tact": {
+    "complexitychecks": [
+      "import ",
+      "contract ",
+      "trait ",
+      "message ",
+      "message(",
+      "struct ",
+      "asm "
+    ],
+    "extensions": ["tact"],
+    "line_comment": ["//", "///"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "TaskPaper": {
     "complexitychecks": [],
     "extensions": ["taskpaper"],
