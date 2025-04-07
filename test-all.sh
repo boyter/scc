@@ -928,6 +928,7 @@ specificLanguages=(
     'Bitbucket Pipeline '
     'Boo '
     'Bosque '
+    'C3 '
     'C Shell '
     'C# '
     'Cairo '
