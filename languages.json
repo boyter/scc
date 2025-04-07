@@ -5878,9 +5878,42 @@
       "|| ",
       "&& ",
       "!= ",
-      "== "
+      "== ",
+      ">= ",
+      "> ",
+      "<= ",
+      "< "
     ],
     "extensions": ["sc", "scala"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
+  "Scallop": {
+    "complexitychecks": [
+      "rel ",
+      "count(",
+      "sum(",
+      "prod(",
+      "min(",
+      "max(",
+      "exists(",
+      "forall(",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== ",
+      ">= ",
+      "> ",
+      "<= ",
+      "< "
+    ],
+    "extensions": ["scl"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
     "quotes": [
