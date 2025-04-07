@@ -992,6 +992,7 @@ specificLanguages=(
     'Smalltalk '
     'Snakemake '
     'Stan '
+    'Tact '
     'Teal '
     'Tera '
     'Templ '

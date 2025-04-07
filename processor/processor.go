@@ -3,9 +3,6 @@
 package processor
 
 import (
-	"bytes"
-	"compress/gzip"
-	"encoding/base64"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -18,8 +15,6 @@ import (
 	"sync"
 
 	"github.com/boyter/gocodewalker"
-
-	jsoniter "github.com/json-iterator/go"
 )
 
 // Version indicates the version of the application
@@ -209,9 +204,6 @@ var LargeByteCount int64 = 1000000
 // DirFilePaths is not set via flags but by arguments following the flags for file or directory to process
 var DirFilePaths = []string{}
 
-// Raw languageDatabase loaded
-var languageDatabase = map[string]Language{}
-
 // ExtensionToLanguage is loaded from the JSON that is in constants.go
 var ExtensionToLanguage = map[string][]string{}
 
@@ -245,8 +237,6 @@ func ConfigureLazy(lazy bool) {
 // ProcessConstants is responsible for setting up the language features based on the JSON file that is stored in constants
 // Needs to be called at least once in order for anything to actually happen
 func ProcessConstants() {
-	languageDatabase = loadDatabase()
-
 	startTime := makeTimestampNano()
 	for name, value := range languageDatabase {
 		for _, ext := range value.Extensions {
@@ -510,36 +500,9 @@ func processFlags() {
 	}
 }
 
-func loadDatabase() map[string]Language {
-	var database map[string]Language
-	startTime := makeTimestampMilli()
-
-	gzData, err := base64.StdEncoding.DecodeString(languages)
-	if err != nil {
-		panic(fmt.Sprintf("failed to base64 decode languages: %v", err))
-	}
-	dataReader, err := gzip.NewReader(bytes.NewReader(gzData))
-	if err != nil {
-		panic(fmt.Sprintf("failed to create gzip reader: %v", err))
-	}
-
-	var json = jsoniter.ConfigCompatibleWithStandardLibrary
-	if err := json.NewDecoder(dataReader).Decode(&database); err != nil {
-		panic(fmt.Sprintf("languages json invalid: %v", err))
-	}
-
-	if Trace {
-		printTrace(fmt.Sprintf("milliseconds unmarshal: %d", makeTimestampMilli()-startTime))
-	}
-
-	return database
-}
-
 func printLanguages() {
-	database := loadDatabase()
-
-	names := make([]string, 0, len(database))
-	for key := range database {
+	names := make([]string, 0, len(languageDatabase))
+	for key := range languageDatabase {
 		names = append(names, key)
 	}
 
@@ -548,7 +511,7 @@ func printLanguages() {
 	})
 
 	for _, name := range names {
-		fmt.Printf("%s (%s)\n", name, strings.Join(append(database[name].Extensions, database[name].FileNames...), ","))
+		fmt.Printf("%s (%s)\n", name, strings.Join(append(languageDatabase[name].Extensions, languageDatabase[name].FileNames...), ","))
 	}
 }
 
