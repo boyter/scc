@@ -1,0 +1,24 @@
+// There are three classes
+rel classes = {0, 1, 2}
+
+// There are 6 students, 2 in each class
+rel student = {
+  (0, "tom"), (0, "jenny"), // Class 0
+  (1, "alice"), (1, "bob"), // Class 1
+  (2, "jerry"), (2, "john"), // Class 2
+}
+
+// Each student is enrolled in a course (Math or CS)
+rel enroll = {
+  ("tom", "CS"), ("jenny", "Math"), // Class 0
+  ("alice", "CS"), ("bob", "CS"), // Class 1
+  ("jerry", "Math"), ("john", "Math"), // Class 2
+}
+
+// Count how many student enrolls in CS course in each class
+rel count_enroll_cs_in_class(c, n) :-
+  n = count(s: student(c, s), enroll(s, "CS") where c: classes(c))
+
+// Expected: {(0, 1), (1, 2), (2, 0)}
+// Interpretation: class 0 has 1 student enroll in CS, class 1 has 2, class 2 has 0
+query count_enroll_cs_in_class
