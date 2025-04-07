@@ -3549,6 +3549,42 @@
       }
     ]
   },
+  "Koto": {
+    "complexitychecks": [
+      "for ",
+      "while ",
+      "until ",
+      "continue ",
+      "break ",
+      "loop ",
+      "if ",
+      "switch ",
+      "match ",
+      "then",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== ",
+      "and ",
+      "or ",
+      "not "
+    ],
+    "extensions": ["koto"],
+    "line_comment": ["#"],
+    "multi_line": [["#-", "-#"]],
+    "nestedmultiline": true,
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
   "LALRPOP": {
     "complexitychecks": [
       "for ",

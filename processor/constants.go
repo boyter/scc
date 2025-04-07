@@ -5773,6 +5773,59 @@ var languageDatabase = map[string]Language{
 		FileNames:       []string{},
 		SheBangs:        []string{},
 	},
+	"Koto": {
+		LineComment: []string{
+			"#",
+		},
+		ComplexityChecks: []string{
+			"for ",
+			"while ",
+			"until ",
+			"continue ",
+			"break ",
+			"loop ",
+			"if ",
+			"switch ",
+			"match ",
+			"then",
+			"else ",
+			"|| ",
+			"&& ",
+			"!= ",
+			"== ",
+			"and ",
+			"or ",
+			"not ",
+		},
+		Extensions: []string{
+			"koto",
+		},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"#-",
+				"-#",
+			},
+		},
+		Quotes: []Quote{
+			{
+				Start:        "\"",
+				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+			{
+				Start:        "'",
+				End:          "'",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+		},
+		NestedMultiLine: true,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"LALRPOP": {
 		LineComment: []string{
 			"//",

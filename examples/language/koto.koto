@@ -1,0 +1,17 @@
+get_primes = |n: Number| -> Iterator
+  if n <= 1
+    return
+
+  sieve = []
+  sieve.resize (n + 1), true
+
+  for x in 2..=n.sqrt()
+    if sieve[x]
+      i = x * x
+      while i <= n
+        sieve[i] = false
+        i += x
+
+  (2..=n).keep |x| sieve[x]
+
+assert_eq (get_primes 20).to_tuple(), (2, 3, 5, 7, 11, 13, 17, 19)
