@@ -751,6 +751,7 @@
       "if(",
       "switch ",
       "switch(",
+      "case ",
       "while ",
       "while(",
       "else ",
@@ -766,6 +767,42 @@
       {
         "end": "\"",
         "start": "\""
+      }
+    ]
+  },
+  "C3": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "foreach ",
+      "foreach(",
+      "if ",
+      "if(",
+      "switch ",
+      "switch(",
+      "case ",
+      "while ",
+      "while(",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== ",
+      "defer ",
+      "macro "
+    ],
+    "extensions": ["c3"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"],["<*", "*>"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "`",
+        "ignoreEscape": true,
+        "start": "`"
       }
     ]
   },
