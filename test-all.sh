@@ -968,6 +968,7 @@ specificLanguages=(
     'JSONC '
     'jq '
     'Korn Shell '
+    'Koto '
     'LALRPOP '
     'License '
     'LiveScript '
