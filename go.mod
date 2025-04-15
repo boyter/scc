@@ -9,7 +9,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.16
 	github.com/rs/zerolog v1.30.0
 	github.com/spf13/cobra v1.8.1
-	golang.org/x/crypto v0.33.0
+	golang.org/x/crypto v0.35.0
 	golang.org/x/text v0.22.0
 	gopkg.in/yaml.v2 v2.4.0
 )
