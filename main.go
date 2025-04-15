@@ -3,6 +3,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"runtime"
@@ -11,6 +12,21 @@ import (
 	"github.com/boyter/scc/v3/processor"
 	"github.com/spf13/cobra"
 )
+
+func printShellCompletion(cmd *cobra.Command, command string) error {
+	switch command {
+	case "bash":
+		return cmd.GenBashCompletionV2(os.Stdout, true)
+	case "zsh":
+		return cmd.GenZshCompletion(os.Stdout)
+	case "fish":
+		return cmd.GenFishCompletion(os.Stdout, true)
+	case "powershell":
+		return cmd.GenPowerShellCompletion(os.Stdout)
+	default:
+		return errors.New("Unknown shell: " + command)
+	}
+}
 
 //go:generate go run scripts/include.go
 func main() {
@@ -425,6 +441,17 @@ func main() {
 		"$",
 		"set currency symbol",
 	)
+
+	// If invoked in the format of "scc completion --shell [name of shell]", generate command line completions instead.
+	// With the --shell option, unintentionally triggering shell completions should be highly unlikely.
+	args := os.Args
+	if len(args) == 4 && args[1] == "completion" && args[2] == "--shell" {
+		err := printShellCompletion(rootCmd, args[3])
+		if err != nil {
+			fmt.Printf("Error printing shell completion: %s\n", err)
+		}
+		return
+	}
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
