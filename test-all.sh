@@ -980,6 +980,7 @@ specificLanguages=(
     'Moonbit '
     'Nushell '
     'OpenQASM '
+    'OpenTofu '
     'Pkl '
     'Proto '
     'Q# '

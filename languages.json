@@ -4649,6 +4649,28 @@
       }
     ]
   },
+  "OpenTofu": {
+    "complexitychecks": [
+      "count",
+      "for",
+      "for_each",
+      "if",
+      ": ",
+      "? ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "> ",
+      ">= ",
+      "< ",
+      "<= ",
+      "== "
+    ],
+    "extensions": ["tofu"],
+    "line_comment": ["#", "//"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": []
+  },
   "Org": {
     "complexitychecks": [
       "for ",

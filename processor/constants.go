@@ -7553,6 +7553,43 @@ var languageDatabase = map[string]Language{
 		FileNames:       []string{},
 		SheBangs:        []string{},
 	},
+	"OpenTofu": {
+		LineComment: []string{
+			"#",
+			"//",
+		},
+		ComplexityChecks: []string{
+			"count",
+			"for",
+			"for_each",
+			"if",
+			": ",
+			"? ",
+			"|| ",
+			"&& ",
+			"!= ",
+			"> ",
+			">= ",
+			"< ",
+			"<= ",
+			"== ",
+		},
+		Extensions: []string{
+			"tofu",
+		},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"/*",
+				"*/",
+			},
+		},
+		Quotes:          []Quote{},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"Org": {
 		LineComment: []string{
 			"# ",
