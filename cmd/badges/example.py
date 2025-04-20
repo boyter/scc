@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import re
 import string
+import subprocess
 
 # import boto3
 
@@ -96,7 +97,7 @@ def get_process_file(filename, url, path):
 
     try:
         unixtime = s3time_to_unix(o.last_modified)
-    except:
+    except Exception:
         # force an update in this case
         unixtime = time.time() - 186400
 
@@ -117,7 +118,7 @@ def clone_and_process(filename, url, path):
     rmtree(Path(gettempdir()) / 'scc-tmp-path')
     git.exec_command('clone', '--depth=1', url, 'scc-tmp-path', cwd=gettempdir())
 
-    os.system('./scc -f json -o ' + str(Path(gettempdir()) / filename) + ' scc-tmp-path')
+    subprocess.run(['./scc', '-f', 'json', '-o', str(Path(gettempdir()) / filename), 'scc-tmp-path'])
 
     with open(Path(gettempdir()) / filename, 'rb') as f:
         s3.upload_fileobj(f, bucket_name, filename)
