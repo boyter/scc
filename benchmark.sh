@@ -6,8 +6,8 @@
 apt update
 apt install --assume-yes build-essential unzip tmux htop
 
-rm *.zip
-rm *.gz
+rm ./*.zip
+rm ./*.gz
 wget https://github.com/boyter/scc/releases/download/v1.0.0/scc-1.0.0-x86_64-unknown-linux.zip
 unzip scc-1.0.0-x86_64-unknown-linux.zip
 mv scc /usr/local/bin/scc1.0.0
