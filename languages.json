@@ -3840,12 +3840,14 @@
       "else(",
       "elseif ",
       "elseif(",
+      "until ",
+      "until(",
       "or ",
       "and ",
       "~= ",
       "== "
     ],
-    "extensions": ["lua", "luau"],
+    "extensions": ["lua"],
     "line_comment": ["--"],
     "multi_line": [
       ["--[[", "]]"],
@@ -3857,8 +3859,8 @@
     ],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -3866,7 +3868,8 @@
       },
       {
         "end": "[[",
-        "start": "]]"
+        "start": "]]",
+        "ignoreEscape": true
       }
     ],
     "shebangs": ["lua"]
@@ -3883,6 +3886,8 @@
       "else(",
       "elseif ",
       "elseif(",
+      "until ",
+      "until(",
       "or ",
       "and ",
       "~= ",
@@ -3900,8 +3905,8 @@
     ],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -3913,7 +3918,8 @@
       },
       {
         "end": "[[",
-        "start": "]]"
+        "start": "]]",
+        "ignoreEscape": true
       }
     ],
     "shebangs": ["luau"]
@@ -7629,6 +7635,48 @@
     "line_comment": ["//"],
     "multi_line": [],
     "quotes": []
+  },
+  "XMake": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "while ",
+      "while(",
+      "else ",
+      "else(",
+      "elseif ",
+      "elseif(",
+      "until ",
+      "until(",
+      "or ",
+      "and ",
+      "~= ",
+      "== "
+    ],
+    "extensions": [],
+    "filenames": ["xmake.lua", "xpack.lua"],
+    "line_comment": ["--"],
+    "multi_line": [
+      ["--[[", "]]"],
+      ["--[=[", "]=]"],
+      ["--[==[", "]==]"],
+      ["--[===[", "]===]"],
+      ["--[====[", "]====]"],
+      ["--[=====[", "]=====]"]
+    ],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "[[",
+        "start": "]]",
+        "ignoreEscape": true
+      }
+    ]
   },
   "Xtend": {
     "complexitychecks": [

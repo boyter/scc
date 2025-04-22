@@ -6238,6 +6238,8 @@ var languageDatabase = map[string]Language{
 			"else(",
 			"elseif ",
 			"elseif(",
+			"until ",
+			"until(",
 			"or ",
 			"and ",
 			"~= ",
@@ -6245,7 +6247,6 @@ var languageDatabase = map[string]Language{
 		},
 		Extensions: []string{
 			"lua",
-			"luau",
 		},
 		ExtensionFile: false,
 		MultiLine: [][]string{
@@ -6276,8 +6277,8 @@ var languageDatabase = map[string]Language{
 		},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -6290,7 +6291,7 @@ var languageDatabase = map[string]Language{
 			{
 				Start:        "]]",
 				End:          "[[",
-				IgnoreEscape: false,
+				IgnoreEscape: true,
 				DocString:    false,
 			},
 		},
@@ -6316,6 +6317,8 @@ var languageDatabase = map[string]Language{
 			"else(",
 			"elseif ",
 			"elseif(",
+			"until ",
+			"until(",
 			"or ",
 			"and ",
 			"~= ",
@@ -6353,8 +6356,8 @@ var languageDatabase = map[string]Language{
 		},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -6373,7 +6376,7 @@ var languageDatabase = map[string]Language{
 			{
 				Start:        "]]",
 				End:          "[[",
-				IgnoreEscape: false,
+				IgnoreEscape: true,
 				DocString:    false,
 			},
 		},
@@ -12400,6 +12403,78 @@ var languageDatabase = map[string]Language{
 		Keywords:        []string{},
 		FileNames:       []string{},
 		SheBangs:        []string{},
+	},
+	"XMake": {
+		LineComment: []string{
+			"--",
+		},
+		ComplexityChecks: []string{
+			"for ",
+			"for(",
+			"if ",
+			"if(",
+			"while ",
+			"while(",
+			"else ",
+			"else(",
+			"elseif ",
+			"elseif(",
+			"until ",
+			"until(",
+			"or ",
+			"and ",
+			"~= ",
+			"== ",
+		},
+		Extensions:    []string{},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"--[[",
+				"]]",
+			},
+			{
+				"--[=[",
+				"]=]",
+			},
+			{
+				"--[==[",
+				"]==]",
+			},
+			{
+				"--[===[",
+				"]===]",
+			},
+			{
+				"--[====[",
+				"]====]",
+			},
+			{
+				"--[=====[",
+				"]=====]",
+			},
+		},
+		Quotes: []Quote{
+			{
+				Start:        "\"",
+				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+			{
+				Start:        "]]",
+				End:          "[[",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+		},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames: []string{
+			"xmake.lua",
+			"xpack.lua",
+		},
+		SheBangs: []string{},
 	},
 	"Xcode Config": {
 		LineComment: []string{

@@ -14,11 +14,23 @@ import (
 func DetectLanguage(name string) ([]string, string) {
 	extension := ""
 
-	t := strings.Count(name, ".")
+	if len(AllowListExtensions) == 0 {
+		// Check the full name for special languages such as xmake.lua, meson.build, ...
+		lang, ok := FilenameToLanguage[strings.ToLower(name)]
+		if ok {
+			return []string{lang}, name
+		}
 
-	// If there is no . in the filename or it starts with one then check if #! or other
-	if (t == 0 || (name[0] == '.' && t == 1)) && len(AllowListExtensions) == 0 {
-		return checkFullName(name)
+		t := strings.Count(name, ".")
+		// If there is no . in the filename or it starts with one then check if #!
+		if t == 0 || (name[0] == '.' && t == 1) {
+			if Verbose {
+				printWarn(fmt.Sprintf("possible #! file: %s", name))
+			}
+
+			// No extension indicates possible #! so mark as such for processing
+			return []string{SheBang}, name
+		}
 	}
 
 	// Lookup in case the full name matches
@@ -37,21 +49,6 @@ func DetectLanguage(name string) ([]string, string) {
 	}
 
 	return language, extension
-}
-
-func checkFullName(name string) ([]string, string) {
-	// Need to check if special type
-	language, ok := FilenameToLanguage[strings.ToLower(name)]
-	if ok {
-		return []string{language}, name
-	}
-
-	if Verbose {
-		printWarn(fmt.Sprintf("possible #! file: %s", name))
-	}
-
-	// No extension indicates possible #! so mark as such for processing
-	return []string{SheBang}, name
 }
 
 // DetectSheBang given some content attempt to determine if it has a #! that maps to a known language and return the language
