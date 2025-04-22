@@ -313,7 +313,7 @@ func TestScanSheBangFuzz(t *testing.T) {
 func TestCheckFullNameSheBang(t *testing.T) {
 	ProcessConstants()
 
-	r, n := checkFullName("name")
+	r, n := DetectLanguage("name")
 
 	if n != "name" {
 		t.Error("Expected name to return")
@@ -327,7 +327,7 @@ func TestCheckFullNameSheBang(t *testing.T) {
 func TestCheckFullNameLicense(t *testing.T) {
 	ProcessConstants()
 
-	r, n := checkFullName("license")
+	r, n := DetectLanguage("license")
 
 	if n != "license" {
 		t.Error("Expected name to return")
@@ -336,6 +336,33 @@ func TestCheckFullNameLicense(t *testing.T) {
 	if r[0] != "License" {
 		t.Error("Expected License return")
 	}
+}
+
+func TestCheckFullNameXMake(t *testing.T) {
+	ProcessConstants()
+
+	r, n := DetectLanguage("xmake.lua")
+
+	if n != "xmake.lua" {
+		t.Error("Expected xmake.lua to return")
+	}
+
+	if r[0] != "XMake" {
+		t.Error("Expected XMake return")
+	}
+
+	// count xmake.lua as a lua file if AllowListExtensions was set
+	AllowListExtensions = []string{"lua"}
+	r, n = DetectLanguage("xmake.lua")
+
+	if n != "lua" {
+		t.Error("Expected lua to return")
+	}
+
+	if r[0] != "Lua" {
+		t.Error("Expected Lua return")
+	}
+	AllowListExtensions = []string{}
 }
 
 func TestGuessLanguageCoq(t *testing.T) {
