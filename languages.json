@@ -4456,7 +4456,7 @@
       "== "
     ],
     "extensions": ["nix"],
-    "line_comment": ["//"],
+    "line_comment": ["#"],
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
