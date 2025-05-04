@@ -7220,7 +7220,7 @@ var languageDatabase = map[string]Language{
 	},
 	"Nix": {
 		LineComment: []string{
-			"//",
+			"#",
 		},
 		ComplexityChecks: []string{
 			"for ",
