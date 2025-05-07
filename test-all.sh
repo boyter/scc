@@ -964,6 +964,7 @@ specificLanguages=(
     'ignore '
     'INI '
     'Java '
+    'JavaScript '
     'JSON5 '
     'JSONC '
     'jq '
@@ -1004,6 +1005,7 @@ specificLanguages=(
     'Templ '
     'Terraform '
     'TTCN-3 '
+    'TypeScript '
     'TypeSpec '
     'Typst '
     'Up '
@@ -1143,6 +1145,41 @@ elif [ $Issue564PyExcludeMultiCount -ne 1 ] ; then
     exit
 else
     echo -e "${GREEN}PASSED Issue564 Regression Check"
+fi
+
+# Regression issue https://github.com/boyter/scc/issues/610
+Issue610Line=$(./scc -f csv "examples/issue610/" --no-scc-ignore | grep 'TypeScript' | cut -d ',' -f 2)
+Issue610Code=$(./scc -f csv "examples/issue610/" --no-scc-ignore | grep 'TypeScript' | cut -d ',' -f 3)
+Issue610Comments=$(./scc -f csv "examples/issue610/" --no-scc-ignore | grep 'TypeScript' | cut -d ',' -f 4)
+Issue610Blanks=$(./scc -f csv "examples/issue610/" --no-scc-ignore | grep 'TypeScript' | cut -d ',' -f 5)
+Issue610Complexity=$(./scc -f csv "examples/issue610/" --no-scc-ignore | grep 'TypeScript' | cut -d ',' -f 6)
+if [ $Issue610Line -ne 11 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue610 line counting"
+    echo -e "=======================================================${NC}"
+    exit
+elif [ $Issue610Code -ne 7 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue610 code counting"
+    echo -e "=======================================================${NC}"
+    exit
+elif [ $Issue610Comments -ne 2 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue610 comments counting"
+    echo -e "=======================================================${NC}"
+    exit
+elif [ $Issue610Blanks -ne 2 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue610 blanks counting"
+    echo -e "=======================================================${NC}"
+    exit
+elif [ $Issue610Complexity -ne 1 ] ; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Issue610 complexity counting"
+    echo -e "=======================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED Issue610 Regression Check"
 fi
 
 # Extra case for longer languages that are normally truncated

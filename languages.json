@@ -3294,15 +3294,26 @@
       "|| ",
       "&& ",
       "!= ",
-      "== "
+      "== ",
+      "?.",
+      "?? ",
+      "??= "
     ],
-    "extensions": ["js", "mjs"],
+    "extensions": ["js", "cjs", "mjs"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
         "end": "\"",
         "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      },
+      {
+        "end": "`",
+        "start": "`"
       }
     ],
     "shebangs": ["node"]
@@ -6883,28 +6894,17 @@
       "switch ",
       "while ",
       "else ",
-      "| ",
       "|| ",
-      "& ",
       "&& ",
       "!= ",
       "!== ",
       "== ",
       "=== ",
-      "foreach(",
       "case ",
       "case(",
-      "casex ",
-      "casex(",
-      "casez ",
-      "casez(",
-      "casexz ",
-      "casexz(",
-      "fork",
-      "?",
-      ":",
-      "inside",
-      "with"
+      "?.",
+      "?? ",
+      "??= "
     ],
     "extensions": ["ts", "tsx"],
     "line_comment": ["//"],
@@ -6913,6 +6913,14 @@
       {
         "end": "\"",
         "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      },
+      {
+        "end": "`",
+        "start": "`"
       }
     ]
   },
@@ -6925,28 +6933,17 @@
       "switch ",
       "while ",
       "else ",
-      "| ",
       "|| ",
-      "& ",
       "&& ",
       "!= ",
       "!== ",
       "== ",
       "=== ",
-      "foreach(",
       "case ",
       "case(",
-      "casex ",
-      "casex(",
-      "casez ",
-      "casez(",
-      "casexz ",
-      "casexz(",
-      "fork",
-      "?",
-      ":",
-      "inside",
-      "with"
+      "?.",
+      "?? ",
+      "??= "
     ],
     "extensions": ["d.ts"],
     "line_comment": ["//"],
@@ -6959,6 +6956,10 @@
       {
         "end": "'",
         "start": "'"
+      },
+      {
+        "end": "`",
+        "start": "`"
       }
     ]
   },
