@@ -5043,6 +5043,38 @@
       }
     ]
   },
+  "PostScript": {
+    "complexitychecks": [
+      "if",
+      "ifelse",
+      "for",
+      "repeat",
+      "loop",
+      "forall",
+      "pathforall",
+      "eq",
+      "ne",
+      "not",
+      "and",
+      "or"
+    ],
+    "extensions": ["ps"],
+    "line_comment": ["%"],
+    "quotes": [
+      {
+        "end": ")",
+        "start": "("
+      },
+      {
+        "end": ">",
+        "start": "<"
+      },
+      {
+        "end": "~>",
+        "start": "<~"
+      }
+    ]
+  },
   "Powershell": {
     "complexitychecks": [
       "while ",

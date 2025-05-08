@@ -8271,6 +8271,54 @@ var languageDatabase = map[string]Language{
 		FileNames:       []string{},
 		SheBangs:        []string{},
 	},
+	"PostScript": {
+		LineComment: []string{
+			"%",
+		},
+		ComplexityChecks: []string{
+			"if",
+			"ifelse",
+			"for",
+			"repeat",
+			"loop",
+			"forall",
+			"pathforall",
+			"eq",
+			"ne",
+			"not",
+			"and",
+			"or",
+		},
+		Extensions: []string{
+			"ps",
+		},
+		ExtensionFile: false,
+		MultiLine:     [][]string{},
+		Quotes: []Quote{
+			{
+				Start:        "(",
+				End:          ")",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+			{
+				Start:        "<",
+				End:          ">",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+			{
+				Start:        "<~",
+				End:          "~>",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+		},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"Powershell": {
 		LineComment: []string{
 			"#",

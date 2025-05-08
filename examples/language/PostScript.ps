@@ -1,0 +1,18 @@
+%!PS
+% an example from https://github.com/bwipp/postscriptbarcode/blob/master/contrib/development/emit_c_style_array.ps
+
+(%stderr) (w) file /f exch def
+f (Version: ) writestring f version writestring f (\n) writestring
+f (Size: ) writestring f size 10 (   ) cvrs writestring f (\n) writestring
+f (ECC: ) writestring f eclevel writestring f (\n) writestring
+f (Mask: ) writestring f bestmaskval 2 tobin writestring f (\n) writestring
+0 1 size 1 sub {
+    /y exch def
+    0 1 size 1 sub {
+        /x exch def
+        f pixs y size mul x add get 0 eq {(0)}{(1)} ifelse writestring
+        f (,) writestring
+    } for
+    f (\n) writestring
+} for
+f closefile
