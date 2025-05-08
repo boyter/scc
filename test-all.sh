@@ -985,6 +985,7 @@ specificLanguages=(
     'OpenQASM '
     'OpenTofu '
     'Pkl '
+    'PostScript '
     'Proto '
     'Q# '
     'R '
