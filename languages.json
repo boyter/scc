@@ -4896,17 +4896,35 @@
     "complexitychecks": [
       "for ",
       "for(",
+      "foreach ",
+      "foreach(",
       "if ",
       "if(",
-      "switch ",
+      "elsif ",
+      "elsif(",
       "while ",
+      "while(",
+      "until ",
+      "until(",
+      "unless ",
+      "unless(",
+      "given ",
+      "given(",
+      "when ",
+      "when(",
+      "catch ",
+      "catch(",
+      "eq ",
+      "ne ",
       "else ",
+      "and ",
+      "or ",
       "|| ",
       "&& ",
       "!= ",
       "== "
     ],
-    "extensions": ["pl", "pm"],
+    "extensions": ["pl", "plx", "pm"],
     "line_comment": ["#"],
     "multi_line": [["=pod", "=cut"]],
     "quotes": [
@@ -5249,7 +5267,7 @@
       "try ",
       "try:",
       "except ",
-      "except(",
+      "except:",
       "finally ",
       "finally:",
       "with ",
@@ -5272,6 +5290,16 @@
         "start": "'"
       },
       {
+        "ignoreEscape": true,
+        "end": "'",
+        "start": "r'"
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"",
+        "start": "r\""
+      },
+      {
         "docString": true,
         "end": "\"\"\"",
         "start": "\"\"\""
@@ -5283,13 +5311,25 @@
       },
       {
         "docString": true,
+        "ignoreEscape": true,
         "end": "\"\"\"",
         "start": "r\"\"\""
       },
       {
         "docString": true,
+        "ignoreEscape": true,
         "end": "'''",
         "start": "r'''"
+      },
+      {
+        "docString": true,
+        "end": "\"\"\"",
+        "start": "f\"\"\""
+      },
+      {
+        "docString": true,
+        "end": "'''",
+        "start": "f'''"
       }
     ],
     "shebangs": ["python", "python2", "python3"]
