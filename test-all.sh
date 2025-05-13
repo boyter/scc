@@ -926,6 +926,7 @@ specificLanguages=(
     'Bean '
     'Bicep '
     'Bitbucket Pipeline '
+    'Blueprint '
     'Boo '
     'Bosque '
     'C3 '
