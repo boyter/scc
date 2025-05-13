@@ -640,6 +640,18 @@
     "multi_line": [["{{--", "--}}"], ["<!--", "-->"]],
     "quotes": []
   },
+  "Blueprint": {
+    "complexitychecks": [],
+    "extensions": ["blp"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "Boo": {
     "complexitychecks": [
       "for ",
