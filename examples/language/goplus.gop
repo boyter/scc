@@ -1,0 +1,37 @@
+#!/usr/bin/gop run
+
+// test
+import (
+	"fmt"
+	"sync"
+)
+
+func collatz(num int32) []int32 {
+	if num <= 0 {
+		panic("num must not be zero") /* collatz sequence needs num >= 0 */
+	}
+	var res []int32
+	res <- num
+	for num > 1 {
+		if num&1 == 0 {
+			num /= 2
+			res <- num
+		} else {
+			num *= 3
+			num++
+			res <- num
+		}
+	}
+	return res
+}
+
+var wg sync.WaitGroup
+
+for i in [int32(i) for i in 1:11] {
+	wg.Add(1)
+	go func(ii int32) {
+		defer wg.Done()
+		println i, ":", collatz(ii)
+	}(i)
+}
+wg.Wait()

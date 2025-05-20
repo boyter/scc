@@ -4319,7 +4319,6 @@ var languageDatabase = map[string]Language{
 		},
 		ComplexityChecks: []string{
 			"go ",
-			"defer ",
 			"for ",
 			"for(",
 			"if ",
@@ -4390,6 +4389,57 @@ var languageDatabase = map[string]Language{
 		Keywords:        []string{},
 		FileNames:       []string{},
 		SheBangs:        []string{},
+	},
+	"Go+": {
+		LineComment: []string{
+			"//",
+			"#",
+		},
+		ComplexityChecks: []string{
+			"go ",
+			"for ",
+			"for(",
+			"if ",
+			"if(",
+			"switch ",
+			"select ",
+			"else ",
+			"|| ",
+			"&& ",
+			"!= ",
+			"== ",
+			"?:",
+		},
+		Extensions: []string{
+			"gop",
+		},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"/*",
+				"*/",
+			},
+		},
+		Quotes: []Quote{
+			{
+				Start:        "\"",
+				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+			{
+				Start:        "`",
+				End:          "`",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+		},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs: []string{
+			"gop",
+		},
 	},
 	"Godot Scene": {
 		LineComment:      []string{},
