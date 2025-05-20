@@ -220,6 +220,10 @@ var LanguageFeatures = map[string]LanguageFeature{}
 // used rather than sync.Map because it turned out to be marginally faster
 var LanguageFeaturesMutex = sync.Mutex{}
 
+var Strip = false
+var StripComments = false
+var StripStrings = false
+
 // Start time in milli seconds in case we want the total time
 var startTimeMilli = makeTimestampMilli()
 

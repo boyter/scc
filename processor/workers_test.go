@@ -4,6 +4,7 @@ package processor
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -1063,6 +1064,20 @@ func TestCountStatsIssue182Delphi(t *testing.T) {
 	if fileJob.Blank != 0 {
 		t.Errorf("Expected 0 lines got %d", fileJob.Blank)
 	}
+}
+
+func TestCountStatsStripper(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Go",
+	}
+	Strip = true
+	StripComments = true
+
+	fileJob.SetContent(`package main // this is a comment in go`)
+	CountStats(&fileJob)
+
+	fmt.Print(">>>", string(fileJob.StrippedContent), "<<<")
 }
 
 //////////////////////////////////////////////////

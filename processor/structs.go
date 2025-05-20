@@ -73,6 +73,7 @@ type FileJob struct {
 	Location           string
 	Symlocation        string
 	Content            []byte `json:"-"`
+	StrippedContent    []byte `json:"-"`
 	Bytes              int64
 	Lines              int64
 	Code               int64

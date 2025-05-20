@@ -212,6 +212,9 @@ func codeState(
 
 	for i := index; i < endPoint; i++ {
 		curByte := fileJob.Content[i]
+		if Strip {
+			fileJob.StrippedContent = append(fileJob.StrippedContent, curByte)
+		}
 		index = i
 
 		if curByte == '\n' {
@@ -486,6 +489,14 @@ func CountStats(fileJob *FileJob) {
 					endString,
 					langFeatures,
 				)
+
+				if Strip {
+					fileJob.StrippedContent = append(fileJob.StrippedContent, fileJob.Content[index])
+				}
+			}
+		} else {
+			if Strip {
+				fileJob.StrippedContent = append(fileJob.StrippedContent, fileJob.Content[index])
 			}
 		}
 
@@ -629,6 +640,9 @@ func checkBomSkip(fileJob *FileJob) int {
 	if bytes.HasPrefix(fileJob.Content, []byte{239, 187, 191}) {
 		if Verbose {
 			printWarn(fmt.Sprintf("UTF-8 BOM found for file %s skipping 3 bytes", fileJob.Filename))
+		}
+		if Strip {
+			fileJob.StrippedContent = []byte{239, 187, 191}
 		}
 		return 3
 	}
