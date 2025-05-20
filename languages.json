@@ -2705,7 +2705,6 @@
   "Go": {
     "complexitychecks": [
       "go ",
-      "defer ",
       "for ",
       "for(",
       "if ",
@@ -2732,6 +2731,38 @@
         "start": "`"
       }
     ]
+  },
+  "Go+": {
+    "complexitychecks": [
+      "go ",
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "select ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== ",
+      "?:"
+    ],
+    "extensions": ["gop"],
+    "line_comment": ["//", "#"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "`",
+        "ignoreEscape": true,
+        "start": "`"
+      }
+    ],
+    "shebangs": ["gop"]
   },
   "Go Template": {
     "complexitychecks": [
