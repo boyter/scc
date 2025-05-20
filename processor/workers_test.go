@@ -1071,13 +1071,17 @@ func TestCountStatsStripper(t *testing.T) {
 	fileJob := FileJob{
 		Language: "Go",
 	}
-	Strip = true
-	StripComments = true
+	Stripper = true
+	Stripper = true
+	StripStrings = true
 
 	fileJob.SetContent(`package main // this is a comment in go`)
 	CountStats(&fileJob)
 
 	fmt.Print(">>>", string(fileJob.StrippedContent), "<<<")
+	if string(fileJob.StrippedContent) != "package main //" {
+		t.Errorf("Expected \"package main //\", received %q", string(fileJob.StrippedContent))
+	}
 }
 
 //////////////////////////////////////////////////

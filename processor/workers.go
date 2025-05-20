@@ -117,6 +117,11 @@ func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, cu
 	for i := index; i < endPoint; i++ {
 		index = i
 
+		if Stripper {
+			fileJob.StrippedContent = append(fileJob.StrippedContent, fileJob.Content[i])
+			fmt.Println(">>>STRINGSTATE", string(fileJob.Content[i]))
+		}
+
 		// If we hit a newline, return because we want to count the stats but keep
 		// the current state so we end up back in this loop when the outer
 		// one calls again
@@ -160,6 +165,11 @@ func docStringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie,
 	// without checking if it is out of bounds first
 	for i := index; i < endPoint; i++ {
 		index = i
+
+		if Stripper {
+			fileJob.StrippedContent = append(fileJob.StrippedContent, fileJob.Content[i])
+			fmt.Println(">>>DOCSTRINGSTATE", string(fileJob.Content[i]))
+		}
 
 		if fileJob.Content[i] == '\n' {
 			return i, currentState
@@ -212,8 +222,9 @@ func codeState(
 
 	for i := index; i < endPoint; i++ {
 		curByte := fileJob.Content[i]
-		if Strip {
+		if Stripper {
 			fileJob.StrippedContent = append(fileJob.StrippedContent, curByte)
+			fmt.Println(">>>CODESTATE", string(curByte))
 		}
 		index = i
 
@@ -251,6 +262,9 @@ func codeState(
 				return i, currentState, endString, endComments, ignoreEscape
 
 			case TSlcomment:
+				if Stripper {
+					fileJob.StrippedContent = append(fileJob.StrippedContent, fileJob.Content[i:i+offsetJump-1]...)
+				}
 				currentState = SCommentCode
 				return i, currentState, endString, endComments, false
 
@@ -279,6 +293,11 @@ func commentState(fileJob *FileJob, index int, endPoint int, currentState int64,
 	for i := index; i < endPoint; i++ {
 		curByte := fileJob.Content[i]
 		index = i
+
+		if Stripper {
+			fileJob.StrippedContent = append(fileJob.StrippedContent, curByte)
+			fmt.Println(">>>COMMENTSTATE", string(curByte))
+		}
 
 		if curByte == '\n' {
 			return i, currentState, endString, endComments
@@ -490,12 +509,12 @@ func CountStats(fileJob *FileJob) {
 					langFeatures,
 				)
 
-				if Strip {
+				if Stripper {
 					fileJob.StrippedContent = append(fileJob.StrippedContent, fileJob.Content[index])
 				}
 			}
 		} else {
-			if Strip {
+			if Stripper {
 				fileJob.StrippedContent = append(fileJob.StrippedContent, fileJob.Content[index])
 			}
 		}
@@ -641,7 +660,7 @@ func checkBomSkip(fileJob *FileJob) int {
 		if Verbose {
 			printWarn(fmt.Sprintf("UTF-8 BOM found for file %s skipping 3 bytes", fileJob.Filename))
 		}
-		if Strip {
+		if Stripper {
 			fileJob.StrippedContent = []byte{239, 187, 191}
 		}
 		return 3
