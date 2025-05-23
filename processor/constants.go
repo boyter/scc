@@ -11291,7 +11291,9 @@ var languageDatabase = map[string]Language{
 		},
 		Extensions: []string{
 			"tf",
+			"tfvars",
 			"tf.json",
+			"tofu",
 		},
 		ExtensionFile: false,
 		MultiLine: [][]string{
