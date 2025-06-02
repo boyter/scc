@@ -6938,7 +6938,7 @@
       "<= ",
       "== "
     ],
-    "extensions": ["tf", "tf.json"],
+    "extensions": ["tf", "tfvars", "tf.json"],
     "line_comment": ["#", "//"],
     "multi_line": [["/*", "*/"]],
     "quotes": []

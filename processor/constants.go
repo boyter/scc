@@ -11291,6 +11291,7 @@ var languageDatabase = map[string]Language{
 		},
 		Extensions: []string{
 			"tf",
+			"tfvars",
 			"tf.json",
 		},
 		ExtensionFile: false,
