@@ -8940,6 +8940,23 @@ var languageDatabase = map[string]Language{
 			"Rscript",
 		},
 	},
+	"RAML": {
+		LineComment: []string{
+			"#",
+		},
+		ComplexityChecks: []string{},
+		Extensions: []string{
+			"raml",
+			"rml",
+		},
+		ExtensionFile:   false,
+		MultiLine:       [][]string{},
+		Quotes:          []Quote{},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"Racket": {
 		LineComment: []string{
 			";",
