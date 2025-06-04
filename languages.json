@@ -7825,6 +7825,13 @@
     "multi_line": [],
     "quotes": []
   },
+  "RAML": {
+    "complexitychecks": [],
+    "extensions": ["raml", "rml"],
+    "line_comment": ["#"],
+    "multi_line": [],
+    "quotes": []
+  },
   "Yarn": {
     "complexitychecks": [
       "<<if ",
