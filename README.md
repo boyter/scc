@@ -150,6 +150,10 @@ Some reviews of `scc`
  - https://www.feliciano.tech/blog/determine-source-code-size-and-complexity-with-scc/
  - https://metaredux.com/posts/2019/12/13/counting-lines.html
 
+Setting up `scc` in GitLab
+
+ - https://about.gitlab.com/blog/2023/02/15/code-counting-in-gitlab/
+
 A talk given at the first GopherCon AU about `scc` (press S to see speaker notes)
 
  - https://boyter.org/static/gophercon-syd-presentation/
