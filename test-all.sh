@@ -938,6 +938,7 @@ specificLanguages=(
     'Circom '
     'Clipper '
     'Clojure '
+    'CMake '
     'Cuda '
     'DAML '
     'DM '
