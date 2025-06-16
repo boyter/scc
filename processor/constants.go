@@ -1364,6 +1364,8 @@ var languageDatabase = map[string]Language{
 			"for(",
 			"if ",
 			"if(",
+			"foreach ",
+			"foreach(",
 			"switch ",
 			"while ",
 			"else ",
@@ -1400,7 +1402,9 @@ var languageDatabase = map[string]Language{
 		NestedMultiLine: false,
 		Keywords:        []string{},
 		FileNames:       []string{},
-		SheBangs:        []string{},
+		SheBangs: []string{
+			"dotnet",
+		},
 	},
 	"C++": {
 		LineComment: []string{
