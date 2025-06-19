@@ -1056,6 +1056,8 @@ func fileSummarizeShort(input chan *FileJob) string {
 	lang := map[string]LanguageSummary{}
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumBytes int64 = 0, 0, 0, 0, 0, 0, 0
 
+	p := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
+
 	for res := range input {
 		sumFiles++
 		sumLines += res.Lines
@@ -1119,9 +1121,9 @@ func fileSummarizeShort(input chan *FileJob) string {
 		trimmedName = trimNameShort(summary, trimmedName)
 
 		if !Complexity {
-			_, _ = fmt.Fprintf(str, tabularShortFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity)
+			_, _ = p.Fprintf(str, tabularShortFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity)
 		} else {
-			_, _ = fmt.Fprintf(str, tabularShortFormatBodyNoComplexity, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code)
+			_, _ = p.Fprintf(str, tabularShortFormatBodyNoComplexity, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code)
 		}
 
 		if Percent {
@@ -1199,9 +1201,9 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 	str.WriteString(getTabularShortBreak())
 	if !Complexity {
-		_, _ = fmt.Fprintf(str, tabularShortFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity)
+		_, _ = p.Fprintf(str, tabularShortFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity)
 	} else {
-		_, _ = fmt.Fprintf(str, tabularShortFormatBodyNoComplexity, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode)
+		_, _ = p.Fprintf(str, tabularShortFormatBodyNoComplexity, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode)
 	}
 	str.WriteString(getTabularShortBreak())
 
