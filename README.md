@@ -1,13 +1,12 @@
-Sloc Cloc and Code (scc)
-------------------------
+# Sloc Cloc and Code (scc)
 
-<img alt="scc" src=https://github.com/boyter/scc/raw/master/scc.jpg>
+[![SCC illustration](./scc.jpg)]
 
 A tool similar to cloc, sloccount and tokei. For counting the lines of code, blank lines, comment lines, and physical lines of source code in many programming languages.
 
 Goal is to be the fastest code counter possible, but also perform COCOMO calculation like sloccount, estimate code complexity similar to cyclomatic complexity calculators and produce unique lines of code or DRYness metrics. In short one tool to rule them all.
 
-Also it has a very short name which is easy to type `scc`. 
+Also it has a very short name which is easy to type `scc`.
 
 If you don't like sloc cloc and code feel free to use the name `Succinct Code Counter`.
 
@@ -15,7 +14,7 @@ If you don't like sloc cloc and code feel free to use the name `Succinct Code Co
 [![Go Report Card](https://goreportcard.com/badge/github.com/boyter/scc)](https://goreportcard.com/report/github.com/boyter/scc)
 [![Coverage Status](https://coveralls.io/repos/github/boyter/scc/badge.svg?branch=master)](https://coveralls.io/github/boyter/scc?branch=master)
 [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/)](https://github.com/boyter/scc/)
-![](https://img.shields.io/github/downloads/boyter/scc/total?label=downloads%20%28GH%29)
+![Scc count downloads](https://img.shields.io/github/downloads/boyter/scc/total?label=downloads%20%28GH%29)
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
 Licensed under MIT licence.
@@ -40,7 +39,7 @@ Licensed under MIT licence.
 
 ### Support
 
-Using `scc` commercially? If you want priority support for `scc` you can purchase a years worth https://boyter.gumroad.com/l/kgenuv which entitles you to priority direct email support from the developer.
+Using `scc` commercially? If you want priority support for `scc` you can purchase a years worth <https://boyter.gumroad.com/l/kgenuv> which entitles you to priority direct email support from the developer.
 
 ### Install
 
@@ -64,7 +63,7 @@ A [snap install](https://snapcraft.io/scc) exists thanks to [Ricardo](https://fe
 
 `$ sudo snap install scc`
 
-*NB* Snap installed applications cannot run outside of `/home` https://askubuntu.com/questions/930437/permission-denied-error-when-running-apps-installed-as-snap-packages-ubuntu-17 so you may encounter issues if you use snap and attempt to run outside this directory.
+*NB* Snap installed applications cannot run outside of `/home` <https://askubuntu.com/questions/930437/permission-denied-error-when-running-apps-installed-as-snap-packages-ubuntu-17> so you may encounter issues if you use snap and attempt to run outside this directory.
 
 #### Homebrew
 
@@ -118,7 +117,7 @@ Go to the directory you want to run scc from.
 
 Run the command below to run the latest release of scc on your current working directory:
 
-```
+```bash
 docker run --rm -it -v "$PWD:/pwd"  ghcr.io/boyter/scc:master scc /pwd
 ```
 
@@ -128,7 +127,7 @@ Binaries for Windows, GNU/Linux and macOS for both i386 and x86_64 machines are 
 
 #### GitLab
 
-https://about.gitlab.com/blog/2023/02/15/code-counting-in-gitlab/
+<https://about.gitlab.com/blog/2023/02/15/code-counting-in-gitlab/>
 
 #### Other
 
@@ -138,87 +137,86 @@ If you would like to assist with getting `scc` added into apt/chocolatey/etc... 
 
 Read all about how it came to be along with performance benchmarks,
 
- - https://boyter.org/posts/sloc-cloc-code/
- - https://boyter.org/posts/why-count-lines-of-code/
- - https://boyter.org/posts/sloc-cloc-code-revisited/
- - https://boyter.org/posts/sloc-cloc-code-performance/
- - https://boyter.org/posts/sloc-cloc-code-performance-update/
+- <https://boyter.org/posts/sloc-cloc-code/>
+- <https://boyter.org/posts/why-count-lines-of-code/>
+- <https://boyter.org/posts/sloc-cloc-code-revisited/>
+- <https://boyter.org/posts/sloc-cloc-code-performance/>
+- <https://boyter.org/posts/sloc-cloc-code-performance-update/>
 
 Some reviews of `scc`
 
- - https://nickmchardy.com/2018/10/counting-lines-of-code-in-koi-cms.html
- - https://www.feliciano.tech/blog/determine-source-code-size-and-complexity-with-scc/
- - https://metaredux.com/posts/2019/12/13/counting-lines.html
+- <https://nickmchardy.com/2018/10/counting-lines-of-code-in-koi-cms.html>
+- <https://www.feliciano.tech/blog/determine-source-code-size-and-complexity-with-scc/>
+- <https://metaredux.com/posts/2019/12/13/counting-lines.html>
 
 Setting up `scc` in GitLab
 
- - https://about.gitlab.com/blog/2023/02/15/code-counting-in-gitlab/
+- <https://about.gitlab.com/blog/2023/02/15/code-counting-in-gitlab/>
 
 A talk given at the first GopherCon AU about `scc` (press S to see speaker notes)
 
- - https://boyter.org/static/gophercon-syd-presentation/
- - https://www.youtube.com/watch?v=jd-sjoy3GZo
+- <https://boyter.org/static/gophercon-syd-presentation/>
+- <https://www.youtube.com/watch?v=jd-sjoy3GZo>
 
 For performance see the [Performance](https://github.com/boyter/scc#performance) section
 
 Other similar projects,
 
- - [SLOCCount](https://www.dwheeler.com/sloccount/) the original sloc counter
- - [cloc](https://github.com/AlDanial/cloc), inspired by SLOCCount; implemented in Perl for portability
- - [gocloc](https://github.com/hhatto/gocloc) a sloc counter in Go inspired by tokei
- - [loc](https://github.com/cgag/loc) rust implementation similar to tokei but often faster
- - [loccount](https://gitlab.com/esr/loccount) Go implementation written and maintained by ESR
- - [polyglot](https://github.com/vmchale/polyglot) ATS sloc counter
- - [tokei](https://github.com/XAMPPRocky/tokei) fast, accurate and written in rust
- - [sloc](https://github.com/flosse/sloc) coffeescript code counter
- - [stto](https://github.com/mainak55512/stto) new Go code counter with a focus on performance
+- [SLOCCount](https://www.dwheeler.com/sloccount/) the original sloc counter
+- [cloc](https://github.com/AlDanial/cloc), inspired by SLOCCount; implemented in Perl for portability
+- [gocloc](https://github.com/hhatto/gocloc) a sloc counter in Go inspired by tokei
+- [loc](https://github.com/cgag/loc) rust implementation similar to tokei but often faster
+- [loccount](https://gitlab.com/esr/loccount) Go implementation written and maintained by ESR
+- [polyglot](https://github.com/vmchale/polyglot) ATS sloc counter
+- [tokei](https://github.com/XAMPPRocky/tokei) fast, accurate and written in rust
+- [sloc](https://github.com/flosse/sloc) coffeescript code counter
+- [stto](https://github.com/mainak55512/stto) new Go code counter with a focus on performance
 
 Interesting reading about other code counting projects tokei, loc, polyglot and loccount
 
- - https://www.reddit.com/r/rust/comments/59bm3t/a_fast_cloc_replacement_in_rust/
- - https://www.reddit.com/r/rust/comments/82k9iy/loc_count_lines_of_code_quickly/
- - http://blog.vmchale.com/article/polyglot-comparisons
- - http://esr.ibiblio.org/?p=8270
+- <https://www.reddit.com/r/rust/comments/59bm3t/a_fast_cloc_replacement_in_rust/>
+- <https://www.reddit.com/r/rust/comments/82k9iy/loc_count_lines_of_code_quickly/>
+- <http://blog.vmchale.com/article/polyglot-comparisons>
+- <http://esr.ibiblio.org/?p=8270>
 
 Further reading about processing files on the disk performance
 
- - https://blog.burntsushi.net/ripgrep/
+- <https://blog.burntsushi.net/ripgrep/>
 
 Using `scc` to process 40 TB of files from GitHub/Bitbucket/GitLab
 
- - https://boyter.org/posts/an-informal-survey-of-10-million-github-bitbucket-gitlab-projects/
+- <https://boyter.org/posts/an-informal-survey-of-10-million-github-bitbucket-gitlab-projects/>
 
 ### Pitch
 
 Why use `scc`?
 
- - It is very fast and gets faster the more CPU you throw at it
- - Accurate
- - Works very well across multiple platforms without slowdown (Windows, Linux, macOS)
- - Large language support
- - Can ignore duplicate files
- - Has complexity estimations
- - You need to tell the difference between Coq and Verilog in the same directory
- - cloc yaml output support so potentially a drop in replacement for some users
- - Can identify or ignore minified files
- - Able to identify many #! files ADVANCED! https://github.com/boyter/scc/issues/115
- - Can ignore large files by lines or bytes
- - Can calculate the ULOC or unique lines of code by file, language or project
- - Supports multiple output formats for integration, CSV, SQL, JSON, HTML and more
+- It is very fast and gets faster the more CPU you throw at it
+- Accurate
+- Works very well across multiple platforms without slowdown (Windows, Linux, macOS)
+- Large language support
+- Can ignore duplicate files
+- Has complexity estimations
+- You need to tell the difference between Coq and Verilog in the same directory
+- cloc yaml output support so potentially a drop in replacement for some users
+- Can identify or ignore minified files
+- Able to identify many #! files ADVANCED! <https://github.com/boyter/scc/issues/115>
+- Can ignore large files by lines or bytes
+- Can calculate the ULOC or unique lines of code by file, language or project
+- Supports multiple output formats for integration, CSV, SQL, JSON, HTML and more
 
 Why not use `scc`?
 
- - You don't like Go for some reason
- - It cannot count D source with different nested multi-line comments correctly https://github.com/boyter/scc/issues/27
+- You don't like Go for some reason
+- It cannot count D source with different nested multi-line comments correctly <https://github.com/boyter/scc/issues/27>
 
 ### Differences
 
 There are some important differences between `scc` and other tools that are out there. Here are a few important ones for you to consider.
 
-Blank lines inside comments are counted as comments. While the line is technically blank the decision was made that 
-once in a comment everything there should be considered a comment until that comment is ended. As such the following,
- 
-```
+Blank lines inside comments are counted as comments. While the line is technically blank the decision was made that once in a comment everything there should be considered a comment until that comment is ended. As such the following,
+
+```c
 /* blank lines follow
 
 
@@ -230,19 +228,19 @@ repositories.
 
 `scc` is able to count verbatim strings correctly. For example in C# the following,
 
-```
+```C#
 private const string BasePath = @"a:\";
 // The below is returned to the user as a version
 private const string Version = "1.0.0";
 ```
 
-Because of the prefixed @ this string ends at the trailing " by ignoring the escape character \ and as such should be 
+Because of the prefixed @ this string ends at the trailing " by ignoring the escape character \ and as such should be
 counted as 2 code lines and 1 comment. Some tools are unable to
 deal with this and instead count up to the "1.0.0" as a string which can cause the middle comment to be counted as
 code rather than a comment.
 
 `scc` will also tell you the number of bytes it has processed (for most output formats) allowing you to estimate the
-cost of running some static analysis tools. 
+cost of running some static analysis tools.
 
 ### Usage
 
@@ -250,7 +248,7 @@ Command line usage of `scc` is designed to be as simple as possible.
 Full details can be found in `scc --help` or `scc -h`. Note that the below reflects the state of master not a release, as such
 features listed below may be missing from your installation.
 
-```
+```text
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
 Version 3.5.0 (beta)
 Ben Boyter <ben@boyter.org> + Contributors
@@ -324,44 +322,48 @@ Flags:
 
 Output should look something like the below for the redis project
 
-```
+```text
 $ scc redis 
 ───────────────────────────────────────────────────────────────────────────────
 Language                 Files     Lines   Blanks  Comments     Code Complexity
 ───────────────────────────────────────────────────────────────────────────────
-C                          296    180267    20367     31679   128221      32548
-C Header                   215     32362     3624      6968    21770       1636
-TCL                        143     28959     3130      1784    24045       2340
-Shell                       44      1658      222       326     1110        187
-Autoconf                    22     10871     1038      1326     8507        953
-Lua                         20       525       68        70      387         65
-Markdown                    16      2595      683         0     1912          0
-Makefile                    11      1363      262       125      976         59
-Ruby                        10       795       78        78      639        116
-gitignore                   10       162       16         0      146          0
-YAML                         6       711       46         8      657          0
-HTML                         5      9658     2928        12     6718          0
-C++                          4       286       48        14      224         31
-License                      4       100       20         0       80          0
-Plain Text                   3       185       26         0      159          0
-CMake                        2       214       43         3      168          4
+C                          437   267,353   31,103    45,998  190,252     48,269
+JSON                       406    25,392        4         0   25,388          0
+C Header                   288    48,831    5,648    11,302   31,881      3,097
+TCL                        215    66,943    7,330     4,651   54,962      3,816
+Shell                       75     1,626      239       343    1,044        185
+Python                      34     4,802      694       498    3,610        621
+Markdown                    26     4,647    1,226         0    3,421          0
+Autoconf                    22    11,732    1,124     1,420    9,188      1,016
+Lua                         20       525       69        71      385         89
+Makefile                    20     1,956      368       170    1,418         85
+YAML                        20     2,696      147        53    2,496          0
+MSBuild                     11     1,995        2         0    1,993        160
+Plain Text                  10     1,773      313         0    1,460          0
+Ruby                         9       817       73       105      639        123
+C++                          8       546       85        43      418         43
+HTML                         5     9,658    2,928        12    6,718          0
+License                      3        90       17         0       73          0
+CMake                        2       298       49         5      244         12
 CSS                          2       107       16         0       91          0
-Python                       2       219       12         6      201         34
 Systemd                      2        80        6         0       74          0
-BASH                         1       118       14         5       99         31
+BASH                         1       143       16         5      122         38
 Batch                        1        28        2         0       26          3
 C++ Header                   1         9        1         3        5          0
 Extensible Styleshe…         1        10        0         0       10          0
+JavaScript                   1        31        1         0       30          5
+Module-Definition            1    11,375    2,116         0    9,259        167
+SVG                          1         1        0         0        1          0
 Smarty Template              1        44        1         0       43          5
-m4                           1       562      116        53      393          0
+m4                           1       951      218        64      669          0
 ───────────────────────────────────────────────────────────────────────────────
-Total                      823    271888    32767     42460   196661      38012
+Total                    1,624   464,459   53,796    64,743  345,920     57,734
 ───────────────────────────────────────────────────────────────────────────────
-Estimated Cost to Develop (organic) $6,918,301
-Estimated Schedule Effort (organic) 28.682292 months
-Estimated People Required (organic) 21.428982
+Estimated Cost to Develop (organic) $12,517,562
+Estimated Schedule Effort (organic) 35.93 months
+Estimated People Required (organic) 30.95
 ───────────────────────────────────────────────────────────────────────────────
-Processed 9425137 bytes, 9.425 megabytes (SI)
+Processed 16601962 bytes, 16.602 megabytes (SI)
 ───────────────────────────────────────────────────────────────────────────────
 ```
 
@@ -372,7 +374,7 @@ You can also run against multiple files or directories `scc directory1 directory
 Since `scc` writes to standard output, there are many ways to easily share the results. For example, using [netcat](https://manpages.org/nc)
 and [one of many pastebins](https://paste.c-net.org/) gives a public URL:
 
-```
+```bash
 $ scc | nc paste.c-net.org 9999
 https://paste.c-net.org/Example
 ```
@@ -385,27 +387,27 @@ It also supports its own ignore file `.sccignore` if you want `scc` to ignore th
 
 ### Interesting Use Cases
 
-Used inside Intel Nemu Hypervisor to track code changes between revisions https://github.com/intel/nemu/blob/topic/virt-x86/tools/cloc-change.sh#L9
-Appears to also be used inside both http://codescoop.com/ https://pinpoint.com/ https://github.com/chaoss/grimoirelab-graal
+Used inside Intel Nemu Hypervisor to track code changes between revisions <https://github.com/intel/nemu/blob/topic/virt-x86/tools/cloc-change.sh#L9>
+Appears to also be used inside both <http://codescoop.com/> <https://pinpoint.com/> <https://github.com/chaoss/grimoirelab-graal>
 
-It also is used to count code and guess language types in https://searchcode.com/ which makes it one of the most frequently run code counters in the world. 
+It also is used to count code and guess language types in <https://searchcode.com/> which makes it one of the most frequently run code counters in the world.
 
-You can also hook scc into your gitlab pipeline https://gitlab.com/guided-explorations/ci-cd-plugin-extensions/ci-cd-plugin-extension-scc
+You can also hook scc into your gitlab pipeline <https://gitlab.com/guided-explorations/ci-cd-plugin-extensions/ci-cd-plugin-extension-scc>
 
-Also used by CodeQL https://github.com/boyter/scc/pull/317 and Scaleway https://twitter.com/Scaleway/status/1488087029476995074?s=20&t=N2-z6O-ISDdDzULg4o4uVQ
+Also used by CodeQL <https://github.com/boyter/scc/pull/317> and Scaleway <https://twitter.com/Scaleway/status/1488087029476995074?s=20&t=N2-z6O-ISDdDzULg4o4uVQ>
 
-- https://docs.linuxfoundation.org/lfx/insights/v3-beta-version-current/getting-started/landing-page/cocomo-cost-estimation-simplified
-- https://openems.io/
+- <https://docs.linuxfoundation.org/lfx/insights/v3-beta-version-current/getting-started/landing-page/cocomo-cost-estimation-simplified>
+- <https://openems.io/>
 
 ### Features
 
 `scc` uses a small state machine in order to determine what state the code is when it reaches a newline `\n`. As such it is aware of and able to count
 
- - Single Line Comments
- - Multi Line Comments
- - Strings
- - Multi Line Strings
- - Blank lines
+- Single Line Comments
+- Multi Line Comments
+- Strings
+- Multi Line Strings
+- Blank lines
 
 Because of this it is able to accurately determine if a comment is in a string or is actually a comment.
 
@@ -423,29 +425,29 @@ Generally though the complexity there is to help estimate between projects writt
 
 As for how it works.
 
-It's my own definition, but tries to be an approximation of cyclomatic complexity https://en.wikipedia.org/wiki/Cyclomatic_complexity although done only on a file level. 
+It's my own definition, but tries to be an approximation of cyclomatic complexity <https://en.wikipedia.org/wiki/Cyclomatic_complexity> although done only on a file level.
 
 The reason it's an approximation is that it's calculated almost for free from a CPU point of view (since its a cheap lookup when counting), whereas a real cyclomatic complexity count would need to parse the code. It gives a reasonable guess in practice though even if it fails to identify recursive methods. The goal was never for it to be exact.
 
 In short when scc is looking through what it has identified as code if it notices what are usually branch conditions it will increment a counter.
 
-The conditions it looks for are compiled into the code and you can get an idea for them by looking at the JSON inside the repository. See https://github.com/boyter/scc/blob/master/languages.json#L3869 for an example of what it's looking at for a file that's Java.
+The conditions it looks for are compiled into the code and you can get an idea for them by looking at the JSON inside the repository. See <https://github.com/boyter/scc/blob/master/languages.json#L3869> for an example of what it's looking at for a file that's Java.
 
 The increment happens for each of the matching conditions and produces the number you see.
 
 ### Unique Lines of Code (ULOC)
 
 ULOC stands for Unique Lines of Code and represents the unique lines across languages, files and the project itself. This idea was taken from
-https://cmcenroe.me/2018/12/14/uloc.html where the calculation is presented using standard Unix tools `sort -u *.h *.c | wc -l`. This metric is
+<https://cmcenroe.me/2018/12/14/uloc.html> where the calculation is presented using standard Unix tools `sort -u *.h *.c | wc -l`. This metric is
 there to assist with the estimation of complexity within the project. Quoting the source
 
 > In my opinion, the number this produces should be a better estimate of the complexity of a project. Compared to SLOC, not only are blank lines discounted, but so are close-brace lines and other repetitive code such as common includes. On the other hand, ULOC counts comments, which require just as much maintenance as the code around them does, while avoiding inflating the result with license headers which appear in every file, for example.
 
 You can obtain the ULOC by supplying the `-u` or `--uloc` argument to `scc`.
 
-It has a corresponding metric `DRYness %` which is the percentage of ULOC to CLOC or `DRYness = ULOC / SLOC`. The 
+It has a corresponding metric `DRYness %` which is the percentage of ULOC to CLOC or `DRYness = ULOC / SLOC`. The
 higher the number the more DRY (don't repeat yourself) the project can be considered. In general a higher value
-here is a better as it indicates less duplicated code. The DRYness metric was taken from a comment by minimax https://lobste.rs/s/has9r7/uloc_unique_lines_code 
+here is a better as it indicates less duplicated code. The DRYness metric was taken from a comment by minimax <https://lobste.rs/s/has9r7/uloc_unique_lines_code>
 
 To obtain the DRYness metric you can use the `-a` or `--dryness` argument to `scc`, which will implicitly set `--uloc`.
 
@@ -453,7 +455,7 @@ Note that there is a performance penalty when calculating the ULOC metrics which
 
 Running the uloc and DRYness calculations against C code a clone of redis produces an output as follows.
 
-```
+```bash
 $ scc -a -i c redis 
 ───────────────────────────────────────────────────────────────────────────────
 Language                 Files     Lines   Blanks  Comments     Code Complexity
@@ -474,13 +476,13 @@ Processed 8407821 bytes, 8.408 megabytes (SI)
 ───────────────────────────────────────────────────────────────────────────────
 ```
 
-Further reading about the ULOC calculation can be found at https://boyter.org/posts/sloc-cloc-code-new-metic-uloc/
+Further reading about the ULOC calculation can be found at <https://boyter.org/posts/sloc-cloc-code-new-metic-uloc/>
 
 ### COCOMO
 
 The COCOMO statistics displayed at the bottom of any command line run can be configured as needed.
 
-```
+```text
 Estimated Cost to Develop (organic) $664,081
 Estimated Schedule Effort (organic) 11.772217 months
 Estimated People Required (organic) 5.011633
@@ -488,7 +490,7 @@ Estimated People Required (organic) 5.011633
 
 To change the COCOMO parameters, you can either use one of the default COCOMO models.
 
-```
+```text
 scc --cocomo-project-type organic
 scc --cocomo-project-type semi-detached
 scc --cocomo-project-type embedded
@@ -496,7 +498,7 @@ scc --cocomo-project-type embedded
 
 You can also supply your own parameters if you are familiar with COCOMO as follows,
 
-```
+```text
 scc --cocomo-project-type "custom,1,1,1,1"
 ```
 
@@ -524,7 +526,7 @@ and also the developers need to be sufficiently experienced and creative to deve
 
 ### Large File Detection
 
-You can have `scc` exclude large files from the output. 
+You can have `scc` exclude large files from the output.
 
 The option to do so is `--no-large` which by default will exclude files over 1,000,000 bytes or 40,000 lines.
 
@@ -542,7 +544,7 @@ You can do so by enabling the `-z` flag like so `scc -z` which will identify any
 
 Minified files appear like so in the output.
 
-```
+```text
 $ scc --no-cocomo -z ./examples/minified/jquery-3.1.1.min.js
 ───────────────────────────────────────────────────────────────────────────────
 Language                 Files     Lines   Blanks  Comments     Code Complexity
@@ -565,19 +567,19 @@ You can exclude minified files from the count totally using the flag `--no-min-g
 
 ### Remapping
 
-Some files may not have an extension. They will be checked to see if they are a #! file. If they are then the language will be remapped to the 
+Some files may not have an extension. They will be checked to see if they are a #! file. If they are then the language will be remapped to the
 correct language. Otherwise, it will not process.
 
 However, you may have the situation where you want to remap such files based on a string inside it. To do so you can use `--remap-unknown`
 
-```
+```bash
  scc --remap-unknown "-*- C++ -*-":"C Header"
 ```
 
-The above will inspect any file with no extension looking for the string `-*- C++ -*-` and if found remap the file to be counted using the C Header rules. 
+The above will inspect any file with no extension looking for the string `-*- C++ -*-` and if found remap the file to be counted using the C Header rules.
 You can have multiple remap rules if required,
 
-```
+```bash
  scc --remap-unknown "-*- C++ -*-":"C Header","other":"Java"
 ```
 
@@ -589,27 +591,27 @@ Note that in all cases if the remap rule does not apply normal #! rules will app
 
 By default `scc` will output to the console. However, you can produce output in other formats if you require.
 
-The different options are `tabular, wide, json, csv, csv-stream, cloc-yaml, html, html-table, sql, sql-insert, openmetrics`. 
+The different options are `tabular, wide, json, csv, csv-stream, cloc-yaml, html, html-table, sql, sql-insert, openmetrics`.
 
 Note that you can write `scc` output to disk using the `-o, --output` option. This allows you to specify a file to
 write your output to. For example `scc -f html -o output.html` will run `scc` against the current directory, and output
 the results in html to the file `output.html`.
 
-You can also write to multiple output files, or multiple types to stdout if you want using the `--format-multi` option. This is 
-most useful when working in CI/CD systems where you want HTML reports as an artifact while also displaying the counts in stdout. 
+You can also write to multiple output files, or multiple types to stdout if you want using the `--format-multi` option. This is
+most useful when working in CI/CD systems where you want HTML reports as an artifact while also displaying the counts in stdout.
 
-```
+```bash
 scc --format-multi "tabular:stdout,html:output.html,csv:output.csv"
 ```
 
 The above will run against the current directory, outputting to standard output the default output, as well as writing
 to output.html and output.csv with the appropriate formats.
 
-#### Tabular 
+#### Tabular
 
 This is the default output format when scc is run.
 
-#### Wide 
+#### Wide
 
 Wide produces some additional information which is the complexity/lines metric. This can be useful when trying to
 identify the most complex file inside a project based on the complexity estimate.
@@ -623,24 +625,24 @@ number of bytes processed.
 
 #### CSV
 
-CSV as an option is good for importing into a spreadsheet for analysis. 
+CSV as an option is good for importing into a spreadsheet for analysis.
 
 Note that this format will give you the byte size of every file `scc` reads allowing you to get a breakdown of the
 number of bytes processed. Also note that CSV respects `--by-file` and as such will return a summary by default.
 
 #### CSV-Stream
 
-csv-stream is an option useful for processing very large repositories where you are likely to run into memory issues. It's output format is 100% the same as CSV. 
+csv-stream is an option useful for processing very large repositories where you are likely to run into memory issues. It's output format is 100% the same as CSV.
 
 Note that you should not use this with the `format-multi` option as it will always print to standard output, and because of how it works will negate the memory saving it normally gains.
-savings that this option provides. Note that there is no sort applied with this option. 
+savings that this option provides. Note that there is no sort applied with this option.
 
-#### cloc-yaml 
+#### cloc-yaml
 
-Is a drop in replacement for cloc using its yaml output option. This is quite often used for passing into other 
+Is a drop in replacement for cloc using its yaml output option. This is quite often used for passing into other
 build systems and can help with replacing cloc if required.
 
-```
+```text
 $ scc -f cloc-yml processor
 # https://github.com/boyter/scc/
 header:
@@ -693,7 +695,7 @@ SUM:
 #### HTML and HTML-TABLE
 
 The HTML output options produce a minimal html report using a table that is either standalone `html` or as just a table `html-table`
-which can be injected into your own HTML pages. The only difference between the two is that the `html` option includes 
+which can be injected into your own HTML pages. The only difference between the two is that the `html` option includes
 html head and body tags with minimal styling.
 
 The markup is designed to allow your own custom styles to be applied. An example report
@@ -707,7 +709,7 @@ number of bytes processed.
 
 #### SQL and SQL-Insert
 
-The SQL output format "mostly" compatible with cloc's SQL output format https://github.com/AlDanial/cloc#sql-
+The SQL output format "mostly" compatible with cloc's SQL output format <https://github.com/AlDanial/cloc#sql->
 
 While all queries on the cloc documentation should work as expected, you will not be able to append output from `scc` and `cloc` into the same database. This is because the table format is slightly different
 to account for scc including complexity counts and bytes.
@@ -718,25 +720,24 @@ Usage is 100% the same as any other `scc` command but sql output will always con
 
 The below will run scc against the current directory, name the output as the project scc and then pipe the output to sqlite to put into the database code.db
 
-```
+```bash
 scc --format sql --sql-project scc . | sqlite3 code.db
 ```
 
 Assuming you then wanted to append another project
 
-```
+```bash
 scc --format sql-insert --sql-project redis . | sqlite3 code.db
 ```
 
 You could then run SQL against the database,
 
-```
+```bash
 sqlite3 code.db 'select project,file,max(nCode) as nL from t
                          group by project order by nL desc;'
 ```
 
 See the cloc documentation for more examples.
-
 
 #### OpenMetrics
 
@@ -746,7 +747,8 @@ The produced output is natively supported by [Prometheus](https://prometheus.io/
 
 Note that OpenMetrics respects `--by-file` and as such will return a summary by default.
 
-The output includes a metadata header containing definitions of the returned metrics: 
+The output includes a metadata header containing definitions of the returned metrics:
+
 ```text
 # TYPE scc_files count
 # HELP scc_files Number of sourcecode files.
@@ -767,6 +769,7 @@ The output includes a metadata header containing definitions of the returned met
 ```
 
 The header is followed by the metric data in either language summary form:
+
 ```text
 scc_files{language="Go"} 1
 scc_lines{language="Go"} 1000
@@ -778,6 +781,7 @@ scc_bytes{language="Go"} 1000
 ```
 
 or, if `--by-file` is present, in per file form:
+
 ```text
 scc_lines{language="Go",file="./bbbb.go"} 1000
 scc_code{language="Go",file="./bbbb.go"} 1000
@@ -795,10 +799,9 @@ However, if you want greater performance and you have RAM to spare you can disab
 
 Benchmarks are run on fresh 48 Core CPU Optimised Digital Ocean Virtual Machine 2024/09/30 all done using [hyperfine](https://github.com/sharkdp/hyperfine).
 
-See https://github.com/boyter/scc/blob/master/benchmark.sh to see how the benchmarks are run.
+See <https://github.com/boyter/scc/blob/master/benchmark.sh> to see how the benchmarks are run.
 
-
-#### Valkey https://github.com/valkey-io/valkey
+#### Valkey <https://github.com/valkey-io/valkey>
 
 ```shell
 Benchmark 1: scc valkey
@@ -824,7 +827,7 @@ Summary
     2.44 ± 0.22 times faster than tokei valkey
 ```
 
-#### CPython https://github.com/python/cpython
+#### CPython <https://github.com/python/cpython>
 
 ```shell
 Benchmark 1: scc cpython
@@ -850,7 +853,7 @@ Summary
     2.15 ± 0.14 times faster than tokei cpython
 ```
 
-#### Linux Kernel https://github.com/torvalds/linux
+#### Linux Kernel <https://github.com/torvalds/linux>
 
 ```shell
 Benchmark 1: scc linux
@@ -876,11 +879,10 @@ Summary
     1.38 ± 0.06 times faster than polyglot linux
 ```
 
-#### Sourcegraph https://github.com/SINTEF/sourcegraph.git
+#### Sourcegraph <https://github.com/SINTEF/sourcegraph.git>
 
 Sourcegraph has gone dark since I last ran these benchmarks hence using a clone taken before this occured.
 The reason for this is to track what appears to be a performance regression in tokei.
-
 
 ```shell
 Benchmark 1: scc sourcegraph
@@ -911,18 +913,17 @@ If you enable duplicate detection expect performance to fall by about 20% in `sc
 
 Performance is tracked for some releases and presented below.
 
-<img alt="scc" src=https://github.com/boyter/scc/raw/master/performance-over-time.png>
-
+[![scc perfromance on Linux kernel](./performance-over-time.png)]
 The decrease in performance from the 3.3.0 release was due to accurate .gitignore, .ignore and .gitmodule support.
 Current work is focussed on resolving this.
 
-https://jsfiddle.net/mw21h9va/
+<https://jsfiddle.net/mw21h9va/>
 
 ### CI/CD Support
 
 Some CI/CD systems which will remain nameless do not work very well with the box-lines used by `scc`. To support those systems better there is an option `--ci` which will change the default output to ASCII only.
 
-```
+```text
 $ scc --ci main.go
 -------------------------------------------------------------------------------
 Language                 Files     Lines   Blanks  Comments     Code Complexity
@@ -949,55 +950,52 @@ For all other changes ensure you run all tests before submitting. You can do so 
 
 ### API Support
 
-The core part of `scc` which is the counting engine is exposed publicly to be integrated into other Go applications. See https://github.com/pinpt/ripsrc for an example of how to do this. 
+The core part of `scc` which is the counting engine is exposed publicly to be integrated into other Go applications. See <https://github.com/pinpt/ripsrc> for an example of how to do this.
 
-It also powers all of the code calculations displayed in https://searchcode.com/ such as https://searchcode.com/file/169350674/main.go/ making it one of the more used code counters in the world.
+It also powers all of the code calculations displayed in <https://searchcode.com/> such as <https://searchcode.com/file/169350674/main.go/> making it one of the more used code counters in the world.
 
 However as a quick start consider the following,
 
 Note that you must pass in the number of bytes in the content in order to ensure it is counted!
 
-```
+```go
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
+  "fmt"
+  "io/ioutil"
 
-	"github.com/boyter/scc/v3/processor"
+  "github.com/boyter/scc/v3/processor"
 )
 
 type statsProcessor struct{}
 
 func (p *statsProcessor) ProcessLine(job *processor.FileJob, currentLine int64, lineType processor.LineType) bool {
-	switch lineType {
-	case processor.LINE_BLANK:
-		fmt.Println(currentLine, "lineType", "BLANK")
-	case processor.LINE_CODE:
-		fmt.Println(currentLine, "lineType", "CODE")
-	case processor.LINE_COMMENT:
-		fmt.Println(currentLine, "lineType", "COMMENT")
-	}
-	return true
+  switch lineType {
+  case processor.LINE_BLANK:
+    fmt.Println(currentLine, "lineType", "BLANK")
+  case processor.LINE_CODE:
+    fmt.Println(currentLine, "lineType", "CODE")
+  case processor.LINE_COMMENT:
+    fmt.Println(currentLine, "lineType", "COMMENT")
+  }
+  return true
 }
 
 func main() {
-	bts, _ := ioutil.ReadFile("somefile.go")
-
-	t := &statsProcessor{}
-	filejob := &processor.FileJob{
-		Filename: "test.go",
-		Language: "Go",
-		Content:  bts,
-		Callback: t,
-		Bytes:    int64(len(bts)),
-	}
-
-	processor.ProcessConstants() // Required to load the language information and need only be done once
-	processor.CountStats(filejob)
+  bts, _ := ioutil.ReadFile("somefile.go")  
+  t := &statsProcessor{}
+  filejob := &processor.FileJob{
+    Filename: "test.go",
+    Language: "Go",
+    Content:  bts,
+    Callback: t,
+    Bytes:    int64(len(bts)),
+  }  
+  processor.ProcessConstants() // Required to load the language information and need only be done once
+  processor.CountStats(filejob)
 }
 ```
-
 
 ### Adding/Modifying Languages
 
@@ -1007,11 +1005,11 @@ To add or modify a language you will need to edit the `languages.json` file in t
 
 Its possible that you may see the counts vary between runs. This usually means one of two things. Either something is changing or locking the files under scc, or that you are hitting ulimit restrictions. To change the ulimit see the following links.
 
- - https://superuser.com/questions/261023/how-to-change-default-ulimit-values-in-mac-os-x-10-6#306555
- - https://unix.stackexchange.com/questions/108174/how-to-persistently-control-maximum-system-resource-consumption-on-mac/221988#221988
- - https://access.redhat.com/solutions/61334
- - https://serverfault.com/questions/356962/where-are-the-default-ulimit-values-set-linux-centos
- - https://www.tecmint.com/increase-set-open-file-limits-in-linux/
+- <https://superuser.com/questions/261023/how-to-change-default-ulimit-values-in-mac-os-x-10-6#306555>
+- <https://unix.stackexchange.com/questions/108174/how-to-persistently-control-maximum-system-resource-consumption-on-mac/221988#221988>
+- <https://access.redhat.com/solutions/61334>
+- <https://serverfault.com/questions/356962/where-are-the-default-ulimit-values-set-linux-centos>
+- <https://www.tecmint.com/increase-set-open-file-limits-in-linux/>
 
 To help identify this issue run scc like so `scc -v .` and look for the message `too many open files` in the output. If it is there you can rectify it by setting your ulimit to a higher value.
 
@@ -1027,15 +1025,15 @@ scc is pretty well tested with many unit, integration and benchmarks to ensure t
 
 ### Package
 
-Packaging as of version v3.1.0 is done through https://goreleaser.com/ 
+Packaging as of version v3.1.0 is done through <https://goreleaser.com/>
 
 ### Containers
 
 Note if you plan to run `scc` in Alpine containers you will need to build with CGO_ENABLED=0.
 
-See the below Dockerfile as an example on how to achieve this based on this issue https://github.com/boyter/scc/issues/208
+See the below Dockerfile as an example on how to achieve this based on this issue <https://github.com/boyter/scc/issues/208>
 
-```
+```Dockerfile
 FROM golang as scc-get
 
 ENV GOOS=linux \
@@ -1057,15 +1055,15 @@ ENTRYPOINT ["scc"]
 You can use `scc` to provide badges on your github/bitbucket/gitlab/sr.ht open repositories. For example, [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/)](https://github.com/boyter/scc/)
  The format to do so is,
 
-https://sloc.xyz/PROVIDER/USER/REPO
+<https://sloc.xyz/PROVIDER/USER/REPO>
 
 An example of the badge for `scc` is included below, and is used on this page.
 
-```
+```Markdown
 [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/)](https://github.com/boyter/scc/)
 ```
 
-By default the badge will show the repo's lines count. You can also specify for it to show a different category, by using the `?category=` query string. 
+By default the badge will show the repo's lines count. You can also specify for it to show a different category, by using the `?category=` query string.
 
 Valid values include `code, blanks, lines, comments, cocomo` and examples of the appearance are included below.
 
@@ -1077,22 +1075,20 @@ Valid values include `code, blanks, lines, comments, cocomo` and examples of the
 
 For `cocomo` you can also set the `avg-wage` value similar to `scc` itself. For example,
 
-https://sloc.xyz/github/boyter/scc/?category=cocomo&avg-wage=1
-https://sloc.xyz/github/boyter/scc/?category=cocomo&avg-wage=100000 
+<https://sloc.xyz/github/boyter/scc/?category=cocomo&avg-wage=1>
+<https://sloc.xyz/github/boyter/scc/?category=cocomo&avg-wage=100000>
 
 Note that the avg-wage value must be a positive integer otherwise it will revert back to the default value of 56286.
 
 You can also configure the look and feel of the bad using the following parameters,
 
- - ?lower=true will lower the title text, so "Total lines" would be "total lines"
-
-The below can control the colours of shadows, fonts and badges
-
- - ?font-color=fff
- - ?font-shadow-color=010101
- - ?top-shadow-accent-color=bbb
- - ?title-bg-color=555
- - ?badge-bg-color=4c1
+- ?lower=true will lower the title text, so "Total lines" would be "total lines"
+he below can control the colours of shadows, fonts and badges
+- ?font-color=fff
+- ?font-shadow-color=010101
+- ?top-shadow-accent-color=bbb
+- ?title-bg-color=555
+- ?badge-bg-color=4c1
 
 An example of using some of these parameters to produce an admittedly ugly result
 
@@ -1100,21 +1096,20 @@ An example of using some of these parameters to produce an admittedly ugly resul
 
 *NB* it may not work for VERY large repositories (has been tested on Apache hadoop/spark without issue).
 
-You can find the source code for badges in the repository at https://github.com/boyter/scc/blob/master/cmd/badges/main.go 
+You can find the source code for badges in the repository at <https://github.com/boyter/scc/blob/master/cmd/badges/main.go>
 
 #### A example for each supported provider
 
-- Github - https://sloc.xyz/github/boyter/scc/
-- sr.ht - https://sloc.xyz/sr.ht/~nektro/magnolia-desktop/
-- Bitbucket - https://sloc.xyz/bitbucket/boyter/decodingcaptchas
-- Gitlab - https://sloc.xyz/gitlab/esr/loccount
+- Github - <https://sloc.xyz/github/boyter/scc/>
+- sr.ht - <https://sloc.xyz/sr.ht/~nektro/magnolia-desktop/>
+- Bitbucket - <https://sloc.xyz/bitbucket/boyter/decodingcaptchas>
+- Gitlab - <https://sloc.xyz/gitlab/esr/loccount>
 
 ### Languages
 
 List of supported languages. The master version of `scc` supports 322 languages at last count. Note that this is always assumed that you built from master, and it might trail behind what is actually supported. To see what your version of `scc` supports run `scc --languages`
 
 [Click here to view all languages supported by master](LANGUAGES.md)
-
 
 ### Release Checklist
 
