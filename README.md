@@ -1,6 +1,6 @@
 # Sloc Cloc and Code (scc)
 
-[![SCC illustration](./scc.jpg)]
+![SCC illustration](./scc.jpg)
 
 A tool similar to cloc, sloccount and tokei. For counting the lines of code, blank lines, comment lines, and physical lines of source code in many programming languages.
 
@@ -460,19 +460,19 @@ $ scc -a -i c redis
 ───────────────────────────────────────────────────────────────────────────────
 Language                 Files     Lines   Blanks  Comments     Code Complexity
 ───────────────────────────────────────────────────────────────────────────────
-C                          419    241293    27309     41292   172692      40849
-(ULOC)                            133535
+C                          437   267,353   31,103    45,998  190,252     48,269
+(ULOC)                            149892
 ───────────────────────────────────────────────────────────────────────────────
-Total                      419    241293    27309     41292   172692      40849
+Total                      437   267,353   31,103    45,998  190,252     48,269
 ───────────────────────────────────────────────────────────────────────────────
-Unique Lines of Code (ULOC)       133535
-DRYness %                           0.55
+Unique Lines of Code (ULOC)       149892
+DRYness %                           0.56
 ───────────────────────────────────────────────────────────────────────────────
-Estimated Cost to Develop (organic) $6,035,748
-Estimated Schedule Effort (organic) 27.23 months
-Estimated People Required (organic) 19.69
+Estimated Cost to Develop (organic) $6,681,762
+Estimated Schedule Effort (organic) 28.31 months
+Estimated People Required (organic) 20.97
 ───────────────────────────────────────────────────────────────────────────────
-Processed 8407821 bytes, 8.408 megabytes (SI)
+Processed 9390815 bytes, 9.391 megabytes (SI)
 ───────────────────────────────────────────────────────────────────────────────
 ```
 
