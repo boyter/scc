@@ -1028,9 +1028,10 @@ specificLanguages=(
     'ZoKrates '
     'Zsh '
 )
+SPECIFIC_LANG_TEST_RESULT=$(./scc "examples/language/" --no-scc-ignore)
 for i in "${specificLanguages[@]}"
 do
-    if ./scc "examples/language/" --no-scc-ignore | grep -q "$i"; then
+    if echo "$SPECIFIC_LANG_TEST_RESULT" | grep -q "$i"; then
         echo -e "${GREEN}PASSED $i Language Check"
     else
         echo -e "${RED}======================================================="
