@@ -518,7 +518,10 @@ func CountStats(fileJob *FileJob) {
 						return
 					}
 				}
-				printTraceF("%s line %d ended with state: %d: counted as code", fileJob.Location, fileJob.Lines, currentState)
+				if Trace {
+					// Don't remove the outside if-statements, for performance
+					printTraceF("%s line %d ended with state: %d: counted as code", fileJob.Location, fileJob.Lines, currentState)
+				}
 			case SComment, SMulticomment, SMulticommentBlank:
 				fileJob.Comment++
 				currentState = resetState(currentState)
@@ -527,7 +530,10 @@ func CountStats(fileJob *FileJob) {
 						return
 					}
 				}
-				printTraceF("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState)
+				if Trace {
+					// Same as above
+					printTraceF("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState)
+				}
 			case SBlank:
 				fileJob.Blank++
 				if fileJob.Callback != nil {
@@ -535,7 +541,10 @@ func CountStats(fileJob *FileJob) {
 						return
 					}
 				}
-				printTraceF("%s line %d ended with state: %d: counted as blank", fileJob.Location, fileJob.Lines, currentState)
+				if Trace {
+					// Same as above
+					printTraceF("%s line %d ended with state: %d: counted as blank", fileJob.Location, fileJob.Lines, currentState)
+				}
 			case SDocString:
 				fileJob.Comment++
 				if fileJob.Callback != nil {
@@ -543,7 +552,10 @@ func CountStats(fileJob *FileJob) {
 						return
 					}
 				}
-				printTraceF("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState)
+				if Trace {
+					// Same as above
+					printTraceF("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState)
+				}
 			}
 		}
 	}
