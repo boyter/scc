@@ -257,9 +257,7 @@ func ProcessConstants() {
 		setupCountAs()
 	}
 
-	if Trace {
-		printTrace(fmt.Sprintf("nanoseconds build extension to language: %d", makeTimestampNano()-startTime))
-	}
+	printTraceF("nanoseconds build extension to language: %d", makeTimestampNano()-startTime)
 
 	// Configure COCOMO setting
 	_, ok := projectType[strings.ToLower(CocomoProjectType)]
@@ -293,13 +291,9 @@ func ProcessConstants() {
 			processLanguageFeature(name, value)
 		}
 
-		if Trace {
-			printTrace(fmt.Sprintf("milliseconds build language features: %d", makeTimestampMilli()-startTime))
-		}
+		printTraceF("milliseconds build language features: %d", makeTimestampMilli()-startTime)
 	} else {
-		if Trace {
-			printTrace("configured to lazy load language features")
-		}
+		printTrace("configured to lazy load language features")
 	}
 
 	// Fix for https://github.com/boyter/scc/issues/250
@@ -331,9 +325,7 @@ func setupCountAs() {
 				if strings.EqualFold(name, t[1]) {
 					ExtensionToLanguage[strings.ToLower(t[0])] = []string{name}
 					identified = true
-					if Debug {
-						printDebug(fmt.Sprintf("set to count extension: %s as language %s by language", t[0], name))
-					}
+					printDebugF("set to count extension: %s as language %s by language", t[0], name)
 				}
 			}
 
@@ -344,10 +336,7 @@ func setupCountAs() {
 
 				if ok {
 					ExtensionToLanguage[strings.ToLower(t[0])] = target
-
-					if Debug {
-						printDebug(fmt.Sprintf("set to count extension: %s as language %s by extension", t[0], target))
-					}
+					printDebugF("set to count extension: %s as language %s by extension", t[0], target)
 				}
 			}
 		}
@@ -379,9 +368,7 @@ func LoadLanguageFeature(loadName string) {
 
 	startTime := makeTimestampNano()
 	processLanguageFeature(loadName, value)
-	if Trace {
-		printTrace(fmt.Sprintf("nanoseconds to build language %s features: %d", loadName, makeTimestampNano()-startTime))
-	}
+	printTraceF("nanoseconds to build language %s features: %d", loadName, makeTimestampNano()-startTime)
 }
 
 func processLanguageFeature(name string, value Language) {
@@ -481,23 +468,21 @@ func processFlags() {
 		UlocMode = true
 	}
 
-	if Debug {
-		printDebug(fmt.Sprintf("Path Deny List: %v", PathDenyList))
-		printDebug(fmt.Sprintf("Sort By: %s", SortBy))
-		printDebug(fmt.Sprintf("White List: %v", AllowListExtensions))
-		printDebug(fmt.Sprintf("Files Output: %t", Files))
-		printDebug(fmt.Sprintf("Verbose: %t", Verbose))
-		printDebug(fmt.Sprintf("Duplicates Detection: %t", Duplicates))
-		printDebug(fmt.Sprintf("Complexity Calculation: %t", !Complexity))
-		printDebug(fmt.Sprintf("Wide: %t", More))
-		printDebug(fmt.Sprintf("Average Wage: %d", AverageWage))
-		printDebug(fmt.Sprintf("Cocomo: %t", !Cocomo))
-		printDebug(fmt.Sprintf("Minified/Generated Detection: %t/%t", Minified, Generated))
-		printDebug(fmt.Sprintf("Ignore Minified/Generated: %t/%t", IgnoreMinified, IgnoreGenerated))
-		printDebug(fmt.Sprintf("IncludeSymLinks: %t", IncludeSymLinks))
-		printDebug(fmt.Sprintf("Uloc: %t", UlocMode))
-		printDebug(fmt.Sprintf("Dryness: %t", Dryness))
-	}
+	printDebugF("Path Deny List: %v", PathDenyList)
+	printDebugF("Sort By: %s", SortBy)
+	printDebugF("White List: %v", AllowListExtensions)
+	printDebugF("Files Output: %t", Files)
+	printDebugF("Verbose: %t", Verbose)
+	printDebugF("Duplicates Detection: %t", Duplicates)
+	printDebugF("Complexity Calculation: %t", !Complexity)
+	printDebugF("Wide: %t", More)
+	printDebugF("Average Wage: %d", AverageWage)
+	printDebugF("Cocomo: %t", !Cocomo)
+	printDebugF("Minified/Generated Detection: %t/%t", Minified, Generated)
+	printDebugF("Ignore Minified/Generated: %t/%t", IgnoreMinified, IgnoreGenerated)
+	printDebugF("IncludeSymLinks: %t", IncludeSymLinks)
+	printDebugF("Uloc: %t", UlocMode)
+	printDebugF("Dryness: %t", Dryness)
 }
 
 func printLanguages() {
@@ -557,11 +542,9 @@ func Process() {
 
 	SortBy = strings.ToLower(SortBy)
 
-	if Debug {
-		printDebug(fmt.Sprintf("NumCPU: %d", runtime.NumCPU()))
-		printDebug(fmt.Sprintf("SortBy: %s", SortBy))
-		printDebug(fmt.Sprintf("PathDenyList: %v", PathDenyList))
-	}
+	printDebugF("NumCPU: %d", runtime.NumCPU())
+	printDebugF("SortBy: %s", SortBy)
+	printDebugF("PathDenyList: %v", PathDenyList)
 
 	potentialFilesQueue := make(chan *gocodewalker.File, FileListQueueSize) // files that pass the .gitignore checks
 	fileListQueue := make(chan *FileJob, FileListQueueSize)                 // Files ready to be read from disk

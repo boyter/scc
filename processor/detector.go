@@ -5,7 +5,6 @@ package processor
 import (
 	"cmp"
 	"errors"
-	"fmt"
 	"slices"
 	"strings"
 )
@@ -24,9 +23,7 @@ func DetectLanguage(name string) ([]string, string) {
 		t := strings.Count(name, ".")
 		// If there is no . in the filename or it starts with one then check if #!
 		if t == 0 || (name[0] == '.' && t == 1) {
-			if Verbose {
-				printWarn(fmt.Sprintf("possible #! file: %s", name))
-			}
+			printWarnF("possible #! file: %s", name)
 
 			// No extension indicates possible #! so mark as such for processing
 			return []string{SheBang}, name
@@ -218,13 +215,8 @@ func DetermineLanguage(filename string, fallbackLanguage string, possibleLanguag
 		}
 	}
 
-	if Verbose {
-		printWarn(fmt.Sprintf("guessing language %s for file %s", toSort[0].Name, filename))
-	}
-
-	if Trace {
-		printTrace(fmt.Sprintf("nanoseconds to guess language: %s: %d", filename, makeTimestampNano()-startTime))
-	}
+	printWarnF("guessing language %s for file %s", toSort[0].Name, filename)
+	printTraceF("nanoseconds to guess language: %s: %d", filename, makeTimestampNano()-startTime)
 
 	if len(toSort) != 0 {
 		return toSort[0].Name
