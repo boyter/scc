@@ -27,8 +27,8 @@ import (
 var tabularShortBreak = "───────────────────────────────────────────────────────────────────────────────\n"
 var tabularShortBreakCi = "-------------------------------------------------------------------------------\n"
 
-var tabularShortFormatHead = "%-20s %9s %9s %8s %9s %8s %10s\n"
-var tabularShortFormatBody = "%-20s %9d %9d %8d %9d %8d %10d\n"
+var tabularShortFormatHead = "%-20s %9s %11s %8s %9s %9s %7s\n"
+var tabularShortFormatBody = "%-20s %9d %11d %8d %9d %9d %7d\n"
 var tabularShortFormatFile = "%s %9d %8d %9d %8d %10d\n"
 var tabularShortFormatFileMaxMean = "MaxLine / MeanLine %11d %9d\n"
 var shortFormatFileTruncate = 29
@@ -1036,7 +1036,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 	str.WriteString(getTabularShortBreak())
 	if !Complexity {
-		fmt.Fprintf(str, tabularShortFormatHead, "Language", "Files", "Lines", "Blanks", "Comments", "Code", "Complexity")
+		fmt.Fprintf(str, tabularShortFormatHead, "Language", "Files", "Lines", "Blanks", "Comments", "Code", "Cplx")
 	} else {
 		fmt.Fprintf(str, tabularShortFormatHeadNoComplexity, "Language", "Files", "Lines", "Blanks", "Comments", "Code")
 	}
