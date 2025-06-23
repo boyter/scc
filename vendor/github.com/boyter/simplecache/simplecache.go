@@ -33,8 +33,8 @@ type Cache[T any] struct {
 	mutex           sync.Mutex
 	maxItems        int // 0 indicates no limits IE never expires unless age limits kick in
 	evictionPolicy  CacheEvictionPolicy
-	evictionSamples int            // how many random samples do we look for when expiring
-	maxAge          *time.Duration // at what point should it be evicted no matter what
+	evictionSamples int           // how many random samples do we look for when expiring
+	maxAge          time.Duration // at what point should it be evicted no matter what
 }
 
 // CacheInterface is an interface for the Cache type mostly for mocking purposes
@@ -70,7 +70,7 @@ func New[T any](opts ...Option) *Cache[T] {
 		maxItems:        100_000, // 0 indicates no limits
 		evictionPolicy:  LFU,
 		evictionSamples: 5,
-		maxAge:          nil, // by default no expiration
+		maxAge:          0, // by default no expiration
 	}
 
 	for _, opt := range opts {
@@ -84,7 +84,7 @@ func New[T any](opts ...Option) *Cache[T] {
 			sc.evictionSamples = *opt.EvictionSamples
 		}
 		if opt.MaxAge != nil {
-			sc.maxAge = opt.MaxAge
+			sc.maxAge = *opt.MaxAge
 		}
 	}
 
@@ -167,8 +167,8 @@ func (c *Cache[T]) Get(key string) (T, bool) {
 
 	entry, found := c.items[key]
 	if found {
-		if c.maxAge != nil { // should it be expired?
-			if entry.lastUse.Before(time.Now().Add(-*c.maxAge)) {
+		if c.maxAge > 0 { // should it be expired?
+			if entry.lastUse.Before(time.Now().Add(-c.maxAge)) {
 				delete(c.items, key)
 				var zero T
 				return zero, false

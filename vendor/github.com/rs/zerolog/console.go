@@ -28,6 +28,8 @@ const (
 
 	colorBold     = 1
 	colorDarkGray = 90
+
+	unknownLevel = "???"
 )
 
 var (
@@ -45,6 +47,10 @@ const (
 // Formatter transforms the input into a formatted string.
 type Formatter func(interface{}) string
 
+// FormatterByFieldName transforms the input into a formatted string,
+// being able to differentiate formatting based on field name.
+type FormatterByFieldName func(interface{}, string) string
+
 // ConsoleWriter parses the JSON input and writes it in an
 // (optionally) colorized, human-friendly format to Out.
 type ConsoleWriter struct {
@@ -57,11 +63,20 @@ type ConsoleWriter struct {
 	// TimeFormat specifies the format for timestamp in output.
 	TimeFormat string
 
+	// TimeLocation tells ConsoleWriter’s default FormatTimestamp
+	// how to localize the time.
+	TimeLocation *time.Location
+
 	// PartsOrder defines the order of parts in output.
 	PartsOrder []string
 
 	// PartsExclude defines parts to not display in output.
 	PartsExclude []string
+
+	// FieldsOrder defines the order of contextual fields in output.
+	FieldsOrder []string
+
+	fieldIsOrdered map[string]int
 
 	// FieldsExclude defines contextual fields to not display in output.
 	FieldsExclude []string
@@ -74,16 +89,21 @@ type ConsoleWriter struct {
 	FormatFieldValue    Formatter
 	FormatErrFieldName  Formatter
 	FormatErrFieldValue Formatter
+	// If this is configured it is used for "part" values and
+	// has precedence on FormatFieldValue
+	FormatPartValueByName FormatterByFieldName
 
 	FormatExtra func(map[string]interface{}, *bytes.Buffer) error
+
+	FormatPrepare func(map[string]interface{}) error
 }
 
 // NewConsoleWriter creates and initializes a new ConsoleWriter.
 func NewConsoleWriter(options ...func(w *ConsoleWriter)) ConsoleWriter {
 	w := ConsoleWriter{
-		Out:        os.Stdout,
-		TimeFormat: consoleDefaultTimeFormat,
-		PartsOrder: consoleDefaultPartsOrder(),
+		Out:          os.Stdout,
+		TimeFormat:   consoleDefaultTimeFormat,
+		PartsOrder:   consoleDefaultPartsOrder(),
 	}
 
 	for _, opt := range options {
@@ -124,6 +144,13 @@ func (w ConsoleWriter) Write(p []byte) (n int, err error) {
 		return n, fmt.Errorf("cannot decode event: %s", err)
 	}
 
+	if w.FormatPrepare != nil {
+		err = w.FormatPrepare(evt)
+		if err != nil {
+			return n, err
+		}
+	}
+
 	for _, p := range w.PartsOrder {
 		w.writePart(buf, evt, p)
 	}
@@ -144,6 +171,15 @@ func (w ConsoleWriter) Write(p []byte) (n int, err error) {
 
 	_, err = buf.WriteTo(w.Out)
 	return len(p), err
+}
+
+// Call the underlying writer's Close method if it is an io.Closer. Otherwise
+// does nothing.
+func (w ConsoleWriter) Close() error {
+	if closer, ok := w.Out.(io.Closer); ok {
+		return closer.Close()
+	}
+	return nil
 }
 
 // writeFields appends formatted key-value pairs to buf.
@@ -167,7 +203,12 @@ func (w ConsoleWriter) writeFields(evt map[string]interface{}, buf *bytes.Buffer
 		}
 		fields = append(fields, field)
 	}
-	sort.Strings(fields)
+
+	if len(w.FieldsOrder) > 0 {
+		w.orderFields(fields)
+	} else {
+		sort.Strings(fields)
+	}
 
 	// Write space only if something has already been written to the buffer, and if there are fields.
 	if buf.Len() > 0 && len(fields) > 0 {
@@ -248,8 +289,9 @@ func (w ConsoleWriter) writeFields(evt map[string]interface{}, buf *bytes.Buffer
 // writePart appends a formatted part to buf.
 func (w ConsoleWriter) writePart(buf *bytes.Buffer, evt map[string]interface{}, p string) {
 	var f Formatter
+	var fvn FormatterByFieldName
 
-	if w.PartsExclude != nil && len(w.PartsExclude) > 0 {
+	if len(w.PartsExclude) > 0 {
 		for _, exclude := range w.PartsExclude {
 			if exclude == p {
 				return
@@ -266,13 +308,13 @@ func (w ConsoleWriter) writePart(buf *bytes.Buffer, evt map[string]interface{}, 
 		}
 	case TimestampFieldName:
 		if w.FormatTimestamp == nil {
-			f = consoleDefaultFormatTimestamp(w.TimeFormat, w.NoColor)
+			f = consoleDefaultFormatTimestamp(w.TimeFormat, w.TimeLocation, w.NoColor)
 		} else {
 			f = w.FormatTimestamp
 		}
 	case MessageFieldName:
 		if w.FormatMessage == nil {
-			f = consoleDefaultFormatMessage
+			f = consoleDefaultFormatMessage(w.NoColor, evt[LevelFieldName])
 		} else {
 			f = w.FormatMessage
 		}
@@ -283,14 +325,21 @@ func (w ConsoleWriter) writePart(buf *bytes.Buffer, evt map[string]interface{}, 
 			f = w.FormatCaller
 		}
 	default:
-		if w.FormatFieldValue == nil {
-			f = consoleDefaultFormatFieldValue
-		} else {
+		if w.FormatPartValueByName != nil {
+			fvn = w.FormatPartValueByName
+		} else if w.FormatFieldValue != nil {
 			f = w.FormatFieldValue
+		} else {
+			f = consoleDefaultFormatFieldValue
 		}
 	}
 
-	var s = f(evt[p])
+	var s string
+	if f == nil {
+		s = fvn(evt[p], p)
+	} else {
+		s = f(evt[p])
+	}
 
 	if len(s) > 0 {
 		if buf.Len() > 0 {
@@ -298,6 +347,32 @@ func (w ConsoleWriter) writePart(buf *bytes.Buffer, evt map[string]interface{}, 
 		}
 		buf.WriteString(s)
 	}
+}
+
+// orderFields takes an array of field names and an array representing field order
+// and returns an array with any ordered fields at the beginning, in order,
+// and the remaining fields after in their original order.
+func (w ConsoleWriter) orderFields(fields []string) {
+	if w.fieldIsOrdered == nil {
+		w.fieldIsOrdered = make(map[string]int)
+		for i, fieldName := range w.FieldsOrder {
+			w.fieldIsOrdered[fieldName] = i
+		}
+	}
+	sort.Slice(fields, func(i, j int) bool {
+		ii, iOrdered := w.fieldIsOrdered[fields[i]]
+		jj, jOrdered := w.fieldIsOrdered[fields[j]]
+		if iOrdered && jOrdered {
+			return ii < jj
+		}
+		if iOrdered {
+			return true
+		}
+		if jOrdered {
+			return false
+		}
+		return fields[i] < fields[j]
+	})
 }
 
 // needsQuote returns true when the string s should be quoted in output.
@@ -310,8 +385,13 @@ func needsQuote(s string) bool {
 	return false
 }
 
-// colorize returns the string s wrapped in ANSI code c, unless disabled is true.
+// colorize returns the string s wrapped in ANSI code c, unless disabled is true or c is 0.
 func colorize(s interface{}, c int, disabled bool) string {
+	e := os.Getenv("NO_COLOR")
+	if e != "" || c == 0 {
+		disabled = true
+	}
+
 	if disabled {
 		return fmt.Sprintf("%s", s)
 	}
@@ -329,19 +409,23 @@ func consoleDefaultPartsOrder() []string {
 	}
 }
 
-func consoleDefaultFormatTimestamp(timeFormat string, noColor bool) Formatter {
+func consoleDefaultFormatTimestamp(timeFormat string, location *time.Location, noColor bool) Formatter {
 	if timeFormat == "" {
 		timeFormat = consoleDefaultTimeFormat
 	}
+	if location == nil {
+		location = time.Local
+	}
+
 	return func(i interface{}) string {
 		t := "<nil>"
 		switch tt := i.(type) {
 		case string:
-			ts, err := time.ParseInLocation(TimeFieldFormat, tt, time.Local)
+			ts, err := time.ParseInLocation(TimeFieldFormat, tt, location)
 			if err != nil {
 				t = tt
 			} else {
-				t = ts.Local().Format(timeFormat)
+				t = ts.In(location).Format(timeFormat)
 			}
 		case json.Number:
 			i, err := tt.Int64()
@@ -362,43 +446,37 @@ func consoleDefaultFormatTimestamp(timeFormat string, noColor bool) Formatter {
 				}
 
 				ts := time.Unix(sec, nsec)
-				t = ts.Format(timeFormat)
+				t = ts.In(location).Format(timeFormat)
 			}
 		}
 		return colorize(t, colorDarkGray, noColor)
 	}
 }
 
+func stripLevel(ll string) string {
+	if len(ll) == 0 {
+		return unknownLevel
+	}
+	if len(ll) > 3 {
+		ll = ll[:3]
+	}
+	return strings.ToUpper(ll)
+}
+
 func consoleDefaultFormatLevel(noColor bool) Formatter {
 	return func(i interface{}) string {
-		var l string
 		if ll, ok := i.(string); ok {
-			switch ll {
-			case LevelTraceValue:
-				l = colorize("TRC", colorMagenta, noColor)
-			case LevelDebugValue:
-				l = colorize("DBG", colorYellow, noColor)
-			case LevelInfoValue:
-				l = colorize("INF", colorGreen, noColor)
-			case LevelWarnValue:
-				l = colorize("WRN", colorRed, noColor)
-			case LevelErrorValue:
-				l = colorize(colorize("ERR", colorRed, noColor), colorBold, noColor)
-			case LevelFatalValue:
-				l = colorize(colorize("FTL", colorRed, noColor), colorBold, noColor)
-			case LevelPanicValue:
-				l = colorize(colorize("PNC", colorRed, noColor), colorBold, noColor)
-			default:
-				l = colorize(ll, colorBold, noColor)
+			level, _ := ParseLevel(ll)
+			fl, ok := FormattedLevels[level]
+			if ok {
+				return colorize(fl, LevelColors[level], noColor)
 			}
-		} else {
-			if i == nil {
-				l = colorize("???", colorBold, noColor)
-			} else {
-				l = strings.ToUpper(fmt.Sprintf("%s", i))[0:3]
-			}
+			return stripLevel(ll)
 		}
-		return l
+		if i == nil {
+			return unknownLevel
+		}
+		return stripLevel(fmt.Sprintf("%s", i))
 	}
 }
 
@@ -420,11 +498,18 @@ func consoleDefaultFormatCaller(noColor bool) Formatter {
 	}
 }
 
-func consoleDefaultFormatMessage(i interface{}) string {
-	if i == nil {
-		return ""
+func consoleDefaultFormatMessage(noColor bool, level interface{}) Formatter {
+	return func(i interface{}) string {
+		if i == nil || i == "" {
+			return ""
+		}
+		switch level {
+		case LevelInfoValue, LevelWarnValue, LevelErrorValue, LevelFatalValue, LevelPanicValue:
+			return colorize(fmt.Sprintf("%s", i), colorBold, noColor)
+		default:
+			return fmt.Sprintf("%s", i)
+		}
 	}
-	return fmt.Sprintf("%s", i)
 }
 
 func consoleDefaultFormatFieldName(noColor bool) Formatter {
@@ -445,6 +530,6 @@ func consoleDefaultFormatErrFieldName(noColor bool) Formatter {
 
 func consoleDefaultFormatErrFieldValue(noColor bool) Formatter {
 	return func(i interface{}) string {
-		return colorize(fmt.Sprintf("%s", i), colorRed, noColor)
+		return colorize(colorize(fmt.Sprintf("%s", i), colorBold, noColor), colorRed, noColor)
 	}
 }
