@@ -232,9 +232,7 @@ func toClocYAML(input chan *FileJob) string {
 	languageYaml, _ := yaml.Marshal(langs)
 	yamlString := "# https://github.com/boyter/scc/\n" + string(reportYaml) + string(languageYaml) + string(sumYaml)
 
-	if Debug {
-		printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
-	}
+	printDebugF("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime)
 
 	return yamlString
 }
@@ -247,9 +245,7 @@ func toJSON(input chan *FileJob) string {
 	json := jsoniter.ConfigCompatibleWithStandardLibrary
 	jsonString, _ := json.Marshal(language)
 
-	if Debug {
-		printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
-	}
+	printDebugF("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime)
 
 	return string(jsonString)
 }
@@ -281,9 +277,7 @@ func toJSON2(input chan *FileJob) string {
 		EstimatedPeople:         people,
 	})
 
-	if Debug {
-		printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
-	}
+	printDebugF("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime)
 
 	return string(jsonString)
 }
@@ -852,7 +846,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 	str := &strings.Builder{}
 
 	str.WriteString(getTabularWideBreak())
-	fmt.Fprintf(str, tabularWideFormatHead, "Language", "Files", "Lines", "Blanks", "Comments", "Code", "Complexity", "Complexity/Lines")
+	_, _ = fmt.Fprintf(str, tabularWideFormatHead, "Language", "Files", "Lines", "Blanks", "Comments", "Code", "Complexity", "Complexity/Lines")
 
 	if !Files {
 		str.WriteString(getTabularWideBreak())
@@ -934,10 +928,10 @@ func fileSummarizeLong(input chan *FileJob) string {
 			trimmedName = summary.Name[:longNameTruncate-1] + "…"
 		}
 
-		fmt.Fprintf(str, tabularWideFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summary.WeightedComplexity)
+		_, _ = fmt.Fprintf(str, tabularWideFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summary.WeightedComplexity)
 
 		if Percent {
-			fmt.Fprintf(str,
+			_, _ = fmt.Fprintf(str,
 				tabularWideFormatBodyPercent,
 				float64(len(summary.Files))/float64(sumFiles)*100,
 				float64(summary.Lines)/float64(sumLines)*100,
@@ -955,11 +949,11 @@ func fileSummarizeLong(input chan *FileJob) string {
 		}
 
 		if MaxMean {
-			fmt.Fprintf(str, tabularWideFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength))
+			_, _ = fmt.Fprintf(str, tabularWideFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength))
 		}
 
 		if UlocMode {
-			fmt.Fprintf(str, tabularWideUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name]))
+			_, _ = fmt.Fprintf(str, tabularWideUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name]))
 			if !Files && summary.Name != language[len(language)-1].Name {
 				str.WriteString(tabularWideBreakCi)
 			}
@@ -973,24 +967,22 @@ func fileSummarizeLong(input chan *FileJob) string {
 				tmp := unicodeAwareTrim(res.Location, wideFormatFileTruncate)
 				tmp = unicodeAwareRightPad(tmp, 43)
 
-				fmt.Fprintf(str, tabularWideFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.WeightedComplexity)
+				_, _ = fmt.Fprintf(str, tabularWideFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.WeightedComplexity)
 			}
 		}
 	}
 
-	if Debug {
-		printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
-	}
+	printDebugF("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime)
 
 	str.WriteString(getTabularWideBreak())
-	fmt.Fprintf(str, tabularWideFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumWeightedComplexity)
+	_, _ = fmt.Fprintf(str, tabularWideFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumWeightedComplexity)
 	str.WriteString(getTabularWideBreak())
 
 	if UlocMode {
-		fmt.Fprintf(str, tabularWideUlocGlobalFormatBody, len(ulocGlobalCount))
+		_, _ = fmt.Fprintf(str, tabularWideUlocGlobalFormatBody, len(ulocGlobalCount))
 		if Dryness {
 			dryness := float64(len(ulocGlobalCount)) / float64(sumLines)
-			fmt.Fprintf(str, "DRYness %% %43.2f\n", dryness)
+			_, _ = fmt.Fprintf(str, "DRYness %% %43.2f\n", dryness)
 		}
 		str.WriteString(getTabularWideBreak())
 	}
@@ -1195,9 +1187,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 		}
 	}
 
-	if Debug {
-		printDebug(fmt.Sprintf("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime))
-	}
+	printDebugF("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime)
 
 	str.WriteString(getTabularShortBreak())
 	if !Complexity {

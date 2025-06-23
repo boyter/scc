@@ -4,7 +4,6 @@ package processor
 
 import (
 	"bytes"
-	"fmt"
 	"hash"
 	"runtime/debug"
 	"strings"
@@ -173,16 +172,12 @@ func docStringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie,
 				// the index
 				for j := index + len(endString); j <= endPoint; j++ {
 					if fileJob.Content[j] == '\n' {
-						if Debug {
-							printDebug("Found newline so docstring is comment")
-						}
+						printDebug("Found newline so docstring is comment")
 						return i, SComment
 					}
 
 					if !isWhitespace(fileJob.Content[j]) {
-						if Debug {
-							printDebug(fmt.Sprintf("Found something not whitespace so is code: %s", string(fileJob.Content[j])))
-						}
+						printDebugF("Found something not whitespace so is code: %s", string(fileJob.Content[j]))
 						return i, SCode
 					}
 				}
@@ -523,9 +518,7 @@ func CountStats(fileJob *FileJob) {
 						return
 					}
 				}
-				if Trace {
-					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as code", fileJob.Location, fileJob.Lines, currentState))
-				}
+				printTraceF("%s line %d ended with state: %d: counted as code", fileJob.Location, fileJob.Lines, currentState)
 			case SComment, SMulticomment, SMulticommentBlank:
 				fileJob.Comment++
 				currentState = resetState(currentState)
@@ -534,9 +527,7 @@ func CountStats(fileJob *FileJob) {
 						return
 					}
 				}
-				if Trace {
-					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState))
-				}
+				printTraceF("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState)
 			case SBlank:
 				fileJob.Blank++
 				if fileJob.Callback != nil {
@@ -544,9 +535,7 @@ func CountStats(fileJob *FileJob) {
 						return
 					}
 				}
-				if Trace {
-					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as blank", fileJob.Location, fileJob.Lines, currentState))
-				}
+				printTraceF("%s line %d ended with state: %d: counted as blank", fileJob.Location, fileJob.Lines, currentState)
 			case SDocString:
 				fileJob.Comment++
 				if fileJob.Callback != nil {
@@ -554,9 +543,7 @@ func CountStats(fileJob *FileJob) {
 						return
 					}
 				}
-				if Trace {
-					printTrace(fmt.Sprintf("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState))
-				}
+				printTraceF("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState)
 			}
 		}
 	}
@@ -588,11 +575,7 @@ func CountStats(fileJob *FileJob) {
 				fileJob.Generated = true
 				fileJob.Language = fileJob.Language + " (gen)"
 				isGenerated = true
-
-				if Verbose {
-					printWarn(fmt.Sprintf("%s identified as isGenerated with heading comment", fileJob.Filename))
-				}
-
+				printWarnF("%s identified as isGenerated with heading comment", fileJob.Filename)
 				break
 			}
 		}
@@ -611,14 +594,9 @@ func minifiedGeneratedCheck(avgLineByteCount int, fileJob *FileJob) {
 	if avgLineByteCount >= MinifiedGeneratedLineByteLength {
 		fileJob.Minified = true
 		fileJob.Language = fileJob.Language + " (min)"
-
-		if Verbose {
-			printWarn(fmt.Sprintf("%s identified as minified/generated with average line byte length of %d >= %d", fileJob.Filename, avgLineByteCount, MinifiedGeneratedLineByteLength))
-		}
+		printWarnF("%s identified as minified/generated with average line byte length of %d >= %d", fileJob.Filename, avgLineByteCount, MinifiedGeneratedLineByteLength)
 	} else {
-		if Debug {
-			printDebug(fmt.Sprintf("%s not identified as minified/generated with average line byte length of %d < %d", fileJob.Filename, avgLineByteCount, MinifiedGeneratedLineByteLength))
-		}
+		printDebugF("%s not identified as minified/generated with average line byte length of %d < %d", fileJob.Filename, avgLineByteCount, MinifiedGeneratedLineByteLength)
 	}
 }
 
@@ -627,9 +605,7 @@ func checkBomSkip(fileJob *FileJob) int {
 	// UTF-8 BOM which if detected we should skip the BOM as we can then count correctly
 	// []byte is UTF-8 BOM taken from https://en.wikipedia.org/wiki/Byte_order_mark#Byte_order_marks_by_encoding
 	if bytes.HasPrefix(fileJob.Content, []byte{239, 187, 191}) {
-		if Verbose {
-			printWarn(fmt.Sprintf("UTF-8 BOM found for file %s skipping 3 bytes", fileJob.Filename))
-		}
+		printWarnF("UTF-8 BOM found for file %s skipping 3 bytes", fileJob.Filename)
 		return 3
 	}
 
@@ -637,7 +613,7 @@ func checkBomSkip(fileJob *FileJob) int {
 	if Verbose {
 		for _, v := range ByteOrderMarks {
 			if bytes.HasPrefix(fileJob.Content, v) {
-				printWarn(fmt.Sprintf("BOM found for file %s indicating it is not ASCII/UTF-8 and may be counted incorrectly or ignored as a binary file", fileJob.Filename))
+				printWarnF("BOM found for file %s indicating it is not ASCII/UTF-8 and may be counted incorrectly or ignored as a binary file", fileJob.Filename)
 			}
 		}
 	}
@@ -673,14 +649,10 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 				if atomic.LoadInt64(&gcEnabled) == 0 && atomic.LoadInt64(&fileCount) >= int64(GcFileCount) {
 					debug.SetGCPercent(gcPercent)
 					atomic.AddInt64(&gcEnabled, 1)
-					if Verbose {
-						printWarn("read file limit exceeded GC re-enabled")
-					}
+					printWarn("read file limit exceeded GC re-enabled")
 				}
 
-				if Trace {
-					printTrace(fmt.Sprintf("nanoseconds read into memory: %s: %d", job.Location, makeTimestampNano()-fileStartTime))
-				}
+				printTraceF("nanoseconds read into memory: %s: %d", job.Location, makeTimestampNano()-fileStartTime)
 
 				if err == nil {
 					job.Content = content
@@ -688,9 +660,7 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 						output <- job
 					}
 				} else {
-					if Verbose {
-						printWarn(fmt.Sprintf("error reading: %s %s", job.Location, err))
-					}
+					printWarnF("error reading: %s %s", job.Location, err)
 				}
 			}
 
@@ -702,9 +672,7 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 		wg.Wait()
 		close(output)
 
-		if Debug {
-			printDebug(fmt.Sprintf("milliseconds reading files into memory: %d", makeTimestampMilli()-startTime))
-		}
+		printDebugF("milliseconds reading files into memory: %d", makeTimestampMilli()-startTime)
 	}()
 }
 
@@ -740,15 +708,11 @@ func processFile(job *FileJob) bool {
 
 			lang, err := DetectSheBang(string(contents[:cutoff]))
 			if err != nil {
-				if Verbose {
-					printWarn(fmt.Sprintf("unable to determine #! language for %s", job.Location))
-				}
+				printWarnF("unable to determine #! language for %s", job.Location)
 				return false
 			}
-			if Verbose {
-				printWarn(fmt.Sprintf("detected #! %s for %s", lang, job.Location))
-			}
 
+			printWarnF("detected #! %s for %s", lang, job.Location)
 			job.Language = lang
 			LoadLanguageFeature(lang)
 		}
@@ -760,10 +724,7 @@ func processFile(job *FileJob) bool {
 		duplicates.mux.Lock()
 		jobHash := job.Hash.Sum(nil)
 		if duplicates.Check(job.Bytes, jobHash) {
-			if Verbose {
-				printWarn(fmt.Sprintf("skipping duplicate file: %s", job.Location))
-			}
-
+			printWarnF("skipping duplicate file: %s", job.Location)
 			duplicates.mux.Unlock()
 			return false
 		}
@@ -773,34 +734,24 @@ func processFile(job *FileJob) bool {
 	}
 
 	if IgnoreMinified && job.Minified {
-		if Verbose {
-			printWarn(fmt.Sprintf("skipping minified file: %s", job.Location))
-		}
+		printWarnF("skipping minified file: %s", job.Location)
 		return false
 	}
 
 	if IgnoreGenerated && job.Generated {
-		if Verbose {
-			printWarn(fmt.Sprintf("skipping generated file: %s", job.Location))
-		}
+		printWarnF("skipping generated file: %s", job.Location)
 		return false
 	}
 
 	if NoLarge && job.Lines >= LargeLineCount {
-		if Verbose {
-			printWarn(fmt.Sprintf("skipping large file due to line length: %s", job.Location))
-		}
+		printWarnF("skipping large file due to line length: %s", job.Location)
 		return false
 	}
 
-	if Trace {
-		printTrace(fmt.Sprintf("nanoseconds process: %s: %d", job.Location, makeTimestampNano()-fileStartTime))
-	}
+	printTraceF("nanoseconds process: %s: %d", job.Location, makeTimestampNano()-fileStartTime)
 
 	if job.Binary {
-		if Verbose {
-			printWarn(fmt.Sprintf("skipping file identified as binary: %s", job.Location))
-		}
+		printWarnF("skipping file identified as binary: %s", job.Location)
 		return false
 	}
 
@@ -839,10 +790,7 @@ func hardRemapLanguage(job *FileJob) bool {
 			if strings.Contains(string(job.Content[:cutoff]), t[0]) {
 				job.Language = t[1]
 				remapped = true
-
-				if Verbose {
-					printWarn(fmt.Sprintf("hard remapping: %s to %s", job.Location, job.Language))
-				}
+				printWarnF("hard remapping: %s to %s", job.Location, job.Language)
 			}
 		}
 	}
@@ -863,10 +811,7 @@ func unknownRemapLanguage(job *FileJob) bool {
 			}
 
 			if strings.Contains(string(job.Content[:cutoff]), t[0]) {
-				if Verbose {
-					printWarn(fmt.Sprintf("unknown remapping: %s to %s", job.Location, job.Language))
-				}
-
+				printWarnF("unknown remapping: %s to %s", job.Location, job.Language)
 				job.Language = t[1]
 				remapped = true
 			}

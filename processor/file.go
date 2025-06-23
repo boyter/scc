@@ -3,7 +3,6 @@
 package processor
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,9 +44,7 @@ func getExtension(name string) string {
 func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 	if NoLarge {
 		if fileInfo.Size() >= LargeByteCount {
-			if Verbose {
-				printWarn(fmt.Sprintf("skipping large file due to byte size: %s", path))
-			}
+			printWarnF("skipping large file due to byte size: %s", path)
 			return nil
 		}
 	}
@@ -57,10 +54,7 @@ func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 	// everything so we can count the real file to ensure the counts are correct
 	if fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
 		if !IncludeSymLinks {
-			if Verbose {
-				printWarn(fmt.Sprintf("skipping symlink file: %s", name))
-			}
-
+			printWarnF("skipping symlink file: %s", name)
 			return nil
 		}
 
@@ -80,9 +74,7 @@ func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 	// Skip non-regular files. They are unlikely to be code and may hang if we
 	// try and read them.
 	if !fileInfo.Mode().IsRegular() {
-		if Verbose {
-			printWarn(fmt.Sprintf("skipping non-regular file: %s", path))
-		}
+		printWarnF("skipping non-regular file: %s", path)
 		return nil
 	}
 
@@ -99,9 +91,7 @@ func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 			}
 
 			if !ok {
-				if Verbose {
-					printWarn(fmt.Sprintf("skipping file as not in allow list: %s", name))
-				}
+				printWarnF("skipping file as not in allow list: %s", name)
 				return nil
 			}
 		}
@@ -116,9 +106,7 @@ func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 			}
 
 			if !ok {
-				if Verbose {
-					printWarn(fmt.Sprintf("skipping file as in exclude list: %s", name))
-				}
+				printWarnF("skipping file as in exclude list: %s", name)
 				return nil
 			}
 		}
@@ -132,9 +120,7 @@ func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 			}
 
 			if !ok {
-				if Verbose {
-					printWarn(fmt.Sprintf("skipping file as in exclude file list: %s", name))
-				}
+				printWarnF("skipping file as in exclude file list: %s", name)
 				return nil
 			}
 		}
@@ -159,8 +145,8 @@ func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 			PossibleLanguages: language,
 			Bytes:             fileInfo.Size(),
 		}
-	} else if Verbose {
-		printWarn(fmt.Sprintf("skipping file unknown extension: %s", name))
+	} else {
+		printWarnF("skipping file unknown extension: %s", name)
 	}
 
 	return nil
