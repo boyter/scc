@@ -21,7 +21,6 @@ Licensed under MIT licence.
 
 ## Table of Contents
 
-- [Support](#support)
 - [Install](#install)
 - [Background](#background)
 - [Pitch](#pitch)
