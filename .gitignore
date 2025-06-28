@@ -18,6 +18,7 @@ scc
 # IDE
 .idea/
 *.code-workspace
+.vscode/
 
 # Performance tests
 examples/performance_tests/0

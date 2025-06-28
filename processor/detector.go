@@ -9,6 +9,12 @@ import (
 	"strings"
 )
 
+var (
+	errMissingShebang              = errors.New("missing shebang")
+	errUnknownShebang              = errors.New("unknown shebang")
+	errUnableToDetermineShebangCmd = errors.New("unable to determine shebang command")
+)
+
 // DetectLanguage detects a language based on the filename returns the language extension and error
 func DetectLanguage(name string) ([]string, string) {
 	extension := ""
@@ -51,7 +57,7 @@ func DetectLanguage(name string) ([]string, string) {
 // DetectSheBang given some content attempt to determine if it has a #! that maps to a known language and return the language
 func DetectSheBang(content string) (string, error) {
 	if !strings.HasPrefix(content, "#!") {
-		return "", errors.New("Missing #!")
+		return "", errMissingShebang
 	}
 
 	index := strings.Index(content, "\n")
@@ -73,7 +79,7 @@ func DetectSheBang(content string) (string, error) {
 		}
 	}
 
-	return "", errors.New("Unknown #!")
+	return "", errUnknownShebang
 }
 
 func scanForSheBang(content []byte) (string, error) {
@@ -134,7 +140,7 @@ loop:
 		return candidate1, nil
 	}
 
-	return "", errors.New("Unable to determine #! command")
+	return "", errUnableToDetermineShebangCmd
 }
 
 type languageGuess struct {
