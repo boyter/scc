@@ -38,7 +38,7 @@ Licensed under MIT licence.
 
 ### scc for Teams & Enterprise
 
-While scc will always be a free and tool for individual developers, companies and busin esses, we are exploring an enhanced version designed for teams and businesses. scc Enterprise will build on the core scc engine to provide historical analysis, team-level dashboards, and policy enforcement to help engineering leaders track code health, manage technical debt, and forecast project costs.
+While scc will always be a free and tool for individual developers, companies and businesses, we are exploring an enhanced version designed for teams and businesses. scc Enterprise will build on the core scc engine to provide historical analysis, team-level dashboards, and policy enforcement to help engineering leaders track code health, manage technical debt, and forecast project costs.
 
 We are currently gathering interest for a private beta. If you want to visualize your codebase's evolution, integrate quality gates into your CI/CD pipeline, and get a big-picture view across all your projects, 
 sign up for the early access list [here](https://docs.google.com/forms/d/e/1FAIpQLScIBKy3y2m0rKu89L67qwe26Xyn9Scu0gW-HQX9lC0qEAx9nQ/viewform)
