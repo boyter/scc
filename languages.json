@@ -3207,6 +3207,10 @@
       }
     ]
   },
+  "JCL":{
+      "extensions": ["jcl"],
+      "line_comment":["//*"]
+  },
   "W.I.S.E. Jobfile": {
     "complexitychecks": [],
     "extensions": ["fgmj"],
