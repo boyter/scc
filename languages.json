@@ -3207,11 +3207,30 @@
       }
     ]
   },
-  "JCL":{
-      "extensions": ["jcl"],
-      "line_comment":["//*"]
-  },
-  "W.I.S.E. Jobfile": {
+  "JCL": {
+  "complexitychecks": [
+    " IF",                    
+    " THEN",                  
+    " ELSE",                  
+    " PROC=",                 
+    " PGM=",                  
+    " DD ",                   
+    " EXEC ",                 
+    " JOB ",                  
+    " COND=",                 
+    " INCLUDE",               
+    " PEND"                     
+  ],
+  "extensions": ["jcl", "jcls"],
+  "line_comment": ["//*"],
+  "quotes": [
+    {
+      "start": "'",
+      "end": "'"
+    }
+  ]
+ },
+    "W.I.S.E. Jobfile": {
     "complexitychecks": [],
     "extensions": ["fgmj"],
     "line_comment": [],
