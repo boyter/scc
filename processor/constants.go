@@ -5183,6 +5183,42 @@ var languageDatabase = map[string]Language{
 		FileNames:       []string{},
 		SheBangs:        []string{},
 	},
+	"JCL": {
+		LineComment: []string{
+			"//*",
+		},
+		ComplexityChecks: []string{
+			" IF",
+			" THEN",
+			" ELSE",
+			" PROC=",
+			" PGM=",
+			" DD ",
+			" EXEC ",
+			" JOB ",
+			" COND=",
+			" INCLUDE",
+			" PEND",
+		},
+		Extensions: []string{
+			"jcl",
+			"jcls",
+		},
+		ExtensionFile: false,
+		MultiLine:     [][]string{},
+		Quotes: []Quote{
+			{
+				Start:        "'",
+				End:          "'",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+		},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"JSON": {
 		LineComment:      []string{},
 		ComplexityChecks: []string{},
