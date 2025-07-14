@@ -968,7 +968,7 @@ specificLanguages=(
     'INI '
     'Java '
     'JavaScript '
-    'JCL'
+    'JCL '
     'JSON5 '
     'JSONC '
     'jq '
