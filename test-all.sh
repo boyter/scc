@@ -1007,6 +1007,7 @@ specificLanguages=(
     'Smalltalk '
     'Snakemake '
     'Stan '
+    'Systemd '
     'Tact '
     'Teal '
     'Tera '

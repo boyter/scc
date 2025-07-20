@@ -1,0 +1,15 @@
+# exampple systemd file
+[Unit]
+Description=scc
+
+[Service]
+WorkingDirectory=/webapps/scc
+ExecStart=/webapps/scc/scc
+Restart=always
+RestartSec=5s
+# persist to disk
+StandardOutput=file:/tmp/scc-stdout.log
+StandardError=file:/tmp/scc-error.log
+
+[Install]
+WantedBy=multi-user.target
