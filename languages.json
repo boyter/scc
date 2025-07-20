@@ -6708,7 +6708,7 @@
       "target",
       "timer"
     ],
-    "line_comment": [],
+    "line_comment": ["#"],
     "multi_line": [],
     "quotes": []
   },

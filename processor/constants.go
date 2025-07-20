@@ -10918,7 +10918,9 @@ var languageDatabase = map[string]Language{
 		SheBangs:  []string{},
 	},
 	"Systemd": {
-		LineComment:      []string{},
+		LineComment: []string{
+			"#",
+		},
 		ComplexityChecks: []string{},
 		Extensions: []string{
 			"automount",
