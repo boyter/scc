@@ -40,3 +40,4 @@ gitignorefile.txt
 .DS_Store
 
 dist/
+coverage.out
