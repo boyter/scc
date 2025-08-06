@@ -27,12 +27,12 @@ import (
 var tabularShortBreak = "───────────────────────────────────────────────────────────────────────────────\n"
 var tabularShortBreakCi = "-------------------------------------------------------------------------------\n"
 
-var tabularShortFormatHead = "%-16s %9s %11s %8s %9s %10s %10s\n"
-var tabularShortFormatBody = "%-16s %9d %11d %8d %9d %10d %10d\n"
+var tabularShortFormatHead = "%-15s %9s %11s %9s %9s %10s %10s\n"
+var tabularShortFormatBody = "%-15s %9d %11d %9d %9d %10d %10d\n"
 var tabularShortFormatFile = "%s %9d %8d %9d %8d %10d\n"
 var tabularShortFormatFileMaxMean = "MaxLine / MeanLine %11d %9d\n"
 var shortFormatFileTruncate = 29
-var shortNameTruncate = 16
+var shortNameTruncate = 15
 var tabularShortUlocLanguageFormatBody = "(ULOC) %33d\n"
 var tabularShortPercentLanguageFormatBody = "Percentage %18.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
 var tabularShortUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %12d\n"
