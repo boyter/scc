@@ -29,9 +29,9 @@ var tabularShortBreakCi = "-----------------------------------------------------
 
 var tabularShortFormatHead = "%-15s %9s %11s %9s %9s %10s %10s\n"
 var tabularShortFormatBody = "%-15s %9d %11d %9d %9d %10d %10d\n"
-var tabularShortFormatFile = "%s %9d %8d %9d %8d %10d\n"
+var tabularShortFormatFile = "%s %9d %9d %9d %10d %10d\n"
 var tabularShortFormatFileMaxMean = "MaxLine / MeanLine %11d %9d\n"
-var shortFormatFileTruncate = 29
+var shortFormatFileTruncate = 26
 var shortNameTruncate = 15
 var tabularShortUlocLanguageFormatBody = "(ULOC) %33d\n"
 var tabularShortPercentLanguageFormatBody = "Percentage %18.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
