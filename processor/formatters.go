@@ -37,8 +37,8 @@ var tabularShortUlocLanguageFormatBody = "(ULOC) %33d\n"
 var tabularShortPercentLanguageFormatBody = "Percentage %18.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
 var tabularShortUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %12d\n"
 
-var tabularShortFormatHeadNoComplexity = "%-22s %11s %11s %10s %11s %9s\n"
-var tabularShortFormatBodyNoComplexity = "%-22s %11d %11d %10d %11d %9d\n"
+var tabularShortFormatHeadNoComplexity = "%-21s %11s %11s %10s %11s %10s\n"
+var tabularShortFormatBodyNoComplexity = "%-21s %11d %11d %10d %11d %10d\n"
 var tabularShortFormatFileNoComplexity = "%s %11d %10d %11d %9d\n"
 var tabularShortFormatFileMaxMeanNoComplexity = "MaxLine / MeanLine %15d %11d\n"
 var longNameTruncate = 22
