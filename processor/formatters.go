@@ -1036,9 +1036,9 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 	str.WriteString(getTabularShortBreak())
 	if !Complexity {
-		fmt.Fprintf(str, tabularShortFormatHead, "Language", "Files", "Lines", "Blanks", "Comments", "Code", "Complexity")
+		_, _ = fmt.Fprintf(str, tabularShortFormatHead, "Language", "Files", "Lines", "Blanks", "Comments", "Code", "Complexity")
 	} else {
-		fmt.Fprintf(str, tabularShortFormatHeadNoComplexity, "Language", "Files", "Lines", "Blanks", "Comments", "Code")
+		_, _ = fmt.Fprintf(str, tabularShortFormatHeadNoComplexity, "Language", "Files", "Lines", "Blanks", "Comments", "Code")
 	}
 
 	if !Files {
@@ -1161,7 +1161,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 				tmp := unicodeAwareTrim(res.Location, shortFormatFileTruncate)
 
 				if !Complexity {
-					tmp = unicodeAwareRightPad(tmp, 30)
+					tmp = unicodeAwareRightPad(tmp, 27)
 					_, _ = fmt.Fprintf(str, tabularShortFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity)
 				} else {
 					tmp = unicodeAwareRightPad(tmp, 34)
