@@ -27,18 +27,18 @@ import (
 var tabularShortBreak = "───────────────────────────────────────────────────────────────────────────────\n"
 var tabularShortBreakCi = "-------------------------------------------------------------------------------\n"
 
-var tabularShortFormatHead = "%-20s %9s %9s %8s %9s %8s %10s\n"
-var tabularShortFormatBody = "%-20s %9d %9d %8d %9d %8d %10d\n"
-var tabularShortFormatFile = "%s %9d %8d %9d %8d %10d\n"
+var tabularShortFormatHead = "%-15s %9s %11s %9s %9s %10s %10s\n"
+var tabularShortFormatBody = "%-15s %9d %11d %9d %9d %10d %10d\n"
+var tabularShortFormatFile = "%s %9d %9d %9d %10d %10d\n"
 var tabularShortFormatFileMaxMean = "MaxLine / MeanLine %11d %9d\n"
-var shortFormatFileTruncate = 29
-var shortNameTruncate = 20
+var shortFormatFileTruncate = 26
+var shortNameTruncate = 15
 var tabularShortUlocLanguageFormatBody = "(ULOC) %33d\n"
 var tabularShortPercentLanguageFormatBody = "Percentage %18.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
 var tabularShortUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %12d\n"
 
-var tabularShortFormatHeadNoComplexity = "%-22s %11s %11s %10s %11s %9s\n"
-var tabularShortFormatBodyNoComplexity = "%-22s %11d %11d %10d %11d %9d\n"
+var tabularShortFormatHeadNoComplexity = "%-21s %11s %11s %10s %11s %10s\n"
+var tabularShortFormatBodyNoComplexity = "%-21s %11d %11d %10d %11d %10d\n"
 var tabularShortFormatFileNoComplexity = "%s %11d %10d %11d %9d\n"
 var tabularShortFormatFileMaxMeanNoComplexity = "MaxLine / MeanLine %15d %11d\n"
 var longNameTruncate = 22
@@ -1036,9 +1036,9 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 	str.WriteString(getTabularShortBreak())
 	if !Complexity {
-		fmt.Fprintf(str, tabularShortFormatHead, "Language", "Files", "Lines", "Blanks", "Comments", "Code", "Complexity")
+		_, _ = fmt.Fprintf(str, tabularShortFormatHead, "Language", "Files", "Lines", "Blanks", "Comments", "Code", "Complexity")
 	} else {
-		fmt.Fprintf(str, tabularShortFormatHeadNoComplexity, "Language", "Files", "Lines", "Blanks", "Comments", "Code")
+		_, _ = fmt.Fprintf(str, tabularShortFormatHeadNoComplexity, "Language", "Files", "Lines", "Blanks", "Comments", "Code")
 	}
 
 	if !Files {
@@ -1161,7 +1161,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 				tmp := unicodeAwareTrim(res.Location, shortFormatFileTruncate)
 
 				if !Complexity {
-					tmp = unicodeAwareRightPad(tmp, 30)
+					tmp = unicodeAwareRightPad(tmp, 27)
 					_, _ = fmt.Fprintf(str, tabularShortFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity)
 				} else {
 					tmp = unicodeAwareRightPad(tmp, 34)

@@ -470,7 +470,7 @@ else
     exit
 fi
 
-if ./scc ./examples/minified/ -i js -z --no-scc-ignore | grep -q "JavaScript (min)"; then
+if ./scc ./examples/minified/ -i js -z --no-scc-ignore | grep -q "JavaScript (mi"; then
     echo -e "${GREEN}PASSED flagged as min"
 else
     echo -e "${RED}======================================================="
@@ -925,7 +925,7 @@ specificLanguages=(
     'BASH '
     'Bean '
     'Bicep '
-    'Bitbucket Pipeline '
+    'Bitbucket Pipe'
     'Blueprint '
     'Boo '
     'Bosque '
@@ -1193,7 +1193,7 @@ else
 fi
 
 # Extra case for longer languages that are normally truncated
-for i in 'CloudFormation (YAM' 'CloudFormation (JSO'
+for i in 'CloudFormation' 'CloudFormation'
 do
     if ./scc "examples/language/" --no-scc-ignore | grep -q "$i"; then
         echo -e "${GREEN}PASSED $i Language Check"
