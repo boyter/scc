@@ -1356,8 +1356,8 @@ func TestToHTMLTable(t *testing.T) {
 func TestUnicodeAwareTrimAscii(t *testing.T) {
 	tmp := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.md"
 	res := unicodeAwareTrim(tmp, shortFormatFileTruncate)
-	if res != "~aaaaaaaaaaaaaaaaaaaaaaaaaa.md" {
-		t.Error("expected ~aaaaaaaaaaaaaaaaaaaaaaaaaa.md got", res)
+	if res != "~aaaaaaaaaaaaaaaaaaaaaaa.md" {
+		t.Error("expected ~aaaaaaaaaaaaaaaaaaaaaaa.md got", res)
 	}
 }
 
@@ -1372,8 +1372,8 @@ func TestUnicodeAwareTrimExactSizeAscii(t *testing.T) {
 func TestUnicodeAwareTrimUnicode(t *testing.T) {
 	tmp := "中文中文中文中文中文中文中文中文中文中文中文中文中文中文中文中文.md"
 	res := unicodeAwareTrim(tmp, shortFormatFileTruncate)
-	if res != "~文中文中文中文中文中文中文.md" {
-		t.Error("expected ~文中文中文中文中文中文中文.md got", res)
+	if res != "~文中文中文中文中文中文.md" {
+		t.Error("expected ~文中文中文中文中文中文.md got", res)
 	}
 }
 
