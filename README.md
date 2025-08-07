@@ -1067,13 +1067,14 @@ An example of the badge for `scc` is included below, and is used on this page.
 
 By default the badge will show the repo's lines count. You can also specify for it to show a different category, by using the `?category=` query string.
 
-Valid values include `code, blanks, lines, comments, cocomo` and examples of the appearance are included below.
+Valid values include `code, blanks, lines, comments, cocomo, effort` and examples of the appearance are included below.
 
 [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/?category=code)](https://github.com/boyter/scc/)
 [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/?category=blanks)](https://github.com/boyter/scc/)
 [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/?category=lines)](https://github.com/boyter/scc/)
 [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/?category=comments)](https://github.com/boyter/scc/)
 [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/?category=cocomo)](https://github.com/boyter/scc/)
+[![Scc Count Badge](https://sloc.xyz/github/boyter/scc/?category=effort)](https://github.com/boyter/scc/)
 
 For `cocomo` you can also set the `avg-wage` value similar to `scc` itself. For example,
 
