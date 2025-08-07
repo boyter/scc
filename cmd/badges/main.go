@@ -85,6 +85,9 @@ func main() {
 		}
 
 		s := formatCount(float64(value))
+		if category == "effort" {
+			s = formatMonthsInt(value)
+		}
 
 		textLength := "250"
 		if len(s) <= 3 {
@@ -95,7 +98,11 @@ func main() {
 
 		log.Info().Str(uniqueCode, "42c5269c").Str("loc", loc.String()).Str("category", category).Send()
 		w.Header().Set("Content-Type", "image/svg+xml;charset=utf-8")
-		_, _ = w.Write([]byte(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="20"><linearGradient id="b" x2="0" y2="100%"><stop offset="0" stop-color="` + bs.TopShadowAccentColor + `" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><clipPath id="a"><rect width="100" height="20" rx="3" fill="#` + bs.FontColor + `"/></clipPath><g clip-path="url(#a)"><path fill="#` + bs.TitleBackgroundColor + `" d="M0 0h69v20H0z"/><path fill="#` + bs.BadgeBackgroundColor + `" d="M69 0h31v20H69z"/><path fill="url(#b)" d="M0 0h100v20H0z"/></g><g fill="#` + bs.FontColor + `" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="110"> <text x="355" y="150" fill="#` + bs.TextShadowColor + `" fill-opacity=".3" transform="scale(.1)" textLength="590">` + title + `</text><text x="355" y="140" transform="scale(.1)" textLength="590">` + title + `</text><text x="835" y="150" fill="#` + bs.TextShadowColor + `" fill-opacity=".3" transform="scale(.1)" textLength="` + textLength + `">` + s + `</text><text x="835" y="140" transform="scale(.1)" textLength="` + textLength + `">` + s + `</text></g> </svg>`))
+		if category == "effort" {
+			_, _ = w.Write([]byte(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="240" height="20"><linearGradient id="b" x2="0" y2="100%"><stop offset="0" stop-color="` + bs.TopShadowAccentColor + `" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><clipPath id="a"><rect width="240" height="20" rx="3" fill="#` + bs.FontColor + `"/></clipPath><g clip-path="url(#a)"><path fill="#` + bs.TitleBackgroundColor + `" d="M0 0h125v20H0z"/><path fill="#` + bs.BadgeBackgroundColor + `" d="M125 0h115v20H125z"/><path fill="url(#b)" d="M0 0h240v20H0z"/></g><g fill="#` + bs.FontColor + `" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="110"> <text x="625" y="150" fill="#` + bs.TextShadowColor + `" fill-opacity=".3" transform="scale(.1)">` + title + `</text><text x="625" y="140" transform="scale(.1)">` + title + `</text><text x="1825" y="150" fill="#` + bs.TextShadowColor + `" fill-opacity=".3" transform="scale(.1)">` + s + `</text><text x="1825" y="140" transform="scale(.1)">` + s + `</text></g> </svg>`))
+		} else {
+			_, _ = w.Write([]byte(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="20"><linearGradient id="b" x2="0" y2="100%"><stop offset="0" stop-color="` + bs.TopShadowAccentColor + `" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><clipPath id="a"><rect width="100" height="20" rx="3" fill="#` + bs.FontColor + `"/></clipPath><g clip-path="url(#a)"><path fill="#` + bs.TitleBackgroundColor + `" d="M0 0h69v20H0z"/><path fill="#` + bs.BadgeBackgroundColor + `" d="M69 0h31v20H69z"/><path fill="url(#b)" d="M0 0h100v20H0z"/></g><g fill="#` + bs.FontColor + `" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="110"> <text x="355" y="150" fill="#` + bs.TextShadowColor + `" fill-opacity=".3" transform="scale(.1)" textLength="590">` + title + `</text><text x="355" y="140" transform="scale(.1)" textLength="590">` + title + `</text><text x="835" y="150" fill="#` + bs.TextShadowColor + `" fill-opacity=".3" transform="scale(.1)" textLength="` + textLength + `">` + s + `</text><text x="835" y="140" transform="scale(.1)" textLength="` + textLength + `">` + s + `</text></g> </svg>`))
+		}
 	})
 
 	addr := ":8080"
@@ -161,6 +168,13 @@ func calculate(category string, wage int, res []processor.LanguageSummary) (stri
 		}
 
 		value = int64(estimateCost(value, wage))
+	case "effort":
+		title = "COCOMO Man Years"
+		for _, x := range res {
+			value += x.Code
+		}
+
+		value = int64(estimateScheduleMonths(value))
 	case "line", "lines": // lines is the default
 		fallthrough
 	default:
@@ -420,6 +434,29 @@ func estimateEffort(codeCount int64) float64 {
 
 func estimateCost(codeCount int64, averageWage int) float64 {
 	return estimateEffort(codeCount) * (float64(averageWage) / 12) * 1.8
+}
+
+func estimateScheduleMonths(codeCount int64) float64 {
+	return 2.5 * math.Pow(estimateEffort(codeCount), 0.38)
+}
+
+// FormatMonths converts a float64 representing months into a "X years Y months" string.
+func formatMonths(totalMonths float64) string {
+	years, fracMonths := math.Modf(totalMonths / 12)
+	months := int(math.Round(fracMonths * 12))
+
+	return fmt.Sprintf("%d years %d months", int(years), months)
+}
+
+// FormatMonthsInt converts an int64 representing months into a "X years Y months" string.
+func formatMonthsInt(totalMonths int64) string {
+	// Use integer division to get the number of years
+	years := totalMonths / 12
+
+	// Use the modulo operator to get the remaining months
+	months := totalMonths % 12
+
+	return fmt.Sprintf("%d years %d months", years, months)
 }
 
 func tryParseInt(s string, def int) int {
