@@ -6201,6 +6201,32 @@
       }
     ]
   },
+  "Seed7": {
+    "complexitychecks": [
+      "for ",
+      "if ",
+      "elsif ",
+      "else",
+      "else ",
+      "case ",
+      "while ",
+      "until ",
+      "catch ",
+      "or ",
+      "and ",
+      "<> ",
+      "= "
+    ],
+    "extensions": ["sd7", "s7i"],
+    "line_comment": ["#"],
+    "multi_line": [["(*", "*)"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "Shell": {
     "complexitychecks": [
       "for ",

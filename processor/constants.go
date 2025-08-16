@@ -10128,6 +10128,49 @@ var languageDatabase = map[string]Language{
 		FileNames:       []string{},
 		SheBangs:        []string{},
 	},
+	"Seed7": {
+		LineComment: []string{
+			"#",
+		},
+		ComplexityChecks: []string{
+			"for ",
+			"if ",
+			"elsif ",
+			"else",
+			"else ",
+			"case ",
+			"while ",
+			"until ",
+			"catch ",
+			"or ",
+			"and ",
+			"<> ",
+			"= ",
+		},
+		Extensions: []string{
+			"sd7",
+			"s7i",
+		},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"(*",
+				"*)",
+			},
+		},
+		Quotes: []Quote{
+			{
+				Start:        "\"",
+				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+		},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"Shell": {
 		LineComment: []string{
 			"#",

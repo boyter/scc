@@ -1,0 +1,25 @@
+(*
+  Language test for Seed7
+*)
+
+$ include "seed7_05.s7i"; # import the standard library
+
+const proc: main is func
+  local
+    var integer: i is 1;
+    var integer: j is 1;
+  begin
+    for i range 1 to 9 do
+      j := 1;
+      while j <= i do
+        write(i <& "x" <& j <& "=" <& j*i);
+        if j <> i then
+          write(", ");
+        else
+          write(".");
+        end if;
+        j +:= 1;
+      end while;
+      writeln();
+    end for;
+  end func;
