@@ -1000,6 +1000,7 @@ specificLanguages=(
     'RAML '
     'Redscript '
     'Scallop '
+    'Seed7 '
     'Shell '
     'Sieve '
     'Slang '
