@@ -38,7 +38,9 @@ func generateConstants() error {
 			if err != nil {
 				return fmt.Errorf("failed to open file '%s': %v", f.Name(), err)
 			}
-			defer f.Close()
+			defer func(file *os.File) {
+				_ = file.Close()
+			}(f)
 
 			data := map[string]processor.Language{}
 
@@ -71,7 +73,9 @@ func generateConstants() error {
 	if err != nil {
 		return fmt.Errorf("failed to open constants file: %v", err)
 	}
-	defer out.Close()
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(out)
 
 	if _, err := out.Write(source); err != nil {
 		return fmt.Errorf("failed to write constants file %v", err)

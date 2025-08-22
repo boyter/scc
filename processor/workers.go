@@ -99,11 +99,12 @@ func shouldProcess(currentByte, processBytesMask byte) bool {
 }
 
 func resetState(currentState int64) int64 {
-	if currentState == SMulticomment || currentState == SMulticommentCode {
+	switch currentState {
+	case SMulticomment, SMulticommentCode:
 		currentState = SMulticomment
-	} else if currentState == SString {
+	case SString:
 		currentState = SString
-	} else {
+	default:
 		currentState = SBlank
 	}
 

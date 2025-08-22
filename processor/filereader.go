@@ -27,7 +27,9 @@ func (reader *FileReader) ReadFile(path string, size int) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error opening %s: %v", path, err)
 	}
-	defer fd.Close()
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(fd)
 
 	// Generally, re-using the buffer is best. But, if we end up reading a huge
 	// file we would allocate an equally huge buffer. Rather than keep the huge
