@@ -292,6 +292,45 @@
     ],
     "shebangs": []
   },
+  "ArkTs": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "else ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "!== ",
+      "== ",
+      "=== ",
+      "case ",
+      "case(",
+      "?.",
+      "?? ",
+      "??= "
+    ],
+    "extensions": ["ets"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      },
+      {
+        "end": "`",
+        "start": "`"
+      }
+    ]
+  },
   "Arturo": {
     "complexitychecks": [
       "loop ",
@@ -5097,6 +5136,17 @@
       "== "
     ],
     "extensions": ["polly"],
+    "line_comment": [],
+    "multi_line": [["<!--", "-->"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
+  "POML": {
+    "extensions": ["poml"],
     "line_comment": [],
     "multi_line": [["<!--", "-->"]],
     "quotes": [

@@ -511,6 +511,65 @@ var languageDatabase = map[string]Language{
 		FileNames:       []string{},
 		SheBangs:        []string{},
 	},
+	"ArkTs": {
+		LineComment: []string{
+			"//",
+		},
+		ComplexityChecks: []string{
+			"for ",
+			"for(",
+			"if ",
+			"if(",
+			"switch ",
+			"while ",
+			"else ",
+			"|| ",
+			"&& ",
+			"!= ",
+			"!== ",
+			"== ",
+			"=== ",
+			"case ",
+			"case(",
+			"?.",
+			"?? ",
+			"??= ",
+		},
+		Extensions: []string{
+			"ets",
+		},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"/*",
+				"*/",
+			},
+		},
+		Quotes: []Quote{
+			{
+				Start:        "\"",
+				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+			{
+				Start:        "'",
+				End:          "'",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+			{
+				Start:        "`",
+				End:          "`",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+		},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"Arturo": {
 		LineComment: []string{
 			";",
@@ -7911,6 +7970,32 @@ var languageDatabase = map[string]Language{
 			{
 				Start:        "'",
 				End:          "'",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+		},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
+	"POML": {
+		LineComment:      []string{},
+		ComplexityChecks: []string{},
+		Extensions: []string{
+			"poml",
+		},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"<!--",
+				"-->",
+			},
+		},
+		Quotes: []Quote{
+			{
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
