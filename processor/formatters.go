@@ -30,20 +30,21 @@ var tabularShortBreakCi = "-----------------------------------------------------
 var tabularShortFormatHead = "%-15s %9s %11s %9s %9s %10s %10s\n"
 var tabularShortFormatBody = "%-15s %9d %11d %9d %9d %10d %10d\n"
 var tabularShortFormatFile = "%s %9d %9d %9d %10d %10d\n"
-var tabularShortFormatFileMaxMean = "MaxLine / MeanLine %11d %9d\n"
+var tabularShortFormatFileMaxMean = "MaxLine / MeanLine %6d %11d\n"
 var shortFormatFileTruncate = 26
 var shortNameTruncate = 15
-var tabularShortUlocLanguageFormatBody = "(ULOC) %33d\n"
-var tabularShortPercentLanguageFormatBody = "Percentage %18.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
-var tabularShortUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %12d\n"
+var tabularShortUlocLanguageFormatBody = "(ULOC) %30d\n"
+var tabularShortPercentLanguageFormatBody = "Percentage %13.1f%% %10.1f%% %8.1f%% %8.1f%% %9.1f%% %9.1f%%\n"
+var tabularShortUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %9d\n"
+var tabularShortDrynessFormatBody = "DRYness %% %27.2f\n"
 
 var tabularShortFormatHeadNoComplexity = "%-21s %11s %11s %10s %11s %10s\n"
 var tabularShortFormatBodyNoComplexity = "%-21s %11d %11d %10d %11d %10d\n"
-var tabularShortFormatFileNoComplexity = "%s %11d %10d %11d %9d\n"
-var tabularShortFormatFileMaxMeanNoComplexity = "MaxLine / MeanLine %15d %11d\n"
+var tabularShortFormatFileNoComplexity = "%s %10d %10d %11d %10d\n"
+var tabularShortFormatFileMaxMeanNoComplexity = "MaxLine / MeanLine %14d %11d\n"
 var longNameTruncate = 22
-var tabularShortUlocLanguageFormatBodyNoComplexity = "(ULOC) %39d\n"
-var tabularShortPercentLanguageFormatBodyNoComplexity = "Percentage %22.1f%% %10.1f%% %9.1f%% %10.1f%% %8.1f%%\n"
+var tabularShortUlocLanguageFormatBodyNoComplexity = "(ULOC) %38d\n"
+var tabularShortPercentLanguageFormatBodyNoComplexity = "Percentage %21.1f%% %10.1f%% %9.1f%% %10.1f%% %9.1f%%\n"
 
 var tabularWideBreak = "─────────────────────────────────────────────────────────────────────────────────────────────────────────────\n"
 var tabularWideBreakCi = "-------------------------------------------------------------------------------------------------------------\n"
@@ -55,6 +56,7 @@ var wideFormatFileTruncate = 42
 var tabularWideUlocLanguageFormatBody = "(ULOC) %46d\n"
 var tabularWideUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %25d\n"
 var tabularWideFormatBodyPercent = "Percentage %31.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
+var tabularWideDrynessFormatBody = "DRYness %% %43.2f\n"
 
 var openMetricsMetadata = `# TYPE scc_files gauge
 # HELP scc_files Number of sourcecode files.
@@ -982,7 +984,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 		_, _ = fmt.Fprintf(str, tabularWideUlocGlobalFormatBody, len(ulocGlobalCount))
 		if Dryness {
 			dryness := float64(len(ulocGlobalCount)) / float64(sumLines)
-			_, _ = fmt.Fprintf(str, "DRYness %% %43.2f\n", dryness)
+			_, _ = fmt.Fprintf(str, tabularWideDrynessFormatBody, dryness)
 		}
 		str.WriteString(getTabularWideBreak())
 	}
@@ -1201,7 +1203,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 		_, _ = fmt.Fprintf(str, tabularShortUlocGlobalFormatBody, len(ulocGlobalCount))
 		if Dryness {
 			dryness := float64(len(ulocGlobalCount)) / float64(sumLines)
-			_, _ = fmt.Fprintf(str, "DRYness %% %30.2f\n", dryness)
+			_, _ = fmt.Fprintf(str, tabularShortDrynessFormatBody, dryness)
 		}
 		str.WriteString(getTabularShortBreak())
 	}
