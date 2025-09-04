@@ -449,13 +449,13 @@ func toOpenMetricsSummary(input chan *FileJob) string {
 	sb := &strings.Builder{}
 	sb.WriteString(openMetricsMetadata)
 	for _, result := range language {
-		fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "files", result.Name, result.Count)
-		fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "lines", result.Name, result.Lines)
-		fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "code", result.Name, result.Code)
-		fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "comments", result.Name, result.Comment)
-		fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "blanks", result.Name, result.Blank)
-		fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "complexity", result.Name, result.Complexity)
-		fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "bytes", result.Name, result.Bytes)
+		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "files", result.Name, result.Count)
+		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "lines", result.Name, result.Lines)
+		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "code", result.Name, result.Code)
+		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "comments", result.Name, result.Comment)
+		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "blanks", result.Name, result.Blank)
+		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "complexity", result.Name, result.Complexity)
+		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "bytes", result.Name, result.Bytes)
 	}
 	return sb.String()
 }
@@ -465,12 +465,12 @@ func toOpenMetricsFiles(input chan *FileJob) string {
 	sb.WriteString(openMetricsMetadata)
 	for file := range input {
 		var filename = strings.ReplaceAll(file.Location, "\\", "\\\\")
-		fmt.Fprintf(sb, openMetricsFileRecordFormat, "lines", file.Language, filename, file.Lines)
-		fmt.Fprintf(sb, openMetricsFileRecordFormat, "code", file.Language, filename, file.Code)
-		fmt.Fprintf(sb, openMetricsFileRecordFormat, "comments", file.Language, filename, file.Comment)
-		fmt.Fprintf(sb, openMetricsFileRecordFormat, "blanks", file.Language, filename, file.Blank)
-		fmt.Fprintf(sb, openMetricsFileRecordFormat, "complexity", file.Language, filename, file.Complexity)
-		fmt.Fprintf(sb, openMetricsFileRecordFormat, "bytes", file.Language, filename, file.Bytes)
+		_, _ = fmt.Fprintf(sb, openMetricsFileRecordFormat, "lines", file.Language, filename, file.Lines)
+		_, _ = fmt.Fprintf(sb, openMetricsFileRecordFormat, "code", file.Language, filename, file.Code)
+		_, _ = fmt.Fprintf(sb, openMetricsFileRecordFormat, "comments", file.Language, filename, file.Comment)
+		_, _ = fmt.Fprintf(sb, openMetricsFileRecordFormat, "blanks", file.Language, filename, file.Blank)
+		_, _ = fmt.Fprintf(sb, openMetricsFileRecordFormat, "complexity", file.Language, filename, file.Complexity)
+		_, _ = fmt.Fprintf(sb, openMetricsFileRecordFormat, "bytes", file.Language, filename, file.Bytes)
 	}
 	sb.WriteString("# EOF\n")
 	return sb.String()
@@ -1122,7 +1122,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 		if Percent {
 			if !Complexity {
-				_, _ = fmt.Fprintf(str,
+				_, _ = p.Fprintf(str,
 					tabularShortPercentLanguageFormatBody,
 					float64(len(summary.Files))/float64(sumFiles)*100,
 					float64(summary.Lines)/float64(sumLines)*100,
@@ -1132,7 +1132,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 					float64(summary.Complexity)/float64(sumComplexity)*100,
 				)
 			} else {
-				_, _ = fmt.Fprintf(str,
+				_, _ = p.Fprintf(str,
 					tabularShortPercentLanguageFormatBodyNoComplexity,
 					float64(len(summary.Files))/float64(sumFiles)*100,
 					float64(summary.Lines)/float64(sumLines)*100,
@@ -1147,9 +1147,9 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 		if MaxMean {
 			if !Complexity {
-				_, _ = fmt.Fprintf(str, tabularShortFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength))
+				_, _ = p.Fprintf(str, tabularShortFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength))
 			} else {
-				_, _ = fmt.Fprintf(str, tabularShortFormatFileMaxMeanNoComplexity, maxIn(summary.LineLength), meanIn(summary.LineLength))
+				_, _ = p.Fprintf(str, tabularShortFormatFileMaxMeanNoComplexity, maxIn(summary.LineLength), meanIn(summary.LineLength))
 			}
 
 			addBreak = true
@@ -1164,19 +1164,19 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 				if !Complexity {
 					tmp = unicodeAwareRightPad(tmp, 27)
-					_, _ = fmt.Fprintf(str, tabularShortFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity)
+					_, _ = p.Fprintf(str, tabularShortFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity)
 				} else {
 					tmp = unicodeAwareRightPad(tmp, 34)
-					_, _ = fmt.Fprintf(str, tabularShortFormatFileNoComplexity, tmp, res.Lines, res.Blank, res.Comment, res.Code)
+					_, _ = p.Fprintf(str, tabularShortFormatFileNoComplexity, tmp, res.Lines, res.Blank, res.Comment, res.Code)
 				}
 			}
 		}
 
 		if UlocMode {
 			if !Complexity {
-				_, _ = fmt.Fprintf(str, tabularShortUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name]))
+				_, _ = p.Fprintf(str, tabularShortUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name]))
 			} else {
-				_, _ = fmt.Fprintf(str, tabularShortUlocLanguageFormatBodyNoComplexity, len(ulocLanguageCount[summary.Name]))
+				_, _ = p.Fprintf(str, tabularShortUlocLanguageFormatBodyNoComplexity, len(ulocLanguageCount[summary.Name]))
 			}
 
 			addBreak = true
@@ -1200,10 +1200,10 @@ func fileSummarizeShort(input chan *FileJob) string {
 	str.WriteString(getTabularShortBreak())
 
 	if UlocMode {
-		_, _ = fmt.Fprintf(str, tabularShortUlocGlobalFormatBody, len(ulocGlobalCount))
+		_, _ = p.Fprintf(str, tabularShortUlocGlobalFormatBody, len(ulocGlobalCount))
 		if Dryness {
 			dryness := float64(len(ulocGlobalCount)) / float64(sumLines)
-			_, _ = fmt.Fprintf(str, tabularShortDrynessFormatBody, dryness)
+			_, _ = p.Fprintf(str, tabularShortDrynessFormatBody, dryness)
 		}
 		str.WriteString(getTabularShortBreak())
 	}
@@ -1310,7 +1310,7 @@ func calculateSize(sumBytes int64, str *strings.Builder) {
 		size = float64(sumBytes) / (1012 * 1012)
 	case "xkcd-imaginary":
 		str.WriteString("used in quantum computing\n")
-		fmt.Fprintf(str, "Processed %d bytes, %s megabytes (%s)\n", sumBytes, `¯\_(ツ)_/¯`, strings.ToUpper(SizeUnit))
+		_, _ = fmt.Fprintf(str, "Processed %d bytes, %s megabytes (%s)\n", sumBytes, `¯\_(ツ)_/¯`, strings.ToUpper(SizeUnit))
 	case "xkcd-intel":
 		str.WriteString("calculated on pentium F.P.U.\n")
 		size = float64(sumBytes) / (1023.937528 * 1023.937528)
@@ -1332,7 +1332,7 @@ func calculateSize(sumBytes int64, str *strings.Builder) {
 	}
 
 	if !strings.EqualFold(SizeUnit, "xkcd-imaginary") {
-		fmt.Fprintf(str, "Processed %d bytes, %.3f megabytes (%s)\n", sumBytes, size, strings.ToUpper(SizeUnit))
+		_, _ = fmt.Fprintf(str, "Processed %d bytes, %.3f megabytes (%s)\n", sumBytes, size, strings.ToUpper(SizeUnit))
 	}
 }
 
