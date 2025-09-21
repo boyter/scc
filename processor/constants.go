@@ -9542,6 +9542,20 @@ var languageDatabase = map[string]Language{
 		FileNames:       []string{},
 		SheBangs:        []string{},
 	},
+	"Rich Text Format": {
+		LineComment:      []string{},
+		ComplexityChecks: []string{},
+		Extensions: []string{
+			"rtf",
+		},
+		ExtensionFile:   false,
+		MultiLine:       [][]string{},
+		Quotes:          []Quote{},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"Robot Framework": {
 		LineComment:      []string{},
 		ComplexityChecks: []string{},
