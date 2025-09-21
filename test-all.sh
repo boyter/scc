@@ -1001,6 +1001,7 @@ specificLanguages=(
     'Rakefile '
     'RAML '
     'Redscript '
+    'Rich Text Form'
     'Scallop '
     'Seed7 '
     'Shell '

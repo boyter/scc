@@ -5842,6 +5842,13 @@
       }
     ]
   },
+  "Rich Text Format": {
+    "complexitychecks": [],
+    "extensions": ["rtf"],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": []
+  },
   "Robot Framework": {
     "complexitychecks": [],
     "extensions": ["robot"],
