@@ -35,6 +35,7 @@ Licensed under MIT licence.
 - [Issues](#issues)
 - [Badges (beta)](#badges-beta)
 - [Language Support](LANGUAGES.md)
+- [Citation](#citation)
 
 ### scc for Teams & Enterprise
 
