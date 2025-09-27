@@ -3,6 +3,7 @@
 package processor
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -1411,5 +1412,133 @@ func BenchmarkFileSummerize(b *testing.B) {
 		b.StartTimer()
 
 		fileSummarize(fileSummaryJobQueue)
+	}
+}
+
+func TestGetCSVSummarySortFunc(t *testing.T) {
+	records := [][]string{
+		// Language,Lines,Code,Comments,Blanks,Complexity,Bytes,Files,ULOC
+		{"Go", "10", "10", "0", "1", "1", "1024", "1", "0"},
+		{"Python", "20", "20", "1", "2", "2", "2048", "2", "0"},
+		{"C#", "30", "30", "2", "3", "3", "4096", "3", "0"},
+		{"C++", "40", "40", "3", "4", "4", "8192", "4", "0"},
+	}
+	testCases := []struct {
+		sortBy   string
+		expected []string
+	}{
+		{
+			sortBy:   "names",
+			expected: []string{"C#", "C++", "Go", "Python"},
+		},
+		{
+			sortBy:   "langs",
+			expected: []string{"C#", "C++", "Go", "Python"},
+		},
+		{
+			sortBy:   "lines",
+			expected: []string{"C++", "C#", "Python", "Go"},
+		},
+		{
+			sortBy:   "code",
+			expected: []string{"C++", "C#", "Python", "Go"},
+		},
+		{
+			sortBy:   "comments",
+			expected: []string{"C++", "C#", "Python", "Go"},
+		},
+		{
+			sortBy:   "blanks",
+			expected: []string{"C++", "C#", "Python", "Go"},
+		},
+		{
+			sortBy:   "complexity",
+			expected: []string{"C++", "C#", "Python", "Go"},
+		},
+		{
+			sortBy:   "bytes",
+			expected: []string{"C++", "C#", "Python", "Go"},
+		},
+		{
+			sortBy:   "files",
+			expected: []string{"C++", "C#", "Python", "Go"},
+		},
+		{
+			sortBy:   "default",
+			expected: []string{"C#", "C++", "Go", "Python"},
+		},
+	}
+	for _, tc := range testCases {
+		data := slices.Clone(records) // always use an unordered records
+		slices.SortFunc(data, getCSVSummarySortFunc(tc.sortBy))
+		sortedRecords := make([]string, 0, len(data))
+		for i := range data {
+			sortedRecords = append(sortedRecords, data[i][0])
+		}
+		if !slices.Equal(sortedRecords, tc.expected) {
+			t.Errorf("sortBy: %s failed, expected: %v, got: %v", tc.sortBy, tc.expected, sortedRecords)
+		}
+	}
+}
+
+func TestGetCSVFilesSortFunc(t *testing.T) {
+	records := [][]string{
+		// Language,Provider,Filename,Lines,Code,Comments,Blanks,Complexity,Bytes,ULOC
+		{"Go", "/path/to/file", "go.go", "10", "10", "0", "1", "1", "1024", "0"},
+		{"Python", "/path/to/file", "python.py", "20", "20", "1", "2", "2", "2048", "0"},
+		{"C#", "/path/to/file", "csharp.cs", "30", "30", "2", "3", "3", "4096", "0"},
+		{"C++", "/path/to/file", "cpp.cpp", "40", "40", "3", "4", "4", "8192", "0"},
+	}
+	testCases := []struct {
+		sortBy   string
+		expected []string
+	}{
+		{
+			sortBy:   "names",
+			expected: []string{"C++", "C#", "Go", "Python"},
+		},
+		{
+			sortBy:   "langs",
+			expected: []string{"C#", "C++", "Go", "Python"},
+		},
+		{
+			sortBy:   "lines",
+			expected: []string{"C++", "C#", "Python", "Go"},
+		},
+		{
+			sortBy:   "code",
+			expected: []string{"C++", "C#", "Python", "Go"},
+		},
+		{
+			sortBy:   "comments",
+			expected: []string{"C++", "C#", "Python", "Go"},
+		},
+		{
+			sortBy:   "blanks",
+			expected: []string{"C++", "C#", "Python", "Go"},
+		},
+		{
+			sortBy:   "complexity",
+			expected: []string{"C++", "C#", "Python", "Go"},
+		},
+		{
+			sortBy:   "bytes",
+			expected: []string{"C++", "C#", "Python", "Go"},
+		},
+		{
+			sortBy:   "default",
+			expected: []string{"C++", "C#", "Go", "Python"},
+		},
+	}
+	for _, tc := range testCases {
+		data := slices.Clone(records) // always use an unordered records
+		slices.SortFunc(data, getCSVFilesSortFunc(tc.sortBy))
+		sortedRecords := make([]string, 0, len(data))
+		for i := range data {
+			sortedRecords = append(sortedRecords, data[i][0])
+		}
+		if !slices.Equal(sortedRecords, tc.expected) {
+			t.Errorf("sortBy: %s failed, expected: %v, got: %v", tc.sortBy, tc.expected, sortedRecords)
+		}
 	}
 }

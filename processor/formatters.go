@@ -292,9 +292,65 @@ func toCSV(input chan *FileJob) string {
 	return toCSVSummary(input)
 }
 
+func getCSVSummarySortFunc(sortBy string) func(a, b []string) int {
+	// Cater for the common case of adding plural even for those options that don't make sense
+	// as it's quite common for those who English is not a first language to make a simple mistake
+	switch sortBy {
+	case "name", "names", "language", "languages", "lang", "langs":
+		return func(a, b []string) int {
+			return strings.Compare(a[0], b[0])
+		}
+	case "line", "lines":
+		return func(a, b []string) int {
+			i1, _ := strconv.ParseInt(a[1], 10, 64)
+			i2, _ := strconv.ParseInt(b[1], 10, 64)
+			return cmp.Compare(i2, i1)
+		}
+	case "blank", "blanks":
+		return func(a, b []string) int {
+			i1, _ := strconv.ParseInt(a[4], 10, 64)
+			i2, _ := strconv.ParseInt(b[4], 10, 64)
+			return cmp.Compare(i2, i1)
+		}
+	case "code", "codes":
+		return func(a, b []string) int {
+			i1, _ := strconv.ParseInt(a[2], 10, 64)
+			i2, _ := strconv.ParseInt(b[2], 10, 64)
+			return cmp.Compare(i2, i1)
+		}
+	case "comment", "comments":
+		return func(a, b []string) int {
+			i1, _ := strconv.ParseInt(a[3], 10, 64)
+			i2, _ := strconv.ParseInt(b[3], 10, 64)
+			return cmp.Compare(i2, i1)
+		}
+	case "complexity", "complexitys":
+		return func(a, b []string) int {
+			i1, _ := strconv.ParseInt(a[5], 10, 64)
+			i2, _ := strconv.ParseInt(b[5], 10, 64)
+			return cmp.Compare(i2, i1)
+		}
+	case "byte", "bytes":
+		return func(a, b []string) int {
+			i1, _ := strconv.ParseInt(a[6], 10, 64)
+			i2, _ := strconv.ParseInt(b[6], 10, 64)
+			return cmp.Compare(i2, i1)
+		}
+	case "file", "files":
+		return func(a, b []string) int {
+			i1, _ := strconv.ParseInt(a[7], 10, 64)
+			i2, _ := strconv.ParseInt(b[7], 10, 64)
+			return cmp.Compare(i2, i1)
+		}
+	default:
+		return func(a, b []string) int {
+			return strings.Compare(a[0], b[0])
+		}
+	}
+}
+
 func toCSVSummary(input chan *FileJob) string {
 	language := aggregateLanguageSummary(input)
-	language = sortLanguageSummary(language)
 
 	records := make([][]string, 0, len(language))
 
@@ -312,7 +368,7 @@ func toCSVSummary(input chan *FileJob) string {
 		})
 	}
 
-	slices.SortFunc(records, getRecordsSortFunc())
+	slices.SortFunc(records, getCSVSummarySortFunc(SortBy))
 
 	recordsEnd := [][]string{{
 		"Language",
@@ -336,10 +392,10 @@ func toCSVSummary(input chan *FileJob) string {
 	return b.String()
 }
 
-func getRecordsSortFunc() func(a, b []string) int {
+func getCSVFilesSortFunc(sortBy string) func(a, b []string) int {
 	// Cater for the common case of adding plural even for those options that don't make sense
 	// as it's quite common for those who English is not a first language to make a simple mistake
-	switch SortBy {
+	switch sortBy {
 	case "name", "names":
 		return func(a, b []string) int {
 			return strings.Compare(a[2], b[2])
@@ -409,7 +465,7 @@ func toCSVFiles(input chan *FileJob) string {
 		})
 	}
 
-	slices.SortFunc(records, getRecordsSortFunc())
+	slices.SortFunc(records, getCSVFilesSortFunc(SortBy))
 
 	recordsEnd := [][]string{{
 		"Language",
