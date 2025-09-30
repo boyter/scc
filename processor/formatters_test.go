@@ -311,6 +311,54 @@ func TestSortLanguageSummaryComplexity(t *testing.T) {
 	}
 }
 
+func TestSortLanguageSummaryBytes(t *testing.T) {
+	SortBy = "bytes"
+	ls := []LanguageSummary{
+		{
+			Name:  "a",
+			Bytes: 1,
+		},
+		{
+			Name:  "b",
+			Bytes: 1,
+		},
+		{
+			Name:  "c",
+			Bytes: 2,
+		},
+	}
+
+	ls = sortLanguageSummary(ls)
+
+	if ls[0].Name != "c" || ls[1].Name != "a" {
+		t.Error("Expected c to be first and a second")
+	}
+}
+
+func TestSortLanguageSummaryFiles(t *testing.T) {
+	SortBy = "files"
+	ls := []LanguageSummary{
+		{
+			Name:  "a",
+			Count: 1,
+		},
+		{
+			Name:  "b",
+			Count: 1,
+		},
+		{
+			Name:  "c",
+			Count: 2,
+		},
+	}
+
+	ls = sortLanguageSummary(ls)
+
+	if ls[0].Name != "c" || ls[1].Name != "a" {
+		t.Error("Expected c to be first and a second")
+	}
+}
+
 func TestSortSummaryNames(t *testing.T) {
 	SortBy = "name"
 	ls := []LanguageSummary{
@@ -1408,76 +1456,19 @@ func BenchmarkFileSummerize(b *testing.B) {
 			Language:   "Go",
 			Lines:      10,
 		}
+		fileSummaryJobQueue <- &FileJob{
+			Blank:      2,
+			Bytes:      2,
+			Code:       2,
+			Comment:    2,
+			Complexity: 2,
+			Language:   "Python",
+			Lines:      20,
+		}
 		close(fileSummaryJobQueue)
 		b.StartTimer()
 
 		fileSummarize(fileSummaryJobQueue)
-	}
-}
-
-func TestGetCSVSummarySortFunc(t *testing.T) {
-	records := [][]string{
-		// Language,Lines,Code,Comments,Blanks,Complexity,Bytes,Files,ULOC
-		{"Go", "10", "10", "0", "1", "1", "1024", "1", "0"},
-		{"Python", "20", "20", "1", "2", "2", "2048", "2", "0"},
-		{"C#", "30", "30", "2", "3", "3", "4096", "3", "0"},
-		{"C++", "40", "40", "3", "4", "4", "8192", "4", "0"},
-	}
-	testCases := []struct {
-		sortBy   string
-		expected []string
-	}{
-		{
-			sortBy:   "names",
-			expected: []string{"C#", "C++", "Go", "Python"},
-		},
-		{
-			sortBy:   "langs",
-			expected: []string{"C#", "C++", "Go", "Python"},
-		},
-		{
-			sortBy:   "lines",
-			expected: []string{"C++", "C#", "Python", "Go"},
-		},
-		{
-			sortBy:   "code",
-			expected: []string{"C++", "C#", "Python", "Go"},
-		},
-		{
-			sortBy:   "comments",
-			expected: []string{"C++", "C#", "Python", "Go"},
-		},
-		{
-			sortBy:   "blanks",
-			expected: []string{"C++", "C#", "Python", "Go"},
-		},
-		{
-			sortBy:   "complexity",
-			expected: []string{"C++", "C#", "Python", "Go"},
-		},
-		{
-			sortBy:   "bytes",
-			expected: []string{"C++", "C#", "Python", "Go"},
-		},
-		{
-			sortBy:   "files",
-			expected: []string{"C++", "C#", "Python", "Go"},
-		},
-		{
-			sortBy:   "default",
-			expected: []string{"C#", "C++", "Go", "Python"},
-		},
-	}
-	for _, tc := range testCases {
-		data := slices.Clone(records) // always use an unordered records
-		slices.SortFunc(data, getCSVSummarySortFunc(tc.sortBy))
-		sortedRecords := make([]string, 0, len(data))
-		for i := range data {
-			sortedRecords = append(sortedRecords, data[i][0])
-		}
-		if !slices.Equal(sortedRecords, tc.expected) {
-			t.Errorf("sortBy: %s failed, expected: %v, got: %v", tc.sortBy, tc.expected, sortedRecords)
-		}
 	}
 }
 

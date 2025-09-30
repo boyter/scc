@@ -292,85 +292,11 @@ func toCSV(input chan *FileJob) string {
 	return toCSVSummary(input)
 }
 
-func getCSVSummarySortFunc(sortBy string) func(a, b []string) int {
-	// Cater for the common case of adding plural even for those options that don't make sense
-	// as it's quite common for those who English is not a first language to make a simple mistake
-	switch sortBy {
-	case "name", "names", "language", "languages", "lang", "langs":
-		return func(a, b []string) int {
-			return strings.Compare(a[0], b[0])
-		}
-	case "line", "lines":
-		return func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[1], 10, 64)
-			i2, _ := strconv.ParseInt(b[1], 10, 64)
-			return cmp.Compare(i2, i1)
-		}
-	case "blank", "blanks":
-		return func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[4], 10, 64)
-			i2, _ := strconv.ParseInt(b[4], 10, 64)
-			return cmp.Compare(i2, i1)
-		}
-	case "code", "codes":
-		return func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[2], 10, 64)
-			i2, _ := strconv.ParseInt(b[2], 10, 64)
-			return cmp.Compare(i2, i1)
-		}
-	case "comment", "comments":
-		return func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[3], 10, 64)
-			i2, _ := strconv.ParseInt(b[3], 10, 64)
-			return cmp.Compare(i2, i1)
-		}
-	case "complexity", "complexitys":
-		return func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[5], 10, 64)
-			i2, _ := strconv.ParseInt(b[5], 10, 64)
-			return cmp.Compare(i2, i1)
-		}
-	case "byte", "bytes":
-		return func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[6], 10, 64)
-			i2, _ := strconv.ParseInt(b[6], 10, 64)
-			return cmp.Compare(i2, i1)
-		}
-	case "file", "files":
-		return func(a, b []string) int {
-			i1, _ := strconv.ParseInt(a[7], 10, 64)
-			i2, _ := strconv.ParseInt(b[7], 10, 64)
-			return cmp.Compare(i2, i1)
-		}
-	default:
-		return func(a, b []string) int {
-			return strings.Compare(a[0], b[0])
-		}
-	}
-}
-
 func toCSVSummary(input chan *FileJob) string {
 	language := aggregateLanguageSummary(input)
+	language = sortLanguageSummary(language)
 
-	records := make([][]string, 0, len(language))
-
-	for _, result := range language {
-		records = append(records, []string{
-			result.Name,
-			strconv.FormatInt(result.Lines, 10),
-			strconv.FormatInt(result.Code, 10),
-			strconv.FormatInt(result.Comment, 10),
-			strconv.FormatInt(result.Blank, 10),
-			strconv.FormatInt(result.Complexity, 10),
-			strconv.FormatInt(result.Bytes, 10),
-			strconv.FormatInt(result.Count, 10),
-			strconv.Itoa(len(ulocLanguageCount[result.Name])),
-		})
-	}
-
-	slices.SortFunc(records, getCSVSummarySortFunc(SortBy))
-
-	recordsEnd := [][]string{{
+	record := []string{
 		"Language",
 		"Lines",
 		"Code",
@@ -380,13 +306,25 @@ func toCSVSummary(input chan *FileJob) string {
 		"Bytes",
 		"Files",
 		"ULOC",
-	}}
-
-	recordsEnd = append(recordsEnd, records...)
+	}
 
 	b := &bytes.Buffer{}
 	w := csv.NewWriter(b)
-	_ = w.WriteAll(recordsEnd)
+	_ = w.Write(record)
+
+	for _, result := range language {
+		record[0] = result.Name
+		record[1] = strconv.FormatInt(result.Lines, 10)
+		record[2] = strconv.FormatInt(result.Code, 10)
+		record[3] = strconv.FormatInt(result.Comment, 10)
+		record[4] = strconv.FormatInt(result.Blank, 10)
+		record[5] = strconv.FormatInt(result.Complexity, 10)
+		record[6] = strconv.FormatInt(result.Bytes, 10)
+		record[7] = strconv.FormatInt(result.Count, 10)
+		record[8] = strconv.Itoa(len(ulocLanguageCount[result.Name]))
+		_ = w.Write(record)
+	}
+
 	w.Flush()
 
 	return b.String()
@@ -1500,6 +1438,20 @@ func sortLanguageSummary(language []LanguageSummary) []LanguageSummary {
 	case "complexity", "complexitys":
 		slices.SortFunc(language, func(a, b LanguageSummary) int {
 			if order := cmp.Compare(b.Complexity, a.Complexity); order != 0 {
+				return order
+			}
+			return strings.Compare(a.Name, b.Name)
+		})
+	case "byte", "bytes":
+		slices.SortFunc(language, func(a, b LanguageSummary) int {
+			if order := cmp.Compare(b.Bytes, a.Bytes); order != 0 {
+				return order
+			}
+			return strings.Compare(a.Name, b.Name)
+		})
+	case "file", "files":
+		slices.SortFunc(language, func(a, b LanguageSummary) int {
+			if order := cmp.Compare(b.Count, a.Count); order != 0 {
 				return order
 			}
 			return strings.Compare(a.Name, b.Name)
