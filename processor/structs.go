@@ -30,13 +30,13 @@ type Language struct {
 	LineComment      []string   `json:"line_comment"`
 	ComplexityChecks []string   `json:"complexitychecks"`
 	Extensions       []string   `json:"extensions"`
-	ExtensionFile    bool       `json:"extensionFile"`
 	MultiLine        [][]string `json:"multi_line"`
 	Quotes           []Quote    `json:"quotes"`
-	NestedMultiLine  bool       `json:"nestedmultiline"`
 	Keywords         []string   `json:"keywords"`
 	FileNames        []string   `json:"filenames"`
 	SheBangs         []string   `json:"shebangs"`
+	ExtensionFile    bool       `json:"extensionFile"`
+	NestedMultiLine  bool       `json:"nestedmultiline"`
 }
 
 // LanguageFeature is a struct which represents the conversion from Language into what is used for matching
@@ -79,7 +79,7 @@ type FileJob struct {
 	Comment            int64
 	Blank              int64
 	Complexity         int64
-	ComplexityLine     []int64
+	ComplexityLine     []int64 `json:"-"`
 	WeightedComplexity float64
 	Hash               hash.Hash
 	Callback           FileJobCallback `json:"-"`
