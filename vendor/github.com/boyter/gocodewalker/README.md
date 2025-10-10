@@ -97,6 +97,27 @@ errorHandler := func(e error) bool {
 fileWalker.SetErrorHandler(errorHandler)
 ```
 
+### Binary Checking
+
+You can ask it to ignore binary files for you by setting `IgnoreBinaryFiles` to true and optionally 
+`IgnoreBinaryFileBytes` to the number of bytes you want to check which by default is set to 1,000.
+
+This will have a performance impact as gocodewalker will open each file, so you may want to do this check yourself
+if performance is your goal.
+
+```go
+fileListQueue := make(chan *gocodewalker.File, 100)
+
+fileWalker := gocodewalker.NewFileWalker(".", fileListQueue)
+
+// set to ignore binary files
+fileWalker.IgnoreBinaryFiles = true
+fileWalker.IgnoreBinaryFileBytes = 500
+```
+
+The check itself looks for a null byte `if b == 0 {` which is a fast mostly accurate way of checking for 
+a binary file.
+
 ### Testing
 
 Done through unit/integration tests. Otherwise see https://github.com/svent/gitignore-test

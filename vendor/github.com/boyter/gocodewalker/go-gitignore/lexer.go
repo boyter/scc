@@ -325,7 +325,7 @@ func (l *lexer) eol() ([]rune, Error) {
 				return _line, _err
 			} else if _next != _NEWLINE {
 				l.unread(_next)
-				return _line, l.err(CarriageReturnError)
+				return _line, l.err(ErrCarriageReturnError)
 			}
 			fallthrough
 
@@ -356,6 +356,7 @@ func (l *lexer) whitespace() ([]rune, Error) {
 		case _SPACE:
 			fallthrough
 		case _TAB:
+			//nolint:staticcheck // SA4011: ineffective break statement (deliberate)
 			break
 
 		// non-whitespace rune
