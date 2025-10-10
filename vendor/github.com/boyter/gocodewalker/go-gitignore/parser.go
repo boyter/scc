@@ -234,7 +234,7 @@ func (p *parser) sequence(t *Token) ([]*Token, Error) {
 
 	// otherwise, we have an invalid specification
 	p.undo(t)
-	return nil, p.err(InvalidPatternError)
+	return nil, p.err(ErrInvalidPatternError)
 } // sequence()
 
 // separator attempts to retrieve a valid sequence of tokens that may appear
@@ -281,7 +281,7 @@ func (p *parser) separator(t *Token) ([]*Token, Error) {
 
 	// any other token is invalid
 	p.undo(_token)
-	return _tokens, p.err(InvalidPatternError)
+	return _tokens, p.err(ErrInvalidPatternError)
 } // separator()
 
 // any attempts to retrieve a valid sequence of tokens that may appear
@@ -316,7 +316,7 @@ func (p *parser) any(t *Token) ([]*Token, Error) {
 
 	// any other token is invalid
 	p.undo(_token)
-	return _tokens, p.err(InvalidPatternError)
+	return _tokens, p.err(ErrInvalidPatternError)
 } // any()
 
 // pattern attempts to retrieve a valid sequence of tokens that may appear
@@ -353,7 +353,7 @@ func (p *parser) pattern(t *Token) ([]*Token, Error) {
 
 	// any other token is invalid
 	p.undo(_token)
-	return _tokens, p.err(InvalidPatternError)
+	return _tokens, p.err(ErrInvalidPatternError)
 } // pattern()
 
 // eol attempts to consume the next Lexer token to read the end of line or end
@@ -377,7 +377,7 @@ func (p *parser) eol() Error {
 
 	// otherwise, we have an invalid pattern
 	p.undo(_token)
-	return p.err(InvalidPatternError)
+	return p.err(ErrInvalidPatternError)
 } // eol()
 
 // next returns the next token from the Lexer, or an error if there is a

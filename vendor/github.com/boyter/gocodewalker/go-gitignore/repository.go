@@ -116,7 +116,7 @@ func NewRepositoryWithCache(base, file string, cache Cache, errors func(e Error)
 	_info, _err := os.Stat(_base)
 	if _info != nil {
 		if !_info.IsDir() {
-			_err = InvalidDirectoryError
+			_err = ErrInvalidDirectoryError
 		}
 	}
 	if _err != nil {

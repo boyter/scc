@@ -7,7 +7,7 @@ else
 endif
 
 lint:
-	@golangci-lint run --disable-all --enable gci --fix
+	@golangci-lint run --fix
 	@golangci-lint run
 
 test:

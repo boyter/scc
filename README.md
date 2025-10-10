@@ -58,7 +58,7 @@ To install a development version:
 
 `go install github.com/boyter/scc/v3@master`
 
-Note that `scc` needs go version >= 1.24.
+Note that `scc` needs go version >= 1.25.
 
 #### Snap
 

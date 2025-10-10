@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	CarriageReturnError   = errors.New("unexpected carriage return '\\r'")
-	InvalidPatternError   = errors.New("invalid pattern")
-	InvalidDirectoryError = errors.New("invalid directory")
+	ErrCarriageReturnError   = errors.New("unexpected carriage return '\\r'")
+	ErrInvalidPatternError   = errors.New("invalid pattern")
+	ErrInvalidDirectoryError = errors.New("invalid directory")
 )
