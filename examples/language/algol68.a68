@@ -1,0 +1,31 @@
+BEGIN # Algol-68 prime number sieve, functional style #
+  
+  PROC error = (STRING s) VOID:
+     (print(( newline, " error: ", s, newline)); GOTO stop);
+  PROC one to = (INT n) LIST:
+     (PROC f = (INT m,n) LIST: (m>n | NIL | cons(m, f(m+1,n))); f(1,n));
+  
+  MODE LIST = REF NODE;
+  MODE NODE = STRUCT (INT h, LIST t);
+  PROC cons = (INT n, LIST l) LIST: HEAP NODE := (n,l);
+  PROC hd   = (LIST l) INT: ( l IS NIL | error("hd NIL"); SKIP | h OF l );
+  PROC tl   = (LIST l) LIST: ( l IS NIL | error("tl NIL"); SKIP | t OF l );
+  PROC show = (LIST l) VOID: ( l ISNT NIL | print((" ",whole(hd(l),0))); show(tl(l)));
+  
+  PROC filter = (PROC (INT) BOOL p, LIST l) LIST:
+     IF l IS NIL THEN NIL
+     ELIF p(hd(l)) THEN cons(hd(l), filter(p,tl(l)))
+     ELSE filter(p, tl(l))
+     FI;
+  
+  PROC sieve = (LIST l) LIST:
+     IF l IS NIL THEN NIL
+     ELSE
+        PROC not multiple = (INT n) BOOL: n MOD hd(l) ~= 0;
+        cons(hd(l), sieve( filter( not multiple, tl(l) )))
+     FI;
+  
+  PROC primes = (INT n) LIST: sieve( tl( one to(n) ));
+  
+  show( primes(100) )
+END

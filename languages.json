@@ -226,6 +226,35 @@
     "multi_line": [],
     "quotes": []
   },
+  "Algol 68": {
+    "complexitychecks": [
+      "IF ",
+      "ELIF ",
+      "ELSE ",
+      "FOR ",
+      "WHILE ",
+      "CASE ",
+      "OUSE ",
+      "AND ",
+      "OR ",
+      "EQ ",
+      "NE ",
+      "IS ",
+      "ISNT ",
+      "IS NOT ",
+      "~= "
+    ],
+    "extensions": ["a68"],
+    "line_comment": [],
+    "multi_line": [["#", "#"], ["CO", "CO"], ["COMMENT", "COMMENT"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\"",
+        "ignoreEscape": true
+      }
+    ]
+  },
   "Alloy": {
     "complexitychecks": [
       "implies ",
