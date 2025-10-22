@@ -394,6 +394,56 @@ var languageDatabase = map[string]Language{
 		FileNames:       []string{},
 		SheBangs:        []string{},
 	},
+	"Algol 68": {
+		LineComment: []string{},
+		ComplexityChecks: []string{
+			"IF ",
+			"ELIF ",
+			"ELSE ",
+			"FOR ",
+			"WHILE ",
+			"CASE ",
+			"OUSE ",
+			"AND ",
+			"OR ",
+			"EQ ",
+			"NE ",
+			"IS ",
+			"ISNT ",
+			"IS NOT ",
+			"~= ",
+		},
+		Extensions: []string{
+			"a68",
+		},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"#",
+				"#",
+			},
+			{
+				"CO",
+				"CO",
+			},
+			{
+				"COMMENT",
+				"COMMENT",
+			},
+		},
+		Quotes: []Quote{
+			{
+				Start:        "\"",
+				End:          "\"",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+		},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"Alloy": {
 		LineComment: []string{
 			"//",

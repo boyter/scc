@@ -918,6 +918,7 @@ fi
 specificLanguages=(
     'ABNF '
     'Alchemist '
+    'Algol 68 '
     'Alloy '
     'ArkTs '
     'Arturo '
