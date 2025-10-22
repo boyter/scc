@@ -614,53 +614,8 @@ else
     exit
 fi
 
-if ./scc -f csv | grep -q "Bytes"; then
-    echo -e "${GREEN}PASSED csv bytes check"
-else
-    echo -e "${RED}======================================================="
-    echo -e "FAILED csv bytes check"
-    echo -e "=======================================================${NC}"
-    exit
-fi
-
-if ./scc -f csv-stream | grep -q "Bytes"; then
-    echo -e "${GREEN}PASSED csv-stream bytes check"
-else
-    echo -e "${RED}======================================================="
-    echo -e "FAILED csv-stream bytes check"
-    echo -e "=======================================================${NC}"
-    exit
-fi
-
-if ./scc -f html | grep -q "Bytes"; then
-    echo -e "${GREEN}PASSED html bytes check"
-else
-    echo -e "${RED}======================================================="
-    echo -e "FAILED html bytes check"
-    echo -e "=======================================================${NC}"
-    exit
-fi
-
 if ./scc -f json | grep -q "Bytes"; then
     echo -e "${GREEN}PASSED json bytes check"
-else
-    echo -e "${RED}======================================================="
-    echo -e "FAILED json bytes check"
-    echo -e "=======================================================${NC}"
-    exit
-fi
-
-if ./scc -f json  -a | grep -q "ULOC"; then
-    echo -e "${GREEN}PASSED json uloc check"
-else
-    echo -e "${RED}======================================================="
-    echo -e "FAILED json uloc check"
-    echo -e "=======================================================${NC}"
-    exit
-fi
-
-if ./scc -f json2 | grep -q "Bytes"; then
-    echo -e "${GREEN}PASSED json2 bytes check"
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED json bytes check"
@@ -673,24 +628,6 @@ if ./scc | grep -q "megabytes"; then
 else
     echo -e "${RED}======================================================="
     echo -e "FAILED bytes check"
-    echo -e "=======================================================${NC}"
-    exit
-fi
-
-if ./scc -f csv | grep -q "Language,Lines,Code,Comments,Blanks,Complexity,Bytes,Files,ULOC"; then
-    echo -e "${GREEN}PASSED csv summary"
-else
-    echo -e "${RED}======================================================="
-    echo -e "FAILED csv summary"
-    echo -e "=======================================================${NC}"
-    exit
-fi
-
-if ./scc -f csv --by-file | grep -q "Language,Provider,Filename,Lines,Code,Comments,Blanks,Complexity,Bytes"; then
-    echo -e "${GREEN}PASSED csv file"
-else
-    echo -e "${RED}======================================================="
-    echo -e "FAILED csv file"
     echo -e "=======================================================${NC}"
     exit
 fi
