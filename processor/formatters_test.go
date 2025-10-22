@@ -3,6 +3,8 @@
 package processor
 
 import (
+	"io"
+	"os"
 	"slices"
 	"strings"
 	"testing"
@@ -1372,6 +1374,34 @@ func TestToHTML(t *testing.T) {
 	if !strings.Contains(res, `<html lang="en">`) {
 		t.Error("Expected to have HTML wrapper")
 	}
+
+	if !strings.Contains(res, "<th>Language</th>") {
+		t.Error("html Language check failed")
+	}
+	if !strings.Contains(res, "<th>Files</th>") {
+		t.Error("html Files check failed")
+	}
+	if !strings.Contains(res, "<th>Lines</th>") {
+		t.Error("html Lines check failed")
+	}
+	if !strings.Contains(res, "<th>Blank</th>") {
+		t.Error("html Blank check failed")
+	}
+	if !strings.Contains(res, "<th>Comment</th>") {
+		t.Error("html Comment check failed")
+	}
+	if !strings.Contains(res, "<th>Code</th>") {
+		t.Error("html Code check failed")
+	}
+	if !strings.Contains(res, "<th>Complexity</th>") {
+		t.Error("html Complexity check failed")
+	}
+	if !strings.Contains(res, "<th>Bytes</th>") {
+		t.Error("html Bytes check failed")
+	}
+	if !strings.Contains(res, "<th>Uloc</th>") {
+		t.Error("html Uloc check failed")
+	}
 }
 
 func TestToHTMLTable(t *testing.T) {
@@ -1531,5 +1561,237 @@ func TestGetCSVFilesSortFunc(t *testing.T) {
 		if !slices.Equal(sortedRecords, tc.expected) {
 			t.Errorf("sortBy: %s failed, expected: %v, got: %v", tc.sortBy, tc.expected, sortedRecords)
 		}
+	}
+}
+
+func TestToCSVFilesHeader(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "aaaa.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	close(inputChan)
+	res := toCSVFiles(inputChan)
+	header, _, _ := strings.Cut(res, "\n")
+	const expected = "Language,Provider,Filename,Lines,Code,Comments,Blanks,Complexity,Bytes,ULOC"
+	if header != expected {
+		t.Errorf("check toCSVFiles header failed, expected: %v, got: %v", expected, header)
+	}
+}
+
+func TestToCSVStreamHeader(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "aaaa.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	close(inputChan)
+
+	originStdout := os.Stdout
+	t.Cleanup(func() {
+		os.Stdout = originStdout
+	})
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Stdout = w
+	go func() {
+		toCSVStream(inputChan)
+		_ = w.Close()
+	}()
+	output, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	header, _, _ := strings.Cut(string(output), "\n")
+	const expected = "Language,Provider,Filename,Lines,Code,Comments,Blanks,Complexity,Bytes,Uloc"
+	if header != expected {
+		t.Errorf("check toCSVStream header failed, expected: %v, got: %v", expected, header)
+	}
+}
+
+func TestToJSONKeys(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "aaaa.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	close(inputChan)
+
+	res := toJSON(inputChan)
+	if !strings.Contains(res, `"Name":`) {
+		t.Error("JSON Name check failed")
+	}
+	if !strings.Contains(res, `"Files":`) {
+		t.Error("JSON Files check failed")
+	}
+	if !strings.Contains(res, `"Lines":`) {
+		t.Error("JSON Lines check failed")
+	}
+	if !strings.Contains(res, `"Blank":`) {
+		t.Error("JSON Blank check failed")
+	}
+	if !strings.Contains(res, `"Comment":`) {
+		t.Error("JSON Comment check failed")
+	}
+	if !strings.Contains(res, `"Code":`) {
+		t.Error("JSON Code check failed")
+	}
+	if !strings.Contains(res, `"Complexity":`) {
+		t.Error("JSON Complexity check failed")
+	}
+	if !strings.Contains(res, `"Bytes":`) {
+		t.Error("JSON Bytes check failed")
+	}
+	if !strings.Contains(res, `"ULOC":`) {
+		t.Error("JSON Uloc check failed")
+	}
+}
+
+func TestToJSON2Keys(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "bbbb.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	inputChan <- &FileJob{
+		Language:           "Go",
+		Filename:           "aaaa.go",
+		Extension:          "go",
+		Location:           "./",
+		Bytes:              1000,
+		Lines:              1000,
+		Code:               1000,
+		Comment:            1000,
+		Blank:              1000,
+		Complexity:         1000,
+		WeightedComplexity: 1000,
+		Binary:             false,
+	}
+	close(inputChan)
+
+	res := toJSON2(inputChan)
+	if !strings.Contains(res, `"Name":`) {
+		t.Error("JSON2 Name check failed")
+	}
+	if !strings.Contains(res, `"Files":`) {
+		t.Error("JSON2 Files check failed")
+	}
+	if !strings.Contains(res, `"Lines":`) {
+		t.Error("JSON2 Lines check failed")
+	}
+	if !strings.Contains(res, `"Blank":`) {
+		t.Error("JSON2 Blank check failed")
+	}
+	if !strings.Contains(res, `"Comment":`) {
+		t.Error("JSON2 Comment check failed")
+	}
+	if !strings.Contains(res, `"Code":`) {
+		t.Error("JSON2 Code check failed")
+	}
+	if !strings.Contains(res, `"Complexity":`) {
+		t.Error("JSON2 Complexity check failed")
+	}
+	if !strings.Contains(res, `"Bytes":`) {
+		t.Error("JSON2 Bytes check failed")
+	}
+	if !strings.Contains(res, `"ULOC":`) {
+		t.Error("JSON2 Uloc check failed")
+	}
+	if !strings.Contains(res, `"languageSummary":`) {
+		t.Error("JSON2 languageSummary check failed")
+	}
+	if !strings.Contains(res, `"estimatedCost":`) {
+		t.Error("JSON2 estimatedCost check failed")
+	}
+	if !strings.Contains(res, `"estimatedScheduleMonths":`) {
+		t.Error("JSON2 estimatedScheduleMonths check failed")
+	}
+	if !strings.Contains(res, `"estimatedPeople":`) {
+		t.Error("JSON2 estimatedPeople check failed")
 	}
 }
