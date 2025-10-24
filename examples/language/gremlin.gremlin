@@ -1,0 +1,31 @@
+// social_graph.gremlin
+// Example traversal to test scc complexity definitions for Gremlin.
+
+// Find a person named "Marko" and get his age
+marko = g.V().has('person','name','marko').values('age')
+
+// This traversal finds Marko's friends and their friends,
+// but emits the path along the way, which adds complexity.
+g.V().has('person', 'name', 'marko').
+  repeat(out('knows')).
+  emit().
+  path().by('name')
+
+// A more complex query to find people Marko knows who are over 30
+// and also know someone who created software.
+// The .where() and .and() steps increase complexity.
+g.V().has('person','name','marko').out('knows').as('friend').
+  where(
+    values('age').is(gt(30))
+  ).
+  and(
+    out('created').has('name', 'lop')
+  ).
+  values('name')
+
+// Using .union() to combine two different traversal paths
+g.V().has('person','name','josh').
+  union(
+    out('created').values('name'), // what he created
+    in('created').values('name')   // who created things with him
+  )

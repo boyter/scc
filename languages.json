@@ -2856,6 +2856,61 @@
     "multi_line": [["{{/*", "*/}}"]],
     "quotes": []
   },
+  "Cypher": {
+    "complexitychecks": [
+      "MATCH",
+      "OPTIONAL MATCH",
+      "WHERE",
+      "UNION",
+      "CALL",
+      "UNWIND",
+      "STARTS WITH",
+      "ENDS WITH",
+      "CONTAINS",
+      "shortestPath",
+      "allShortestPaths",
+      "-[*..]->"
+    ],
+    "extensions": ["cypher", "cql"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [
+      {
+        "end": "'",
+        "start": "'"
+      },
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
+  "Gremlin": {
+    "complexitychecks": [
+      ".where(",
+      ".union(",
+      ".repeat(",
+      ".emit(",
+      ".and(",
+      ".or(",
+      ".not(",
+      ".as(",
+      ".by("
+    ],
+    "extensions": ["gremlin"],
+    "line_comment": ["//"],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "'",
+        "start": "'"
+      },
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "Godot Scene": {
     "complexitychecks": [],
     "extensions": ["tscn"],
