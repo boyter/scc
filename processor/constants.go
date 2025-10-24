@@ -2768,6 +2768,54 @@ var languageDatabase = map[string]Language{
 		FileNames:       []string{},
 		SheBangs:        []string{},
 	},
+	"Cypher": {
+		LineComment: []string{
+			"//",
+		},
+		ComplexityChecks: []string{
+			"MATCH",
+			"OPTIONAL MATCH",
+			"WHERE",
+			"UNION",
+			"CALL",
+			"UNWIND",
+			"STARTS WITH",
+			"ENDS WITH",
+			"CONTAINS",
+			"shortestPath",
+			"allShortestPaths",
+			"-[*..]->",
+		},
+		Extensions: []string{
+			"cypher",
+			"cql",
+		},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"/*",
+				"*/",
+			},
+		},
+		Quotes: []Quote{
+			{
+				Start:        "'",
+				End:          "'",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+			{
+				Start:        "\"",
+				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+		},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"Cython": {
 		LineComment: []string{
 			"#",
@@ -4646,6 +4694,45 @@ var languageDatabase = map[string]Language{
 				End:          "\"\"\"",
 				IgnoreEscape: false,
 				DocString:    true,
+			},
+		},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
+	"Gremlin": {
+		LineComment: []string{
+			"//",
+		},
+		ComplexityChecks: []string{
+			".where(",
+			".union(",
+			".repeat(",
+			".emit(",
+			".and(",
+			".or(",
+			".not(",
+			".as(",
+			".by(",
+		},
+		Extensions: []string{
+			"gremlin",
+		},
+		ExtensionFile: false,
+		MultiLine:     [][]string{},
+		Quotes: []Quote{
+			{
+				Start:        "'",
+				End:          "'",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+			{
+				Start:        "\"",
+				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
 			},
 		},
 		NestedMultiLine: false,
