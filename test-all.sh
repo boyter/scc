@@ -879,7 +879,7 @@ specificLanguages=(
     'Clojure '
     'CMake '
     'Cuda '
-    'Cypher'
+    'Cypher '
     'DAML '
     'DM '
     'Docker ignore '
@@ -1148,6 +1148,30 @@ do
         exit
     fi
 done
+
+if [[ "$(./scc --farmat 2>&1 | grep -A 1 'The most similar flag of --farmat is:' | tail -n 1)" == $'\t--format' ]]; then
+    echo -e "${GREEN}PASSED signle flag suggestion test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should suggest --format $i"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+if [[ "$(./scc --no-gignore 2>&1 | grep -A 2 'The most similar flags of --no-gignore are:' | tail -n 2 | head -n 1)" == $'\t--no-ignore' ]]; then
+    if [[ "$(./scc --no-gignore 2>&1 | grep -A 2 'The most similar flags of --no-gignore are:' | tail -n 1)" == $'\t--no-gitignore' ]]; then
+        echo -e "${GREEN}PASSED multiple flags suggestion test"
+    else
+        echo -e "${RED}======================================================="
+        echo -e "FAILED Should suggest --no-gitignore $i"
+        echo -e "=======================================================${NC}"
+        exit
+    fi
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED Should suggest --no-ignore $i"
+    echo -e "=======================================================${NC}"
+    exit
+fi
 
 echo -e  "${NC}Checking compile targets..."
 
