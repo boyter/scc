@@ -1,3 +1,6 @@
+# github.com/agnivade/levenshtein v1.2.2-0.20250519083737-420867539855
+## explicit; go 1.21
+github.com/agnivade/levenshtein
 # github.com/boyter/gocodewalker v1.5.1
 ## explicit; go 1.23.0
 github.com/boyter/gocodewalker

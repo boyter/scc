@@ -11,6 +11,7 @@ import (
 
 	"github.com/boyter/scc/v3/processor"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 func printShellCompletion(cmd *cobra.Command, command string) error {
@@ -25,6 +26,23 @@ func printShellCompletion(cmd *cobra.Command, command string) error {
 		return cmd.GenPowerShellCompletion(os.Stdout)
 	default:
 		return errors.New("Unknown shell: " + command)
+	}
+}
+
+func printFlagSuggestion(flagSet *pflag.FlagSet, unknownFlag string) {
+	flags := processor.GetMostSimilarFlags(flagSet, unknownFlag)
+	if len(flags) == 0 {
+		return
+	}
+
+	if len(flags) > 1 {
+		_, _ = fmt.Fprintf(os.Stderr, "The most similar flags of --%s are:\n", unknownFlag)
+	} else {
+		_, _ = fmt.Fprintf(os.Stderr, "The most similar flag of --%s is:\n", unknownFlag)
+	}
+
+	for _, flag := range flags {
+		_, _ = fmt.Fprintf(os.Stderr, "\t--%s\n", flag)
 	}
 }
 
@@ -448,12 +466,16 @@ func main() {
 	if len(args) == 4 && args[1] == "completion" && args[2] == "--shell" {
 		err := printShellCompletion(rootCmd, args[3])
 		if err != nil {
-			fmt.Printf("Error printing shell completion: %s\n", err)
+			_, _ = fmt.Fprintf(os.Stderr, "Error printing shell completion: %s\n", err)
 		}
 		return
 	}
 
 	if err := rootCmd.Execute(); err != nil {
+		// If a flag does not exist and is not a shorthand, it may be a spelling error. Search for and print possible options.
+		if notExistError, ok := err.(*pflag.NotExistError); ok && len(notExistError.GetSpecifiedName()) > 1 {
+			printFlagSuggestion(flags, notExistError.GetSpecifiedName())
+		}
 		os.Exit(1)
 	}
 }
