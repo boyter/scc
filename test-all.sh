@@ -880,6 +880,7 @@ specificLanguages=(
     'CMake '
     'Cuda '
     'Cypher '
+    'D2 '
     'DAML '
     'DM '
     'Docker ignore '

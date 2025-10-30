@@ -2923,6 +2923,22 @@ var languageDatabase = map[string]Language{
 			"rdmd",
 		},
 	},
+	"D2": {
+		LineComment: []string{
+			"#",
+		},
+		ComplexityChecks: []string{},
+		Extensions: []string{
+			"d2",
+		},
+		ExtensionFile:   false,
+		MultiLine:       [][]string{},
+		Quotes:          []Quote{},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"DAML": {
 		LineComment: []string{
 			"--",
