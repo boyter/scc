@@ -1782,6 +1782,13 @@
     ],
     "shebangs": ["rdmd"]
   },
+  "D2": {
+    "complexitychecks": [],
+    "extensions": ["d2"],
+    "line_comment": ["#"],
+    "multi_line": [],
+    "quotes": []
+  },
   "DAML": {
     "complexitychecks": [
       "if ",
