@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-const SimilarStringThreshold float64 = 0.8
+const SimilarStringThreshold float64 = 0.75
 
 // StringSimilarRatio calculates the similarity ratio between s1 and s2.
 //
@@ -39,7 +39,12 @@ func GetMostSimilarFlags(flagSet *pflag.FlagSet, flag string) []string {
 		if len(f.Name) <= 1 {
 			return
 		}
-		ratio := StringSimilarRatio(flag, f.Name)
+		var ratio float64
+		if len(f.Name) <= 3 {
+			ratio = StringSimilarRatio("--"+flag, "--"+f.Name)
+		} else {
+			ratio = StringSimilarRatio(flag, f.Name)
+		}
 		if ratio >= SimilarStringThreshold {
 			similarFlags = append(similarFlags, similarFlag{
 				name:  f.Name,
@@ -47,6 +52,24 @@ func GetMostSimilarFlags(flagSet *pflag.FlagSet, flag string) []string {
 			})
 		}
 	})
+	// cobra doesn't put --version and --help into the flag set
+	// we should check it handly
+	versionSimilarRatio := StringSimilarRatio(flag, "version")
+	if versionSimilarRatio >= SimilarStringThreshold {
+		similarFlags = append(similarFlags, similarFlag{
+			name:  "version",
+			ratio: versionSimilarRatio,
+		})
+	}
+
+	helpSimilarRatio := StringSimilarRatio(flag, "help")
+	if helpSimilarRatio >= SimilarStringThreshold {
+		similarFlags = append(similarFlags, similarFlag{
+			name:  "help",
+			ratio: helpSimilarRatio,
+		})
+	}
+
 	if len(similarFlags) == 0 {
 		return []string{}
 	}
