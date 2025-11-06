@@ -63,6 +63,26 @@ func TestStringSimilarRatio(t *testing.T) {
 			isSimilar: true,
 		},
 		{
+			s1:        "uloc",
+			s2:        "ulc",
+			isSimilar: true,
+		},
+		{
+			s1:        "uloc",
+			s2:        "ulcc",
+			isSimilar: true,
+		},
+		{
+			s1:        "uloc",
+			s2:        "ulocc",
+			isSimilar: true,
+		},
+		{
+			s1:        "--ci",
+			s2:        "--cii",
+			isSimilar: true,
+		},
+		{
 			s1:        "hello",
 			s2:        "hello-world",
 			isSimilar: false,
@@ -97,6 +117,9 @@ func TestGetMostSimilarFlags(t *testing.T) {
 	_ = flags.Bool("no-gitignore", false, "test")
 	_ = flags.Int("no-gitmodule", 0, "test")
 	_ = flags.String("format", "", "test")
+	_ = flags.String("uloc", "", "test")
+	_ = flags.String("gen", "", "test")
+	_ = flags.String("ci", "", "test")
 
 	testCases := []struct {
 		name    string
@@ -121,6 +144,27 @@ func TestGetMostSimilarFlags(t *testing.T) {
 		{
 			name:    "formet",
 			expects: []string{"format"},
+		},
+		{
+			name:    "ulc",
+			expects: []string{"uloc"},
+		},
+		{
+			name:    "gan",
+			expects: []string{"gen"},
+		},
+		{
+			name:    "cii",
+			expects: []string{"ci"},
+		},
+		// these two are not included in the set, but still need to be matched
+		{
+			name:    "vrsion",
+			expects: []string{"version"},
+		},
+		{
+			name:    "hellp",
+			expects: []string{"help"},
 		},
 	}
 	for _, tc := range testCases {
