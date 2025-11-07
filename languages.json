@@ -790,6 +790,18 @@
     "multi_line": [],
     "quotes": []
   },
+  "Bru": {
+    "complexitychecks": [],
+    "extensions": ["bru"],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "BuildStream": {
     "complexitychecks": [],
     "extensions": ["bst"],

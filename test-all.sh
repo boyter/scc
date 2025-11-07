@@ -868,6 +868,7 @@ specificLanguages=(
     'Blueprint '
     'Boo '
     'Bosque '
+    'Bru '
     'C3 '
     'C Shell '
     'C# '
