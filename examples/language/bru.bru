@@ -1,0 +1,20 @@
+post {
+  url: https://api.textlocal.in/login
+}
+
+body {
+  {
+    "username": "johnnash",
+    "password": "governingdynamics"
+  }
+}
+
+tests {
+  test("should be able to login", function() {
+    expect(res.status).to.equal(201);
+  });
+
+  test("should receive the token", function() {
+    expect(res.body.token).to.be.a('string');
+  });
+}
