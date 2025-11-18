@@ -1,0 +1,65 @@
+"C++":
+  complexitychecks[13]: "for ",for(,"if ",if(,"switch ",switch(,"while ",while(,"else ","|| ","&& ","!= ","== "
+  extensions[11]: cc,cpp,cxx,c++,pcc,ino,ccm,cppm,cxxm,c++m,mxx
+  line_comment[1]: //
+  multi_line[1]:
+    - [2]: /*,*/
+  quotes[1]{end,start}:
+    "\"","\""
+"C++ Header":
+  complexitychecks[13]: "for ",for(,"if ",if(,"switch ",switch(,"while ",while(,"else ","|| ","&& ","!= ","== "
+  extensions[6]: hh,hpp,hxx,inl,ipp,ixx
+  line_comment[1]: //
+  multi_line[1]:
+    - [2]: /*,*/
+  quotes[1]{end,start}:
+    "\"","\""
+Go:
+  complexitychecks[12]: "go ","for ",for(,"if ",if(,"switch ","select ","else ","|| ","&& ","!= ","== "
+  extensions[1]: go
+  line_comment[1]: //
+  multi_line[1]:
+    - [2]: /*,*/
+  quotes[2]:
+    - end: "\""
+      start: "\""
+    - end: `
+      ignoreEscape: true
+      start: `
+Python:
+  complexitychecks[24]: "for ",for(,"while ",while(,"if ",if(,"elif ",elif(,"else ","else:","match ",match(,"try ","try:","except ","except:","finally ","finally:","with ",with (,"and ",and(,"or ",or(
+  extensions[3]: py,pyw,pyi
+  line_comment[1]: #
+  multi_line[0]:
+  quotes[10]:
+    - end: "\""
+      start: "\""
+    - end: '
+      start: '
+    - ignoreEscape: true
+      end: '
+      start: r'
+    - ignoreEscape: true
+      end: "\""
+      start: "r\""
+    - docString: true
+      end: "\"\"\""
+      start: "\"\"\""
+    - docString: true
+      end: '''
+      start: '''
+    - docString: true
+      ignoreEscape: true
+      end: "\"\"\""
+      start: "r\"\"\""
+    - docString: true
+      ignoreEscape: true
+      end: '''
+      start: r'''
+    - docString: true
+      end: "\"\"\""
+      start: "f\"\"\""
+    - docString: true
+      end: '''
+      start: f'''
+  shebangs[3]: python,python2,python3

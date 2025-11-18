@@ -11378,6 +11378,27 @@ var languageDatabase = map[string]Language{
 		FileNames:       []string{},
 		SheBangs:        []string{},
 	},
+	"TOON": {
+		LineComment:      []string{},
+		ComplexityChecks: []string{},
+		Extensions: []string{
+			"toon",
+		},
+		ExtensionFile: false,
+		MultiLine:     [][]string{},
+		Quotes: []Quote{
+			{
+				Start:        "\"",
+				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+		},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"TTCN-3": {
 		LineComment: []string{
 			"//",
