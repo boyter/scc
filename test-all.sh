@@ -959,6 +959,7 @@ specificLanguages=(
     'Tera '
     'Templ '
     'Terraform '
+    'TOON '
     'TTCN-3 '
     'TypeScript '
     'TypeSpec '

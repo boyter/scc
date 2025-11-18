@@ -7183,6 +7183,18 @@
       }
     ]
   },
+  "TOON": {
+    "complexitychecks": [],
+    "extensions": ["toon"],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "Treetop": {
     "complexitychecks": [
       "for ",
