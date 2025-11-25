@@ -18,10 +18,10 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/mattn/go-runewidth"
+	"go.yaml.in/yaml/v2"
 
 	glanguage "golang.org/x/text/language"
 	gmessage "golang.org/x/text/message"
-	"gopkg.in/yaml.v2"
 )
 
 var tabularShortBreak = "───────────────────────────────────────────────────────────────────────────────\n"
