@@ -857,6 +857,7 @@ specificLanguages=(
     'Alchemist '
     'Algol 68 '
     'Alloy '
+    'Amber '
     'ArkTs '
     'Arturo '
     'Astro '

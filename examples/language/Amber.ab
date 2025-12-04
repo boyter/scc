@@ -1,0 +1,50 @@
+#!/usr/bin/env amber
+import { 
+    date_format_posix,
+    date_now,
+} from "std/date"
+
+fun collatz(num: Int): [Int]? {
+    if num <= 0 {
+        // num must not be zero
+        fail 1
+    }
+    let res = [num]
+    while num > 1 {
+        if num%2 == 0 {
+            num /= 2
+            res += [num]
+        } else {
+            num *= 3
+            num += 1
+            res += [num]
+        }
+    }
+    return res
+}
+
+fun print_array(ref arr: [Int]): Text {
+    let res = "["
+    for i, e in arr {
+        res += e as Text
+        if i != len(arr)-1 {
+            res += ", "
+        }
+    }
+    res += "]"
+    return res
+}
+
+main {
+    echo "start: {date_format_posix(date_now())?}\n"
+
+    for i in 0..=20 {
+        let c = collatz(i) failed(code) {
+            echo "{i}: error {code}, collatz for {i} does not exist"
+            continue
+        }
+        echo "{i}: {print_array(c)}"
+    }
+    
+    echo "\nend: {date_format_posix(date_now())?}"
+}

@@ -272,6 +272,36 @@
     "multi_line": [["/*", "*/"]],
     "quotes": []
   },
+  "Amber": {
+    "complexitychecks": [
+      "for ",
+      "exited(",
+      "failed ",
+      "failed(",
+      "succeeded ",
+      "if ",
+      "then ",
+      "while ",
+      "loop ",
+      "else:",
+      "else ",
+      "or ",
+      "and ",
+      "!= ",
+      "== "
+    ],
+    "extensions": ["ab"],
+    "filenames": [],
+    "line_comment": ["//"],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ],
+    "shebangs": ["amber"]
+  },
   "Android Interface Definition Language": {
     "complexitychecks": [
       "for ",
