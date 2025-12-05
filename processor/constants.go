@@ -476,6 +476,47 @@ var languageDatabase = map[string]Language{
 		FileNames:       []string{},
 		SheBangs:        []string{},
 	},
+	"Amber": {
+		LineComment: []string{
+			"//",
+		},
+		ComplexityChecks: []string{
+			"for ",
+			"exited(",
+			"failed ",
+			"failed(",
+			"succeeded ",
+			"if ",
+			"then ",
+			"while ",
+			"loop ",
+			"else:",
+			"else ",
+			"or ",
+			"and ",
+			"!= ",
+			"== ",
+		},
+		Extensions: []string{
+			"ab",
+		},
+		ExtensionFile: false,
+		MultiLine:     [][]string{},
+		Quotes: []Quote{
+			{
+				Start:        "\"",
+				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+		},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs: []string{
+			"amber",
+		},
+	},
 	"Android Interface Definition Language": {
 		LineComment: []string{
 			"//",
