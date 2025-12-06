@@ -2,6 +2,8 @@ module github.com/boyter/scc/v3
 
 go 1.25.2
 
+ignore ./examples
+
 require (
 	github.com/agnivade/levenshtein v1.2.2-0.20250519083737-420867539855
 	github.com/boyter/gocodewalker v1.5.1
