@@ -1,1 +1,0 @@
-Files in here are to ensure that .ignore and .gitignore work recursively
