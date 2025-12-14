@@ -529,3 +529,159 @@ func TestDeterministicOutput(t *testing.T) {
 		}
 	}
 }
+
+func TestLanguageNameTruncate(t *testing.T) {
+	output, err := runSCC("examples/language")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Count(output, "Bitbucket Pipe…") != 1 {
+		t.Errorf("`Bitbucket Pipeline` truncate test failed")
+	}
+	if strings.Count(output, "CloudFormation…") != 2 {
+		t.Errorf("`CloudFormation (JSON)` and `CloudFormation (YAML)` truncate test failed")
+	}
+}
+
+func TestSpecificLanguages(t *testing.T) {
+	languages := [...]string{
+		"ABNF",
+		"Alchemist",
+		"Algol 68",
+		"Alloy",
+		"Amber",
+		"ArkTs",
+		"Arturo",
+		"Astro",
+		"AWK",
+		"BASH",
+		"Bean",
+		"Bicep",
+		"Bitbucket Pipeline",
+		"Blueprint",
+		"Boo",
+		"Bosque",
+		"Bru",
+		"C3",
+		"C Shell",
+		"C#",
+		"Cairo",
+		"Cangjie",
+		"Chapel",
+		"Circom",
+		"Clipper",
+		"Clojure",
+		"CMake",
+		"Cuda",
+		"Cypher",
+		"D2",
+		"DAML",
+		"DM",
+		"Docker ignore",
+		"Dockerfile",
+		"DOT",
+		"Elixir Template",
+		"Elm",
+		"EmiT",
+		"F#",
+		"Factor",
+		"Flow9",
+		"FSL",
+		"Futhark",
+		"FXML",
+		"Gemfile",
+		"Gleam",
+		"Go",
+		"Go+",
+		"Godot Scene",
+		"GraphQL",
+		"Gremlin",
+		"Gwion",
+		"HAML",
+		"Hare",
+		"HCL",
+		"ignore",
+		"INI",
+		"Java",
+		"JavaScript",
+		"JCL",
+		"JSON5",
+		"JSONC",
+		"jq",
+		"Korn Shell",
+		"Koto",
+		"LALRPOP",
+		"License",
+		"LiveScript",
+		"LLVM IR",
+		"Lua",
+		"Luau",
+		"Luna",
+		"Makefile",
+		"Metal",
+		"Monkey C",
+		"Moonbit",
+		"Nushell",
+		"OpenQASM",
+		"OpenTofu",
+		"Perl",
+		"Pkl",
+		"Plain Text",
+		"POML",
+		"PostScript",
+		"Proto",
+		"Python",
+		"Q#",
+		"R",
+		"Racket",
+		"Rakefile",
+		"RAML",
+		"Redscript",
+		"Rich Text Format",
+		"Scallop",
+		"Seed7",
+		"Shell",
+		"Sieve",
+		"Slang",
+		"Slint",
+		"Smalltalk",
+		"Snakemake",
+		"Stan",
+		"Systemd",
+		"Tact",
+		"Teal",
+		"Tera",
+		"Templ",
+		"Terraform",
+		"TOML",
+		"TOON",
+		"TTCN-3",
+		"TypeScript",
+		"TypeSpec",
+		"Typst",
+		"Up",
+		"Vala",
+		"Vim Script",
+		"Web Services Description Language",
+		"wenyan",
+		"Wren",
+		"XMake",
+		"XML Schema",
+		"YAML",
+		"Yarn",
+		"Zig",
+		"ZoKrates",
+		"Zsh",
+	}
+
+	output, err := runSCC("-f", "csv", "examples/language")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, language := range languages {
+		if !strings.Contains(output, language+",") {
+			t.Errorf("language not found in output: %v", language)
+		}
+	}
+}
