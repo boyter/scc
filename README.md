@@ -33,7 +33,7 @@ Licensed under MIT licence.
 - [Development](#development)
 - [Adding/Modifying Languages](#addingmodifying-languages)
 - [Issues](#issues)
-- [Badges (beta)](#badges-beta)
+- [Badges](#badges)
 - [Language Support](LANGUAGES.md)
 - [Citation](#citation)
 
@@ -1053,7 +1053,7 @@ COPY --from=scc-get /go/scc/scc /bin/
 ENTRYPOINT ["scc"]
 ```
 
-### Badges (beta)
+### Badges
 
 You can use `scc` to provide badges on your github/bitbucket/gitlab/sr.ht open repositories. For example, [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/)](https://github.com/boyter/scc/)
  The format to do so is,
