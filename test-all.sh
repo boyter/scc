@@ -560,10 +560,13 @@ GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w"
 echo "   windows..."
 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w"
 GOOS=windows GOARCH=386 go build -ldflags="-s -w"
+GOOS=windows GOARCH=arm64 go build -ldflags="-s -w"
 echo "   linux..."
 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w"
 GOOS=linux GOARCH=386 go build -ldflags="-s -w"
 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w"
+GOOS=linux GOARCH=riscv64 go build -ldflags="-s -w"
+GOOS=linux GOARCH=loong64 go build -ldflags="-s -w"
 
 echo -e "${NC}Cleaning up..."
 rm ./scc
