@@ -1084,19 +1084,37 @@ For `cocomo` you can also set the `avg-wage` value similar to `scc` itself. For 
 
 Note that the avg-wage value must be a positive integer otherwise it will revert back to the default value of 56286.
 
-You can also configure the look and feel of the bad using the following parameters,
+You can also configure the look and feel of the badge using the following parameters,
 
 - ?lower=true will lower the title text, so "Total lines" would be "total lines"
-he below can control the colours of shadows, fonts and badges
+
+The below can control the colours of shadows, fonts and badges. Colors can be specified as either hex codes or named colors (similar to shields.io):
+
 - ?font-color=fff
 - ?font-shadow-color=010101
 - ?top-shadow-accent-color=bbb
 - ?title-bg-color=555
 - ?badge-bg-color=4c1
 
+##### Named Colors
+
+For convenience, you can use named colors instead of hex codes. The following named colors are supported:
+
+**Shields.io colors:** `brightgreen`, `green`, `yellowgreen`, `yellow`, `orange`, `red`, `blue`, `lightgrey`, `blueviolet`
+
+**Semantic aliases:** `success`, `important`, `critical`, `informational`, `inactive`
+
+**CSS colors:** `white`, `black`, `silver`, `gray`, `maroon`, `purple`, `fuchsia`, `lime`, `olive`, `navy`, `teal`, `aqua`, `cyan`, `magenta`, `pink`, `coral`, `salmon`, `gold`, `khaki`, `violet`, `indigo`, `crimson`, `turquoise`, `tan`, `brown`, and many more standard CSS color names.
+
+For example, instead of `?badge-bg-color=007ec6` you can use `?badge-bg-color=blue`.
+
 An example of using some of these parameters to produce an admittedly ugly result
 
 [![Scc Count Badge](https://sloc.xyz/github/boyter/scc?font-color=ff0000&badge-bg-color=0000ff&lower=true)](https://github.com/boyter/scc/)
+
+An example using named colors for as a slightly nicer result
+
+[![Scc Count Badge](https://sloc.xyz/github/boyter/scc?title-bg-color=navy&badge-bg-color=blue&font-color=white)](https://github.com/boyter/scc/)
 
 *NB* it may not work for VERY large repositories (has been tested on Apache hadoop/spark without issue).
 
