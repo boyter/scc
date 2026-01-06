@@ -241,6 +241,157 @@ type badgeSettings struct {
 	BadgeBackgroundColor string
 }
 
+// namedColors maps color names to their hex values (without #).
+// Includes shields.io colors and common CSS color names for compatibility.
+var namedColors = map[string]string{
+	// shields.io specific colors
+	"brightgreen": "44cc11",
+	"green":       "97ca00",
+	"yellowgreen": "a4a61d",
+	"yellow":      "dfb317",
+	"orange":      "fe7d37",
+	"red":         "e05d44",
+	"blue":        "007ec6",
+	"lightgrey":   "9f9f9f",
+	"lightgray":   "9f9f9f",
+	"grey":        "555555",
+	"gray":        "555555",
+	"blueviolet":  "8a2be2",
+	// shields.io semantic aliases
+	"success":       "44cc11",
+	"important":     "fe7d37",
+	"critical":      "e05d44",
+	"informational": "007ec6",
+	"inactive":      "9f9f9f",
+	// Common CSS color names
+	"black":           "000000",
+	"white":           "ffffff",
+	"silver":          "c0c0c0",
+	"maroon":          "800000",
+	"purple":          "800080",
+	"fuchsia":         "ff00ff",
+	"lime":            "00ff00",
+	"olive":           "808000",
+	"navy":            "000080",
+	"teal":            "008080",
+	"aqua":            "00ffff",
+	"cyan":            "00ffff",
+	"magenta":         "ff00ff",
+	"pink":            "ffc0cb",
+	"coral":           "ff7f50",
+	"salmon":          "fa8072",
+	"gold":            "ffd700",
+	"khaki":           "f0e68c",
+	"violet":          "ee82ee",
+	"indigo":          "4b0082",
+	"crimson":         "dc143c",
+	"turquoise":       "40e0d0",
+	"tan":             "d2b48c",
+	"brown":           "a52a2a",
+	"chocolate":       "d2691e",
+	"tomato":          "ff6347",
+	"orchid":          "da70d6",
+	"plum":            "dda0dd",
+	"peru":            "cd853f",
+	"sienna":          "a0522d",
+	"beige":           "f5f5dc",
+	"ivory":           "fffff0",
+	"linen":           "faf0e6",
+	"azure":           "f0ffff",
+	"lavender":        "e6e6fa",
+	"wheat":           "f5deb3",
+	"snow":            "fffafa",
+	"seashell":        "fff5ee",
+	"honeydew":        "f0fff0",
+	"mintcream":       "f5fffa",
+	"aliceblue":       "f0f8ff",
+	"ghostwhite":      "f8f8ff",
+	"oldlace":         "fdf5e6",
+	"papayawhip":      "ffefd5",
+	"moccasin":        "ffe4b5",
+	"bisque":          "ffe4c4",
+	"mistyrose":       "ffe4e1",
+	"lemonchiffon":    "fffacd",
+	"cornsilk":        "fff8dc",
+	"antiquewhite":    "faebd7",
+	"floralwhite":     "fffaf0",
+	"steelblue":       "4682b4",
+	"royalblue":       "4169e1",
+	"skyblue":         "87ceeb",
+	"dodgerblue":      "1e90ff",
+	"deepskyblue":     "00bfff",
+	"cadetblue":       "5f9ea0",
+	"cornflowerblue":  "6495ed",
+	"mediumblue":      "0000cd",
+	"darkblue":        "00008b",
+	"midnightblue":    "191970",
+	"slateblue":       "6a5acd",
+	"darkslateblue":   "483d8b",
+	"mediumslateblue": "7b68ee",
+	"seagreen":        "2e8b57",
+	"mediumseagreen":  "3cb371",
+	"lightgreen":      "90ee90",
+	"darkgreen":       "006400",
+	"forestgreen":     "228b22",
+	"limegreen":       "32cd32",
+	"springgreen":     "00ff7f",
+	"palegreen":       "98fb98",
+	"darkseagreen":    "8fbc8f",
+	"olivedrab":       "6b8e23",
+	"darkolivegreen":  "556b2f",
+	"darkred":         "8b0000",
+	"firebrick":       "b22222",
+	"indianred":       "cd5c5c",
+	"lightsalmon":     "ffa07a",
+	"darksalmon":      "e9967a",
+	"lightcoral":      "f08080",
+	"rosybrown":       "bc8f8f",
+	"sandybrown":      "f4a460",
+	"goldenrod":       "daa520",
+	"darkgoldenrod":   "b8860b",
+	"darkorange":      "ff8c00",
+	"orangered":       "ff4500",
+	"hotpink":         "ff69b4",
+	"deeppink":        "ff1493",
+	"palevioletred":   "db7093",
+	"mediumvioletred": "c71585",
+	"mediumpurple":    "9370db",
+	"darkorchid":      "9932cc",
+	"darkviolet":      "9400d3",
+	"darkmagenta":     "8b008b",
+	"slategray":       "708090",
+	"slategrey":       "708090",
+	"lightslategray":  "778899",
+	"lightslategrey":  "778899",
+	"darkslategray":   "2f4f4f",
+	"darkslategrey":   "2f4f4f",
+	"dimgray":         "696969",
+	"dimgrey":         "696969",
+	"darkgray":        "a9a9a9",
+	"darkgrey":        "a9a9a9",
+	"gainsboro":       "dcdcdc",
+	"whitesmoke":      "f5f5f5",
+}
+
+// resolveColor converts a color input (name or hex) to a hex value without #.
+// Returns the hex value if valid, or empty string if invalid.
+func resolveColor(color string) string {
+	color = strings.ToLower(color)
+
+	// Check if it's a named color
+	if hex, ok := namedColors[color]; ok {
+		return hex
+	}
+
+	// Check if it's a valid hex color (3, 4, 6, or 8 digits)
+	hexRegex := regexp.MustCompile(`^(?:(?:[\da-f]{3}){1,2}|(?:[\da-f]{4}){1,2})$`)
+	if hexRegex.MatchString(color) {
+		return color
+	}
+
+	return ""
+}
+
 // Parses badge settings from url query params
 // if error, ignore and return default badge settings
 func parseBadgeSettings(values url.Values) *badgeSettings {
@@ -252,31 +403,27 @@ func parseBadgeSettings(values url.Values) *badgeSettings {
 		BadgeBackgroundColor: "4c1",
 	}
 
-	fontColor := strings.ToLower(values.Get("font-color"))
-	textShadowColor := strings.ToLower(values.Get("font-shadow-color"))
-	topShadowAccentColor := strings.ToLower(values.Get("top-shadow-accent-color"))
-	titleBackgroundColor := strings.ToLower(values.Get("title-bg-color"))
-	badgeBackgroundColor := strings.ToLower(values.Get("badge-bg-color"))
+	fontColor := values.Get("font-color")
+	textShadowColor := values.Get("font-shadow-color")
+	topShadowAccentColor := values.Get("top-shadow-accent-color")
+	titleBackgroundColor := values.Get("title-bg-color")
+	badgeBackgroundColor := values.Get("badge-bg-color")
 
-	// Ensure valid colors
-	r, err := regexp.Compile(`^(?:(?:[\da-f]{3}){1,2}|(?:[\da-f]{4}){1,2})$`)
-	if err != nil {
-		return &bs
+	// Resolve colors (supports both named colors and hex codes)
+	if resolved := resolveColor(fontColor); resolved != "" {
+		bs.FontColor = resolved
 	}
-	if r.MatchString(fontColor) {
-		bs.FontColor = fontColor
+	if resolved := resolveColor(textShadowColor); resolved != "" {
+		bs.TextShadowColor = resolved
 	}
-	if r.MatchString(textShadowColor) {
-		bs.TextShadowColor = textShadowColor
+	if resolved := resolveColor(topShadowAccentColor); resolved != "" {
+		bs.TopShadowAccentColor = resolved
 	}
-	if r.MatchString(topShadowAccentColor) {
-		bs.TopShadowAccentColor = topShadowAccentColor
+	if resolved := resolveColor(titleBackgroundColor); resolved != "" {
+		bs.TitleBackgroundColor = resolved
 	}
-	if r.MatchString(titleBackgroundColor) {
-		bs.TitleBackgroundColor = titleBackgroundColor
-	}
-	if r.MatchString(badgeBackgroundColor) {
-		bs.BadgeBackgroundColor = badgeBackgroundColor
+	if resolved := resolveColor(badgeBackgroundColor); resolved != "" {
+		bs.BadgeBackgroundColor = resolved
 	}
 
 	return &bs
