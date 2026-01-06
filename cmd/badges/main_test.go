@@ -6,6 +6,62 @@ import (
 	"testing"
 )
 
+func Test_resolveColor(t *testing.T) {
+	tests := []struct {
+		name  string
+		color string
+		want  string
+	}{
+		// Named colors (shields.io)
+		{name: "blue", color: "blue", want: "007ec6"},
+		{name: "red", color: "red", want: "e05d44"},
+		{name: "green", color: "green", want: "97ca00"},
+		{name: "brightgreen", color: "brightgreen", want: "44cc11"},
+		{name: "yellowgreen", color: "yellowgreen", want: "a4a61d"},
+		{name: "orange", color: "orange", want: "fe7d37"},
+		{name: "yellow", color: "yellow", want: "dfb317"},
+		{name: "lightgrey", color: "lightgrey", want: "9f9f9f"},
+		{name: "lightgray", color: "lightgray", want: "9f9f9f"},
+		{name: "blueviolet", color: "blueviolet", want: "8a2be2"},
+		// Semantic aliases
+		{name: "success", color: "success", want: "44cc11"},
+		{name: "critical", color: "critical", want: "e05d44"},
+		{name: "informational", color: "informational", want: "007ec6"},
+		// CSS colors
+		{name: "white", color: "white", want: "ffffff"},
+		{name: "black", color: "black", want: "000000"},
+		{name: "navy", color: "navy", want: "000080"},
+		{name: "teal", color: "teal", want: "008080"},
+		// Case insensitivity
+		{name: "BLUE uppercase", color: "BLUE", want: "007ec6"},
+		{name: "Blue mixed case", color: "Blue", want: "007ec6"},
+		// Hex codes (3 digit)
+		{name: "hex 3 digit", color: "fff", want: "fff"},
+		{name: "hex 3 digit mixed", color: "a1b", want: "a1b"},
+		// Hex codes (6 digit)
+		{name: "hex 6 digit", color: "abcdef", want: "abcdef"},
+		{name: "hex 6 digit uppercase", color: "ABCDEF", want: "abcdef"},
+		// Hex codes (4 digit with alpha)
+		{name: "hex 4 digit", color: "fffa", want: "fffa"},
+		// Hex codes (8 digit with alpha)
+		{name: "hex 8 digit", color: "abcdef12", want: "abcdef12"},
+		// Invalid inputs
+		{name: "invalid name", color: "notacolor", want: ""},
+		{name: "invalid hex too short", color: "ab", want: ""},
+		{name: "invalid hex too long", color: "abcdefghi", want: ""},
+		{name: "invalid hex with special chars", color: "abc#ef", want: ""},
+		{name: "empty string", color: "", want: ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := resolveColor(tt.color); got != tt.want {
+				t.Errorf("resolveColor(%q) = %q, want %q", tt.color, got, tt.want)
+			}
+		})
+	}
+}
+
 func Test_formatCount(t *testing.T) {
 	type args struct {
 		count float64
@@ -186,6 +242,55 @@ func Test_parseBadgeSettings(t *testing.T) {
 				"badge-bg-color":          []string{"invalid"},
 			},
 			want: defaultSettings,
+		},
+		{
+			name: "named colors - shields.io style",
+			values: url.Values{
+				"font-color":              []string{"white"},
+				"font-shadow-color":       []string{"black"},
+				"top-shadow-accent-color": []string{"lightgrey"},
+				"title-bg-color":          []string{"blue"},
+				"badge-bg-color":          []string{"brightgreen"},
+			},
+			want: &badgeSettings{
+				FontColor:            "ffffff",
+				TextShadowColor:      "000000",
+				TopShadowAccentColor: "9f9f9f",
+				TitleBackgroundColor: "007ec6",
+				BadgeBackgroundColor: "44cc11",
+			},
+		},
+		{
+			name: "mixed named colors and hex codes",
+			values: url.Values{
+				"font-color":              []string{"fff"},
+				"font-shadow-color":       []string{"navy"},
+				"top-shadow-accent-color": []string{"bbb"},
+				"title-bg-color":          []string{"blueviolet"},
+				"badge-bg-color":          []string{"success"},
+			},
+			want: &badgeSettings{
+				FontColor:            "fff",
+				TextShadowColor:      "000080",
+				TopShadowAccentColor: "bbb",
+				TitleBackgroundColor: "8a2be2",
+				BadgeBackgroundColor: "44cc11",
+			},
+		},
+		{
+			name: "case insensitive named colors",
+			values: url.Values{
+				"font-color":     []string{"WHITE"},
+				"title-bg-color": []string{"Blue"},
+				"badge-bg-color": []string{"BrightGreen"},
+			},
+			want: &badgeSettings{
+				FontColor:            "ffffff",
+				TextShadowColor:      defaultSettings.TextShadowColor,
+				TopShadowAccentColor: defaultSettings.TopShadowAccentColor,
+				TitleBackgroundColor: "007ec6",
+				BadgeBackgroundColor: "44cc11",
+			},
 		},
 	}
 
