@@ -599,6 +599,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"Gwion",
 		"HAML",
 		"Hare",
+		"Haskell",
 		"HCL",
 		"ignore",
 		"INI",

@@ -3232,8 +3232,9 @@
       "/= ",
       "== ",
       "case ",
-      "do {",
-      "forall "
+      "otherwise ",
+      "wildcard ",
+      "do {"
     ],
     "extensions": ["hs"],
     "line_comment": ["--"],
