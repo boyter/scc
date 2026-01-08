@@ -5191,8 +5191,9 @@ var languageDatabase = map[string]Language{
 			"/= ",
 			"== ",
 			"case ",
+			"otherwise ",
+			"wildcard ",
 			"do {",
-			"forall ",
 		},
 		Extensions: []string{
 			"hs",
