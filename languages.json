@@ -25,6 +25,39 @@
     "multi_line": [],
     "quotes": []
   },
+  "Apex": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "switch(",
+      "while ",
+      "while(",
+      "else ",
+      "else{",
+      "try ",
+      "try{",
+      "catch ",
+      "catch(",
+      "finally ",
+      "finally{",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": ["apex", "trigger"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
   "APL": {
     "complexitychecks": [
       ":For ",
