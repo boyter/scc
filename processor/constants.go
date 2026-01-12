@@ -561,6 +561,56 @@ var languageDatabase = map[string]Language{
 		FileNames:       []string{},
 		SheBangs:        []string{},
 	},
+	"Apex": {
+		LineComment: []string{
+			"//",
+		},
+		ComplexityChecks: []string{
+			"for ",
+			"for(",
+			"if ",
+			"if(",
+			"switch ",
+			"switch(",
+			"while ",
+			"while(",
+			"else ",
+			"else{",
+			"try ",
+			"try{",
+			"catch ",
+			"catch(",
+			"finally ",
+			"finally{",
+			"|| ",
+			"&& ",
+			"!= ",
+			"== ",
+		},
+		Extensions: []string{
+			"apex",
+			"trigger",
+		},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"/*",
+				"*/",
+			},
+		},
+		Quotes: []Quote{
+			{
+				Start:        "'",
+				End:          "'",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+		},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"AppleScript": {
 		LineComment: []string{
 			"#",
