@@ -638,6 +638,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"Racket",
 		"Rakefile",
 		"RAML",
+		"Rebol",
 		"Redscript",
 		"Rich Text Format",
 		"Scallop",
