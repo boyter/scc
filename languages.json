@@ -5943,6 +5943,47 @@
     "multi_line": [["<!--", "-->"], ["@*", "*@"]],
     "quotes": []
   },
+  "Rebol": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "forever ",
+      "foreach ",
+      "forall ",
+      "forskip ",
+      "loop ",
+      "repeat ",
+      "if ",
+      "if(",
+      "either ",
+      "either(",
+      "switch ",
+      "switch(",
+      "switch/default ",
+      "switch/default(",
+      "case ",
+      "case(",
+      "case/all ",
+      "case/all(",
+      "while ",
+      "while(",
+      "until ",
+      "until(",
+      "or ",
+      "and ",
+      "<> ",
+      "= "
+    ],
+    "extensions": ["reb"],
+    "line_comment": [";"],
+    "multi_line": [["{", "}"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "ReScript": {
     "complexitychecks": [
       "for ",
