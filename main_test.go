@@ -623,6 +623,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"Metal",
 		"Monkey C",
 		"Moonbit",
+		"Nature",
 		"Nushell",
 		"OpenQASM",
 		"OpenTofu",

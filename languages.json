@@ -4703,6 +4703,46 @@
       }
     ]
   },
+  "Nature": {
+    "complexitychecks": [
+      "go ",
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "catch ",
+      "catch(",
+      "else ",
+      "else{",
+      "match ",
+      "match(",
+      "match{",
+      "select ",
+      "select{",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": ["n"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [
+      {
+        "end": "'",
+        "start": "'"
+      },
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "`",
+        "ignoreEscape": true,
+        "start": "`"
+      }
+    ]
+  },
   "Nial": {
     "complexitychecks": [
       "case ",

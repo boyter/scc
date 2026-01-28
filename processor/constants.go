@@ -7634,6 +7634,65 @@ var languageDatabase = map[string]Language{
 		FileNames:       []string{},
 		SheBangs:        []string{},
 	},
+	"Nature": {
+		LineComment: []string{
+			"//",
+		},
+		ComplexityChecks: []string{
+			"go ",
+			"for ",
+			"for(",
+			"if ",
+			"if(",
+			"catch ",
+			"catch(",
+			"else ",
+			"else{",
+			"match ",
+			"match(",
+			"match{",
+			"select ",
+			"select{",
+			"|| ",
+			"&& ",
+			"!= ",
+			"== ",
+		},
+		Extensions: []string{
+			"n",
+		},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"/*",
+				"*/",
+			},
+		},
+		Quotes: []Quote{
+			{
+				Start:        "'",
+				End:          "'",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+			{
+				Start:        "\"",
+				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+			{
+				Start:        "`",
+				End:          "`",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+		},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"Nial": {
 		LineComment: []string{
 			"%",
