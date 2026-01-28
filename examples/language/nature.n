@@ -1,0 +1,37 @@
+// example from https://github.com/nature-lang/nature/blob/89d3196ec6f6e077fc7c3cba05c58d9f1bea6a03/tests/features/cases/20230811_00_template/main.n
+
+import syscall
+import package.zlib
+
+fn main():void! {
+    var input = 'mock/input.txt'
+    var output = 'output.gz'
+
+    var fd = syscall.open(input, syscall.O_RDONLY, 0666)
+
+    var gzfile = zlib.gzopen(output.ref(), 'wb'.ref())
+
+    var buf = vec_new<u8>(0, 4096)
+    for true {
+        var len = syscall.read(fd, buf.ref(), buf.len())
+        if len == 0 {
+            break
+        }
+
+        // gzwrite
+        int write_len = zlib.gzwrite(gzfile, buf.ref(), len)
+        if write_len != len {
+            syscall.close(fd)
+            zlib.gzclose(gzfile)
+
+            throw errorf('write failed')
+        }
+
+        println('gz write success, len:', write_len)
+    }
+
+    syscall.close(fd)
+    zlib.gzclose(gzfile)
+
+    println('gz success full')
+}
