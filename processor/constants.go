@@ -12092,6 +12092,8 @@ var languageDatabase = map[string]Language{
 		Extensions: []string{
 			"ts",
 			"tsx",
+			"cts",
+			"mts",
 		},
 		ExtensionFile: false,
 		MultiLine: [][]string{

@@ -7422,7 +7422,7 @@
       "?? ",
       "??= "
     ],
-    "extensions": ["ts", "tsx"],
+    "extensions": ["ts", "tsx", "cts", "mts"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
     "quotes": [
