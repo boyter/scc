@@ -561,7 +561,7 @@ func CountStats(fileJob *FileJob) {
 		}
 	}
 
-	if UlocMode && Files {
+	if UlocMode {
 		uloc := map[string]struct{}{}
 		for l := range strings.SplitSeq(strings.TrimRight(string(fileJob.Content), "\n"), "\n") {
 			uloc[l] = struct{}{}
