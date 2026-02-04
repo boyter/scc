@@ -1248,7 +1248,10 @@ func trimNameShort(summary LanguageSummary, trimmedName string) string {
 func calculateCocomoSLOCCount(sumCode int64, str *strings.Builder) {
 	estimatedEffort := EstimateEffort(int64(sumCode), EAF)
 	estimatedScheduleMonths := EstimateScheduleMonths(estimatedEffort)
-	estimatedPeopleRequired := estimatedEffort / estimatedScheduleMonths
+	estimatedPeopleRequired := 0.0
+	if estimatedScheduleMonths > 0 {
+		estimatedPeopleRequired = estimatedEffort / estimatedScheduleMonths
+	}
 	estimatedCost := EstimateCost(estimatedEffort, AverageWage, Overhead)
 
 	p := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
@@ -1281,7 +1284,10 @@ func esstimateCostScheduleMonths(sumCode int64) (float64, float64, float64) {
 	estimatedEffort := EstimateEffort(int64(sumCode), EAF)
 	estimatedCost := EstimateCost(estimatedEffort, AverageWage, Overhead)
 	estimatedScheduleMonths := EstimateScheduleMonths(estimatedEffort)
-	estimatedPeopleRequired := estimatedEffort / estimatedScheduleMonths
+	estimatedPeopleRequired := 0.0
+	if estimatedScheduleMonths > 0 {
+		estimatedPeopleRequired = estimatedEffort / estimatedScheduleMonths
+	}
 	return estimatedCost, estimatedScheduleMonths, estimatedPeopleRequired
 }
 
