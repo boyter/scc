@@ -481,6 +481,14 @@ Processed 9390815 bytes, 9.391 megabytes (SI)
 
 Further reading about the ULOC calculation can be found at <https://boyter.org/posts/sloc-cloc-code-new-metic-uloc/>
 
+Interpreting Dryness,
+
+- 75% (High Density): Very terse, expressive code. Every line counts. (Example: Clojure, Haskell)
+- 60% - 70% (Standard): A healthy balance of logic and structural ceremony. (Example: Java, Python)
+- < 55% (High Boilerplate): High repetition. Likely due to mandatory error handling, auto-generated code, or verbose configuration. (Example: C#, CSS)
+
+See <https://boyter.org/posts/boilerplate-tax-ranking-popular-languages-by-density/> for more details.
+
 ### COCOMO
 
 The COCOMO statistics displayed at the bottom of any command line run can be configured as needed.
