@@ -485,6 +485,12 @@ func processFlags() {
 	printDebugF("Dryness: %t", Dryness)
 }
 
+// LanguageDatabase provides access to the internal language database
+// useful for consuming applications wanting to consume and use
+func LanguageDatabase() map[string]Language {
+	return languageDatabase
+}
+
 func printLanguages() {
 	names := make([]string, 0, len(languageDatabase))
 	for key := range languageDatabase {
