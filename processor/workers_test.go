@@ -1066,6 +1066,283 @@ func TestCountStatsIssue182Delphi(t *testing.T) {
 }
 
 //////////////////////////////////////////////////
+// Content Classification Tests
+//////////////////////////////////////////////////
+
+// Classification should not change any line counts
+func TestClassifyContentCountInvariance(t *testing.T) {
+	ProcessConstants()
+
+	content := `package main
+
+import "fmt"
+
+// main function
+func main() {
+	fmt.Println("hello") // inline comment
+	/* block
+	   comment */
+}
+`
+	// Run without classification
+	fj1 := FileJob{Language: "Go"}
+	fj1.SetContent(content)
+	CountStats(&fj1)
+
+	// Run with classification
+	fj2 := FileJob{Language: "Go", ClassifyContent: true}
+	fj2.SetContent(content)
+	CountStats(&fj2)
+
+	if fj1.Lines != fj2.Lines {
+		t.Errorf("Lines mismatch: %d vs %d", fj1.Lines, fj2.Lines)
+	}
+	if fj1.Code != fj2.Code {
+		t.Errorf("Code mismatch: %d vs %d", fj1.Code, fj2.Code)
+	}
+	if fj1.Comment != fj2.Comment {
+		t.Errorf("Comment mismatch: %d vs %d", fj1.Comment, fj2.Comment)
+	}
+	if fj1.Blank != fj2.Blank {
+		t.Errorf("Blank mismatch: %d vs %d", fj1.Blank, fj2.Blank)
+	}
+	if fj1.Complexity != fj2.Complexity {
+		t.Errorf("Complexity mismatch: %d vs %d", fj1.Complexity, fj2.Complexity)
+	}
+}
+
+// ContentByteType should stay nil when ClassifyContent is false (default)
+func TestClassifyContentNilGuard(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{Language: "Go"}
+	fileJob.SetContent("x := 1\n")
+	CountStats(&fileJob)
+
+	if fileJob.ContentByteType != nil {
+		t.Error("Expected ContentByteType to be nil when ClassifyContent is false")
+	}
+}
+
+// Code-only file: all non-whitespace bytes should be ByteTypeCode
+func TestClassifyContentCodeOnly(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{Language: "Go", ClassifyContent: true}
+	fileJob.SetContent("x := 1")
+	CountStats(&fileJob)
+
+	if fileJob.ContentByteType == nil {
+		t.Fatal("Expected ContentByteType to be non-nil")
+	}
+
+	for i, b := range fileJob.Content {
+		bt := fileJob.ContentByteType[i]
+		if b == ' ' || b == '\t' || b == '\n' || b == '\r' {
+			continue // whitespace can be blank or code depending on state
+		}
+		if bt != ByteTypeCode {
+			t.Errorf("byte %d (%q): expected ByteTypeCode(%d), got %d", i, string(b), ByteTypeCode, bt)
+		}
+	}
+}
+
+// Comment-only file: "// comment" bytes after // should be ByteTypeComment
+func TestClassifyContentCommentOnly(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{Language: "Go", ClassifyContent: true}
+	fileJob.SetContent("// this is a comment")
+	CountStats(&fileJob)
+
+	if fileJob.ContentByteType == nil {
+		t.Fatal("Expected ContentByteType to be non-nil")
+	}
+
+	// After the first byte that triggers comment state, subsequent bytes should be comment
+	hasComment := false
+	for i := range fileJob.Content {
+		if fileJob.ContentByteType[i] == ByteTypeComment {
+			hasComment = true
+		}
+	}
+	if !hasComment {
+		t.Error("Expected at least some ByteTypeComment bytes for a comment-only line")
+	}
+
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 comment line, got %d", fileJob.Comment)
+	}
+}
+
+// Multi-line comment: inner bytes should be ByteTypeComment
+func TestClassifyContentMultiLineComment(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{Language: "Go", ClassifyContent: true}
+	fileJob.SetContent("/* hello\nworld */")
+	CountStats(&fileJob)
+
+	if fileJob.ContentByteType == nil {
+		t.Fatal("Expected ContentByteType to be non-nil")
+	}
+
+	// Check that "hello" inside the comment is classified as comment
+	helloStart := bytes.Index(fileJob.Content, []byte("hello"))
+	for i := helloStart; i < helloStart+5; i++ {
+		if fileJob.ContentByteType[i] != ByteTypeComment {
+			t.Errorf("byte %d (%q): expected ByteTypeComment(%d), got %d", i, string(fileJob.Content[i]), ByteTypeComment, fileJob.ContentByteType[i])
+		}
+	}
+}
+
+// String literal: bytes inside "..." should be ByteTypeString
+func TestClassifyContentString(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{Language: "Go", ClassifyContent: true}
+	fileJob.SetContent(`x := "hello"`)
+	CountStats(&fileJob)
+
+	if fileJob.ContentByteType == nil {
+		t.Fatal("Expected ContentByteType to be non-nil")
+	}
+
+	// Find "hello" inside the string
+	helloStart := bytes.Index(fileJob.Content, []byte("hello"))
+	for i := helloStart; i < helloStart+5; i++ {
+		if fileJob.ContentByteType[i] != ByteTypeString {
+			t.Errorf("byte %d (%q): expected ByteTypeString(%d), got %d", i, string(fileJob.Content[i]), ByteTypeString, fileJob.ContentByteType[i])
+		}
+	}
+
+	// "x" at the start should be code
+	if fileJob.ContentByteType[0] != ByteTypeCode {
+		t.Errorf("byte 0 (%q): expected ByteTypeCode(%d), got %d", string(fileJob.Content[0]), ByteTypeCode, fileJob.ContentByteType[0])
+	}
+}
+
+// Mixed line: "x := 1 // comment" has code then comment
+func TestClassifyContentMixedLine(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{Language: "Go", ClassifyContent: true}
+	fileJob.SetContent("x := 1 // comment")
+	CountStats(&fileJob)
+
+	if fileJob.ContentByteType == nil {
+		t.Fatal("Expected ContentByteType to be non-nil")
+	}
+
+	// 'x' should be code
+	if fileJob.ContentByteType[0] != ByteTypeCode {
+		t.Errorf("byte 0 (%q): expected ByteTypeCode, got %d", string(fileJob.Content[0]), fileJob.ContentByteType[0])
+	}
+
+	// "comment" text after // should be ByteTypeComment
+	commentStart := bytes.Index(fileJob.Content, []byte("comment"))
+	for i := commentStart; i < commentStart+7; i++ {
+		if fileJob.ContentByteType[i] != ByteTypeComment {
+			t.Errorf("byte %d (%q): expected ByteTypeComment, got %d", i, string(fileJob.Content[i]), fileJob.ContentByteType[i])
+		}
+	}
+
+	// Line should be counted as code (code + comment = code line)
+	if fileJob.Code != 1 {
+		t.Errorf("Expected 1 code line, got %d", fileJob.Code)
+	}
+}
+
+// Python docstring: content classified as ByteTypeComment
+func TestClassifyContentPythonDocstring(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{Language: "Python", ClassifyContent: true}
+	fileJob.SetContent(`"""
+docstring content
+"""`)
+	CountStats(&fileJob)
+
+	if fileJob.ContentByteType == nil {
+		t.Fatal("Expected ContentByteType to be non-nil")
+	}
+
+	// "docstring content" should be classified as comment
+	docStart := bytes.Index(fileJob.Content, []byte("docstring"))
+	if docStart >= 0 {
+		for i := docStart; i < docStart+9; i++ {
+			if fileJob.ContentByteType[i] != ByteTypeComment {
+				t.Errorf("byte %d (%q): expected ByteTypeComment(%d), got %d",
+					i, string(fileJob.Content[i]), ByteTypeComment, fileJob.ContentByteType[i])
+			}
+		}
+	}
+}
+
+// FilterContentByType: returns filtered content correctly
+func TestFilterContentByType(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{Language: "Go", ClassifyContent: true}
+	fileJob.SetContent("x := 1 // comment\n")
+	CountStats(&fileJob)
+
+	// Filter to only code
+	codeOnly := fileJob.FilterContentByType(ByteTypeCode)
+	if codeOnly == nil {
+		t.Fatal("Expected non-nil result from FilterContentByType")
+	}
+
+	// Should preserve newlines
+	if codeOnly[len(codeOnly)-1] != '\n' {
+		t.Error("Expected newline to be preserved")
+	}
+
+	// 'x' should be preserved
+	if codeOnly[0] != 'x' {
+		t.Errorf("Expected 'x' to be preserved, got %q", string(codeOnly[0]))
+	}
+
+	// "comment" should be replaced with spaces
+	commentStart := bytes.Index(fileJob.Content, []byte("comment"))
+	for i := commentStart; i < commentStart+7; i++ {
+		if codeOnly[i] != ' ' {
+			t.Errorf("byte %d: expected space, got %q", i, string(codeOnly[i]))
+		}
+	}
+}
+
+// FilterContentByType returns nil when ContentByteType is nil
+func TestFilterContentByTypeNil(t *testing.T) {
+	fileJob := FileJob{}
+	fileJob.SetContent("hello")
+
+	result := fileJob.FilterContentByType(ByteTypeCode)
+	if result != nil {
+		t.Error("Expected nil result when ContentByteType is nil")
+	}
+}
+
+// FilterContentByType with multiple keep types
+func TestFilterContentByTypeMultiple(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{Language: "Go", ClassifyContent: true}
+	fileJob.SetContent(`x := "hello" // comment`)
+	CountStats(&fileJob)
+
+	// Keep both code and string, filter out comments
+	result := fileJob.FilterContentByType(ByteTypeCode, ByteTypeString)
+	if result == nil {
+		t.Fatal("Expected non-nil result")
+	}
+
+	// 'x' (code) should be preserved
+	if result[0] != 'x' {
+		t.Errorf("Expected 'x' preserved, got %q", string(result[0]))
+	}
+
+	// "hello" (string) content should be preserved
+	helloStart := bytes.Index(fileJob.Content, []byte("hello"))
+	for i := helloStart; i < helloStart+5; i++ {
+		if result[i] != fileJob.Content[i] {
+			t.Errorf("byte %d: expected %q preserved, got %q", i, string(fileJob.Content[i]), string(result[i]))
+		}
+	}
+}
+
+//////////////////////////////////////////////////
 // Benchmarks Below
 //////////////////////////////////////////////////
 
@@ -1583,4 +1860,55 @@ func BenchmarkCheckLenPrecalc(b *testing.B) {
 	}
 
 	b.Log(count)
+}
+
+func BenchmarkCountStatsNoClassify(b *testing.B) {
+	ProcessConstants()
+	b.StopTimer()
+	content := ""
+	for i := 0; i < 500; i++ {
+		content += "x := 1 // comment\n"
+	}
+	fileJob := FileJob{
+		Language: "Go",
+		Content:  []byte(content),
+		Bytes:    int64(len(content)),
+	}
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		fileJob.Lines = 0
+		fileJob.Code = 0
+		fileJob.Comment = 0
+		fileJob.Blank = 0
+		fileJob.Complexity = 0
+		fileJob.ComplexityLine = nil
+		fileJob.ContentByteType = nil
+		CountStats(&fileJob)
+	}
+}
+
+func BenchmarkCountStatsWithClassify(b *testing.B) {
+	ProcessConstants()
+	b.StopTimer()
+	content := ""
+	for i := 0; i < 500; i++ {
+		content += "x := 1 // comment\n"
+	}
+	fileJob := FileJob{
+		Language:        "Go",
+		Content:         []byte(content),
+		Bytes:           int64(len(content)),
+		ClassifyContent: true,
+	}
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		fileJob.Lines = 0
+		fileJob.Code = 0
+		fileJob.Comment = 0
+		fileJob.Blank = 0
+		fileJob.Complexity = 0
+		fileJob.ComplexityLine = nil
+		fileJob.ContentByteType = nil
+		CountStats(&fileJob)
+	}
 }

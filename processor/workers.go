@@ -98,6 +98,19 @@ func shouldProcess(currentByte, processBytesMask byte) bool {
 	return currentByte&processBytesMask == currentByte
 }
 
+func stateToByteType(state int64) byte {
+	switch state {
+	case SCode:
+		return ByteTypeCode
+	case SString:
+		return ByteTypeString
+	case SComment, SCommentCode, SMulticomment, SMulticommentCode, SMulticommentBlank, SDocString:
+		return ByteTypeComment
+	default: // SBlank
+		return ByteTypeBlank
+	}
+}
+
 func resetState(currentState int64) int64 {
 	switch currentState {
 	case SMulticomment, SMulticommentCode:
@@ -116,6 +129,10 @@ func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, cu
 	// without checking if it is out of bounds first
 	for i := index; i < endPoint; i++ {
 		index = i
+
+		if fileJob.ContentByteType != nil {
+			fileJob.ContentByteType[i] = ByteTypeString
+		}
 
 		// If we hit a newline, return because we want to count the stats but keep
 		// the current state so we end up back in this loop when the outer
@@ -160,6 +177,10 @@ func docStringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie,
 	// without checking if it is out of bounds first
 	for i := index; i < endPoint; i++ {
 		index = i
+
+		if fileJob.ContentByteType != nil {
+			fileJob.ContentByteType[i] = ByteTypeComment
+		}
 
 		if fileJob.Content[i] == '\n' {
 			return i, currentState
@@ -209,6 +230,10 @@ func codeState(
 	for i := index; i < endPoint; i++ {
 		curByte := fileJob.Content[i]
 		index = i
+
+		if fileJob.ContentByteType != nil {
+			fileJob.ContentByteType[i] = ByteTypeCode
+		}
 
 		if curByte == '\n' {
 			return i, currentState, endString, endComments, false
@@ -273,6 +298,10 @@ func commentState(fileJob *FileJob, index int, endPoint int, currentState int64,
 		curByte := fileJob.Content[i]
 		index = i
 
+		if fileJob.ContentByteType != nil {
+			fileJob.ContentByteType[i] = ByteTypeComment
+		}
+
 		if curByte == '\n' {
 			return i, currentState, endString, endComments
 		}
@@ -325,11 +354,17 @@ func blankState(
 			endComments = append(endComments, endString)
 			currentState = SMulticomment
 			index += offsetJump - 1
+			if fileJob.ContentByteType != nil {
+				fileJob.ContentByteType[index] = ByteTypeComment
+			}
 			return index, currentState, endString, endComments, false
 		}
 
 	case TSlcomment:
 		currentState = SComment
+		if fileJob.ContentByteType != nil {
+			fileJob.ContentByteType[index] = ByteTypeComment
+		}
 		return index, currentState, endString, endComments, false
 
 	case TString:
@@ -338,14 +373,23 @@ func blankState(
 		for _, v := range langFeatures.Quotes {
 			if v.End == string(endString) && v.DocString {
 				currentState = SDocString
+				if fileJob.ContentByteType != nil {
+					fileJob.ContentByteType[index] = ByteTypeComment
+				}
 				return index, currentState, endString, endComments, ignoreEscape
 			}
 		}
 		currentState = SString
+		if fileJob.ContentByteType != nil {
+			fileJob.ContentByteType[index] = ByteTypeString
+		}
 		return index, currentState, endString, endComments, ignoreEscape
 
 	case TComplexity:
 		currentState = SCode
+		if fileJob.ContentByteType != nil {
+			fileJob.ContentByteType[index] = ByteTypeCode
+		}
 		if index == 0 || isWhitespace(fileJob.Content[index-1]) {
 			fileJob.Complexity++
 			fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] = fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] + 1
@@ -353,6 +397,9 @@ func blankState(
 
 	default:
 		currentState = SCode
+		if fileJob.ContentByteType != nil {
+			fileJob.ContentByteType[index] = ByteTypeCode
+		}
 	}
 
 	return index, currentState, endString, endComments, false
@@ -436,7 +483,15 @@ func CountStats(fileJob *FileJob) {
 	ignoreEscape := false
 	fileJob.ComplexityLine = append(fileJob.ComplexityLine, 0)
 
+	if fileJob.ClassifyContent {
+		fileJob.ContentByteType = make([]byte, fileJob.Bytes)
+	}
+
 	for index := checkBomSkip(fileJob); index < int(fileJob.Bytes); index++ {
+		if fileJob.ContentByteType != nil {
+			fileJob.ContentByteType[index] = stateToByteType(currentState)
+		}
+
 		// Based on our current state determine if the state should change by checking
 		// what the character is. The below is very CPU bound so need to be careful if
 		// changing anything in here and profile/measure afterwards!
