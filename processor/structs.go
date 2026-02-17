@@ -17,6 +17,16 @@ const (
 	TComplexity
 )
 
+// ByteType constants for per-byte content classification.
+// When FileJob.ClassifyContent is true, CountStats populates
+// FileJob.ContentByteType with one of these values per byte.
+const (
+	ByteTypeBlank   byte = 0
+	ByteTypeCode    byte = 1
+	ByteTypeComment byte = 2
+	ByteTypeString  byte = 3
+)
+
 // Quote is a struct which holds rules and start/end values for string quotes
 type Quote struct {
 	Start        string `json:"start"`
@@ -89,6 +99,32 @@ type FileJob struct {
 	EndPoint           int
 	Uloc               int
 	LineLength         []int `json:"-"`
+	ClassifyContent    bool   `json:"-"` // When true, CountStats populates ContentByteType
+	ContentByteType    []byte `json:"-"` // Per-byte classification, allocated by CountStats when ClassifyContent is true
+}
+
+// FilterContentByType returns a copy of Content with bytes not matching any of
+// the given types replaced by spaces. Newlines are always preserved regardless
+// of type. Returns nil if ContentByteType is nil.
+func (fj *FileJob) FilterContentByType(keepTypes ...byte) []byte {
+	if fj.ContentByteType == nil {
+		return nil
+	}
+
+	keep := make(map[byte]bool, len(keepTypes))
+	for _, t := range keepTypes {
+		keep[t] = true
+	}
+
+	result := make([]byte, len(fj.Content))
+	for i, b := range fj.Content {
+		if b == '\n' || keep[fj.ContentByteType[i]] {
+			result[i] = b
+		} else {
+			result[i] = ' '
+		}
+	}
+	return result
 }
 
 // LanguageSummary is used to hold summarized results for a single language

@@ -1008,6 +1008,59 @@ func main() {
 }
 ```
 
+#### Per-Byte Content Classification
+
+For library consumers who need finer granularity than per-line classification, `scc` supports opt-in per-byte content classification. When enabled, `CountStats` populates a byte slice classifying every byte in the file as code, comment, string, or blank. This is useful for stripping comments from source files, extracting only comments, or building syntax-aware tools without reimplementing language parsing.
+
+To enable it, set `ClassifyContent: true` on the `FileJob` before calling `CountStats`. When disabled (the default), there is zero performance impact.
+
+```go
+package main
+
+import (
+  "fmt"
+  "os"
+
+  "github.com/boyter/scc/v3/processor"
+)
+
+func main() {
+  processor.ProcessConstants()
+
+  bts, _ := os.ReadFile("main.go")
+  filejob := &processor.FileJob{
+    Filename:        "main.go",
+    Language:        "Go",
+    Content:         bts,
+    Bytes:           int64(len(bts)),
+    ClassifyContent: true, // Enable per-byte classification
+  }
+  processor.CountStats(filejob)
+
+  // ContentByteType has one entry per byte with values:
+  //   processor.ByteTypeBlank   (0) - blank lines / leading whitespace
+  //   processor.ByteTypeCode    (1) - code
+  //   processor.ByteTypeComment (2) - comments (including docstrings)
+  //   processor.ByteTypeString  (3) - string literals
+
+  // Example: extract only code, replacing everything else with spaces
+  codeOnly := filejob.FilterContentByType(processor.ByteTypeCode)
+  fmt.Println(string(codeOnly))
+
+  // Example: extract only comments
+  commentsOnly := filejob.FilterContentByType(processor.ByteTypeComment)
+  fmt.Println(string(commentsOnly))
+
+  // Example: keep both code and strings, strip comments
+  noComments := filejob.FilterContentByType(processor.ByteTypeCode, processor.ByteTypeString)
+  fmt.Println(string(noComments))
+}
+```
+
+`FilterContentByType` returns a copy of the content with non-matching bytes replaced by spaces. Newlines are always preserved regardless of type, so the output maintains the same line structure as the original file. It returns `nil` if classification was not enabled.
+
+Note that at syntax marker boundaries (e.g., `//`, `/*`, `"`), the first byte of the marker may be classified as the preceding state. This is a 1-byte approximation that is acceptable for content filtering use cases.
+
 ### Adding/Modifying Languages
 
 To add or modify a language you will need to edit the `languages.json` file in the root of the project, and then run `go generate` to build it into the application. You can then `go install` or `go build` as normal to produce the binary with your modifications.
