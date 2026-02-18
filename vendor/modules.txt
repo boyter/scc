@@ -1,6 +1,9 @@
 # github.com/agnivade/levenshtein v1.2.2-0.20250519083737-420867539855
 ## explicit; go 1.21
 github.com/agnivade/levenshtein
+# github.com/bahlo/generic-list-go v0.2.0
+## explicit; go 1.18
+github.com/bahlo/generic-list-go
 # github.com/boyter/gocodewalker v1.5.1
 ## explicit; go 1.23.0
 github.com/boyter/gocodewalker
@@ -8,6 +11,9 @@ github.com/boyter/gocodewalker/go-gitignore
 # github.com/boyter/simplecache v0.0.0-20250113230110-8a4c9201822a
 ## explicit; go 1.23.3
 github.com/boyter/simplecache
+# github.com/buger/jsonparser v1.1.1
+## explicit; go 1.13
+github.com/buger/jsonparser
 # github.com/clipperhouse/uax29/v2 v2.2.0
 ## explicit; go 1.18
 github.com/clipperhouse/uax29/v2/graphemes
@@ -15,12 +21,27 @@ github.com/clipperhouse/uax29/v2/internal/iterators
 # github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964
 ## explicit
 github.com/danwakefield/fnmatch
+# github.com/google/uuid v1.6.0
+## explicit
+github.com/google/uuid
 # github.com/inconshreveable/mousetrap v1.1.0
 ## explicit; go 1.18
 github.com/inconshreveable/mousetrap
+# github.com/invopop/jsonschema v0.13.0
+## explicit; go 1.18
+github.com/invopop/jsonschema
 # github.com/json-iterator/go v1.1.12
 ## explicit; go 1.12
 github.com/json-iterator/go
+# github.com/mailru/easyjson v0.7.7
+## explicit; go 1.12
+github.com/mailru/easyjson/buffer
+github.com/mailru/easyjson/jwriter
+# github.com/mark3labs/mcp-go v0.44.0
+## explicit; go 1.23.0
+github.com/mark3labs/mcp-go/mcp
+github.com/mark3labs/mcp-go/server
+github.com/mark3labs/mcp-go/util
 # github.com/mattn/go-colorable v0.1.13
 ## explicit; go 1.15
 github.com/mattn/go-colorable
@@ -42,12 +63,21 @@ github.com/rs/zerolog
 github.com/rs/zerolog/internal/cbor
 github.com/rs/zerolog/internal/json
 github.com/rs/zerolog/log
+# github.com/spf13/cast v1.7.1
+## explicit; go 1.19
+github.com/spf13/cast
 # github.com/spf13/cobra v1.10.1
 ## explicit; go 1.15
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.10
 ## explicit; go 1.12
 github.com/spf13/pflag
+# github.com/wk8/go-ordered-map/v2 v2.1.8
+## explicit; go 1.18
+github.com/wk8/go-ordered-map/v2
+# github.com/yosida95/uritemplate/v3 v3.0.2
+## explicit; go 1.14
+github.com/yosida95/uritemplate/v3
 # go.yaml.in/yaml/v2 v2.4.3
 ## explicit; go 1.15
 go.yaml.in/yaml/v2
@@ -75,3 +105,6 @@ golang.org/x/text/internal/tag
 golang.org/x/text/language
 golang.org/x/text/message
 golang.org/x/text/message/catalog
+# gopkg.in/yaml.v3 v3.0.1
+## explicit
+gopkg.in/yaml.v3

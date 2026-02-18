@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/boyter/scc/v3/mcpserver"
 	"github.com/boyter/scc/v3/processor"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -70,11 +71,16 @@ func main() {
 	}
 
 	rootCmd := &cobra.Command{
-		Use:     "scc [flags] [files or directories]",
-		Short:   "scc [files or directories]",
-		Long:    fmt.Sprintf("Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.\nVersion %s\nBen Boyter <ben@boyter.org> + Contributors", processor.Version),
+		Use:   "scc [flags] [files or directories]",
+		Short: "scc [files or directories]",
+		Long:  fmt.Sprintf("Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.\nVersion %s\nBen Boyter <ben@boyter.org> + Contributors", processor.Version),
 		Version: processor.Version,
 		Run: func(cmd *cobra.Command, args []string) {
+			if mcpMode, _ := cmd.Flags().GetBool("mcp"); mcpMode {
+				dir, _ := cmd.Flags().GetString("mcp-dir")
+				mcpserver.Serve(dir)
+				return
+			}
 			processor.DirFilePaths = args
 			processor.ConfigureGc()
 			processor.ConfigureLazy(true)
@@ -458,6 +464,16 @@ func main() {
 		"currency-symbol",
 		"$",
 		"set currency symbol",
+	)
+	flags.Bool(
+		"mcp",
+		false,
+		"start MCP (Model Context Protocol) server for LLM integration",
+	)
+	flags.String(
+		"mcp-dir",
+		"",
+		"directory to analyze when running as MCP server (default: current directory)",
 	)
 
 	// If invoked in the format of "scc completion --shell [name of shell]", generate command line completions instead.

@@ -511,6 +511,144 @@ var ulocMutex = sync.Mutex{}
 var ulocGlobalCount = map[string]struct{}{}
 var ulocLanguageCount = map[string]map[string]struct{}{}
 
+// ProcessResult holds the structured results of processing, suitable for programmatic consumption.
+type ProcessResult struct {
+	LanguageSummary         []LanguageSummary
+	TotalFiles              int64
+	TotalLines              int64
+	TotalCode               int64
+	TotalComment            int64
+	TotalBlank              int64
+	TotalBytes              int64
+	TotalComplexity         int64
+	EstimatedCost           float64
+	EstimatedScheduleMonths float64
+	EstimatedPeople         float64
+}
+
+// ProcessToResult runs the same pipeline as Process() but returns structured data
+// instead of printing to stdout. It returns an error instead of calling os.Exit on bad paths.
+func ProcessToResult() (*ProcessResult, error) {
+	ProcessConstants()
+	processFlags()
+
+	if len(DirFilePaths) == 0 {
+		DirFilePaths = append(DirFilePaths, ".")
+	}
+
+	filePaths := []string{}
+	dirPaths := []string{}
+
+	for _, f := range DirFilePaths {
+		fpath := filepath.Clean(f)
+
+		s, err := os.Stat(fpath)
+		if err != nil {
+			return nil, fmt.Errorf("file or directory could not be read: %s", fpath)
+		}
+
+		if s.IsDir() {
+			dirPaths = append(dirPaths, fpath)
+		} else {
+			filePaths = append(filePaths, fpath)
+		}
+	}
+
+	SortBy = strings.ToLower(SortBy)
+
+	potentialFilesQueue := make(chan *gocodewalker.File, FileListQueueSize)
+	fileListQueue := make(chan *FileJob, FileListQueueSize)
+	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)
+
+	fileWalker := gocodewalker.NewParallelFileWalker(dirPaths, potentialFilesQueue)
+	fileWalker.SetErrorHandler(func(e error) bool {
+		return true
+	})
+	fileWalker.IgnoreGitIgnore = GitIgnore
+	fileWalker.IgnoreIgnoreFile = Ignore
+	fileWalker.IgnoreGitModules = GitModuleIgnore
+	fileWalker.IncludeHidden = true
+	fileWalker.ExcludeDirectory = PathDenyList
+	fileWalker.SetConcurrency(DirectoryWalkerJobWorkers)
+
+	if !SccIgnore {
+		fileWalker.CustomIgnore = []string{".sccignore"}
+	}
+
+	for _, exclude := range Exclude {
+		regexpResult, err := regexp.Compile(exclude)
+		if err == nil {
+			fileWalker.ExcludeFilenameRegex = append(fileWalker.ExcludeFilenameRegex, regexpResult)
+			fileWalker.ExcludeDirectoryRegex = append(fileWalker.ExcludeDirectoryRegex, regexpResult)
+		}
+	}
+
+	go func() {
+		_ = fileWalker.Start()
+	}()
+
+	go func() {
+		for _, f := range filePaths {
+			fileInfo, err := os.Lstat(f)
+			if err != nil {
+				continue
+			}
+
+			fileJob := newFileJob(f, f, fileInfo)
+			if fileJob != nil {
+				fileListQueue <- fileJob
+			}
+		}
+
+		for fi := range potentialFilesQueue {
+			fileInfo, err := os.Lstat(fi.Location)
+			if err != nil {
+				continue
+			}
+
+			if !fileInfo.IsDir() {
+				fileJob := newFileJob(fi.Location, fi.Filename, fileInfo)
+				if fileJob != nil {
+					fileListQueue <- fileJob
+				}
+			}
+		}
+		close(fileListQueue)
+	}()
+
+	go fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
+
+	language := aggregateLanguageSummary(fileSummaryJobQueue)
+	language = sortLanguageSummary(language)
+
+	var totalFiles, totalLines, totalCode, totalComment, totalBlank, totalBytes, totalComplexity int64
+	for _, l := range language {
+		totalFiles += l.Count
+		totalLines += l.Lines
+		totalCode += l.Code
+		totalComment += l.Comment
+		totalBlank += l.Blank
+		totalBytes += l.Bytes
+		totalComplexity += l.Complexity
+	}
+
+	cost, schedule, people := esstimateCostScheduleMonths(totalCode)
+
+	return &ProcessResult{
+		LanguageSummary:         language,
+		TotalFiles:              totalFiles,
+		TotalLines:              totalLines,
+		TotalCode:               totalCode,
+		TotalComment:            totalComment,
+		TotalBlank:              totalBlank,
+		TotalBytes:              totalBytes,
+		TotalComplexity:         totalComplexity,
+		EstimatedCost:           cost,
+		EstimatedScheduleMonths: schedule,
+		EstimatedPeople:         people,
+	}, nil
+}
+
 // Process is the main entry point of the command line it sets everything up and starts running
 func Process() {
 	if Languages {
