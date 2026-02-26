@@ -4331,6 +4331,39 @@
     "multi_line": [],
     "quotes": []
   },
+  "MLIR": {
+    "complexitychecks": [
+      "affine.for ",
+      "affine.if ",
+      "else ",
+      "else{",
+      "cf.switch ",
+      "cf.br ",
+      "cf.cond_br",
+      "scf.for ",
+      "scf.forall ",
+      "scf.forall{",
+      "scf.forall.in_parallel ",
+      "scf.forall.in_parallel{",
+      "scf.if ",
+      "scf.index_switch ",
+      "scf.while ",
+      "arith.cmpi eq,",
+      "arith.cmpi ne,",
+      "index.cmp eq,",
+      "index.cmp ne,"
+    ],
+    "extensions": ["mlir"],
+    "line_comment": ["//"],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ],
+    "shebangs": []
+  },
   "MQL Header": {
     "complexitychecks": [
       "for ",

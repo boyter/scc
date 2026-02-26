@@ -619,6 +619,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"Lua",
 		"Luau",
 		"Luna",
+		"MLIR",
 		"Makefile",
 		"Metal",
 		"Monkey C",
