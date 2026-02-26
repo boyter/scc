@@ -572,11 +572,13 @@ func Process() {
 		fileWalker.CustomIgnore = []string{".sccignore"}
 	}
 
+	var excludePathRegexes []*regexp.Regexp
 	for _, exclude := range Exclude {
 		regexpResult, err := regexp.Compile(exclude)
 		if err == nil {
 			fileWalker.ExcludeFilenameRegex = append(fileWalker.ExcludeFilenameRegex, regexpResult)
 			fileWalker.ExcludeDirectoryRegex = append(fileWalker.ExcludeDirectoryRegex, regexpResult)
+			excludePathRegexes = append(excludePathRegexes, regexpResult)
 		} else {
 			printError(err.Error())
 		}
@@ -603,6 +605,17 @@ func Process() {
 		}
 
 		for fi := range potentialFilesQueue {
+			shouldExclude := false
+			for _, re := range excludePathRegexes {
+				if re.MatchString(fi.Location) {
+					shouldExclude = true
+					break
+				}
+			}
+			if shouldExclude {
+				continue
+			}
+
 			fileInfo, err := os.Lstat(fi.Location)
 			if err != nil {
 				continue
