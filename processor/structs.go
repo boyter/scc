@@ -98,7 +98,7 @@ type FileJob struct {
 	Generated          bool
 	EndPoint           int
 	Uloc               int
-	LineLength         []int `json:"-"`
+	LineLength         []int  `json:"-"`
 	ClassifyContent    bool   `json:"-"` // When true, CountStats populates ContentByteType
 	ContentByteType    []byte `json:"-"` // Per-byte classification, allocated by CountStats when ClassifyContent is true
 }
