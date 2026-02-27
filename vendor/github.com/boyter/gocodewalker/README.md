@@ -38,6 +38,12 @@ errorHandler := func(e error) bool {
 }
 fileWalker.SetErrorHandler(errorHandler)
 
+// skipHandler
+skipHandler := func(path string, name string, isDir bool, reason gocodewalker.SkipReason) {
+    fmt.Println("SKIPPED", path, name, isDir, reason)
+}
+fileWalker.SetSkipHandler(skipHandler)
+
 go fileWalker.Start()
 
 for f := range fileListQueue {
@@ -96,6 +102,19 @@ errorHandler := func(e error) bool {
 }
 fileWalker.SetErrorHandler(errorHandler)
 ```
+
+### Skip Handler
+
+You can supply your own skip handler when walking. This allows you to perform an action a file is skipped.
+
+```go
+// skipHandler
+skipHandler := func(path string, name string, isDir bool, reason gocodewalker.SkipReason) {
+    fmt.Println("SKIPPED", path, name, isDir, reason)
+}
+fileWalker.SetSkipHandler(skipHandler)
+```
+
 
 ### Binary Checking
 

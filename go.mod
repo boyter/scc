@@ -6,7 +6,7 @@ ignore ./examples
 
 require (
 	github.com/agnivade/levenshtein v1.2.2-0.20250519083737-420867539855
-	github.com/boyter/gocodewalker v1.5.1
+	github.com/boyter/gocodewalker v1.5.2-0.20260227212453-19676720409f
 	github.com/boyter/simplecache v0.0.0-20250113230110-8a4c9201822a
 	github.com/json-iterator/go v1.1.12
 	github.com/mattn/go-runewidth v0.0.19

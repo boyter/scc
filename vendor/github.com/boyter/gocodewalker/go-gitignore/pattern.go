@@ -30,10 +30,21 @@ type pattern struct {
 	_position  Position
 } // pattern()
 
+// matchType classifies name patterns for fast-path matching.
+type matchType int
+
+const (
+	matchComplex matchType = iota // requires fnmatch
+	matchExact                    // no glob chars → string ==
+	matchSuffix                   // leading * + literal tail → HasSuffix
+)
+
 // name represents patterns matching a file or path name (i.e. the last
 // component of a path)
 type name struct {
 	pattern
+	_matchType matchType
+	_literal   string
 } // name{}
 
 // path represents a pattern that contains at least one path separator within
@@ -144,10 +155,31 @@ func (p *pattern) String() string { return p._string }
 //      - designed to match trailing file/directory names only
 //
 
+// containsGlob reports whether s contains any fnmatch special characters.
+func containsGlob(s string) bool {
+	return strings.ContainsAny(s, "*?[\\")
+}
+
 // name returns a Pattern designed to match file or directory names, with no
 // path elements.
 func (p *pattern) name(tokens []*Token) Pattern {
-	return &name{*p}
+	n := &name{pattern: *p}
+
+	// classify the fnmatch expression for fast-path dispatch
+	switch {
+	case !containsGlob(p._fnmatch):
+		// exact literal (e.g. "node_modules", ".DS_Store")
+		n._matchType = matchExact
+		n._literal = p._fnmatch
+	case p._fnmatch[0] == '*' && !containsGlob(p._fnmatch[1:]):
+		// suffix match (e.g. "*.o", "*.pyc")
+		n._matchType = matchSuffix
+		n._literal = p._fnmatch[1:]
+	default:
+		n._matchType = matchComplex
+	}
+
+	return n
 } // name()
 
 // Match returns true if the given path matches the name pattern. If the
@@ -160,12 +192,20 @@ func (n *name) Match(path string, isdir bool) bool {
 		return false
 	}
 
-	// should we match the whole path, or just the last component?
-	if n._anchored {
-		return fnmatch.Match(n._fnmatch, path, 0)
-	} else {
-		_, _base := filepath.Split(path)
-		return fnmatch.Match(n._fnmatch, _base, 0)
+	// determine the string to match against
+	_target := path
+	if !n._anchored {
+		_, _target = filepath.Split(path)
+	}
+
+	// fast-path dispatch avoids expensive fnmatch for simple patterns
+	switch n._matchType {
+	case matchExact:
+		return _target == n._literal
+	case matchSuffix:
+		return strings.HasSuffix(_target, n._literal)
+	default:
+		return fnmatch.Match(n._fnmatch, _target, 0)
 	}
 } // Match()
 
@@ -200,13 +240,6 @@ func (p *path) Match(path string, isdir bool) bool {
 		return false
 	}
 
-	if fnmatch.Match(p._fnmatch, path, fnmatch.FNM_PATHNAME) {
-		return true
-	} else if p._anchored {
-		return false
-	}
-
-	// match against the trailing path elements
 	return fnmatch.Match(p._fnmatch, path, fnmatch.FNM_PATHNAME)
 } // Match()
 

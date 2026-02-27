@@ -11,6 +11,10 @@ import (
 	"sync"
 )
 
+// matchIsDirCache maps raw paths to their absolute-path equivalents.
+// sync.Map gives lock-free reads on the hot path (concurrent file walking).
+var matchIsDirCache sync.Map
+
 // use an empty GitIgnore for cached lookups
 var empty = &ignore{}
 
@@ -243,26 +247,18 @@ func (i *ignore) Match(path string) Match {
 	return i.Absolute(_path, _isdir)
 } // Match()
 
-var matchIsDirMutex = sync.Mutex{}
-var matchIsDirCache = map[string]string{}
-
 func (i *ignore) MatchIsDir(path string, _isdir bool) Match {
-
 	// ensure we have the absolute path for the given file
-	matchIsDirMutex.Lock()
-	_path, ok := matchIsDirCache[path]
-	matchIsDirMutex.Unlock()
-	if !ok {
-		var _err error
-		_path, _err = filepath.Abs(path)
-		if _err != nil {
-			i._errors(NewError(_err, Position{}))
-			return nil
-		}
-		matchIsDirMutex.Lock()
-		matchIsDirCache[path] = _path
-		matchIsDirMutex.Unlock()
+	if v, ok := matchIsDirCache.Load(path); ok {
+		return i.Absolute(v.(string), _isdir)
 	}
+
+	_path, _err := filepath.Abs(path)
+	if _err != nil {
+		i._errors(NewError(_err, Position{}))
+		return nil
+	}
+	matchIsDirCache.Store(path, _path)
 
 	// attempt to match the absolute path
 	return i.Absolute(_path, _isdir)
