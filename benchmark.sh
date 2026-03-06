@@ -8,168 +8,119 @@ apt install --assume-yes build-essential unzip tmux htop
 
 rm ./*.zip
 rm ./*.gz
-wget https://github.com/boyter/scc/releases/download/v1.0.0/scc-1.0.0-x86_64-unknown-linux.zip
-unzip scc-1.0.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc1.0.0
 
-wget https://github.com/boyter/scc/releases/download/v1.1.0/scc-1.1.0-x86_64-unknown-linux.zip
-unzip scc-1.1.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc1.1.0
+install_scc_zip() {
+    local version=$1
+    local url=$2
+    wget "$url"
+    local file=$(basename "$url")
+    unzip "$file"
+    mv scc /usr/local/bin/scc${version}
+    rm "$file"
+}
 
-wget https://github.com/boyter/scc/releases/download/v1.2.0/scc-1.2.0-x86_64-unknown-linux.zip
-unzip scc-1.2.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc1.2.0
+install_scc_tar() {
+    local version=$1
+    local url=$2
+    wget "$url"
+    local file=$(basename "$url")
+    tar zxvf "$file"
+    mv scc /usr/local/bin/scc${version}
+    rm "$file"
+}
 
-wget https://github.com/boyter/scc/releases/download/untagged-928286b8064e2cf6dd35/scc-1.3.0-x86_64-unknown-linux.zip
-unzip scc-1.3.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc1.3.0
+# v1.x zip releases
+ZIP_VERSIONS=(
+    "1.0.0 https://github.com/boyter/scc/releases/download/v1.0.0/scc-1.0.0-x86_64-unknown-linux.zip"
+    "1.1.0 https://github.com/boyter/scc/releases/download/v1.1.0/scc-1.1.0-x86_64-unknown-linux.zip"
+    "1.2.0 https://github.com/boyter/scc/releases/download/v1.2.0/scc-1.2.0-x86_64-unknown-linux.zip"
+    "1.3.0 https://github.com/boyter/scc/releases/download/untagged-928286b8064e2cf6dd35/scc-1.3.0-x86_64-unknown-linux.zip"
+    "1.4.0 https://github.com/boyter/scc/releases/download/v1.4.0/scc-1.4.0-x86_64-unknown-linux.zip"
+    "1.5.0 https://github.com/boyter/scc/releases/download/v1.5.0/scc-1.5.0-x86_64-unknown-linux.zip"
+    "1.6.0 https://github.com/boyter/scc/releases/download/v1.6.0/scc-1.6.0-x86_64-unknown-linux.zip"
+    "1.7.0 https://github.com/boyter/scc/releases/download/v1.7.0/scc-1.7.0-x86_64-unknown-linux.zip"
+    "1.8.0 https://github.com/boyter/scc/releases/download/v1.8.0/scc-1.8.0-x86_64-unknown-linux.zip"
+    "1.9.0 https://github.com/boyter/scc/releases/download/v1.9.0/scc-1.9.0-x86_64-unknown-linux.zip"
+    "1.10.0 https://github.com/boyter/scc/releases/download/v1.10.0/scc-1.0.0-x86_64-unknown-linux.zip"
+    "1.11.0 https://github.com/boyter/scc/releases/download/v1.11.0/scc-1.11.0-x86_64-unknown-linux.zip"
+    "1.12.0 https://github.com/boyter/scc/releases/download/v1.12.0/scc-1.12.0-x86_64-unknown-linux.zip"
+    "1.12.1 https://github.com/boyter/scc/releases/download/v1.12.1/scc-1.12.1-x86_64-unknown-linux.zip"
+)
 
-wget https://github.com/boyter/scc/releases/download/v1.4.0/scc-1.4.0-x86_64-unknown-linux.zip
-unzip scc-1.4.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc1.4.0
+# v2.x zip releases
+ZIP_VERSIONS+=(
+    "2.0.0 https://github.com/boyter/scc/releases/download/v2.0.0/scc-2.0.0-x86_64-unknown-linux.zip"
+    "2.1.0 https://github.com/boyter/scc/releases/download/v2.1.0/scc-2.1.0-x86_64-unknown-linux.zip"
+    "2.2.0 https://github.com/boyter/scc/releases/download/v2.2.0/scc-2.2.0-x86_64-unknown-linux.zip"
+    "2.3.0 https://github.com/boyter/scc/releases/download/v2.3.0/scc-2.3.0-x86_64-unknown-linux.zip"
+    "2.4.0 https://github.com/boyter/scc/releases/download/v2.4.0/scc-2.4.0-x86_64-unknown-linux.zip"
+    "2.5.0 https://github.com/boyter/scc/releases/download/v2.5.0/scc-2.5.0-x86_64-unknown-linux.zip"
+    "2.6.0 https://github.com/boyter/scc/releases/download/v2.6.0/scc-2.6.0-x86_64-unknown-linux.zip"
+    "2.7.0 https://github.com/boyter/scc/releases/download/v2.7.0/scc-2.7.0-x86_64-unknown-linux.zip"
+    "2.8.0 https://github.com/boyter/scc/releases/download/v2.8.0/scc-2.8.0-x86_64-unknown-linux.zip"
+    "2.9.0 https://github.com/boyter/scc/releases/download/v2.9.0/scc-2.9.0-x86_64-unknown-linux.zip"
+    "2.9.1 https://github.com/boyter/scc/releases/download/v2.9.1/scc-2.9.1-x86_64-unknown-linux.zip"
+    "2.10.0 https://github.com/boyter/scc/releases/download/v2.10.0/scc-2.10.0-x86_64-unknown-linux.zip"
+    "2.11.0 https://github.com/boyter/scc/releases/download/v2.11.0/scc-2.11.0-x86_64-unknown-linux.zip"
+    "2.12.0 https://github.com/boyter/scc/releases/download/v2.12.0/scc-2.12.0-x86_64-unknown-linux.zip"
+    "2.13.0 https://github.com/boyter/scc/releases/download/v2.13.0/scc-2.13.0-x86_64-unknown-linux.zip"
+)
 
-wget https://github.com/boyter/scc/releases/download/v1.5.0/scc-1.5.0-x86_64-unknown-linux.zip
-unzip scc-1.5.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc1.5.0
+# v3.0.0 is a zip
+ZIP_VERSIONS+=(
+    "3.0.0 https://github.com/boyter/scc/releases/download/v3.0.0/scc-3.0.0-x86_64-unknown-linux.zip"
+)
 
-wget https://github.com/boyter/scc/releases/download/v1.6.0/scc-1.6.0-x86_64-unknown-linux.zip
-unzip scc-1.6.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc1.6.0
+# v3.1.0 has a versioned tar name
+TAR_VERSIONS=(
+    "3.1.0 https://github.com/boyter/scc/releases/download/v3.1.0/scc_3.1.0_Linux_x86_64.tar.gz"
+)
 
-wget https://github.com/boyter/scc/releases/download/v1.7.0/scc-1.7.0-x86_64-unknown-linux.zip
-unzip scc-1.7.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc1.7.0
+# v3.2.0+ use the generic tar name
+GENERIC_TAR_VERSIONS=(3.2.0 3.3.0 3.3.2 3.3.3 3.3.4 3.4.0 3.5.0 3.6.0 3.7.0)
 
-wget https://github.com/boyter/scc/releases/download/v1.8.0/scc-1.8.0-x86_64-unknown-linux.zip
-unzip scc-1.8.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc1.8.0
+# Install all zip versions
+for entry in "${ZIP_VERSIONS[@]}"; do
+    version=${entry%% *}
+    url=${entry#* }
+    install_scc_zip "$version" "$url"
+done
 
-wget https://github.com/boyter/scc/releases/download/v1.9.0/scc-1.9.0-x86_64-unknown-linux.zip
-unzip scc-1.9.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc1.9.0
+# Install versioned tar
+for entry in "${TAR_VERSIONS[@]}"; do
+    version=${entry%% *}
+    url=${entry#* }
+    install_scc_tar "$version" "$url"
+done
 
-# Whoops... the name was not set correctly...
-rm scc-1.0.0-x86_64-unknown-linux.zip
-wget https://github.com/boyter/scc/releases/download/v1.10.0/scc-1.0.0-x86_64-unknown-linux.zip
-unzip scc-1.0.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc1.10.0
+# Install generic-named tar versions
+for version in "${GENERIC_TAR_VERSIONS[@]}"; do
+    install_scc_tar "$version" "https://github.com/boyter/scc/releases/download/v${version}/scc_Linux_x86_64.tar.gz"
+done
 
-wget https://github.com/boyter/scc/releases/download/v1.11.0/scc-1.11.0-x86_64-unknown-linux.zip
-unzip scc-1.11.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc1.11.0
+# Make the latest version available as just 'scc'
+cp /usr/local/bin/scc${GENERIC_TAR_VERSIONS[-1]} /usr/local/bin/scc
 
-wget https://github.com/boyter/scc/releases/download/v1.12.0/scc-1.12.0-x86_64-unknown-linux.zip
-unzip scc-1.12.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc1.12.0
+# Collect all scc version names for hyperfine
+ALL_VERSIONS=()
+for entry in "${ZIP_VERSIONS[@]}"; do
+    ALL_VERSIONS+=("${entry%% *}")
+done
+for entry in "${TAR_VERSIONS[@]}"; do
+    ALL_VERSIONS+=("${entry%% *}")
+done
+for v in "${GENERIC_TAR_VERSIONS[@]}"; do
+    ALL_VERSIONS+=("$v")
+done
 
-wget https://github.com/boyter/scc/releases/download/v1.12.1/scc-1.12.1-x86_64-unknown-linux.zip
-unzip scc-1.12.1-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc1.12.1
-
-wget https://github.com/boyter/scc/releases/download/v2.0.0/scc-2.0.0-x86_64-unknown-linux.zip
-unzip scc-2.0.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc2.0.0
-
-wget https://github.com/boyter/scc/releases/download/v2.1.0/scc-2.1.0-x86_64-unknown-linux.zip
-unzip scc-2.1.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc2.1.0
-
-wget https://github.com/boyter/scc/releases/download/v2.2.0/scc-2.2.0-x86_64-unknown-linux.zip
-unzip scc-2.2.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc2.2.0
-
-wget https://github.com/boyter/scc/releases/download/v2.3.0/scc-2.3.0-x86_64-unknown-linux.zip
-unzip scc-2.3.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc2.3.0
-
-wget https://github.com/boyter/scc/releases/download/v2.4.0/scc-2.4.0-x86_64-unknown-linux.zip
-unzip scc-2.4.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc2.4.0
-
-wget https://github.com/boyter/scc/releases/download/v2.5.0/scc-2.5.0-x86_64-unknown-linux.zip
-unzip scc-2.5.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc2.5.0
-
-wget https://github.com/boyter/scc/releases/download/v2.6.0/scc-2.6.0-x86_64-unknown-linux.zip
-unzip scc-2.6.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc2.6.0
-
-wget https://github.com/boyter/scc/releases/download/v2.7.0/scc-2.7.0-x86_64-unknown-linux.zip
-unzip scc-2.7.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc2.7.0
-
-wget https://github.com/boyter/scc/releases/download/v2.8.0/scc-2.8.0-x86_64-unknown-linux.zip
-unzip scc-2.8.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc2.8.0
-
-wget https://github.com/boyter/scc/releases/download/v2.9.0/scc-2.9.0-x86_64-unknown-linux.zip
-unzip scc-2.9.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc2.9.0
-
-wget https://github.com/boyter/scc/releases/download/v2.9.1/scc-2.9.1-x86_64-unknown-linux.zip
-unzip scc-2.9.1-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc2.9.1
-
-wget https://github.com/boyter/scc/releases/download/v2.10.0/scc-2.10.0-x86_64-unknown-linux.zip
-unzip scc-2.10.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc2.10.0
-
-wget https://github.com/boyter/scc/releases/download/v2.11.0/scc-2.11.0-x86_64-unknown-linux.zip
-unzip scc-2.11.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc2.11.0
-
-wget https://github.com/boyter/scc/releases/download/v2.12.0/scc-2.12.0-x86_64-unknown-linux.zip
-unzip scc-2.12.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc2.12.0
-
-wget https://github.com/boyter/scc/releases/download/v2.13.0/scc-2.13.0-x86_64-unknown-linux.zip
-unzip scc-2.13.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc2.13.0
-
-wget https://github.com/boyter/scc/releases/download/v3.0.0/scc-3.0.0-x86_64-unknown-linux.zip
-unzip scc-3.0.0-x86_64-unknown-linux.zip
-mv scc /usr/local/bin/scc3.0.0
-
-wget https://github.com/boyter/scc/releases/download/v3.1.0/scc_3.1.0_Linux_x86_64.tar.gz
-tar zxvf scc_3.1.0_Linux_x86_64.tar.gz
-mv scc /usr/local/bin/scc3.1.0
-
-wget https://github.com/boyter/scc/releases/download/v3.2.0/scc_Linux_x86_64.tar.gz
-tar zxvf scc_Linux_x86_64.tar.gz
-mv scc /usr/local/bin/scc3.2.0
-rm scc_Linux_x86_64.tar.gz
-
-wget https://github.com/boyter/scc/releases/download/v3.3.0/scc_Linux_x86_64.tar.gz
-tar zxvf scc_Linux_x86_64.tar.gz
-mv scc /usr/local/bin/scc3.3.0
-rm scc_Linux_x86_64.tar.gz
-
-wget https://github.com/boyter/scc/releases/download/v3.3.2/scc_Linux_x86_64.tar.gz
-tar zxvf scc_Linux_x86_64.tar.gz
-mv scc /usr/local/bin/scc3.3.2
-rm scc_Linux_x86_64.tar.gz
-
-wget https://github.com/boyter/scc/releases/download/v3.3.3/scc_Linux_x86_64.tar.gz
-tar zxvf scc_Linux_x86_64.tar.gz
-mv scc /usr/local/bin/scc3.3.3
-rm scc_Linux_x86_64.tar.gz
-
-wget https://github.com/boyter/scc/releases/download/v3.3.4/scc_Linux_x86_64.tar.gz
-tar zxvf scc_Linux_x86_64.tar.gz
-mv scc /usr/local/bin/scc3.3.4
-rm scc_Linux_x86_64.tar.gz
-
-wget https://github.com/boyter/scc/releases/download/v3.3.4/scc_Linux_x86_64.tar.gz
-tar zxvf scc_Linux_x86_64.tar.gz
-mv scc /usr/local/bin/scc3.3.4
-rm scc_Linux_x86_64.tar.gz
-
-wget https://github.com/boyter/scc/releases/download/v3.4.0/scc_Linux_x86_64.tar.gz
-tar zxvf scc_Linux_x86_64.tar.gz
-cp scc /usr/local/bin/scc3.4.0
-mv scc /usr/local/bin/scc
-rm scc_Linux_x86_64.tar.gz
-
+build_hyperfine_args() {
+    local target=$1
+    local args=()
+    for v in "${ALL_VERSIONS[@]}"; do
+        args+=("scc${v} ${target}")
+    done
+    printf "'%s' " "${args[@]}"
+}
 
 # Now setup comparison applications starting with hyperfine which we compare against
 
@@ -202,12 +153,11 @@ git clone --depth=1 https://github.com/python/cpython.git
 git clone --depth=1 https://github.com/torvalds/linux.git
 git clone --depth=1 https://github.com/SINTEF/sourcegraph.git
 
-# Regression test all versions of scc
-echo "Sanity check it all works"
-hyperfine 'scc1.0.0 valkey' 'scc1.1.0 valkey' 'scc1.2.0 valkey' 'scc1.3.0 valkey' 'scc1.4.0 valkey' 'scc1.5.0 valkey' 'scc1.6.0 valkey' 'scc1.7.0 valkey' 'scc1.8.0 valkey' 'scc1.9.0 valkey' 'scc1.10.0 valkey' 'scc1.11.0 valkey' 'scc1.12.0 valkey' 'scc1.12.1 valkey' 'scc2.0.0 valkey' 'scc2.1.0 valkey' 'scc2.2.0 valkey' 'scc2.3.0 valkey' 'scc2.4.0 valkey' 'scc2.5.0 valkey' 'scc2.6.0 valkey' 'scc2.7.0 valkey' 'scc2.8.0 valkey' 'scc2.9.0 valkey' 'scc2.9.1 valkey' 'scc2.10.0 valkey' 'scc2.11.0 valkey' 'scc2.12.0 valkey' 'scc2.13.0 valkey' 'scc3.0.0 valkey' 'scc3.1.0 valkey' 'scc3.2.0 valkey' 'scc3.3.0 valkey' 'scc3.3.2 valkey' 'scc3.3.3 valkey' 'scc3.3.4 valkey' 'scc3.4.0 valkey'
-
 echo "Running regression benchmark"
-hyperfine 'scc1.0.0 linux' 'scc1.1.0 linux' 'scc1.2.0 linux' 'scc1.3.0 linux' 'scc1.4.0 linux' 'scc1.5.0 linux' 'scc1.6.0 linux' 'scc1.7.0 linux' 'scc1.8.0 linux' 'scc1.9.0 linux' 'scc1.10.0 linux' 'scc1.11.0 linux' 'scc1.12.0 linux' 'scc1.12.1 linux' 'scc2.0.0 linux' 'scc2.1.0 linux' 'scc2.2.0 linux' 'scc2.3.0 linux' 'scc2.4.0 linux' 'scc2.5.0 linux' 'scc2.6.0 linux' 'scc2.7.0 linux' 'scc2.8.0 linux' 'scc2.9.0 linux' 'scc2.9.1 linux' 'scc2.10.0 linux' 'scc2.11.0 linux' 'scc2.12.0 linux' 'scc2.13.0 linux' 'scc3.0.0 linux' 'scc3.1.0 linux' 'scc3.2.0 linux' 'scc3.3.0 linux' 'scc3.3.2 linux' 'scc3.3.3 linux' 'scc3.3.4 linux' 'scc3.4.0 linux' > benchmark_regression.txt
+eval hyperfine --export-json benchmark_regression.json $(build_hyperfine_args linux) > benchmark_regression.txt
+
+echo "Generating chart"
+python3 benchmark_to_chart.py benchmark_regression.json "scc performance linux kernel" > benchmark_chart.html
 
 # Benchmark against everything
 echo "Running valkey benchmark"
