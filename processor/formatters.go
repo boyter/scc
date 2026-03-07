@@ -1007,7 +1007,8 @@ func unicodeAwareTrim(tmp string, size int) string {
 	if len(r) > size {
 		for runewidth.StringWidth(tmp) > size {
 			// remove character one at a time till we get the length we want
-			tmp = string([]rune(tmp)[1:])
+			r = r[1:]
+			tmp = string(r)
 		}
 
 		tmp = "~" + strings.TrimSpace(tmp)
@@ -1020,11 +1021,7 @@ func unicodeAwareTrim(tmp string, size int) string {
 // 文中 meaning the size is off... which is annoying, so we implement this ourselves to get it
 // right
 func unicodeAwareRightPad(tmp string, size int) string {
-	for runewidth.StringWidth(tmp) < size {
-		tmp += " "
-	}
-
-	return tmp
+	return runewidth.FillRight(tmp, size)
 }
 
 func fileSummarizeShort(input chan *FileJob) string {

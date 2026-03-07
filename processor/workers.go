@@ -633,10 +633,7 @@ func CountStats(fileJob *FileJob) {
 	isGenerated := false
 
 	if Generated {
-		headLen := 1000
-		if headLen >= len(fileJob.Content) {
-			headLen = len(fileJob.Content) - 1
-		}
+		headLen := min(1000, len(fileJob.Content))
 		head := bytes.ToLower(fileJob.Content[0:headLen])
 		for _, marker := range GeneratedMarkers {
 			if bytes.Contains(head, bytes.ToLower([]byte(marker))) {
@@ -767,12 +764,7 @@ func processFile(job *FileJob) bool {
 
 		// if we didn't remap we then want to see if it's a #! map
 		if !remapped {
-			cutoff := 200
-
-			// To avoid runtime panic check if the content we are cutting is smaller than 200
-			if len(contents) < cutoff {
-				cutoff = len(contents)
-			}
+			cutoff := min(200, len(contents))
 
 			lang, err := DetectSheBang(string(contents[:cutoff]))
 			if err != nil {
@@ -848,12 +840,7 @@ func hardRemapLanguage(job *FileJob) bool {
 	for s := range strings.SplitSeq(RemapAll, ",") {
 		t := strings.Split(s, ":")
 		if len(t) == 2 {
-			cutoff := 1000 // 1000 bytes into the file to look
-
-			// To avoid runtime panic check if the content we are cutting is smaller than 1000
-			if len(job.Content) < cutoff {
-				cutoff = len(job.Content)
-			}
+			cutoff := min(1000, len(job.Content)) // at most 1000 bytes into the file to look
 
 			if strings.Contains(string(job.Content[:cutoff]), t[0]) {
 				job.Language = t[1]
@@ -871,12 +858,7 @@ func unknownRemapLanguage(job *FileJob) bool {
 	for s := range strings.SplitSeq(RemapUnknown, ",") {
 		t := strings.Split(s, ":")
 		if len(t) == 2 {
-			cutoff := 1000 // 1000 bytes into the file to look
-
-			// To avoid runtime panic check if the content we are cutting is smaller than 1000
-			if len(job.Content) < cutoff {
-				cutoff = len(job.Content)
-			}
+			cutoff := min(1000, len(job.Content)) // at most 1000 bytes into the file to look
 
 			if strings.Contains(string(job.Content[:cutoff]), t[0]) {
 				printWarnF("unknown remapping: %s to %s", job.Location, job.Language)
