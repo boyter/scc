@@ -1470,6 +1470,44 @@ func TestUnicodeAwareRightPadUnicode(t *testing.T) {
 	}
 }
 
+func BenchmarkUnicodeAwareTrimExactSizeAscii(b *testing.B) {
+	tmp := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.md"
+	for b.Loop() {
+		res := unicodeAwareTrim(tmp, len(tmp))
+		if res != tmp {
+			b.Fatalf("expected %s got %s", tmp, res)
+		}
+	}
+}
+
+func BenchmarkUnicodeAwareTrimUnicode(b *testing.B) {
+	tmp := "中文中文中文中文中文中文中文中文中文中文中文中文中文中文中文中文.md"
+	for b.Loop() {
+		res := unicodeAwareTrim(tmp, shortFormatFileTruncate)
+		if res != "~文中文中文中文中文中文.md" {
+			b.Fatalf("expected ~文中文中文中文中文中文.md got %s", res)
+		}
+	}
+}
+
+func BenchmarkUnicodeAwareRightPad(b *testing.B) {
+	for b.Loop() {
+		tmp := unicodeAwareRightPad("", 10)
+		if runewidth.StringWidth(tmp) != 10 {
+			b.Fatal("expected length of 10")
+		}
+	}
+}
+
+func BenchmarkUnicodeAwareRightPadUnicode(b *testing.B) {
+	for b.Loop() {
+		tmp := unicodeAwareRightPad("中文", 10)
+		if runewidth.StringWidth(tmp) != 10 {
+			b.Fatal("expected length of 10")
+		}
+	}
+}
+
 // When using columise  ~28726 ns/op
 // When using optimised ~14293 ns/op
 func BenchmarkFileSummerize(b *testing.B) {
