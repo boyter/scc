@@ -13232,6 +13232,34 @@ var languageDatabase = map[string]Language{
 		FileNames:       []string{},
 		SheBangs:        []string{},
 	},
+	"XHTML": {
+		LineComment:      []string{},
+		ComplexityChecks: []string{},
+		Extensions: []string{
+			"xhtml",
+			"xhtm",
+			"xht",
+		},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"<!--",
+				"-->",
+			},
+		},
+		Quotes: []Quote{
+			{
+				Start:        "\"",
+				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+		},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"XML": {
 		LineComment:      []string{},
 		ComplexityChecks: []string{},

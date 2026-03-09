@@ -8161,6 +8161,17 @@
       }
     ]
   },
+  "XHTML": {
+    "extensions": ["xhtml", "xhtm", "xht"],
+    "line_comment": [],
+    "multi_line": [["<!--", "-->"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "XML": {
     "extensions": ["xml"],
     "line_comment": [],
