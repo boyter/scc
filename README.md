@@ -42,7 +42,7 @@ Licensed under MIT licence.
 
 While scc will always be a free and tool for individual developers, companies and businesses, we are exploring an enhanced version designed for teams and businesses. scc Enterprise will build on the core scc engine to provide historical analysis, team-level dashboards, and policy enforcement to help engineering leaders track code health, manage technical debt, and forecast project costs.
 
-We are currently gathering interest for a private beta. If you want to visualize your codebase's evolution, integrate quality gates into your CI/CD pipeline, and get a big-picture view across all your projects, 
+We are currently gathering interest for a private beta. If you want to visualize your codebase's evolution, integrate quality gates into your CI/CD pipeline, and get a big-picture view across all your projects,
 sign up for the early access list [here](https://docs.google.com/forms/d/e/1FAIpQLScIBKy3y2m0rKu89L67qwe26Xyn9Scu0gW-HQX9lC0qEAx9nQ/viewform)
 
 ### Install
@@ -556,7 +556,7 @@ LOCOMO is opt-in. Enable it with `--locomo` or use `--cost-comparison` to displa
 ```
 $ scc --locomo .
 ...
-LOCOMO LLM Cost Estimate (claude-sonnet)
+LOCOMO LLM Cost Estimate (medium)
   Tokens Required (in/out) 3.0M / 0.7M
   Cost to Generate $20
   Generation Time (serial) 3.9 hours
@@ -570,8 +570,8 @@ LOCOMO LLM Cost Estimate (claude-sonnet)
 LOCOMO uses SLOC and complexity data that `scc` already computes. The model works per-file and aggregates:
 
 1. **Output tokens** — each line of code maps to ~10 LLM output tokens (configurable).
-2. **Input tokens** — estimated prompting cost, scaled by code complexity. More complex code (higher branch density) requires more detailed prompts. Uses `sqrt(complexity/code)` scaling to prevent runaway estimates.
-3. **Iteration factor** — LLMs rarely produce correct code on the first try. A retry multiplier scales with complexity, also using sqrt scaling.
+2. **Input tokens** — estimated prompting cost, scaled by code complexity. More complex code (higher branch density) requires more detailed prompts. Scales to prevent runaway estimates.
+3. **Iteration factor** — LLMs rarely produce correct code on the first try. A retry multiplier scales with complexity, also scales.
 4. **Dollar cost** — input and output tokens multiplied by per-token pricing.
 5. **Generation time** — total serial output tokens divided by tokens-per-second throughput.
 6. **Human review time** — estimated per-line overhead for planning, review, testing, and integration.
@@ -1332,7 +1332,7 @@ Please use the following bibtex entry to cite scc in a publication:
 }
 </pre>
 
-You may need to check the release page https://github.com/boyter/scc/releases to find the correct year and month for the release you are using.
+You may need to check the release page <https://github.com/boyter/scc/releases> to find the correct year and month for the release you are using.
 
 ### Release Checklist
 

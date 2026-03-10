@@ -259,13 +259,13 @@ type Json2 struct {
 	EstimatedPeople         float64           `json:"estimatedPeople"`
 
 	// LOCOMO fields (only populated when --locomo or --cost-comparison is enabled)
-	EstimatedLLMCost                     *float64 `json:"estimatedLLMCost,omitempty"`
-	EstimatedLLMInputTokens              *float64 `json:"estimatedLLMInputTokens,omitempty"`
-	EstimatedLLMOutputTokens             *float64 `json:"estimatedLLMOutputTokens,omitempty"`
-	EstimatedLLMGenerationSeconds        *float64 `json:"estimatedLLMGenerationSeconds,omitempty"`
-	EstimatedLLMReviewHours              *float64 `json:"estimatedLLMReviewHours,omitempty"`
-	EstimatedLLMPreset                   *string  `json:"estimatedLLMPreset,omitempty"`
-	EstimatedLLMAverageComplexityMult    *float64 `json:"estimatedLLMAverageComplexityMultiplier,omitempty"`
+	EstimatedLLMCost                  *float64 `json:"estimatedLLMCost,omitempty"`
+	EstimatedLLMInputTokens           *float64 `json:"estimatedLLMInputTokens,omitempty"`
+	EstimatedLLMOutputTokens          *float64 `json:"estimatedLLMOutputTokens,omitempty"`
+	EstimatedLLMGenerationSeconds     *float64 `json:"estimatedLLMGenerationSeconds,omitempty"`
+	EstimatedLLMReviewHours           *float64 `json:"estimatedLLMReviewHours,omitempty"`
+	EstimatedLLMPreset                *string  `json:"estimatedLLMPreset,omitempty"`
+	EstimatedLLMAverageComplexityMult *float64 `json:"estimatedLLMAverageComplexityMultiplier,omitempty"`
 }
 
 func toJSON2(input chan *FileJob) string {
@@ -1367,7 +1367,7 @@ func calculateLocomo(sumCode, sumComplexity int64, str *strings.Builder) {
 	}
 
 	_, _ = p.Fprintf(str, "  Human Review Time %.1f hours\n", result.ReviewHours)
-	str.WriteString("  Disclaimer: rough ballpark for regenerating code using a frontier LLM.\n")
+	str.WriteString("  Disclaimer: rough ballpark for regenerating code using a LLM.\n")
 	str.WriteString("  Does not account for context reuse, test generation, or heavy debugging.\n")
 }
 
