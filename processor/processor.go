@@ -191,7 +191,7 @@ var Locomo = false
 var CostComparison = false
 
 // LocomoPresetName is the LLM model preset for pricing and throughput defaults
-var LocomoPresetName = "claude-sonnet"
+var LocomoPresetName = "medium"
 
 // LocomoInputPrice is the cost per 1M input tokens (overrides preset)
 var LocomoInputPrice float64

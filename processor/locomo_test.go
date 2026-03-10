@@ -55,7 +55,7 @@ func TestLocomoIterationFactorLowDensity(t *testing.T) {
 
 func TestLocomoEstimateBasic(t *testing.T) {
 	// Reset to defaults
-	LocomoPresetName = "claude-sonnet"
+	LocomoPresetName = "medium"
 	LocomoTokensPerLine = 10
 	LocomoBaseInputPerLine = 20
 	LocomoComplexityWeight = 5
@@ -92,13 +92,13 @@ func TestLocomoEstimateBasic(t *testing.T) {
 	if result.AverageComplexityMult <= 1 {
 		t.Error("Expected complexity multiplier > 1")
 	}
-	if result.Preset != "claude-sonnet" {
-		t.Errorf("Expected preset claude-sonnet, got %s", result.Preset)
+	if result.Preset != "medium" {
+		t.Errorf("Expected preset medium, got %s", result.Preset)
 	}
 }
 
 func TestLocomoEstimateZeroCode(t *testing.T) {
-	LocomoPresetName = "claude-sonnet"
+	LocomoPresetName = "medium"
 	LocomoConfig = ""
 	LocomoInputPriceSet = false
 	LocomoOutputPriceSet = false
@@ -121,7 +121,7 @@ func TestLocomoEstimateZeroCode(t *testing.T) {
 }
 
 func TestLocomoEstimateHighComplexity(t *testing.T) {
-	LocomoPresetName = "claude-sonnet"
+	LocomoPresetName = "medium"
 	LocomoConfig = ""
 	LocomoInputPriceSet = false
 	LocomoOutputPriceSet = false
@@ -148,7 +148,7 @@ func TestLocomoEstimateHighComplexity(t *testing.T) {
 }
 
 func TestLocomoEstimateLocalLlama(t *testing.T) {
-	LocomoPresetName = "local-llama"
+	LocomoPresetName = "local"
 	LocomoConfig = ""
 	LocomoInputPriceSet = false
 	LocomoOutputPriceSet = false
@@ -163,7 +163,7 @@ func TestLocomoEstimateLocalLlama(t *testing.T) {
 	result := LocomoEstimate(1000, 100)
 
 	if result.Cost != 0 {
-		t.Errorf("Expected 0 cost for local-llama, got %f", result.Cost)
+		t.Errorf("Expected 0 cost for local, got %f", result.Cost)
 	}
 	if result.GenerationSeconds <= 0 {
 		t.Error("Expected positive generation time even for local model")
@@ -172,8 +172,8 @@ func TestLocomoEstimateLocalLlama(t *testing.T) {
 
 func TestGetLocomoPresetUnknown(t *testing.T) {
 	p := GetLocomoPreset("nonexistent")
-	if p.Name != "claude-sonnet" {
-		t.Errorf("Expected fallback to claude-sonnet, got %s", p.Name)
+	if p.Name != "medium" {
+		t.Errorf("Expected fallback to medium, got %s", p.Name)
 	}
 }
 

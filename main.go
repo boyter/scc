@@ -480,8 +480,8 @@ func main() {
 	flags.StringVar(
 		&processor.LocomoPresetName,
 		"locomo-preset",
-		"claude-sonnet",
-		"LOCOMO model preset [claude-sonnet, claude-haiku, gpt-4o, gpt-4o-mini, local-llama]",
+		"medium",
+		"LOCOMO model preset [large, medium, small, local]",
 	)
 	flags.Float64Var(
 		&processor.LocomoReviewMinutesPerLine,

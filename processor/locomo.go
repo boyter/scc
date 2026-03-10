@@ -12,7 +12,9 @@ import (
 // Estimates the cost to regenerate a codebase using an LLM.
 // Analogous to COCOMO for human development — a rough ballpark estimator.
 
-// LocomoPreset defines the pricing and throughput for a specific LLM model
+// LocomoPreset defines the pricing and throughput for an LLM tier.
+// Presets are tier-based (large/medium/small/local) rather than model-specific,
+// so they don't go stale as specific models are retired or renamed.
 type LocomoPreset struct {
 	Name        string
 	InputPrice  float64 // cost per 1M input tokens
@@ -21,11 +23,14 @@ type LocomoPreset struct {
 }
 
 var locomoPresets = map[string]LocomoPreset{
-	"claude-sonnet": {Name: "claude-sonnet", InputPrice: 3.00, OutputPrice: 15.00, TPS: 50},
-	"claude-haiku":  {Name: "claude-haiku", InputPrice: 0.80, OutputPrice: 4.00, TPS: 100},
-	"gpt-4o":        {Name: "gpt-4o", InputPrice: 2.50, OutputPrice: 10.00, TPS: 50},
-	"gpt-4o-mini":   {Name: "gpt-4o-mini", InputPrice: 0.15, OutputPrice: 0.60, TPS: 100},
-	"local-llama":   {Name: "local-llama", InputPrice: 0.00, OutputPrice: 0.00, TPS: 15},
+	// large: frontier models (Claude Opus, GPT-4.5, Gemini Ultra, etc.)
+	"large": {Name: "large", InputPrice: 10.00, OutputPrice: 30.00, TPS: 30},
+	// medium: balanced models (Claude Sonnet, GPT-4o, Gemini Pro, etc.) — default
+	"medium": {Name: "medium", InputPrice: 3.00, OutputPrice: 15.00, TPS: 50},
+	// small: fast/cheap models (Claude Haiku, GPT-4o-mini, Gemini Flash, etc.)
+	"small": {Name: "small", InputPrice: 0.50, OutputPrice: 2.00, TPS: 100},
+	// local: self-hosted models (Llama, Mistral, etc.) — no API cost
+	"local": {Name: "local", InputPrice: 0.00, OutputPrice: 0.00, TPS: 15},
 }
 
 // LocomoResult holds the computed estimates from the LOCOMO model
@@ -39,13 +44,13 @@ type LocomoResult struct {
 	Preset                   string
 }
 
-// GetLocomoPreset returns the preset for the given name, falling back to claude-sonnet
+// GetLocomoPreset returns the preset for the given name, falling back to medium
 func GetLocomoPreset(name string) LocomoPreset {
 	p, ok := locomoPresets[strings.ToLower(name)]
 	if ok {
 		return p
 	}
-	return locomoPresets["claude-sonnet"]
+	return locomoPresets["medium"]
 }
 
 // LocomoComplexityDensity calculates complexity/code with a guard for division by zero

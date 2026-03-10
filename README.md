@@ -295,7 +295,7 @@ Flags:
       --locomo-config string               LOCOMO power-user config "tokensPerLine,inputPerLine,complexityWeight,iterations,iterationWeight"
       --locomo-input-price float           LOCOMO cost per 1M input tokens in dollars (overrides preset)
       --locomo-output-price float          LOCOMO cost per 1M output tokens in dollars (overrides preset)
-      --locomo-preset string               LOCOMO model preset [claude-sonnet, claude-haiku, gpt-4o, gpt-4o-mini, local-llama] (default "claude-sonnet")
+      --locomo-preset string               LOCOMO model preset [large, medium, small, local] (default "medium")
       --locomo-review float                human review minutes per line of code for LOCOMO estimate (default 0.01)
       --locomo-tps float                   LOCOMO output tokens per second (overrides preset)
       --cost-comparison                    show both COCOMO and LOCOMO estimates side by side
@@ -578,21 +578,20 @@ LOCOMO uses SLOC and complexity data that `scc` already computes. The model work
 
 #### Model presets
 
-Presets set pricing and throughput for common models. Use `--locomo-preset` to select one:
+Presets are tier-based rather than tied to specific models, so they don't go stale as models are retired or renamed. Use `--locomo-preset` to select a tier:
 
-| Preset | Input $/1M | Output $/1M | TPS | Use case |
-|--------|-----------|-------------|-----|----------|
-| `claude-sonnet` (default) | 3.00 | 15.00 | 50 | Frontier model, balanced |
-| `claude-haiku` | 0.80 | 4.00 | 100 | Fast and cheap |
-| `gpt-4o` | 2.50 | 10.00 | 50 | OpenAI flagship |
-| `gpt-4o-mini` | 0.15 | 0.60 | 100 | Budget option |
-| `local-llama` | 0.00 | 0.00 | 15 | Local model, no API cost |
+| Preset | Represents | Input $/1M | Output $/1M | TPS |
+|--------|-----------|-----------|-------------|-----|
+| `large` | Frontier models (Claude Opus, GPT-4.5, Gemini Ultra, etc.) | 10.00 | 30.00 | 30 |
+| `medium` (default) | Balanced models (Claude Sonnet, GPT-4o, Gemini Pro, etc.) | 3.00 | 15.00 | 50 |
+| `small` | Fast/cheap models (Claude Haiku, GPT-4o-mini, Gemini Flash, etc.) | 0.50 | 2.00 | 100 |
+| `local` | Self-hosted models (Llama, Mistral, etc.) | 0.00 | 0.00 | 15 |
 
-For `local-llama`, cost is $0 but generation time is still reported to capture the compute/time investment. Preset pricing reflects approximate rates as of early 2026 and will need periodic updates.
+For `local`, cost is $0 but generation time is still reported to capture the compute/time investment. Preset pricing reflects approximate tier rates as of early 2026 and can be overridden with explicit flags.
 
 ```
-scc --locomo --locomo-preset gpt-4o .
-scc --locomo --locomo-preset local-llama .
+scc --locomo --locomo-preset large .
+scc --locomo --locomo-preset local .
 ```
 
 #### Overriding preset values
@@ -653,7 +652,7 @@ LOCOMO is a rough estimator with known limitations:
 |------|---------|-------------|
 | `--locomo` | false | Enable LOCOMO output |
 | `--cost-comparison` | false | Show COCOMO + LOCOMO side by side |
-| `--locomo-preset` | claude-sonnet | Model preset for pricing and throughput |
+| `--locomo-preset` | medium | Model tier preset for pricing and throughput |
 | `--locomo-input-price` | (preset) | Override: cost per 1M input tokens ($) |
 | `--locomo-output-price` | (preset) | Override: cost per 1M output tokens ($) |
 | `--locomo-tps` | (preset) | Override: output tokens per second |
