@@ -257,6 +257,15 @@ type Json2 struct {
 	EstimatedCost           float64           `json:"estimatedCost"`
 	EstimatedScheduleMonths float64           `json:"estimatedScheduleMonths"`
 	EstimatedPeople         float64           `json:"estimatedPeople"`
+
+	// LOCOMO fields (only populated when --locomo or --cost-comparison is enabled)
+	EstimatedLLMCost                     *float64 `json:"estimatedLLMCost,omitempty"`
+	EstimatedLLMInputTokens              *float64 `json:"estimatedLLMInputTokens,omitempty"`
+	EstimatedLLMOutputTokens             *float64 `json:"estimatedLLMOutputTokens,omitempty"`
+	EstimatedLLMGenerationSeconds        *float64 `json:"estimatedLLMGenerationSeconds,omitempty"`
+	EstimatedLLMReviewHours              *float64 `json:"estimatedLLMReviewHours,omitempty"`
+	EstimatedLLMPreset                   *string  `json:"estimatedLLMPreset,omitempty"`
+	EstimatedLLMAverageComplexityMult    *float64 `json:"estimatedLLMAverageComplexityMultiplier,omitempty"`
 }
 
 func toJSON2(input chan *FileJob) string {
@@ -264,20 +273,34 @@ func toJSON2(input chan *FileJob) string {
 	language := aggregateLanguageSummary(input)
 	language = sortLanguageSummary(language)
 
-	var sumCode int64
+	var sumCode, sumComplexity int64
 	for _, l := range language {
 		sumCode += l.Code
+		sumComplexity += l.Complexity
 	}
 
 	cost, schedule, people := esstimateCostScheduleMonths(sumCode)
 
-	json := jsoniter.ConfigCompatibleWithStandardLibrary
-	jsonString, _ := json.Marshal(Json2{
+	j2 := Json2{
 		LanguageSummary:         language,
 		EstimatedCost:           cost,
 		EstimatedScheduleMonths: schedule,
 		EstimatedPeople:         people,
-	})
+	}
+
+	if Locomo {
+		result := LocomoEstimate(sumCode, sumComplexity)
+		j2.EstimatedLLMCost = &result.Cost
+		j2.EstimatedLLMInputTokens = &result.InputTokens
+		j2.EstimatedLLMOutputTokens = &result.OutputTokens
+		j2.EstimatedLLMGenerationSeconds = &result.GenerationSeconds
+		j2.EstimatedLLMReviewHours = &result.ReviewHours
+		j2.EstimatedLLMPreset = &result.Preset
+		j2.EstimatedLLMAverageComplexityMult = &result.AverageComplexityMult
+	}
+
+	json := jsoniter.ConfigCompatibleWithStandardLibrary
+	jsonString, _ := json.Marshal(j2)
 
 	printDebugF("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime)
 
@@ -623,14 +646,28 @@ func toHtmlTable(input chan *FileJob) string {
 		<th>%d</th>
 	</tr>`, sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumBytes, len(ulocGlobalCount))
 
+	hasCostOutput := false
 	if !Cocomo {
 		var sb strings.Builder
 		calculateCocomo(sumCode, &sb)
 		_, _ = fmt.Fprintf(str, `
 	<tr>
 		<th colspan="9">%s</th>
-	</tr></tfoot>
-	</table>`, strings.ReplaceAll(sb.String(), "\n", "<br>"))
+	</tr>`, strings.ReplaceAll(sb.String(), "\n", "<br>"))
+		hasCostOutput = true
+	}
+	if Locomo {
+		var sb strings.Builder
+		calculateLocomo(sumCode, sumComplexity, &sb)
+		_, _ = fmt.Fprintf(str, `
+	<tr>
+		<th colspan="9">%s</th>
+	</tr>`, strings.ReplaceAll(sb.String(), "\n", "<br>"))
+		hasCostOutput = true
+	}
+	if hasCostOutput {
+		str.WriteString(`</tfoot>
+	</table>`)
 	} else {
 		str.WriteString(`</tfoot></table>`)
 	}
@@ -645,12 +682,13 @@ func toSqlInsert(input chan *FileJob) string {
 		projectName = strings.Join(DirFilePaths, ",")
 	}
 
-	var sumCode int64
+	var sumCode, sumComplexity int64
 	str.WriteString("\nbegin transaction;")
 	count := 0
 	for res := range input {
 		count++
 		sumCode += res.Code
+		sumComplexity += res.Complexity
 
 		dir, _ := filepath.Split(res.Location)
 
@@ -683,6 +721,22 @@ func toSqlInsert(input chan *FileJob) string {
 		people,
 	)
 	str.WriteString("\ncommit;")
+
+	if Locomo {
+		result := LocomoEstimate(sumCode, sumComplexity)
+		str.WriteString("\nbegin transaction;")
+		_, _ = fmt.Fprintf(str, "\ninsert into locomo_metadata values('%s', '%s', %f, %f, %f, %f, %f, '%s');",
+			currentTime.Format("2006-01-02 15:04:05"),
+			projectName,
+			result.Cost,
+			result.InputTokens,
+			result.OutputTokens,
+			result.GenerationSeconds,
+			result.ReviewHours,
+			escapeSQLString(result.Preset),
+		)
+		str.WriteString("\ncommit;")
+	}
 
 	return str.String()
 }
@@ -990,6 +1044,9 @@ func fileSummarizeLong(input chan *FileJob) string {
 			calculateCocomo(sumCode, str)
 		}
 	}
+	if Locomo {
+		calculateLocomo(sumCode, sumComplexity, str)
+	}
 	if !Size {
 		calculateSize(sumBytes, str)
 		str.WriteString(getTabularWideBreak())
@@ -1207,6 +1264,10 @@ func fileSummarizeShort(input chan *FileJob) string {
 		}
 		str.WriteString(getTabularShortBreak())
 	}
+	if Locomo {
+		calculateLocomo(sumCode, sumComplexity, str)
+		str.WriteString(getTabularShortBreak())
+	}
 	if !Size {
 		calculateSize(sumBytes, str)
 		str.WriteString(getTabularShortBreak())
@@ -1286,6 +1347,28 @@ func esstimateCostScheduleMonths(sumCode int64) (float64, float64, float64) {
 		estimatedPeopleRequired = estimatedEffort / estimatedScheduleMonths
 	}
 	return estimatedCost, estimatedScheduleMonths, estimatedPeopleRequired
+}
+
+func calculateLocomo(sumCode, sumComplexity int64, str *strings.Builder) {
+	result := LocomoEstimate(sumCode, sumComplexity)
+
+	p := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
+
+	_, _ = p.Fprintf(str, "LOCOMO LLM Cost Estimate (%s)\n", result.Preset)
+	_, _ = p.Fprintf(str, "  Tokens Required (in/out) %.1fM / %.1fM\n", result.InputTokens/1_000_000, result.OutputTokens/1_000_000)
+	_, _ = p.Fprintf(str, "  Cost to Generate %s%.0f\n", CurrencySymbol, result.Cost)
+
+	if result.GenerationSeconds > 86400 {
+		_, _ = p.Fprintf(str, "  Generation Time (serial) %.1f days\n", result.GenerationSeconds/86400)
+	} else if result.GenerationSeconds > 3600 {
+		_, _ = p.Fprintf(str, "  Generation Time (serial) %.1f hours\n", result.GenerationSeconds/3600)
+	} else {
+		_, _ = p.Fprintf(str, "  Generation Time (serial) %.1f minutes\n", result.GenerationSeconds/60)
+	}
+
+	_, _ = p.Fprintf(str, "  Human Review Time %.1f hours\n", result.ReviewHours)
+	str.WriteString("  Disclaimer: rough ballpark for regenerating code using a frontier LLM.\n")
+	str.WriteString("  Does not account for context reuse, test generation, or heavy debugging.\n")
 }
 
 func calculateSize(sumBytes int64, str *strings.Builder) {

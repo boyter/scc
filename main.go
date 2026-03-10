@@ -78,6 +78,12 @@ func main() {
 			processor.DirFilePaths = args
 			processor.ConfigureGc()
 			processor.ConfigureLazy(true)
+
+			// Detect if LOCOMO price/tps flags were explicitly set
+			processor.LocomoInputPriceSet = cmd.PersistentFlags().Changed("locomo-input-price")
+			processor.LocomoOutputPriceSet = cmd.PersistentFlags().Changed("locomo-output-price")
+			processor.LocomoTPSSet = cmd.PersistentFlags().Changed("locomo-tps")
+
 			processor.Process()
 		},
 	}
@@ -458,6 +464,54 @@ func main() {
 		"currency-symbol",
 		"$",
 		"set currency symbol",
+	)
+	flags.BoolVar(
+		&processor.Locomo,
+		"locomo",
+		false,
+		"enable LOCOMO (LLM Output COst MOdel) cost estimation",
+	)
+	flags.BoolVar(
+		&processor.CostComparison,
+		"cost-comparison",
+		false,
+		"show both COCOMO and LOCOMO estimates side by side",
+	)
+	flags.StringVar(
+		&processor.LocomoPresetName,
+		"locomo-preset",
+		"claude-sonnet",
+		"LOCOMO model preset [claude-sonnet, claude-haiku, gpt-4o, gpt-4o-mini, local-llama]",
+	)
+	flags.Float64Var(
+		&processor.LocomoReviewMinutesPerLine,
+		"locomo-review",
+		0.01,
+		"human review minutes per line of code for LOCOMO estimate",
+	)
+	flags.StringVar(
+		&processor.LocomoConfig,
+		"locomo-config",
+		"",
+		"LOCOMO power-user config \"tokensPerLine,inputPerLine,complexityWeight,iterations,iterationWeight\"",
+	)
+	flags.Float64Var(
+		&processor.LocomoInputPrice,
+		"locomo-input-price",
+		0,
+		"LOCOMO cost per 1M input tokens in dollars (overrides preset)",
+	)
+	flags.Float64Var(
+		&processor.LocomoOutputPrice,
+		"locomo-output-price",
+		0,
+		"LOCOMO cost per 1M output tokens in dollars (overrides preset)",
+	)
+	flags.Float64Var(
+		&processor.LocomoTPS,
+		"locomo-tps",
+		0,
+		"LOCOMO output tokens per second (overrides preset)",
 	)
 
 	// If invoked in the format of "scc completion --shell [name of shell]", generate command line completions instead.
