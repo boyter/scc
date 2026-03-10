@@ -66,6 +66,7 @@ func TestLocomoEstimateBasic(t *testing.T) {
 	LocomoInputPriceSet = false
 	LocomoOutputPriceSet = false
 	LocomoTPSSet = false
+	LocomoCyclesSet = false
 
 	result := LocomoEstimate(1000, 100)
 
@@ -193,6 +194,70 @@ func TestParseLocomoConfigInvalid(t *testing.T) {
 	// Should remain unchanged
 	if a != 10 || b != 20 || c != 5 || d != 1.5 || e != 2 {
 		t.Error("Invalid config should not change defaults")
+	}
+}
+
+func TestLocomoEstimateIterationFactorPopulated(t *testing.T) {
+	LocomoPresetName = "medium"
+	LocomoConfig = ""
+	LocomoInputPriceSet = false
+	LocomoOutputPriceSet = false
+	LocomoTPSSet = false
+	LocomoCyclesSet = false
+	LocomoTokensPerLine = 10
+	LocomoBaseInputPerLine = 20
+	LocomoComplexityWeight = 5
+	LocomoIterations = 1.5
+	LocomoIterationWeight = 2
+	LocomoReviewMinutesPerLine = 0.01
+
+	result := LocomoEstimate(1000, 100)
+
+	if result.IterationFactor <= 0 {
+		t.Error("Expected positive IterationFactor")
+	}
+	// density = 0.1, iFactor = 1.5 + sqrt(0.1)*2 ≈ 2.13
+	if result.IterationFactor < 2.0 || result.IterationFactor > 2.3 {
+		t.Errorf("Expected IterationFactor ~2.13, got %f", result.IterationFactor)
+	}
+}
+
+func TestLocomoCyclesOverride(t *testing.T) {
+	LocomoPresetName = "medium"
+	LocomoConfig = ""
+	LocomoInputPriceSet = false
+	LocomoOutputPriceSet = false
+	LocomoTPSSet = false
+	LocomoTokensPerLine = 10
+	LocomoBaseInputPerLine = 20
+	LocomoComplexityWeight = 5
+	LocomoIterations = 1.5
+	LocomoIterationWeight = 2
+	LocomoReviewMinutesPerLine = 0.01
+
+	// First get the default result
+	LocomoCyclesSet = false
+	defaultResult := LocomoEstimate(1000, 100)
+
+	// Now override with 100 cycles
+	LocomoCyclesSet = true
+	LocomoCyclesOverride = 100
+	overrideResult := LocomoEstimate(1000, 100)
+
+	// Reset
+	LocomoCyclesSet = false
+	LocomoCyclesOverride = 0
+
+	if overrideResult.IterationFactor != 100 {
+		t.Errorf("Expected IterationFactor 100, got %f", overrideResult.IterationFactor)
+	}
+	if overrideResult.Cost <= defaultResult.Cost {
+		t.Error("Expected override cost to be higher than default")
+	}
+	// Cost should scale roughly proportionally with cycles
+	ratio := overrideResult.Cost / defaultResult.Cost
+	if ratio < 30 || ratio > 70 {
+		t.Errorf("Cost ratio seems off: %f (expected ~47x for 100 vs ~2.13 cycles)", ratio)
 	}
 }
 

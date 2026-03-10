@@ -226,6 +226,12 @@ var LocomoIterations float64 = 1.5
 // LocomoIterationWeight is the scaling weight for complexity-driven retries
 var LocomoIterationWeight float64 = 2
 
+// LocomoCyclesOverride is the user-supplied iteration factor override (--locomo-cycles)
+var LocomoCyclesOverride float64
+
+// LocomoCyclesSet indicates whether --locomo-cycles was explicitly set
+var LocomoCyclesSet = false
+
 // GcFileCount is the number of files to process before turning the GC back on
 var GcFileCount = 10000
 var gcPercent = -1

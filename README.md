@@ -293,6 +293,7 @@ Flags:
       --large-line-count int               number of lines a file can contain before being removed from output (default 40000)
       --locomo                             enable LOCOMO (LLM Output COst MOdel) cost estimation
       --locomo-config string               LOCOMO power-user config "tokensPerLine,inputPerLine,complexityWeight,iterations,iterationWeight"
+      --locomo-cycles float               override estimated LLM iteration cycles (default: calculated from complexity)
       --locomo-input-price float           LOCOMO cost per 1M input tokens in dollars (overrides preset)
       --locomo-output-price float          LOCOMO cost per 1M output tokens in dollars (overrides preset)
       --locomo-preset string               LOCOMO model preset [large, medium, small, local] (default "medium")
@@ -553,6 +554,8 @@ LOCOMO (LLM Output COst MOdel) estimates the cost to regenerate a codebase using
 
 Note: LOCOMO was developed as part of `scc` and is not an industry-standard model. Unlike COCOMO, which is based on decades of empirical research by Barry Boehm, LOCOMO is an experimental heuristic designed to give a useful order-of-magnitude estimate for LLM-assisted development costs. Treat its output as a conversation starter, not a definitive answer.
 
+**Important distinction:** LOCOMO estimates the cost to **regenerate** known code — essentially "given this exact codebase, how much would it cost to have an LLM produce it?" This is fundamentally different from the cost to **create** something from scratch, which involves exploration, architectural decisions, dead ends, debugging, and iteration that can cost orders of magnitude more. COCOMO estimates the human *creation* cost; LOCOMO estimates the LLM *regeneration* cost. They answer different questions.
+
 LOCOMO is opt-in. Enable it with `--locomo` or use `--cost-comparison` to display both COCOMO and LOCOMO side by side.
 
 ```
@@ -561,6 +564,7 @@ $ scc --locomo .
 LOCOMO LLM Cost Estimate (medium)
   Tokens Required (in/out) 3.0M / 0.7M
   Cost to Generate $20
+  Estimated Cycles 2.1
   Generation Time (serial) 3.9 hours
   Human Review Time 5.9 hours
   Disclaimer: rough ballpark for regenerating code using a frontier LLM.
@@ -659,6 +663,7 @@ LOCOMO is a rough estimator with known limitations:
 | `--locomo-output-price` | (preset) | Override: cost per 1M output tokens ($) |
 | `--locomo-tps` | (preset) | Override: output tokens per second |
 | `--locomo-review` | 0.01 | Human review minutes per line of code |
+| `--locomo-cycles` | (calculated) | Override estimated LLM iteration cycles |
 | `--locomo-config` | 10,20,5,1.5,2 | Power-user model parameters |
 
 ### Large File Detection

@@ -266,6 +266,7 @@ type Json2 struct {
 	EstimatedLLMReviewHours           *float64 `json:"estimatedLLMReviewHours,omitempty"`
 	EstimatedLLMPreset                *string  `json:"estimatedLLMPreset,omitempty"`
 	EstimatedLLMAverageComplexityMult *float64 `json:"estimatedLLMAverageComplexityMultiplier,omitempty"`
+	EstimatedLLMCycles                *float64 `json:"estimatedLLMCycles,omitempty"`
 }
 
 func toJSON2(input chan *FileJob) string {
@@ -297,6 +298,7 @@ func toJSON2(input chan *FileJob) string {
 		j2.EstimatedLLMReviewHours = &result.ReviewHours
 		j2.EstimatedLLMPreset = &result.Preset
 		j2.EstimatedLLMAverageComplexityMult = &result.AverageComplexityMult
+		j2.EstimatedLLMCycles = &result.IterationFactor
 	}
 
 	json := jsoniter.ConfigCompatibleWithStandardLibrary
@@ -725,7 +727,7 @@ func toSqlInsert(input chan *FileJob) string {
 	if Locomo {
 		result := LocomoEstimate(sumCode, sumComplexity)
 		str.WriteString("\nbegin transaction;")
-		_, _ = fmt.Fprintf(str, "\ninsert into locomo_metadata values('%s', '%s', %f, %f, %f, %f, %f, '%s');",
+		_, _ = fmt.Fprintf(str, "\ninsert into locomo_metadata values('%s', '%s', %f, %f, %f, %f, %f, '%s', %f);",
 			currentTime.Format("2006-01-02 15:04:05"),
 			projectName,
 			result.Cost,
@@ -734,6 +736,7 @@ func toSqlInsert(input chan *FileJob) string {
 			result.GenerationSeconds,
 			result.ReviewHours,
 			escapeSQLString(result.Preset),
+			result.IterationFactor,
 		)
 		str.WriteString("\ncommit;")
 	}
@@ -1357,6 +1360,7 @@ func calculateLocomo(sumCode, sumComplexity int64, str *strings.Builder) {
 	_, _ = p.Fprintf(str, "LOCOMO LLM Cost Estimate (%s)\n", result.Preset)
 	_, _ = p.Fprintf(str, "  Tokens Required (in/out) %.1fM / %.1fM\n", result.InputTokens/1_000_000, result.OutputTokens/1_000_000)
 	_, _ = p.Fprintf(str, "  Cost to Generate %s%.0f\n", CurrencySymbol, result.Cost)
+	_, _ = p.Fprintf(str, "  Estimated Cycles %.1f\n", result.IterationFactor)
 
 	if result.GenerationSeconds > 86400 {
 		_, _ = p.Fprintf(str, "  Generation Time (serial) %.1f days\n", result.GenerationSeconds/86400)

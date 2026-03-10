@@ -83,6 +83,7 @@ func main() {
 			processor.LocomoInputPriceSet = cmd.PersistentFlags().Changed("locomo-input-price")
 			processor.LocomoOutputPriceSet = cmd.PersistentFlags().Changed("locomo-output-price")
 			processor.LocomoTPSSet = cmd.PersistentFlags().Changed("locomo-tps")
+			processor.LocomoCyclesSet = cmd.PersistentFlags().Changed("locomo-cycles")
 
 			processor.Process()
 		},
@@ -512,6 +513,12 @@ func main() {
 		"locomo-tps",
 		0,
 		"LOCOMO output tokens per second (overrides preset)",
+	)
+	flags.Float64Var(
+		&processor.LocomoCyclesOverride,
+		"locomo-cycles",
+		0,
+		"override estimated LLM iteration cycles (default: calculated from complexity)",
 	)
 
 	// If invoked in the format of "scc completion --shell [name of shell]", generate command line completions instead.

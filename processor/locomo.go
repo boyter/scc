@@ -35,13 +35,14 @@ var locomoPresets = map[string]LocomoPreset{
 
 // LocomoResult holds the computed estimates from the LOCOMO model
 type LocomoResult struct {
-	InputTokens              float64
-	OutputTokens             float64
-	Cost                     float64
-	GenerationSeconds        float64
-	ReviewHours              float64
-	AverageComplexityMult    float64
-	Preset                   string
+	InputTokens           float64
+	OutputTokens          float64
+	Cost                  float64
+	GenerationSeconds     float64
+	ReviewHours           float64
+	AverageComplexityMult float64
+	IterationFactor       float64
+	Preset                string
 }
 
 // GetLocomoPreset returns the preset for the given name, falling back to medium
@@ -107,6 +108,10 @@ func LocomoEstimate(sumCode, sumComplexity int64) LocomoResult {
 	cFactor := LocomoComplexityFactor(density, complexityWeight)
 	iFactor := LocomoIterationFactor(density, baseIterations, iterationWeight)
 
+	if LocomoCyclesSet && LocomoCyclesOverride > 0 {
+		iFactor = LocomoCyclesOverride
+	}
+
 	outputTokens := float64(sumCode) * tokensPerLine * iFactor
 	inputTokens := float64(sumCode) * baseInputPerLine * cFactor * iFactor
 
@@ -126,6 +131,7 @@ func LocomoEstimate(sumCode, sumComplexity int64) LocomoResult {
 		GenerationSeconds:     generationSeconds,
 		ReviewHours:           reviewHours,
 		AverageComplexityMult: cFactor * iFactor,
+		IterationFactor:       iFactor,
 		Preset:                preset.Name,
 	}
 }
