@@ -4,7 +4,7 @@
 
 A tool similar to cloc, sloccount and tokei. For counting the lines of code, blank lines, comment lines, and physical lines of source code in many programming languages.
 
-Goal is to be the fastest code counter possible, but also perform COCOMO calculation like sloccount, estimate code complexity similar to cyclomatic complexity calculators and produce unique lines of code or DRYness metrics. In short one tool to rule them all.
+Goal is to be the fastest code counter possible, but also perform COCOMO calculation like sloccount, LOCOMO estimation for LLM-based development costs, estimate code complexity similar to cyclomatic complexity calculators and produce unique lines of code or DRYness metrics. In short one tool to rule them all.
 
 Also it has a very short name which is easy to type `scc`.
 
@@ -28,6 +28,7 @@ Licensed under MIT licence.
 - [Complexity Estimates](#complexity-estimates)
 - [Unique Lines of Code (ULOC)](#unique-lines-of-code-uloc)
 - [COCOMO](#cocomo)
+- [LOCOMO](#locomo)
 - [Output Formats](#output-formats)
 - [Performance](#performance)
 - [Development](#development)
@@ -41,7 +42,7 @@ Licensed under MIT licence.
 
 While scc will always be a free and tool for individual developers, companies and businesses, we are exploring an enhanced version designed for teams and businesses. scc Enterprise will build on the core scc engine to provide historical analysis, team-level dashboards, and policy enforcement to help engineering leaders track code health, manage technical debt, and forecast project costs.
 
-We are currently gathering interest for a private beta. If you want to visualize your codebase's evolution, integrate quality gates into your CI/CD pipeline, and get a big-picture view across all your projects, 
+We are currently gathering interest for a private beta. If you want to visualize your codebase's evolution, integrate quality gates into your CI/CD pipeline, and get a big-picture view across all your projects,
 sign up for the early access list [here](https://docs.google.com/forms/d/e/1FAIpQLScIBKy3y2m0rKu89L67qwe26Xyn9Scu0gW-HQX9lC0qEAx9nQ/viewform)
 
 ### Install
@@ -290,6 +291,14 @@ Flags:
   -l, --languages                          print supported languages and extensions
       --large-byte-count int               number of bytes a file can contain before being removed from output (default 1000000)
       --large-line-count int               number of lines a file can contain before being removed from output (default 40000)
+      --locomo                             enable LOCOMO (LLM Output COst MOdel) cost estimation
+      --locomo-config string               LOCOMO power-user config "tokensPerLine,inputPerLine,complexityWeight,iterations,iterationWeight"
+      --locomo-input-price float           LOCOMO cost per 1M input tokens in dollars (overrides preset)
+      --locomo-output-price float          LOCOMO cost per 1M output tokens in dollars (overrides preset)
+      --locomo-preset string               LOCOMO model preset [large, medium, small, local] (default "medium")
+      --locomo-review float                human review minutes per line of code for LOCOMO estimate (default 0.01)
+      --locomo-tps float                   LOCOMO output tokens per second (overrides preset)
+      --cost-comparison                    show both COCOMO and LOCOMO estimates side by side
       --min                                identify minified files
   -z, --min-gen                            identify minified or generated files
       --min-gen-line-length int            number of bytes per average line for file to be considered minified or generated (default 255)
@@ -537,6 +546,120 @@ requirement fall under this category. Such software requires a larger team size 
 and also the developers need to be sufficiently experienced and creative to develop such complex models.
 
 `scc --cocomo-project-type "embedded,3.6,1.20,2.5,0.32"`
+
+### LOCOMO
+
+LOCOMO (LLM Output COst MOdel) estimates the cost to regenerate a codebase using a large language model. It is the LLM-era counterpart to COCOMO — a rough ballpark estimator, not a project planning tool.
+
+Note: LOCOMO was developed as part of `scc` and is not an industry-standard model. Unlike COCOMO, which is based on decades of empirical research by Barry Boehm, LOCOMO is an experimental heuristic designed to give a useful order-of-magnitude estimate for LLM-assisted development costs. Treat its output as a conversation starter, not a definitive answer.
+
+LOCOMO is opt-in. Enable it with `--locomo` or use `--cost-comparison` to display both COCOMO and LOCOMO side by side.
+
+```
+$ scc --locomo .
+...
+LOCOMO LLM Cost Estimate (medium)
+  Tokens Required (in/out) 3.0M / 0.7M
+  Cost to Generate $20
+  Generation Time (serial) 3.9 hours
+  Human Review Time 5.9 hours
+  Disclaimer: rough ballpark for regenerating code using a frontier LLM.
+  Does not account for context reuse, test generation, or heavy debugging.
+```
+
+#### How it works
+
+LOCOMO uses SLOC and complexity data that `scc` already computes. The model works per-file and aggregates:
+
+1. **Output tokens** — each line of code maps to ~10 LLM output tokens (configurable).
+2. **Input tokens** — estimated prompting cost, scaled by code complexity. More complex code (higher branch density) requires more detailed prompts. Scales to prevent runaway estimates.
+3. **Iteration factor** — LLMs rarely produce correct code on the first try. A retry multiplier scales with complexity, also scales.
+4. **Dollar cost** — input and output tokens multiplied by per-token pricing.
+5. **Generation time** — total serial output tokens divided by tokens-per-second throughput.
+6. **Human review time** — estimated per-line overhead for planning, review, testing, and integration.
+
+#### Model presets
+
+Presets are tier-based rather than tied to specific models, so they don't go stale as models are retired or renamed. Use `--locomo-preset` to select a tier:
+
+| Preset | Represents | Input $/1M | Output $/1M | TPS |
+|--------|-----------|-----------|-------------|-----|
+| `large` | Frontier models (Opus, GPT-5.3, Gemini 3.1 Pro, etc.) | 10.00 | 30.00 | 30 |
+| `medium` (default) | Balanced models (Sonnet, Gemini Flash, etc.) | 3.00 | 15.00 | 50 |
+| `small` | Fast/cheap models (Haiku, GPT-4o-mini, etc.) | 0.50 | 2.00 | 100 |
+| `local` | Self-hosted models (Llama, Mistral, Qwen etc.) | 0.00 | 0.00 | 15 |
+
+For `local`, cost is $0 but generation time is still reported to capture the compute/time investment. Preset pricing reflects approximate tier rates as of early 2026 and can be overridden with explicit flags.
+
+```
+scc --locomo --locomo-preset large .
+scc --locomo --locomo-preset local .
+```
+
+#### Overriding preset values
+
+You can override individual preset values for pricing or throughput:
+
+```
+scc --locomo --locomo-input-price 1.0 --locomo-output-price 5.0 .
+scc --locomo --locomo-tps 100 .
+```
+
+#### Human review time
+
+The `--locomo-review` flag controls estimated human review minutes per line of code (default: 0.01, i.e. 0.6 seconds per line). This is intentionally optimistic and assumes light oversight.
+
+For mission-critical, security-sensitive, or complex algorithmic code you should increase this:
+
+```
+scc --locomo --locomo-review 0.05 .
+scc --locomo --locomo-review 0.1 .
+```
+
+#### Power-user configuration
+
+The internal model parameters (tokens per line, base input per line, complexity weight, iteration count, iteration weight) can be overridden with a single comma-separated config string:
+
+```
+scc --locomo --locomo-config "tokensPerLine,inputPerLine,complexityWeight,iterations,iterationWeight"
+```
+
+The defaults are `"10,20,5,1.5,2"`. For example, to use fewer tokens per line and lower complexity sensitivity:
+
+```
+scc --locomo --locomo-config "8,15,3,2.0,1.5"
+```
+
+#### Comparing COCOMO and LOCOMO
+
+Use `--cost-comparison` to show both estimates side by side. This enables COCOMO (if it was disabled) and LOCOMO together:
+
+```
+scc --cost-comparison .
+```
+
+#### What LOCOMO does not account for
+
+LOCOMO is a rough estimator with known limitations:
+
+- **No context reuse.** Real LLM-assisted development shares context across files. The per-file model overestimates input tokens for large projects with shared patterns.
+- **Boilerplate vs algorithmic code.** A 500-line CRUD controller and a 500-line compression algorithm have very different real costs, but the model only differentiates them via complexity density.
+- **Code that LLMs can't write well.** Complex concurrency, platform-specific edge cases, and security-critical crypto need human authoring, not just review.
+- **No test generation cost.** The model estimates source code generation only, not test suites.
+- **Pricing changes.** LLM pricing drops rapidly. Preset defaults will become stale — use explicit price flags for current estimates.
+
+#### All LOCOMO flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--locomo` | false | Enable LOCOMO output |
+| `--cost-comparison` | false | Show COCOMO + LOCOMO side by side |
+| `--locomo-preset` | medium | Model tier preset for pricing and throughput |
+| `--locomo-input-price` | (preset) | Override: cost per 1M input tokens ($) |
+| `--locomo-output-price` | (preset) | Override: cost per 1M output tokens ($) |
+| `--locomo-tps` | (preset) | Override: output tokens per second |
+| `--locomo-review` | 0.01 | Human review minutes per line of code |
+| `--locomo-config` | 10,20,5,1.5,2 | Power-user model parameters |
 
 ### Large File Detection
 
@@ -1211,7 +1334,7 @@ Please use the following bibtex entry to cite scc in a publication:
 }
 </pre>
 
-You may need to check the release page https://github.com/boyter/scc/releases to find the correct year and month for the release you are using.
+You may need to check the release page <https://github.com/boyter/scc/releases> to find the correct year and month for the release you are using.
 
 ### Release Checklist
 

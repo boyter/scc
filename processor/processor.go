@@ -184,6 +184,48 @@ var Overhead float64 = 2.4
 // EAF is the effort adjustment factor derived from the cost drivers, i.e. 1.0 if rated nominal
 var EAF float64 = 1.0
 
+// Locomo toggles the LOCOMO (LLM Output COst MOdel) calculation
+var Locomo = false
+
+// CostComparison enables both COCOMO and LOCOMO output for side-by-side comparison
+var CostComparison = false
+
+// LocomoPresetName is the LLM model preset for pricing and throughput defaults
+var LocomoPresetName = "medium"
+
+// LocomoInputPrice is the cost per 1M input tokens (overrides preset)
+var LocomoInputPrice float64
+var LocomoInputPriceSet = false
+
+// LocomoOutputPrice is the cost per 1M output tokens (overrides preset)
+var LocomoOutputPrice float64
+var LocomoOutputPriceSet = false
+
+// LocomoTPS is the output tokens per second (overrides preset)
+var LocomoTPS float64
+var LocomoTPSSet = false
+
+// LocomoReviewMinutesPerLine is the human review time per line of code in minutes
+var LocomoReviewMinutesPerLine float64 = 0.01
+
+// LocomoConfig is the power-user config string "tokensPerLine,baseInputPerLine,complexityWeight,iterations,iterationWeight"
+var LocomoConfig = ""
+
+// LocomoTokensPerLine is the average number of output tokens per line of code
+var LocomoTokensPerLine float64 = 10
+
+// LocomoBaseInputPerLine is the base number of input tokens per output line
+var LocomoBaseInputPerLine float64 = 20
+
+// LocomoComplexityWeight is the scaling weight applied to sqrt(complexity density) for input tokens
+var LocomoComplexityWeight float64 = 5
+
+// LocomoIterations is the base number of iteration/retry attempts
+var LocomoIterations float64 = 1.5
+
+// LocomoIterationWeight is the scaling weight for complexity-driven retries
+var LocomoIterationWeight float64 = 2
+
 // GcFileCount is the number of files to process before turning the GC back on
 var GcFileCount = 10000
 var gcPercent = -1
@@ -476,8 +518,21 @@ func processFlags() {
 	printDebugF("Duplicates Detection: %t", Duplicates)
 	printDebugF("Complexity Calculation: %t", !Complexity)
 	printDebugF("Wide: %t", More)
+	// If cost-comparison is enabled, turn on both COCOMO and LOCOMO
+	if CostComparison {
+		Cocomo = false
+		Locomo = true
+	}
+
+	// LOCOMO needs complexity data to produce accurate estimates.
+	// If complexity was disabled via --no-complexity, force it back on.
+	if Locomo && Complexity {
+		Complexity = false
+	}
+
 	printDebugF("Average Wage: %d", AverageWage)
 	printDebugF("Cocomo: %t", !Cocomo)
+	printDebugF("Locomo: %t", Locomo)
 	printDebugF("Minified/Generated Detection: %t/%t", Minified, Generated)
 	printDebugF("Ignore Minified/Generated: %t/%t", IgnoreMinified, IgnoreGenerated)
 	printDebugF("IncludeSymLinks: %t", IncludeSymLinks)
