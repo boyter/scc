@@ -551,6 +551,8 @@ and also the developers need to be sufficiently experienced and creative to deve
 
 LOCOMO (LLM Output COst MOdel) estimates the cost to regenerate a codebase using a large language model. It is the LLM-era counterpart to COCOMO — a rough ballpark estimator, not a project planning tool.
 
+Note: LOCOMO was developed as part of `scc` and is not an industry-standard model. Unlike COCOMO, which is based on decades of empirical research by Barry Boehm, LOCOMO is an experimental heuristic designed to give a useful order-of-magnitude estimate for LLM-assisted development costs. Treat its output as a conversation starter, not a definitive answer.
+
 LOCOMO is opt-in. Enable it with `--locomo` or use `--cost-comparison` to display both COCOMO and LOCOMO side by side.
 
 ```
