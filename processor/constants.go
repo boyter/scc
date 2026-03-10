@@ -7557,6 +7557,46 @@ var languageDatabase = map[string]Language{
 		FileNames:       []string{},
 		SheBangs:        []string{},
 	},
+	"Mog": {
+		LineComment: []string{
+			"//",
+		},
+		ComplexityChecks: []string{
+			"for ",
+			"if ",
+			"if(",
+			"while ",
+			"while(",
+			"else ",
+			"match ",
+			"or ",
+			"and ",
+			"|| ",
+			"&& ",
+			"!= ",
+			"== ",
+			"catch ",
+			"catch(",
+			"try ",
+		},
+		Extensions: []string{
+			"mog",
+		},
+		ExtensionFile: false,
+		MultiLine:     [][]string{},
+		Quotes: []Quote{
+			{
+				Start:        "\"",
+				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+		},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"Monkey C": {
 		LineComment: []string{
 			"//",

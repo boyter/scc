@@ -4659,6 +4659,35 @@
     "multi_line": [],
     "quotes": []
   },
+  "Mog": {
+    "complexitychecks": [
+      "for ",
+      "if ",
+      "if(",
+      "while ",
+      "while(",
+      "else ",
+      "match ",
+      "or ",
+      "and ",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== ",
+      "catch ",
+      "catch(",
+      "try "
+    ],
+    "extensions": ["mog"],
+    "line_comment": ["//"],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "Monkey C": {
     "complexitychecks": [
       "for ",
