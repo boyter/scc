@@ -567,7 +567,7 @@ LOCOMO LLM Cost Estimate (medium)
   Estimated Cycles 2.1
   Generation Time (serial) 3.9 hours
   Human Review Time 5.9 hours
-  Disclaimer: rough ballpark for regenerating code using a frontier LLM.
+  Disclaimer: rough ballpark for regenerating code using a LLM.
   Does not account for context reuse, test generation, or heavy debugging.
 ```
 
