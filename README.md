@@ -582,10 +582,10 @@ Presets are tier-based rather than tied to specific models, so they don't go sta
 
 | Preset | Represents | Input $/1M | Output $/1M | TPS |
 |--------|-----------|-----------|-------------|-----|
-| `large` | Frontier models (Claude Opus, GPT-4.5, Gemini Ultra, etc.) | 10.00 | 30.00 | 30 |
-| `medium` (default) | Balanced models (Claude Sonnet, GPT-4o, Gemini Pro, etc.) | 3.00 | 15.00 | 50 |
-| `small` | Fast/cheap models (Claude Haiku, GPT-4o-mini, Gemini Flash, etc.) | 0.50 | 2.00 | 100 |
-| `local` | Self-hosted models (Llama, Mistral, etc.) | 0.00 | 0.00 | 15 |
+| `large` | Frontier models (Opus, GPT-5.3, Gemini 3.1 Pro, etc.) | 10.00 | 30.00 | 30 |
+| `medium` (default) | Balanced models (Sonnet, Gemini Flash, etc.) | 3.00 | 15.00 | 50 |
+| `small` | Fast/cheap models (Haiku, GPT-4o-mini, etc.) | 0.50 | 2.00 | 100 |
+| `local` | Self-hosted models (Llama, Mistral, Qwen etc.) | 0.00 | 0.00 | 15 |
 
 For `local`, cost is $0 but generation time is still reported to capture the compute/time investment. Preset pricing reflects approximate tier rates as of early 2026 and can be overridden with explicit flags.
 

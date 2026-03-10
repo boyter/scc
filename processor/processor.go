@@ -524,6 +524,12 @@ func processFlags() {
 		Locomo = true
 	}
 
+	// LOCOMO needs complexity data to produce accurate estimates.
+	// If complexity was disabled via --no-complexity, force it back on.
+	if Locomo && Complexity {
+		Complexity = false
+	}
+
 	printDebugF("Average Wage: %d", AverageWage)
 	printDebugF("Cocomo: %t", !Cocomo)
 	printDebugF("Locomo: %t", Locomo)

@@ -88,7 +88,7 @@ func LocomoEstimate(sumCode, sumComplexity int64) LocomoResult {
 	if LocomoOutputPriceSet {
 		outputPrice = LocomoOutputPrice
 	}
-	if LocomoTPSSet {
+	if LocomoTPSSet && LocomoTPS > 0 {
 		tps = LocomoTPS
 	}
 
