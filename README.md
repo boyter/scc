@@ -397,10 +397,13 @@ It also is used to count code and guess language types in <https://searchcode.co
 
 You can also hook scc into your gitlab pipeline <https://gitlab.com/guided-explorations/ci-cd-plugin-extensions/ci-cd-plugin-extension-scc>
 
-Also used by CodeQL <https://github.com/boyter/scc/pull/317> and Scaleway <https://twitter.com/Scaleway/status/1488087029476995074?s=20&t=N2-z6O-ISDdDzULg4o4uVQ>
+Used by the following products and services,
 
-- <https://docs.linuxfoundation.org/lfx/insights/v3-beta-version-current/getting-started/landing-page/cocomo-cost-estimation-simplified>
-- <https://openems.io/>
+- [GitHub CodeQL](https://github.com/boyter/scc/pull/317) - The CodeQL engine uses `scc` for line counting
+- [JetBrains Qodana](https://github.com/JetBrains/qodana-cli) - The Qodana CLI leverages `scc` as a command-line helper for code analysis
+- [Scaleway](https://twitter.com/Scaleway/status/1488087029476995074?s=20&t=N2-z6O-ISDdDzULg4o4uVQ) - Cloud provider using `scc`
+- [Linux Foundation LFX Insights](https://docs.linuxfoundation.org/lfx/insights/v3-beta-version-current/getting-started/landing-page/cocomo-cost-estimation-simplified) - COCOMO cost estimation
+- [OpenEMS](https://openems.io/)
 
 ### Features
 
