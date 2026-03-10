@@ -622,13 +622,25 @@ scc --locomo --locomo-review 0.1 .
 
 #### Power-user configuration
 
-The internal model parameters (tokens per line, base input per line, complexity weight, iteration count, iteration weight) can be overridden with a single comma-separated config string:
+The five internal model parameters can be overridden with a single comma-separated config string:
 
 ```
 scc --locomo --locomo-config "tokensPerLine,inputPerLine,complexityWeight,iterations,iterationWeight"
 ```
 
-The defaults are `"10,20,5,1.5,2"`. For example, to use fewer tokens per line and lower complexity sensitivity:
+The defaults are `"10,20,5,1.5,2"`. Here is what each parameter controls:
+
+| Position | Name | Default | Description |
+|----------|------|---------|-------------|
+| 1 | tokensPerLine | 10 | Average LLM output tokens per line of code |
+| 2 | inputPerLine | 20 | Base LLM input (prompt) tokens per output line |
+| 3 | complexityWeight | 5 | How much complexity density scales input tokens: `inputFactor = 1 + sqrt(density) * weight` |
+| 4 | iterations | 1.5 | Base iteration/retry cycles before complexity adjustment |
+| 5 | iterationWeight | 2 | How much complexity density adds extra cycles: `cycles = iterations + sqrt(density) * weight` |
+
+The iteration factor (cycles) scales both input and output tokens — it represents how many generation attempts the LLM needs. Simple code (~0.05 complexity density) produces ~1.9 cycles; complex code (~0.3 density) produces ~2.6 cycles. Use `--locomo-cycles` to override this with a fixed value.
+
+For example, to model a cheaper/faster LLM that needs fewer tokens but more retries:
 
 ```
 scc --locomo --locomo-config "8,15,3,2.0,1.5"
@@ -664,7 +676,7 @@ LOCOMO is a rough estimator with known limitations:
 | `--locomo-tps` | (preset) | Override: output tokens per second |
 | `--locomo-review` | 0.01 | Human review minutes per line of code |
 | `--locomo-cycles` | (calculated) | Override estimated LLM iteration cycles |
-| `--locomo-config` | 10,20,5,1.5,2 | Power-user model parameters |
+| `--locomo-config` | 10,20,5,1.5,2 | Power-user config: tokensPerLine, inputPerLine, complexityWeight, iterations, iterationWeight |
 
 ### Large File Detection
 
