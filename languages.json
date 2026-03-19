@@ -4688,6 +4688,88 @@
       }
     ]
   },
+  "Mojo": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "while ",
+      "while(",
+      "if ",
+      "if(",
+      "elif ",
+      "elif(",
+      "else ",
+      "else:",
+      "try ",
+      "try:",
+      "except ",
+      "except:",
+      "finally ",
+      "finally:",
+      "with ",
+      "with (",
+      "and ",
+      "and(",
+      "or ",
+      "or(",
+      "== ",
+      "!= "
+    ],
+    "extensions": ["mojo"],
+    "line_comment": ["#"],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"",
+        "start": "r\""
+      },
+      {
+        "end": "\"",
+        "start": "t\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"",
+        "start": "rt\""
+      },
+      {
+        "docString": true,
+        "end": "\"\"\"",
+        "start": "\"\"\""
+      },
+      {
+        "docString": true,
+        "end": "'''",
+        "start": "'''"
+      },
+      {
+        "docString": true,
+        "ignoreEscape": true,
+        "end": "\"\"\"",
+        "start": "r\"\"\""
+      },
+      {
+        "docString": true,
+        "ignoreEscape": true,
+        "end": "'''",
+        "start": "r'''"
+      },
+      {
+        "docString": true,
+        "end": "\"\"\"",
+        "start": "t\"\"\""
+      }
+    ]
+  },
   "Monkey C": {
     "complexitychecks": [
       "for ",
