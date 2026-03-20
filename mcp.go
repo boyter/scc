@@ -55,7 +55,7 @@ Use by_file with sort=complexity to find the most complex files in a project.`),
 			mcp.Description("If true, return per-file results instead of per-language summary. Useful with sort to find e.g. the most complex or largest files. Use with limit to control response size."),
 		),
 		mcp.WithNumber("limit",
-			mcp.Description("Maximum number of files to return per language when by_file is true. Useful to get e.g. top 10 most complex files without a huge response."),
+			mcp.Description("Maximum number of files to return per language when by_file is true. Defaults to 10. Set to -1 for unlimited."),
 		),
 		mcp.WithString("include_ext",
 			mcp.Description("Comma-separated list of file extensions to include (e.g. 'go,java,js')."),
@@ -194,9 +194,13 @@ func mcpAnalyzeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 		processor.Files = true
 	}
 
-	fileLimit := 0
-	if l, ok := args["limit"].(float64); ok && l > 0 {
-		fileLimit = int(l)
+	fileLimit := 10 // default limit when by_file is true
+	if l, ok := args["limit"].(float64); ok {
+		if l < 0 {
+			fileLimit = 0 // -1 (or any negative) means unlimited
+		} else {
+			fileLimit = int(l)
+		}
 	}
 
 	if includeExt, ok := args["include_ext"].(string); ok && includeExt != "" {
