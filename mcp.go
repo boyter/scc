@@ -1,0 +1,315 @@
+// SPDX-License-Identifier: MIT
+
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/boyter/scc/v3/processor"
+	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/mark3labs/mcp-go/server"
+)
+
+func startMCPServer() {
+	mcpServer := server.NewMCPServer(
+		"scc",
+		processor.Version,
+		server.WithToolCapabilities(false),
+	)
+
+	analyzeTool := mcp.NewTool("analyze",
+		mcp.WithDescription(`Count lines of code, comments, blanks and estimate complexity for a project directory or file. Supports 200+ languages.
+
+Returns per-language summary with:
+- files: number of source files
+- lines: total lines
+- code: lines of actual code
+- comment: lines of comments
+- blank: blank lines
+- complexity: estimated cyclomatic complexity
+- bytes: total size in bytes
+
+Also returns COCOMO cost/schedule estimates and optionally LOCOMO (LLM cost) estimates.
+
+Use by_file with sort=complexity to find the most complex files in a project.`),
+		mcp.WithString("path",
+			mcp.Description("Directory or file path to analyze. Defaults to current directory."),
+		),
+		mcp.WithString("sort",
+			mcp.Description("Column to sort results by: files, name, lines, blank, code, comment, complexity, bytes. Default: files."),
+		),
+		mcp.WithBoolean("by_file",
+			mcp.Description("If true, return per-file results instead of per-language summary. Useful with sort to find e.g. the most complex or largest files."),
+		),
+		mcp.WithString("include_ext",
+			mcp.Description("Comma-separated list of file extensions to include (e.g. 'go,java,js')."),
+		),
+		mcp.WithString("exclude_ext",
+			mcp.Description("Comma-separated list of file extensions to exclude (e.g. 'json,xml')."),
+		),
+		mcp.WithBoolean("no_duplicates",
+			mcp.Description("Remove duplicate files from stats."),
+		),
+		mcp.WithBoolean("no_min_gen",
+			mcp.Description("Exclude minified or generated files."),
+		),
+		mcp.WithBoolean("locomo",
+			mcp.Description("Include LOCOMO (LLM Output COst MOdel) cost estimation in results."),
+		),
+		mcp.WithString("locomo_preset",
+			mcp.Description("LOCOMO model preset: large (GPT-4/Opus class), medium (Sonnet class), small (Haiku class), local (local LLM). Default: medium."),
+		),
+	)
+
+	mcpServer.AddTool(analyzeTool, mcpAnalyzeHandler)
+
+	errLogger := log.New(os.Stderr, "scc-mcp: ", log.LstdFlags)
+	if err := server.ServeStdio(mcpServer, server.WithErrorLogger(errLogger)); err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "scc-mcp: server error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+type mcpAnalyzeResponse struct {
+	Path       string                     `json:"path"`
+	Languages  []mcpLanguageResult        `json:"languages"`
+	Totals     mcpTotals                  `json:"totals"`
+	COCOMO     *mcpCOCOMO                 `json:"cocomo,omitempty"`
+	LOCOMO     *mcpLOCOMO                 `json:"locomo,omitempty"`
+	FileCount  int64                      `json:"totalFiles"`
+	TotalLines int64                      `json:"totalLines"`
+	TotalCode  int64                      `json:"totalCode"`
+}
+
+type mcpLanguageResult struct {
+	Name       string          `json:"name"`
+	Files      int64           `json:"files"`
+	Lines      int64           `json:"lines"`
+	Code       int64           `json:"code"`
+	Comment    int64           `json:"comment"`
+	Blank      int64           `json:"blank"`
+	Complexity int64           `json:"complexity"`
+	Bytes      int64           `json:"bytes"`
+	FileList   []mcpFileResult `json:"fileList,omitempty"`
+}
+
+type mcpFileResult struct {
+	Location   string `json:"location"`
+	Filename   string `json:"filename"`
+	Language   string `json:"language"`
+	Lines      int64  `json:"lines"`
+	Code       int64  `json:"code"`
+	Comment    int64  `json:"comment"`
+	Blank      int64  `json:"blank"`
+	Complexity int64  `json:"complexity"`
+	Bytes      int64  `json:"bytes"`
+}
+
+type mcpTotals struct {
+	Files      int64 `json:"files"`
+	Lines      int64 `json:"lines"`
+	Code       int64 `json:"code"`
+	Comment    int64 `json:"comment"`
+	Blank      int64 `json:"blank"`
+	Complexity int64 `json:"complexity"`
+	Bytes      int64 `json:"bytes"`
+}
+
+type mcpCOCOMO struct {
+	EstimatedCost           float64 `json:"estimatedCost"`
+	EstimatedScheduleMonths float64 `json:"estimatedScheduleMonths"`
+	EstimatedPeople         float64 `json:"estimatedPeople"`
+}
+
+type mcpLOCOMO struct {
+	Cost                  float64 `json:"cost"`
+	InputTokens           float64 `json:"inputTokens"`
+	OutputTokens          float64 `json:"outputTokens"`
+	GenerationSeconds     float64 `json:"generationSeconds"`
+	ReviewHours           float64 `json:"reviewHours"`
+	Preset                string  `json:"preset"`
+	AverageComplexityMult float64 `json:"averageComplexityMultiplier"`
+	Cycles                float64 `json:"cycles"`
+}
+
+func mcpAnalyzeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := request.GetArguments()
+
+	// Extract parameters
+	path := "."
+	if p, ok := args["path"].(string); ok && p != "" {
+		path = p
+	}
+
+	// Resolve to absolute path
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("invalid path: %v", err)), nil
+	}
+
+	// Verify path exists
+	if _, err := os.Stat(absPath); err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("path does not exist: %s", absPath)), nil
+	}
+
+	// Configure processor globals for this request
+	processor.DirFilePaths = []string{absPath}
+	processor.Format = "json"
+	processor.Cocomo = false
+	processor.Size = false
+	processor.Files = false
+
+	if sortBy, ok := args["sort"].(string); ok && sortBy != "" {
+		processor.SortBy = sortBy
+	} else {
+		processor.SortBy = "files"
+	}
+
+	if byFile, ok := args["by_file"].(bool); ok && byFile {
+		processor.Files = true
+	}
+
+	if includeExt, ok := args["include_ext"].(string); ok && includeExt != "" {
+		processor.AllowListExtensions = strings.Split(includeExt, ",")
+	} else {
+		processor.AllowListExtensions = []string{}
+	}
+
+	if excludeExt, ok := args["exclude_ext"].(string); ok && excludeExt != "" {
+		processor.ExcludeListExtensions = strings.Split(excludeExt, ",")
+	} else {
+		processor.ExcludeListExtensions = []string{}
+	}
+
+	if noDups, ok := args["no_duplicates"].(bool); ok && noDups {
+		processor.Duplicates = true
+	} else {
+		processor.Duplicates = false
+	}
+
+	if noMinGen, ok := args["no_min_gen"].(bool); ok && noMinGen {
+		processor.IgnoreMinifiedGenerate = true
+	} else {
+		processor.IgnoreMinifiedGenerate = false
+	}
+
+	if locomo, ok := args["locomo"].(bool); ok && locomo {
+		processor.Locomo = true
+	} else {
+		processor.Locomo = false
+	}
+
+	if locomoPreset, ok := args["locomo_preset"].(string); ok && locomoPreset != "" {
+		processor.LocomoPresetName = locomoPreset
+	} else {
+		processor.LocomoPresetName = "medium"
+	}
+
+	processor.ConfigureLazy(true)
+
+	// Run the analysis
+	language, err := processor.ProcessResult()
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("analysis failed: %v", err)), nil
+	}
+
+	// Build response
+	var totals mcpTotals
+	langs := make([]mcpLanguageResult, 0, len(language))
+
+	for _, l := range language {
+		lr := mcpLanguageResult{
+			Name:       l.Name,
+			Files:      l.Count,
+			Lines:      l.Lines,
+			Code:       l.Code,
+			Comment:    l.Comment,
+			Blank:      l.Blank,
+			Complexity: l.Complexity,
+			Bytes:      l.Bytes,
+		}
+
+		if processor.Files && len(l.Files) > 0 {
+			lr.FileList = make([]mcpFileResult, 0, len(l.Files))
+			for _, f := range l.Files {
+				lr.FileList = append(lr.FileList, mcpFileResult{
+					Location:   f.Location,
+					Filename:   f.Filename,
+					Language:   f.Language,
+					Lines:      f.Lines,
+					Code:       f.Code,
+					Comment:    f.Comment,
+					Blank:      f.Blank,
+					Complexity: f.Complexity,
+					Bytes:      f.Bytes,
+				})
+			}
+		}
+
+		langs = append(langs, lr)
+
+		totals.Files += l.Count
+		totals.Lines += l.Lines
+		totals.Code += l.Code
+		totals.Comment += l.Comment
+		totals.Blank += l.Blank
+		totals.Complexity += l.Complexity
+		totals.Bytes += l.Bytes
+	}
+
+	resp := mcpAnalyzeResponse{
+		Path:       absPath,
+		Languages:  langs,
+		Totals:     totals,
+		FileCount:  totals.Files,
+		TotalLines: totals.Lines,
+		TotalCode:  totals.Code,
+	}
+
+	// COCOMO estimate
+	estimatedEffort := processor.EstimateEffort(totals.Code, processor.EAF)
+	estimatedCost := processor.EstimateCost(estimatedEffort, processor.AverageWage, processor.Overhead)
+	estimatedScheduleMonths := processor.EstimateScheduleMonths(estimatedEffort)
+	estimatedPeople := 0.0
+	if estimatedScheduleMonths > 0 {
+		estimatedPeople = estimatedEffort / estimatedScheduleMonths
+	}
+	resp.COCOMO = &mcpCOCOMO{
+		EstimatedCost:           estimatedCost,
+		EstimatedScheduleMonths: estimatedScheduleMonths,
+		EstimatedPeople:         estimatedPeople,
+	}
+
+	// LOCOMO estimate if requested
+	if processor.Locomo {
+		result := processor.LocomoEstimate(totals.Code, totals.Complexity)
+		resp.LOCOMO = &mcpLOCOMO{
+			Cost:                  result.Cost,
+			InputTokens:           result.InputTokens,
+			OutputTokens:          result.OutputTokens,
+			GenerationSeconds:     result.GenerationSeconds,
+			ReviewHours:           result.ReviewHours,
+			Preset:                result.Preset,
+			AverageComplexityMult: result.AverageComplexityMult,
+			Cycles:                result.IterationFactor,
+		}
+	}
+
+	// Serialize to JSON
+	jsonBytes, err := jsonMarshal(resp)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to serialize results: %v", err)), nil
+	}
+
+	return mcp.NewToolResultText(string(jsonBytes)), nil
+}
+
+func jsonMarshal(v interface{}) ([]byte, error) {
+	return json.MarshalIndent(v, "", "  ")
+}

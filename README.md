@@ -32,6 +32,7 @@ Licensed under MIT licence.
 - [Output Formats](#output-formats)
 - [Performance](#performance)
 - [Development](#development)
+- [MCP Server Mode](#mcp-server-mode)
 - [Adding/Modifying Languages](#addingmodifying-languages)
 - [Issues](#issues)
 - [Badges](#badges)
@@ -303,6 +304,7 @@ Flags:
       --min                                identify minified files
   -z, --min-gen                            identify minified or generated files
       --min-gen-line-length int            number of bytes per average line for file to be considered minified or generated (default 255)
+      --mcp                                start as an MCP (Model Context Protocol) server over stdio
       --no-cocomo                          remove COCOMO calculation output
   -c, --no-complexity                      skip calculation of code complexity
   -d, --no-duplicates                      remove duplicate files from stats and output
@@ -1200,6 +1202,76 @@ func main() {
 `FilterContentByType` returns a copy of the content with non-matching bytes replaced by spaces. Newlines are always preserved regardless of type, so the output maintains the same line structure as the original file. It returns `nil` if classification was not enabled.
 
 Note that at syntax marker boundaries (e.g., `//`, `/*`, `"`), the first byte of the marker may be classified as the preceding state. This is a 1-byte approximation that is acceptable for content filtering use cases.
+
+### MCP Server Mode
+
+`scc` can run as an [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server over stdio, allowing LLM tools like Claude Desktop, Claude Code, Cursor, and others to use it as a code analysis tool.
+
+```shell
+scc --mcp
+```
+
+#### Claude Code Configuration
+
+Run in your terminal for the current project:
+
+```shell
+claude mcp add scc -- scc --mcp
+```
+
+Or globally for all projects:
+
+```shell
+claude mcp add scc --scope user -- scc --mcp
+```
+
+Alternatively, add to your `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "scc": {
+      "command": "scc",
+      "args": ["--mcp"]
+    }
+  }
+}
+```
+
+#### Claude Desktop Configuration
+
+Add to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "scc": {
+      "command": "/path/to/scc",
+      "args": ["--mcp"]
+    }
+  }
+}
+```
+
+#### Exposed Tools
+
+The MCP server exposes one tool:
+
+**`analyze`** — Count lines of code, comments, blanks and estimate complexity for a project directory or file.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `path` | string | no | Directory or file path to analyze. Defaults to current directory. |
+| `sort` | string | no | Column to sort by: `files`, `name`, `lines`, `blanks`, `code`, `comments`, `complexity`, `bytes`. Default: `files`. |
+| `by_file` | boolean | no | If true, return per-file results instead of per-language summary. |
+| `include_ext` | string | no | Comma-separated file extensions to include (e.g. `go,java,js`). |
+| `exclude_ext` | string | no | Comma-separated file extensions to exclude (e.g. `json,xml`). |
+| `no_duplicates` | boolean | no | Remove duplicate files from stats. |
+| `no_min_gen` | boolean | no | Ignore minified or generated files. |
+| `locomo` | boolean | no | Include LOCOMO (LLM cost) estimation in results. |
+| `locomo_preset` | string | no | LOCOMO model preset: `large`, `medium`, `small`, `local`. Default: `medium`. |
+
+Results are returned as JSON with per-language breakdown (files, lines, code, comments, blanks, complexity, bytes), totals, and COCOMO cost/schedule estimates. When `locomo` is enabled, LOCOMO estimates (token counts, cost, generation time, review hours) are also included.
 
 ### Adding/Modifying Languages
 

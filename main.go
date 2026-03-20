@@ -52,6 +52,14 @@ func main() {
 	// pprof.StartCPUProfile(f)
 	// defer pprof.StopCPUProfile()
 
+	// Handle --mcp flag before cobra to avoid interfering with stdio
+	for _, arg := range os.Args[1:] {
+		if arg == "--mcp" {
+			startMCPServer()
+			return
+		}
+	}
+
 	if len(os.Args) == 2 && strings.HasPrefix(os.Args[1], "@") {
 		// handle "scc @flags.txt" syntax
 		filepath := strings.TrimPrefix(os.Args[1], "@")
@@ -519,6 +527,15 @@ func main() {
 		"locomo-cycles",
 		0,
 		"override estimated LLM iteration cycles (default: calculated from complexity)",
+	)
+
+	// --mcp is intercepted before cobra runs, but we register it here so it appears in --help
+	var mcpDummy bool
+	flags.BoolVar(
+		&mcpDummy,
+		"mcp",
+		false,
+		"start as an MCP (Model Context Protocol) server over stdio",
 	)
 
 	// If invoked in the format of "scc completion --shell [name of shell]", generate command line completions instead.
