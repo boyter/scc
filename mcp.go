@@ -3,12 +3,14 @@
 package main
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 
@@ -50,7 +52,10 @@ Use by_file with sort=complexity to find the most complex files in a project.`),
 			mcp.Description("Column to sort results by: files, name, lines, blank, code, comment, complexity, bytes. Default: files."),
 		),
 		mcp.WithBoolean("by_file",
-			mcp.Description("If true, return per-file results instead of per-language summary. Useful with sort to find e.g. the most complex or largest files."),
+			mcp.Description("If true, return per-file results instead of per-language summary. Useful with sort to find e.g. the most complex or largest files. Use with limit to control response size."),
+		),
+		mcp.WithNumber("limit",
+			mcp.Description("Maximum number of files to return per language when by_file is true. Useful to get e.g. top 10 most complex files without a huge response."),
 		),
 		mcp.WithString("include_ext",
 			mcp.Description("Comma-separated list of file extensions to include (e.g. 'go,java,js')."),
@@ -189,6 +194,11 @@ func mcpAnalyzeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 		processor.Files = true
 	}
 
+	fileLimit := 0
+	if l, ok := args["limit"].(float64); ok && l > 0 {
+		fileLimit = int(l)
+	}
+
 	if includeExt, ok := args["include_ext"].(string); ok && includeExt != "" {
 		processor.AllowListExtensions = splitAndTrimExtensions(includeExt)
 	} else {
@@ -255,8 +265,16 @@ func mcpAnalyzeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 		}
 
 		if processor.Files && len(l.Files) > 0 {
-			lr.FileList = make([]mcpFileResult, 0, len(l.Files))
-			for _, f := range l.Files {
+			files := l.Files
+			// Sort files within each language by the same criteria
+			// used for languages so per-file output is ordered and
+			// limit returns the top N rather than an arbitrary slice.
+			sortFileJobs(files)
+			if fileLimit > 0 && len(files) > fileLimit {
+				files = files[:fileLimit]
+			}
+			lr.FileList = make([]mcpFileResult, 0, len(files))
+			for _, f := range files {
 				lr.FileList = append(lr.FileList, mcpFileResult{
 					Location:   f.Location,
 					Filename:   f.Filename,
@@ -331,6 +349,45 @@ func mcpAnalyzeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 
 func jsonMarshal(v interface{}) ([]byte, error) {
 	return json.MarshalIndent(v, "", "  ")
+}
+
+// sortFileJobs sorts a slice of FileJob pointers using the current
+// processor.SortBy value so that the most relevant files come first.
+func sortFileJobs(files []*processor.FileJob) {
+	switch processor.SortBy {
+	case "name", "names", "language", "languages", "lang", "langs":
+		slices.SortFunc(files, func(a, b *processor.FileJob) int {
+			return strings.Compare(a.Filename, b.Filename)
+		})
+	case "line", "lines":
+		slices.SortFunc(files, func(a, b *processor.FileJob) int {
+			return cmp.Compare(b.Lines, a.Lines)
+		})
+	case "blank", "blanks":
+		slices.SortFunc(files, func(a, b *processor.FileJob) int {
+			return cmp.Compare(b.Blank, a.Blank)
+		})
+	case "code", "codes":
+		slices.SortFunc(files, func(a, b *processor.FileJob) int {
+			return cmp.Compare(b.Code, a.Code)
+		})
+	case "comment", "comments":
+		slices.SortFunc(files, func(a, b *processor.FileJob) int {
+			return cmp.Compare(b.Comment, a.Comment)
+		})
+	case "complexity", "complexitys":
+		slices.SortFunc(files, func(a, b *processor.FileJob) int {
+			return cmp.Compare(b.Complexity, a.Complexity)
+		})
+	case "byte", "bytes":
+		slices.SortFunc(files, func(a, b *processor.FileJob) int {
+			return cmp.Compare(b.Bytes, a.Bytes)
+		})
+	default:
+		slices.SortFunc(files, func(a, b *processor.FileJob) int {
+			return cmp.Compare(b.Lines, a.Lines)
+		})
+	}
 }
 
 // splitAndTrimExtensions splits a comma-separated string into
