@@ -10,11 +10,16 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/boyter/scc/v3/processor"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
+
+// mcpMu serializes MCP tool calls so concurrent requests
+// don't race on processor package globals.
+var mcpMu sync.Mutex
 
 func startMCPServer() {
 	mcpServer := server.NewMCPServer(
@@ -153,10 +158,15 @@ func mcpAnalyzeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 		return mcp.NewToolResultError(fmt.Sprintf("invalid path: %v", err)), nil
 	}
 
-	// Verify path exists
+	// Verify path can be accessed
 	if _, err := os.Stat(absPath); err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("path does not exist: %s", absPath)), nil
+		return mcp.NewToolResultError(fmt.Sprintf("path cannot be accessed: %s: %v", absPath, err)), nil
 	}
+
+	// Serialize access to processor globals so concurrent MCP
+	// requests don't race on shared state.
+	mcpMu.Lock()
+	defer mcpMu.Unlock()
 
 	// Configure processor globals for this request
 	processor.DirFilePaths = []string{absPath}
@@ -176,13 +186,13 @@ func mcpAnalyzeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 	}
 
 	if includeExt, ok := args["include_ext"].(string); ok && includeExt != "" {
-		processor.AllowListExtensions = strings.Split(includeExt, ",")
+		processor.AllowListExtensions = splitAndTrimExtensions(includeExt)
 	} else {
 		processor.AllowListExtensions = []string{}
 	}
 
 	if excludeExt, ok := args["exclude_ext"].(string); ok && excludeExt != "" {
-		processor.ExcludeListExtensions = strings.Split(excludeExt, ",")
+		processor.ExcludeListExtensions = splitAndTrimExtensions(excludeExt)
 	} else {
 		processor.ExcludeListExtensions = []string{}
 	}
@@ -312,4 +322,18 @@ func mcpAnalyzeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 
 func jsonMarshal(v interface{}) ([]byte, error) {
 	return json.MarshalIndent(v, "", "  ")
+}
+
+// splitAndTrimExtensions splits a comma-separated string into
+// trimmed, non-empty extension entries.
+func splitAndTrimExtensions(s string) []string {
+	parts := strings.Split(s, ",")
+	result := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			result = append(result, p)
+		}
+	}
+	return result
 }
