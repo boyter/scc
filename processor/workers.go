@@ -842,7 +842,7 @@ func hardRemapLanguage(job *FileJob) bool {
 		if len(t) == 2 {
 			cutoff := min(1000, len(job.Content)) // at most 1000 bytes into the file to look
 
-			if strings.Contains(string(job.Content[:cutoff]), t[0]) {
+			if bytes.Contains(job.Content[:cutoff], []byte(t[0])) {
 				job.Language = t[1]
 				remapped = true
 				printWarnF("hard remapping: %s to %s", job.Location, job.Language)
@@ -860,7 +860,7 @@ func unknownRemapLanguage(job *FileJob) bool {
 		if len(t) == 2 {
 			cutoff := min(1000, len(job.Content)) // at most 1000 bytes into the file to look
 
-			if strings.Contains(string(job.Content[:cutoff]), t[0]) {
+			if bytes.Contains(job.Content[:cutoff], []byte(t[0])) {
 				printWarnF("unknown remapping: %s to %s", job.Location, job.Language)
 				job.Language = t[1]
 				remapped = true

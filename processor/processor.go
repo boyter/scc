@@ -425,6 +425,7 @@ func processLanguageFeature(name string, value Language) {
 	mlCommentTrie := &Trie{}
 	stringTrie := &Trie{}
 	tokenTrie := &Trie{}
+	keywordBytes := make([][]byte, 0, len(value.Keywords))
 
 	complexityMask := byte(0)
 	singleLineCommentMask := byte(0)
@@ -464,6 +465,10 @@ func processLanguageFeature(name string, value Language) {
 	}
 	processMask |= stringMask
 
+	for _, v := range value.Keywords {
+		keywordBytes = append(keywordBytes, []byte(v))
+	}
+
 	LanguageFeaturesMutex.Lock()
 	LanguageFeatures[name] = LanguageFeature{
 		Complexity:            complexityTrie,
@@ -480,6 +485,7 @@ func processLanguageFeature(name string, value Language) {
 		StringCheckMask:       stringMask,
 		ProcessMask:           processMask,
 		Keywords:              value.Keywords,
+		KeywordBytes:          keywordBytes,
 		Quotes:                value.Quotes,
 	}
 	LanguageFeaturesMutex.Unlock()
