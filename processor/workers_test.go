@@ -756,12 +756,48 @@ func TestFileProcessorWorker(t *testing.T) {
 
 	Duplicates = true
 
-	fileProcessorWorker(inputChan, outputChan)
+	ctx := processorContext{remap: newRemapConfig("", "")}
+	ctx.fileProcessorWorker(inputChan, outputChan)
 
 	for res := range outputChan {
 		if res.Bytes == 0 {
 			t.Error("Expect bytes to have something")
 		}
+	}
+}
+
+func TestParseRemapRulesIgnoresInvalidEntries(t *testing.T) {
+	rules := parseRemapRules("match:Go,invalid,too:many:parts,:Rust")
+
+	if len(rules) != 2 {
+		t.Fatalf("expected 2 rules, got %d", len(rules))
+	}
+
+	if string(rules[0].pattern) != "match" || rules[0].language != "Go" {
+		t.Fatalf("unexpected first rule: %#v", rules[0])
+	}
+
+	if string(rules[1].pattern) != "" || rules[1].language != "Rust" {
+		t.Fatalf("unexpected second rule: %#v", rules[1])
+	}
+}
+
+func TestHardRemapLanguageUsesParsedRules(t *testing.T) {
+	job := &FileJob{
+		Language: "Plain Text",
+		Location: "./test.txt",
+		Content:  []byte("prefix -*- C++ -*- suffix"),
+	}
+
+	ctx := processorContext{remap: newRemapConfig("-*- C++ -*-:C Header", "")}
+	remapped := ctx.hardRemapLanguage(job)
+
+	if !remapped {
+		t.Fatal("expected file to be remapped")
+	}
+
+	if job.Language != "C Header" {
+		t.Fatalf("expected remapped language to be C Header, got %s", job.Language)
 	}
 }
 
