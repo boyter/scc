@@ -1948,3 +1948,86 @@ func BenchmarkCountStatsWithClassify(b *testing.B) {
 		CountStats(&fileJob)
 	}
 }
+
+func BenchmarkHardRemapLanguage(b *testing.B) {
+	job := &FileJob{
+		Language: "Plain Text",
+		Location: "./test.txt",
+		Content:  []byte("prefix -*- C++ -*- suffix"),
+	}
+
+	b.Run("match_single_rule", func(b *testing.B) {
+		ctx := processorContext{remap: newRemapConfig("-*- C++ -*-:C Header", "")}
+		b.ReportAllocs()
+		b.SetBytes(int64(len(job.Content)))
+
+		for i := 0; i < b.N; i++ {
+			job.Language = "Plain Text"
+			_ = ctx.hardRemapLanguage(job)
+		}
+	})
+
+	b.Run("no_match_single_rule", func(b *testing.B) {
+		ctx := processorContext{remap: newRemapConfig("-*- Rust -*-:Rust", "")}
+		b.ReportAllocs()
+		b.SetBytes(int64(len(job.Content)))
+
+		for i := 0; i < b.N; i++ {
+			job.Language = "Plain Text"
+			_ = ctx.hardRemapLanguage(job)
+		}
+	})
+
+	b.Run("match_many_rules_late", func(b *testing.B) {
+		rules := []string{
+			"-*- Rust -*-:Rust",
+			"-*- Python -*-:Python",
+			"-*- Ruby -*-:Ruby",
+			"-*- Java -*-:Java",
+			"-*- Kotlin -*-:Kotlin",
+			"-*- Swift -*-:Swift",
+			"-*- Scala -*-:Scala",
+			"-*- Perl -*-:Perl",
+			"-*- Lua -*-:Lua",
+			"-*- C++ -*-:C Header",
+		}
+		ctx := processorContext{remap: newRemapConfig(strings.Join(rules, ","), "")}
+		b.ReportAllocs()
+		b.SetBytes(int64(len(job.Content)))
+
+		for i := 0; i < b.N; i++ {
+			job.Language = "Plain Text"
+			_ = ctx.hardRemapLanguage(job)
+		}
+	})
+}
+
+func BenchmarkUnknownRemapLanguage(b *testing.B) {
+	job := &FileJob{
+		Language: "#!",
+		Location: "./test.txt",
+		Content:  []byte("#!/bin/sh\nprefix -*- C++ -*- suffix"),
+	}
+
+	b.Run("match_single_rule", func(b *testing.B) {
+		ctx := processorContext{remap: newRemapConfig("", "-*- C++ -*-:C Header")}
+		b.ReportAllocs()
+		b.SetBytes(int64(len(job.Content)))
+
+		for i := 0; i < b.N; i++ {
+			job.Language = "#!"
+			_ = ctx.unknownRemapLanguage(job)
+		}
+	})
+
+	b.Run("no_match_single_rule", func(b *testing.B) {
+		ctx := processorContext{remap: newRemapConfig("", "-*- Rust -*-:Rust")}
+		b.ReportAllocs()
+		b.SetBytes(int64(len(job.Content)))
+
+		for i := 0; i < b.N; i++ {
+			job.Language = "#!"
+			_ = ctx.unknownRemapLanguage(job)
+		}
+	})
+}
