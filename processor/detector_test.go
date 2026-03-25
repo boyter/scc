@@ -3,6 +3,7 @@
 package processor
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -416,5 +417,36 @@ func BenchmarkScanSheBangFuzz(b *testing.B) {
 func BenchmarkScanSheBangReal(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, _ = scanForSheBang([]byte("#!  /usr/bin/env   perl   -w"))
+	}
+}
+
+func BenchmarkDetermineLanguage(b *testing.B) {
+	ProcessConstants()
+
+	coqContent := []byte("Require Hypothesis Inductive\n")
+	systemVerilogContent := []byte("endmodule posedge edge always wire\n")
+	largeCoqContent := []byte("Require Hypothesis Inductive\n" + strings.Repeat("x", 25_000))
+	largeSystemVerilogContent := []byte("endmodule posedge edge always wire\n" + strings.Repeat("y", 25_000))
+	possibleLanguages := []string{"Coq", "SystemVerilog"}
+
+	benchmarks := []struct {
+		name    string
+		content []byte
+	}{
+		{name: "small_coq", content: coqContent},
+		{name: "small_systemverilog", content: systemVerilogContent},
+		{name: "large_coq_over_cutoff", content: largeCoqContent},
+		{name: "large_systemverilog_over_cutoff", content: largeSystemVerilogContent},
+	}
+
+	for _, benchmark := range benchmarks {
+		b.Run(benchmark.name, func(b *testing.B) {
+			b.ReportAllocs()
+			b.SetBytes(int64(len(benchmark.content)))
+
+			for i := 0; i < b.N; i++ {
+				_ = DetermineLanguage("", "", possibleLanguages, benchmark.content)
+			}
+		})
 	}
 }

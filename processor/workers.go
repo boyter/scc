@@ -688,7 +688,7 @@ func checkBomSkip(fileJob *FileJob) int {
 
 // Reads and processes files from input chan in parallel, and sends results to
 // output chan
-func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
+func (ctx processorContext) fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 	var startTime int64
 	var fileCount int64
 	var gcEnabled int64
@@ -721,7 +721,7 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 
 				if err == nil {
 					job.Content = content
-					if processFile(job) {
+					if ctx.processFile(job) {
 						output <- job
 					}
 				} else {
@@ -743,7 +743,7 @@ func fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
 
 // Process a single file
 // File must have been read to job.Content already
-func processFile(job *FileJob) bool {
+func (ctx processorContext) processFile(job *FileJob) bool {
 	fileStartTime := makeTimestampNano()
 
 	contents := job.Content
@@ -752,14 +752,14 @@ func processFile(job *FileJob) bool {
 	job.Language = DetermineLanguage(job.Filename, job.Language, job.PossibleLanguages, job.Content)
 
 	remapped := false
-	if RemapAll != "" {
-		hardRemapLanguage(job)
+	if len(ctx.remap.all) != 0 {
+		ctx.hardRemapLanguage(job)
 	}
 
 	// If the type is #! we should check to see if we can identify
 	if job.Language == SheBang {
-		if RemapUnknown != "" {
-			remapped = unknownRemapLanguage(job)
+		if len(ctx.remap.unknown) != 0 {
+			remapped = ctx.unknownRemapLanguage(job)
 		}
 
 		// if we didn't remap we then want to see if it's a #! map
@@ -835,36 +835,30 @@ func processFile(job *FileJob) bool {
 	return true
 }
 
-func hardRemapLanguage(job *FileJob) bool {
+func (ctx processorContext) hardRemapLanguage(job *FileJob) bool {
 	remapped := false
-	for s := range strings.SplitSeq(RemapAll, ",") {
-		t := strings.Split(s, ":")
-		if len(t) == 2 {
-			cutoff := min(1000, len(job.Content)) // at most 1000 bytes into the file to look
+	cutoff := min(1000, len(job.Content)) // at most 1000 bytes into the file to look
 
-			if strings.Contains(string(job.Content[:cutoff]), t[0]) {
-				job.Language = t[1]
-				remapped = true
-				printWarnF("hard remapping: %s to %s", job.Location, job.Language)
-			}
+	for _, rule := range ctx.remap.all {
+		if bytes.Contains(job.Content[:cutoff], rule.pattern) {
+			job.Language = rule.language
+			remapped = true
+			printWarnF("hard remapping: %s to %s", job.Location, job.Language)
 		}
 	}
 
 	return remapped
 }
 
-func unknownRemapLanguage(job *FileJob) bool {
+func (ctx processorContext) unknownRemapLanguage(job *FileJob) bool {
 	remapped := false
-	for s := range strings.SplitSeq(RemapUnknown, ",") {
-		t := strings.Split(s, ":")
-		if len(t) == 2 {
-			cutoff := min(1000, len(job.Content)) // at most 1000 bytes into the file to look
+	cutoff := min(1000, len(job.Content)) // at most 1000 bytes into the file to look
 
-			if strings.Contains(string(job.Content[:cutoff]), t[0]) {
-				printWarnF("unknown remapping: %s to %s", job.Location, job.Language)
-				job.Language = t[1]
-				remapped = true
-			}
+	for _, rule := range ctx.remap.unknown {
+		if bytes.Contains(job.Content[:cutoff], rule.pattern) {
+			job.Language = rule.language
+			remapped = true
+			printWarnF("unknown remapping: %s to %s", job.Location, job.Language)
 		}
 	}
 

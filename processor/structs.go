@@ -65,6 +65,7 @@ type LanguageFeature struct {
 	StringCheckMask       byte
 	ProcessMask           byte
 	Keywords              []string
+	KeywordBytes          [][]byte
 	Quotes                []Quote
 }
 

@@ -3,6 +3,7 @@
 package processor
 
 import (
+	"bytes"
 	"cmp"
 	"errors"
 	"slices"
@@ -166,11 +167,9 @@ func DetermineLanguage(filename string, fallbackLanguage string, possibleLanguag
 
 	startTime := makeTimestampNano()
 
-	var toCheck string
+	toCheck := content
 	if len(content) > 20_000 {
-		toCheck = string(content)[:20_000]
-	} else {
-		toCheck = string(content)
+		toCheck = content[:20_000]
 	}
 
 	primary := ""
@@ -182,8 +181,8 @@ func DetermineLanguage(filename string, fallbackLanguage string, possibleLanguag
 		LanguageFeaturesMutex.Unlock()
 
 		count := 0
-		for _, key := range langFeatures.Keywords {
-			if strings.Contains(toCheck, key) {
+		for _, key := range langFeatures.KeywordBytes {
+			if bytes.Contains(toCheck, key) {
 				count++
 			}
 		}

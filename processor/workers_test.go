@@ -756,12 +756,48 @@ func TestFileProcessorWorker(t *testing.T) {
 
 	Duplicates = true
 
-	fileProcessorWorker(inputChan, outputChan)
+	ctx := processorContext{remap: newRemapConfig("", "")}
+	ctx.fileProcessorWorker(inputChan, outputChan)
 
 	for res := range outputChan {
 		if res.Bytes == 0 {
 			t.Error("Expect bytes to have something")
 		}
+	}
+}
+
+func TestParseRemapRulesIgnoresInvalidEntries(t *testing.T) {
+	rules := parseRemapRules("match:Go,invalid,too:many:parts,:Rust")
+
+	if len(rules) != 2 {
+		t.Fatalf("expected 2 rules, got %d", len(rules))
+	}
+
+	if string(rules[0].pattern) != "match" || rules[0].language != "Go" {
+		t.Fatalf("unexpected first rule: %#v", rules[0])
+	}
+
+	if string(rules[1].pattern) != "" || rules[1].language != "Rust" {
+		t.Fatalf("unexpected second rule: %#v", rules[1])
+	}
+}
+
+func TestHardRemapLanguageUsesParsedRules(t *testing.T) {
+	job := &FileJob{
+		Language: "Plain Text",
+		Location: "./test.txt",
+		Content:  []byte("prefix -*- C++ -*- suffix"),
+	}
+
+	ctx := processorContext{remap: newRemapConfig("-*- C++ -*-:C Header", "")}
+	remapped := ctx.hardRemapLanguage(job)
+
+	if !remapped {
+		t.Fatal("expected file to be remapped")
+	}
+
+	if job.Language != "C Header" {
+		t.Fatalf("expected remapped language to be C Header, got %s", job.Language)
 	}
 }
 
@@ -1911,4 +1947,87 @@ func BenchmarkCountStatsWithClassify(b *testing.B) {
 		fileJob.ContentByteType = nil
 		CountStats(&fileJob)
 	}
+}
+
+func BenchmarkHardRemapLanguage(b *testing.B) {
+	job := &FileJob{
+		Language: "Plain Text",
+		Location: "./test.txt",
+		Content:  []byte("prefix -*- C++ -*- suffix"),
+	}
+
+	b.Run("match_single_rule", func(b *testing.B) {
+		ctx := processorContext{remap: newRemapConfig("-*- C++ -*-:C Header", "")}
+		b.ReportAllocs()
+		b.SetBytes(int64(len(job.Content)))
+
+		for i := 0; i < b.N; i++ {
+			job.Language = "Plain Text"
+			_ = ctx.hardRemapLanguage(job)
+		}
+	})
+
+	b.Run("no_match_single_rule", func(b *testing.B) {
+		ctx := processorContext{remap: newRemapConfig("-*- Rust -*-:Rust", "")}
+		b.ReportAllocs()
+		b.SetBytes(int64(len(job.Content)))
+
+		for i := 0; i < b.N; i++ {
+			job.Language = "Plain Text"
+			_ = ctx.hardRemapLanguage(job)
+		}
+	})
+
+	b.Run("match_many_rules_late", func(b *testing.B) {
+		rules := []string{
+			"-*- Rust -*-:Rust",
+			"-*- Python -*-:Python",
+			"-*- Ruby -*-:Ruby",
+			"-*- Java -*-:Java",
+			"-*- Kotlin -*-:Kotlin",
+			"-*- Swift -*-:Swift",
+			"-*- Scala -*-:Scala",
+			"-*- Perl -*-:Perl",
+			"-*- Lua -*-:Lua",
+			"-*- C++ -*-:C Header",
+		}
+		ctx := processorContext{remap: newRemapConfig(strings.Join(rules, ","), "")}
+		b.ReportAllocs()
+		b.SetBytes(int64(len(job.Content)))
+
+		for i := 0; i < b.N; i++ {
+			job.Language = "Plain Text"
+			_ = ctx.hardRemapLanguage(job)
+		}
+	})
+}
+
+func BenchmarkUnknownRemapLanguage(b *testing.B) {
+	job := &FileJob{
+		Language: "#!",
+		Location: "./test.txt",
+		Content:  []byte("#!/bin/sh\nprefix -*- C++ -*- suffix"),
+	}
+
+	b.Run("match_single_rule", func(b *testing.B) {
+		ctx := processorContext{remap: newRemapConfig("", "-*- C++ -*-:C Header")}
+		b.ReportAllocs()
+		b.SetBytes(int64(len(job.Content)))
+
+		for i := 0; i < b.N; i++ {
+			job.Language = "#!"
+			_ = ctx.unknownRemapLanguage(job)
+		}
+	})
+
+	b.Run("no_match_single_rule", func(b *testing.B) {
+		ctx := processorContext{remap: newRemapConfig("", "-*- Rust -*-:Rust")}
+		b.ReportAllocs()
+		b.SetBytes(int64(len(job.Content)))
+
+		for i := 0; i < b.N; i++ {
+			job.Language = "#!"
+			_ = ctx.unknownRemapLanguage(job)
+		}
+	})
 }

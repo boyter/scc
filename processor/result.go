@@ -42,6 +42,7 @@ func ProcessResult() ([]LanguageSummary, error) {
 	}
 
 	SortBy = strings.ToLower(SortBy)
+	ctx := processorContext{remap: newRemapConfig(RemapAll, RemapUnknown)}
 
 	printDebugF("NumCPU: %d", runtime.NumCPU())
 	printDebugF("SortBy: %s", SortBy)
@@ -126,7 +127,7 @@ func ProcessResult() ([]LanguageSummary, error) {
 		close(fileListQueue)
 	}()
 
-	go fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
+	go ctx.fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
 
 	language := aggregateLanguageSummary(fileSummaryJobQueue)
 	language = sortLanguageSummary(language)
