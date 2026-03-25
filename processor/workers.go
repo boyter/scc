@@ -856,9 +856,9 @@ func (ctx processorContext) unknownRemapLanguage(job *FileJob) bool {
 
 	for _, rule := range ctx.remap.unknown {
 		if bytes.Contains(job.Content[:cutoff], rule.pattern) {
-			printWarnF("unknown remapping: %s to %s", job.Location, job.Language)
 			job.Language = rule.language
 			remapped = true
+			printWarnF("unknown remapping: %s to %s", job.Location, job.Language)
 		}
 	}
 
