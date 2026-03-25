@@ -3,6 +3,7 @@
 package processor
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -85,7 +86,11 @@ func TestProcessFlags(t *testing.T) {
 }
 
 func TestPrintLanguages(t *testing.T) {
-	printLanguages()
+	result := &strings.Builder{}
+	PrintLanguages(result)
+	if !strings.Contains(result.String(), "Go Template (tmpl,gohtml,gotxt)\n") {
+		t.Fatal("printLanguages test failed")
+	}
 }
 
 func TestProcess(t *testing.T) {
