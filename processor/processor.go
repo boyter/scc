@@ -4,6 +4,7 @@ package processor
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -595,7 +596,7 @@ func LanguageDatabase() map[string]Language {
 	return languageDatabase
 }
 
-func printLanguages() {
+func PrintLanguages(dst io.Writer) {
 	names := make([]string, 0, len(languageDatabase))
 	for key := range languageDatabase {
 		names = append(names, key)
@@ -606,7 +607,7 @@ func printLanguages() {
 	})
 
 	for _, name := range names {
-		fmt.Printf("%s (%s)\n", name, strings.Join(append(languageDatabase[name].Extensions, languageDatabase[name].FileNames...), ","))
+		_, _ = fmt.Fprintf(dst, "%s (%s)\n", name, strings.Join(append(languageDatabase[name].Extensions, languageDatabase[name].FileNames...), ","))
 	}
 }
 
@@ -618,7 +619,7 @@ var ulocLanguageCount = map[string]map[string]struct{}{}
 // Process is the main entry point of the command line it sets everything up and starts running
 func Process() {
 	if Languages {
-		printLanguages()
+		PrintLanguages(os.Stdout)
 		return
 	}
 

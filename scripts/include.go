@@ -17,7 +17,10 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-const constantsFile = "./processor/constants.go"
+const (
+	constantsFile     = "./processor/constants.go"
+	languagesListFile = "./LANGUAGES.md"
+)
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
@@ -69,7 +72,7 @@ func generateConstants() error {
 		return fmt.Errorf("failed to format code: %v", err)
 	}
 
-	out, err := os.OpenFile(constantsFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	out, err := os.OpenFile(constantsFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		return fmt.Errorf("failed to open constants file: %v", err)
 	}
@@ -84,9 +87,29 @@ func generateConstants() error {
 	return nil
 }
 
+func generateLanguagesList() error {
+	out, err := os.OpenFile(languagesListFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
+	if err != nil {
+		return fmt.Errorf("failed to open languages list file: %v", err)
+	}
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(out)
+
+	_, _ = out.WriteString("```\n")
+	processor.PrintLanguages(out)
+	_, _ = out.WriteString("```\n")
+
+	return nil
+}
+
 func main() {
 	if err := generateConstants(); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to generate constants: %v\n", err)
+		os.Exit(1)
+	}
+	if err := generateLanguagesList(); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to generate languages list: %v\n", err)
 		os.Exit(1)
 	}
 }

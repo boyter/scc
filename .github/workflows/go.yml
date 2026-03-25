@@ -11,12 +11,30 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
 
     - name: Set up Go
       uses: actions/setup-go@v6
       with:
         go-version-file: './go.mod'
+    
+    - name: Format Check
+      run: |
+        go fmt ./...
+        if ! git diff --color=always --exit-code -- . ':!vendor'; then
+          echo "::error::Found changed files after 'go fmt ./...'."
+          echo "Please run 'go fmt ./...' and check in all changes."
+          exit 1
+        fi
+    
+    - name: Generate Check
+      run: |
+        go generate
+        if ! git diff --color=always --exit-code -- . ':!vendor'; then
+          echo "::error::Found changed files after 'go generate'."
+          echo "Please run 'go generate' and check in all changes."
+          exit 1
+        fi
 
     - name: Build
       run: go build -v ./...

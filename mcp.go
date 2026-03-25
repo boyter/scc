@@ -87,14 +87,14 @@ Use by_file with sort=complexity to find the most complex files in a project.`),
 }
 
 type mcpAnalyzeResponse struct {
-	Path       string                     `json:"path"`
-	Languages  []mcpLanguageResult        `json:"languages"`
-	Totals     mcpTotals                  `json:"totals"`
-	COCOMO     *mcpCOCOMO                 `json:"cocomo,omitempty"`
-	LOCOMO     *mcpLOCOMO                 `json:"locomo,omitempty"`
-	FileCount  int64                      `json:"totalFiles"`
-	TotalLines int64                      `json:"totalLines"`
-	TotalCode  int64                      `json:"totalCode"`
+	Path       string              `json:"path"`
+	Languages  []mcpLanguageResult `json:"languages"`
+	Totals     mcpTotals           `json:"totals"`
+	COCOMO     *mcpCOCOMO          `json:"cocomo,omitempty"`
+	LOCOMO     *mcpLOCOMO          `json:"locomo,omitempty"`
+	FileCount  int64               `json:"totalFiles"`
+	TotalLines int64               `json:"totalLines"`
+	TotalCode  int64               `json:"totalCode"`
 }
 
 type mcpLanguageResult struct {

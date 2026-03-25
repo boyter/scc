@@ -30,10 +30,6 @@ fi
 echo "Building application..."
 go build -ldflags="-s -w" || exit
 
-echo '```' > LANGUAGES.md
-./scc --languages >> LANGUAGES.md
-echo '```' >> LANGUAGES.md
-
 
 echo "Building HTML report..."
 
