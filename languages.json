@@ -8155,6 +8155,27 @@
       }
     ]
   },
+  "WebGPU Enhanced Shading Language": {
+    "complexitychecks": [
+      "for (",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "while ",
+      "while(",
+      "else ",
+      "@if(",
+      "@elif(",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": ["wesl"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]]
+  },
   "WebGPU Shading Language": {
     "complexitychecks": [
       "for (",

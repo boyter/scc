@@ -13182,6 +13182,42 @@ var languageDatabase = map[string]Language{
 		FileNames:       []string{},
 		SheBangs:        []string{},
 	},
+	"WebGPU Enhanced Shading Language": {
+		LineComment: []string{
+			"//",
+		},
+		ComplexityChecks: []string{
+			"for (",
+			"for(",
+			"if ",
+			"if(",
+			"switch ",
+			"while ",
+			"while(",
+			"else ",
+			"@if(",
+			"@elif(",
+			"|| ",
+			"&& ",
+			"!= ",
+			"== ",
+		},
+		Extensions: []string{
+			"wesl",
+		},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"/*",
+				"*/",
+			},
+		},
+		Quotes:          []Quote{},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"WebGPU Shading Language": {
 		LineComment: []string{
 			"//",
