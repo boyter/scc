@@ -11,7 +11,7 @@ github.com/boyter/gocodewalker/go-gitignore
 # github.com/boyter/simplecache v0.0.0-20250113230110-8a4c9201822a
 ## explicit; go 1.23.3
 github.com/boyter/simplecache
-# github.com/buger/jsonparser v1.1.1
+# github.com/buger/jsonparser v1.1.2
 ## explicit; go 1.13
 github.com/buger/jsonparser
 # github.com/clipperhouse/uax29/v2 v2.2.0
