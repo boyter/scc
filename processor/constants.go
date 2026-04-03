@@ -2864,8 +2864,11 @@ var languageDatabase = map[string]Language{
 			"if ",
 			"if(",
 			"switch ",
+			"switch(",
 			"while ",
+			"while(",
 			"else ",
+			"else{",
 			"|| ",
 			"&& ",
 			"!= ",
@@ -2873,6 +2876,7 @@ var languageDatabase = map[string]Language{
 		},
 		Extensions: []string{
 			"cu",
+			"cuh",
 		},
 		ExtensionFile: false,
 		MultiLine: [][]string{

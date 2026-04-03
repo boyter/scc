@@ -1786,14 +1786,17 @@
       "if ",
       "if(",
       "switch ",
+      "switch(",
       "while ",
+      "while(",
       "else ",
+      "else{",
       "|| ",
       "&& ",
       "!= ",
       "== "
     ],
-    "extensions": ["cu"],
+    "extensions": ["cu", "cuh"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
     "quotes": [
