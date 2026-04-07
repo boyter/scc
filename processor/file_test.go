@@ -5,7 +5,6 @@ package processor
 import (
 	"math/rand/v2"
 	"os"
-	"runtime"
 	"testing"
 )
 
@@ -185,10 +184,6 @@ func TestNewFileJobSize(t *testing.T) {
 }
 
 func TestNewFileJobBrokenSymlink(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("skipping symlink test on Windows due to privilege requirements")
-	}
-
 	ProcessConstants()
 	IncludeSymLinks = true
 
