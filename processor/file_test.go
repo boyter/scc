@@ -183,6 +183,34 @@ func TestNewFileJobSize(t *testing.T) {
 	LargeByteCount = 1000000
 }
 
+func TestNewFileJobBrokenSymlink(t *testing.T) {
+	ProcessConstants()
+	IncludeSymLinks = true
+
+	// Create a temp directory to work in
+	dir, err := os.MkdirTemp("", "scc-broken-symlink-test")
+	if err != nil {
+		t.Fatal("Failed to create temp dir:", err)
+	}
+	defer os.RemoveAll(dir)
+
+	// Create a symlink that points to a path that doesn't exist
+	symPath := dir + "/broken.go"
+	err = os.Symlink("/this/path/does/not/exist.go", symPath)
+	if err != nil {
+		t.Fatal("Failed to create broken symlink:", err)
+	}
+
+	fi, _ := os.Lstat(symPath)
+	job := newFileJob(symPath, "broken.go", fi)
+
+	if job != nil {
+		t.Error("Expected nil for broken symlink got", job)
+	}
+
+	IncludeSymLinks = false
+}
+
 func BenchmarkGetExtensionDifferent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 

@@ -9,6 +9,7 @@ require (
 	github.com/boyter/gocodewalker v1.5.2-0.20260227212453-19676720409f
 	github.com/boyter/simplecache v0.0.0-20250113230110-8a4c9201822a
 	github.com/json-iterator/go v1.1.12
+	github.com/mark3labs/mcp-go v0.45.0
 	github.com/mattn/go-runewidth v0.0.19
 	github.com/rs/zerolog v1.30.0
 	github.com/spf13/cobra v1.10.1
@@ -27,7 +28,6 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/invopop/jsonschema v0.13.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/mark3labs/mcp-go v0.45.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
