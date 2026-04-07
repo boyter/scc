@@ -275,3 +275,42 @@ func TestNewFileJobCircularSymlink(t *testing.T) {
 		t.Error("Expected nil for circular symlink, but got a FileJob")
 	}
 }
+
+func TestNewFileJobDuplicateCounting(t *testing.T) {
+	ProcessConstants()
+	IncludeSymLinks = true
+	defer func() { IncludeSymLinks = false }()
+	visitedPaths = sync.Map{}
+
+	// Create Temp directory
+	dir := t.TempDir()
+	// Create a test file
+	testFile := filepath.Join(dir, "file.go")
+
+	if err := os.WriteFile(testFile, []byte("package main"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a symlink to the same file
+	linkFile := filepath.Join(dir, "link.go")
+	if err := os.Symlink(testFile, linkFile); err != nil {
+		t.Skip("Symlinks not supported:", err)
+	}
+	// Process the test file
+	fi1, _ := os.Lstat(testFile)
+	job1 := newFileJob(testFile, "file.go", fi1)
+
+	// Process the symlink (same target)
+	fi2, _ := os.Lstat(linkFile)
+	job2 := newFileJob(linkFile, "link.go", fi2)
+
+	// First count should go through
+	if job1 == nil {
+		t.Fatal("Expected first file job to be created")
+	}
+
+	// Second count should be skipped
+	if job2 != nil {
+		t.Error("Expected nil for duplicate file through symlink, but got a FileJob")
+	}
+}
