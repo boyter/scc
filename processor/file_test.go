@@ -5,6 +5,8 @@ package processor
 import (
 	"math/rand/v2"
 	"os"
+	"path/filepath"
+	"sync"
 	"testing"
 )
 
@@ -238,4 +240,33 @@ func randStringBytes(n int) string {
 		b[i] = letterBytes[rand.IntN(len(letterBytes))]
 	}
 	return string(b)
+}
+
+func TestNewFileJobCircularSymlink(t *testing.T) {
+	ProcessConstants()
+	IncludeSymLinks = true
+	defer func() { IncludeSymLinks = false }()
+	visitedPaths = sync.Map{}
+	// Create a temp directory to work in
+	dir := t.TempDir()
+	link1 := filepath.Join(dir, "link1.go")
+	link2 := filepath.Join(dir, "link2.go")
+	// Create a loop: link1 -> link2 and link2 -> link1
+	if err := os.Symlink(link2, link1); err != nil {
+		t.Skip("Symlinks not supported:", err)
+	}
+	if err := os.Symlink(link1, link2); err != nil {
+		t.Fatal("Failed to create circular link:", err)
+	}
+
+	fi, err := os.Lstat(link1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// It should either return nil or handle the 'too many links' error internally.
+	job := newFileJob(link1, "link1.go", fi)
+
+	if job != nil {
+		t.Error("Expected nil for circular symlink, but got a FileJob")
+	}
 }
