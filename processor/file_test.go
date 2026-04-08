@@ -248,6 +248,9 @@ func randStringBytes(n int) string {
 }
 
 func TestNewFileJobCircularSymlink(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping symlink test on Windows due to privilege requirements")
+	}
 	ProcessConstants()
 	IncludeSymLinks = true
 	defer func() { IncludeSymLinks = false }()
@@ -258,7 +261,7 @@ func TestNewFileJobCircularSymlink(t *testing.T) {
 	link2 := filepath.Join(dir, "link2.go")
 	// Create a loop: link1 -> link2 and link2 -> link1
 	if err := os.Symlink(link2, link1); err != nil {
-		t.Skip("Symlinks not supported:", err)
+		t.Fatal("Failed to create first link:", err)
 	}
 	if err := os.Symlink(link1, link2); err != nil {
 		t.Fatal("Failed to create circular link:", err)
@@ -268,7 +271,7 @@ func TestNewFileJobCircularSymlink(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// It should either return nil or handle the 'too many links' error internally.
+	// It should return the 'too many links' error.
 	job := newFileJob(link1, "link1.go", fi)
 
 	if job != nil {
@@ -277,6 +280,9 @@ func TestNewFileJobCircularSymlink(t *testing.T) {
 }
 
 func TestNewFileJobDuplicateCounting(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping symlink test on Windows due to privilege requirements")
+	}
 	ProcessConstants()
 	IncludeSymLinks = true
 	defer func() { IncludeSymLinks = false }()
