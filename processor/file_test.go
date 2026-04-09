@@ -5,6 +5,9 @@ package processor
 import (
 	"math/rand/v2"
 	"os"
+	"path/filepath"
+	"runtime"
+	"sync"
 	"testing"
 )
 
@@ -183,6 +186,38 @@ func TestNewFileJobSize(t *testing.T) {
 	LargeByteCount = 1000000
 }
 
+func TestNewFileJobBrokenSymlink(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping symlink test on Windows due to privilege requirements")
+	}
+
+	ProcessConstants()
+	IncludeSymLinks = true
+
+	// Create a temp directory to work in
+	dir, err := os.MkdirTemp("", "scc-broken-symlink-test")
+	if err != nil {
+		t.Fatal("Failed to create temp dir:", err)
+	}
+	defer os.RemoveAll(dir)
+
+	// Create a symlink that points to a path that doesn't exist
+	symPath := dir + "/broken.go"
+	err = os.Symlink("/this/path/does/not/exist.go", symPath)
+	if err != nil {
+		t.Fatal("Failed to create broken symlink:", err)
+	}
+
+	fi, _ := os.Lstat(symPath)
+	job := newFileJob(symPath, "broken.go", fi)
+
+	if job != nil {
+		t.Error("Expected nil for broken symlink got", job)
+	}
+
+	IncludeSymLinks = false
+}
+
 func BenchmarkGetExtensionDifferent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 
@@ -210,4 +245,78 @@ func randStringBytes(n int) string {
 		b[i] = letterBytes[rand.IntN(len(letterBytes))]
 	}
 	return string(b)
+}
+
+func TestNewFileJobCircularSymlink(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping symlink test on Windows due to privilege requirements")
+	}
+	ProcessConstants()
+	IncludeSymLinks = true
+	defer func() { IncludeSymLinks = false }()
+	visitedPaths = sync.Map{}
+	// Create a temp directory to work in
+	dir := t.TempDir()
+	link1 := filepath.Join(dir, "link1.go")
+	link2 := filepath.Join(dir, "link2.go")
+	// Create a loop: link1 -> link2 and link2 -> link1
+	if err := os.Symlink(link2, link1); err != nil {
+		t.Fatal("Failed to create first link:", err)
+	}
+	if err := os.Symlink(link1, link2); err != nil {
+		t.Fatal("Failed to create circular link:", err)
+	}
+
+	fi, err := os.Lstat(link1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// It should return the 'too many links' error.
+	job := newFileJob(link1, "link1.go", fi)
+
+	if job != nil {
+		t.Error("Expected nil for circular symlink, but got a FileJob")
+	}
+}
+
+func TestNewFileJobDuplicateCounting(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping symlink test on Windows due to privilege requirements")
+	}
+	ProcessConstants()
+	IncludeSymLinks = true
+	defer func() { IncludeSymLinks = false }()
+	visitedPaths = sync.Map{}
+
+	// Create Temp directory
+	dir := t.TempDir()
+	// Create a test file
+	testFile := filepath.Join(dir, "file.go")
+
+	if err := os.WriteFile(testFile, []byte("package main"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a symlink to the same file
+	linkFile := filepath.Join(dir, "link.go")
+	if err := os.Symlink(testFile, linkFile); err != nil {
+		t.Skip("Symlinks not supported:", err)
+	}
+	// Process the test file
+	fi1, _ := os.Lstat(testFile)
+	job1 := newFileJob(testFile, "file.go", fi1)
+
+	// Process the symlink (same target)
+	fi2, _ := os.Lstat(linkFile)
+	job2 := newFileJob(linkFile, "link.go", fi2)
+
+	// First count should go through
+	if job1 == nil {
+		t.Fatal("Expected first file job to be created")
+	}
+
+	// Second count should be skipped
+	if job2 != nil {
+		t.Error("Expected nil for duplicate file through symlink, but got a FileJob")
+	}
 }
