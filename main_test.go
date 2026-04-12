@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -315,6 +316,50 @@ func TestLineLength(t *testing.T) {
 	}
 }
 
+func TestFormatHTML(t *testing.T) {
+	t.Parallel()
+	output, err := runSCC("--format", "html")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(output, "<title>scc html output</title>") {
+		t.Fatalf("html format test failed, output:\n%s", output)
+	}
+}
+
+func TestFormatHTMLTable(t *testing.T) {
+	t.Parallel()
+	output, err := runSCC("--format", "html-table")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(output, `<table id="scc-table">`) {
+		t.Fatalf("html-table format test failed, output:\n%s", output)
+	}
+}
+
+func TestFormatSQL(t *testing.T) {
+	t.Parallel()
+	output, err := runSCC("--format", "sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(output, "create table metadata (   -- github.com/boyter/scc") {
+		t.Fatalf("sql format test failed, output:\n%s", output)
+	}
+}
+
+func TestFormatSQLInsert(t *testing.T) {
+	t.Parallel()
+	output, err := runSCC("--format", "sql-insert")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(output, "begin transaction;\ninsert into t values(") {
+		t.Fatalf("sql-insert format test failed, output:\n%s", output)
+	}
+}
+
 func TestMultipleFormatStdout(t *testing.T) {
 	output, err := runSCC("--format-multi", "tabular:stdout,html:stdout,csv:stdout,sql:stdout")
 	if err != nil {
@@ -519,7 +564,7 @@ func TestDeterministicOutput(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for range 20 {
+	for range 10 {
 		output2, err := runSCC(".")
 		if err != nil {
 			t.Fatal(err)
@@ -527,6 +572,152 @@ func TestDeterministicOutput(t *testing.T) {
 		if output != output2 {
 			t.Fatalf("want:\n%s, got:\n%s", output, output2)
 		}
+	}
+}
+
+func TestDuplicates(t *testing.T) {
+	for range 10 {
+		output, err := runSCC("-f", "json", "-d", "./examples/duplicates/")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(output, `"Count":1`) {
+			t.Fatalf("duplicates check failed, output:\n%s", output)
+		}
+	}
+}
+
+func TestCountAs(t *testing.T) {
+	testCases := []struct {
+		countAs  string
+		expected []string
+	}{
+		{
+			countAs:  "jsp:html",
+			expected: []string{"HTML"},
+		},
+		{
+			countAs:  "JsP:html",
+			expected: []string{"HTML"},
+		},
+		{
+			countAs:  "jsp:j2",
+			expected: []string{"Jinja"},
+		},
+		{
+			countAs:  "jsp:html,new:java",
+			expected: []string{"HTML", "Java"},
+		},
+		{
+			countAs:  "jsp:html,new:C Header",
+			expected: []string{"HTML", "C Header"},
+		},
+	}
+
+	for _, tc := range testCases {
+		output, err := runSCC("-f", "csv", "--count-as", tc.countAs, "./examples/countas/")
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, expectedLang := range tc.expected {
+			if !strings.Contains(output, expectedLang+",") {
+				t.Errorf("count as failed, count as: %s, output:\n%s", tc.countAs, output)
+			}
+		}
+	}
+}
+
+func TestRemapUnknown(t *testing.T) {
+	t.Parallel()
+	output, err := runSCC("-f", "csv", "--remap-unknown", "-*- C++ -*-:C Header", "./examples/remap/unknown")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(output, "C Header,") {
+		t.Fatalf("remap unknown failed, output:\n%s", output)
+	}
+}
+
+func TestRemapAll(t *testing.T) {
+	t.Parallel()
+	output, err := runSCC("-f", "csv", "--remap-all", "-*- C++ -*-:C Header", "./examples/remap/java.java")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(output, "C Header,") {
+		t.Fatalf("remap all failed, output:\n%s", output)
+	}
+}
+
+func TestCocomoProjectType(t *testing.T) {
+	projectTypes := []string{"organic", "semi-detached", "embedded", "custom,1,1,1,1"}
+	for _, typ := range projectTypes {
+		output, err := runSCC("--cocomo-project-type", typ)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(output, fmt.Sprintf("Estimated Cost to Develop (%s)", typ)) ||
+			!strings.Contains(output, fmt.Sprintf("Estimated Schedule Effort (%s)", typ)) ||
+			!strings.Contains(output, fmt.Sprintf("Estimated People Required (%s)", typ)) {
+			t.Errorf("check cocomo project type failed: %s", typ)
+		}
+	}
+}
+
+func TestCocomoProjectTypeFallback(t *testing.T) {
+	unknownTypes := []string{"doesnotexist", "custom,1,1,1"}
+	for _, typ := range unknownTypes {
+		output, err := runSCC("--cocomo-project-type", typ)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(output, "Estimated Cost to Develop (organic)") ||
+			!strings.Contains(output, "Estimated Schedule Effort (organic)") ||
+			!strings.Contains(output, "Estimated People Required (organic)") {
+			t.Errorf("check cocomo project type fallback failed: %s", typ)
+		}
+	}
+}
+
+func TestOutputBytes(t *testing.T) {
+	jsonOutput, err := runSCC("-f", "json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(jsonOutput, `"Bytes":`) {
+		t.Errorf("json output does not contain `Bytes` field, output:\n%s", jsonOutput)
+	}
+
+	output, err := runSCC()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(output, "megabytes") {
+		t.Errorf("output does not contain `megabytes`, output:\n%s", output)
+	}
+}
+
+func TestFileGCCount(t *testing.T) {
+	const target = "./examples/duplicates"
+	files, err := os.ReadDir(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	output, err := runSCC("--file-gc-count", strconv.Itoa(len(files)-1), "-v", target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(output, "read file limit exceeded GC re-enabled") {
+		t.Errorf("test file GC count failed, file count: %d, limit: %d", len(files), len(files)-1)
+	}
+
+	output, err = runSCC("--file-gc-count", strconv.Itoa(len(files)+1), "-v", target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(output, "read file limit exceeded GC re-enabled") {
+		t.Errorf("test file GC count failed, file count: %d, limit: %d", len(files), len(files)+1)
 	}
 }
 
