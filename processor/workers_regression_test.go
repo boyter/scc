@@ -134,20 +134,57 @@ hello there! how's it going?
 
 	CountStats(&fileJob)
 
-	if fileJob.Lines != 2 {
-		t.Errorf("Expected 2 lines got %d", fileJob.Lines)
+	if fileJob.Lines != 3 {
+		t.Errorf("Expected 3 lines got %d", fileJob.Lines)
 	}
 
-	if fileJob.Code != 1 {
-		t.Errorf("Expected 1 lines got %d", fileJob.Code)
+	if fileJob.Code != 0 {
+		t.Errorf("Expected 0 lines got %d", fileJob.Code)
 	}
 
-	if fileJob.Comment != 1 {
-		t.Errorf("Expected 1 lines got %d", fileJob.Comment)
+	if fileJob.Comment != 3 {
+		t.Errorf("Expected 3 lines got %d", fileJob.Comment)
 	}
 
 	if fileJob.Blank != 0 {
 		t.Errorf("Expected 0 lines got %d", fileJob.Blank)
+	}
+}
+
+func TestCountStatsIssue246(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Python",
+	}
+
+	// Apostrophes inside triple-double-quoted docstrings should not
+	// break docstring parsing (issue #246).
+	fileJob.SetContent(`#!/usr/bin/env python3
+
+"""
+Docstrings containing an apostrophe (') are handled incorrectly
+"""
+# A comment
+if __name__ == '__main__':
+    print('Hello, World!')
+`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 8 {
+		t.Errorf("Expected 8 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 2 {
+		t.Errorf("Expected 2 code lines got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 5 {
+		t.Errorf("Expected 5 comment lines got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 1 {
+		t.Errorf("Expected 1 blank line got %d", fileJob.Blank)
 	}
 }
 
