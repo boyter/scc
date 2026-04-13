@@ -18,6 +18,7 @@ import (
 func ProcessResult() ([]LanguageSummary, error) {
 	ProcessConstants()
 	processFlags()
+	cleanVisitedPaths()
 
 	if len(DirFilePaths) == 0 {
 		DirFilePaths = append(DirFilePaths, ".")

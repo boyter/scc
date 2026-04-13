@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"slices"
 	"strconv"
 	"strings"
@@ -718,6 +719,58 @@ func TestFileGCCount(t *testing.T) {
 	}
 	if strings.Contains(output, "read file limit exceeded GC re-enabled") {
 		t.Errorf("test file GC count failed, file count: %d, limit: %d", len(files), len(files)+1)
+	}
+}
+
+func TestIncludeSymlinks(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping symlink test on Windows due to privilege requirements")
+	}
+
+	tmpDir, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	dirA := filepath.Join(tmpDir, "a")
+	dirB := filepath.Join(tmpDir, "b")
+	if err := os.Mkdir(dirA, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(dirB, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	const fileName = "source.go"
+	if err := os.WriteFile(filepath.Join(dirA, fileName), []byte("package main\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dirB, fileName), []byte("package main\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	// link to another dir, should be counted under --include-symlinks
+	if err := os.Symlink(filepath.Join(dirB, fileName), filepath.Join(dirA, "link1.go")); err != nil {
+		t.Fatal(err)
+	}
+	// link to the same dir, this should be ignored in all times
+	if err := os.Symlink(filepath.Join(dirA, fileName), filepath.Join(dirA, "link2.go")); err != nil {
+		t.Fatal(err)
+	}
+
+	output, err := runSCC("-f", "json", "--no-scc-ignore", dirA)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(output, `"Count":1`) {
+		t.Errorf("count without symlink failed, output:\n%s", output)
+	}
+
+	output, err = runSCC("-f", "json", "--no-scc-ignore", "--include-symlinks", dirA)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(output, `"Count":2`) {
+		t.Errorf("count includes symlink failed, output:\n%s", output)
 	}
 }
 

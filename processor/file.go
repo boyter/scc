@@ -44,6 +44,10 @@ func getExtension(name string) string {
 	return extension.(string)
 }
 
+func cleanVisitedPaths() {
+	visitedPaths.Clear()
+}
+
 func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 	if NoLarge {
 		if fileInfo.Size() >= LargeByteCount {
