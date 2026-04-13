@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sync"
 	"testing"
 )
 
@@ -77,6 +76,7 @@ func TestGetExtensionSecondPass(t *testing.T) {
 
 func TestNewFileJobFullname(t *testing.T) {
 	ProcessConstants()
+	cleanVisitedPaths()
 	AllowListExtensions = []string{}
 
 	fi, _ := os.Stat("../examples/issue114/makefile")
@@ -89,6 +89,7 @@ func TestNewFileJobFullname(t *testing.T) {
 
 func TestNewFileJob(t *testing.T) {
 	ProcessConstants()
+	cleanVisitedPaths()
 
 	fi, _ := os.Stat("../examples/issue114/java")
 	job := newFileJob("../examples/issue114/", "java", fi)
@@ -101,6 +102,7 @@ func TestNewFileJob(t *testing.T) {
 func TestNewFileJobGitIgnore(t *testing.T) {
 	AllowListExtensions = []string{}
 	ProcessConstants()
+	cleanVisitedPaths()
 	CountIgnore = true
 
 	fi, _ := os.Stat("../examples/issue114/.gitignore")
@@ -114,6 +116,7 @@ func TestNewFileJobGitIgnore(t *testing.T) {
 func TestNewFileJobIgnore(t *testing.T) {
 	AllowListExtensions = []string{}
 	ProcessConstants()
+	cleanVisitedPaths()
 
 	fi, _ := os.Stat("../examples/issue114/.ignore")
 	job := newFileJob("../examples/issue114/", ".ignore", fi)
@@ -125,6 +128,7 @@ func TestNewFileJobIgnore(t *testing.T) {
 
 func TestNewFileJobLicense(t *testing.T) {
 	ProcessConstants()
+	cleanVisitedPaths()
 
 	fi, _ := os.Stat("../examples/issue114/license")
 	job := newFileJob("../examples/issue114/", "license", fi)
@@ -136,6 +140,7 @@ func TestNewFileJobLicense(t *testing.T) {
 
 func TestNewFileJobYAML(t *testing.T) {
 	ProcessConstants()
+	cleanVisitedPaths()
 
 	fi, _ := os.Stat("../examples/issue114/.travis.yml")
 	job := newFileJob("../examples/issue114/", ".travis.yml", fi)
@@ -154,6 +159,7 @@ func TestNewFileJobYAML(t *testing.T) {
 
 func TestNewFileJobYAMLCloudformation(t *testing.T) {
 	ProcessConstants()
+	cleanVisitedPaths()
 
 	fi, _ := os.Stat("../examples/issue114/.travis.yml")
 	job := newFileJob("../examples/issue114/", ".travis.yml", fi)
@@ -172,6 +178,7 @@ func TestNewFileJobYAMLCloudformation(t *testing.T) {
 
 func TestNewFileJobSize(t *testing.T) {
 	ProcessConstants()
+	cleanVisitedPaths()
 	NoLarge = true
 	LargeByteCount = 1
 
@@ -192,20 +199,27 @@ func TestNewFileJobBrokenSymlink(t *testing.T) {
 	}
 
 	ProcessConstants()
+	cleanVisitedPaths()
 	IncludeSymLinks = true
+	defer func() {
+		IncludeSymLinks = false
+	}()
 
 	// Create a temp directory to work in
-	dir, err := os.MkdirTemp("", "scc-broken-symlink-test")
+	file := filepath.Join(t.TempDir(), "source.go")
+	err := os.WriteFile(file, []byte("package main\n"), 0644)
 	if err != nil {
-		t.Fatal("Failed to create temp dir:", err)
+		t.Fatal(err)
 	}
-	defer os.RemoveAll(dir)
-
-	// Create a symlink that points to a path that doesn't exist
-	symPath := dir + "/broken.go"
-	err = os.Symlink("/this/path/does/not/exist.go", symPath)
+	symPath := filepath.Join(t.TempDir(), "broken.go")
+	err = os.Symlink(file, symPath)
 	if err != nil {
-		t.Fatal("Failed to create broken symlink:", err)
+		t.Fatal(err)
+	}
+	// Delete the file breaks the symlink
+	err = os.Remove(file)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	fi, _ := os.Lstat(symPath)
@@ -214,8 +228,6 @@ func TestNewFileJobBrokenSymlink(t *testing.T) {
 	if job != nil {
 		t.Error("Expected nil for broken symlink got", job)
 	}
-
-	IncludeSymLinks = false
 }
 
 func BenchmarkGetExtensionDifferent(b *testing.B) {
@@ -252,11 +264,12 @@ func TestNewFileJobCircularSymlink(t *testing.T) {
 		t.Skip("skipping symlink test on Windows due to privilege requirements")
 	}
 	ProcessConstants()
+	cleanVisitedPaths()
 	IncludeSymLinks = true
 	defer func() { IncludeSymLinks = false }()
-	visitedPaths = sync.Map{}
+
 	// Create a temp directory to work in
-	dir := t.TempDir()
+	dir, _ := filepath.EvalSymlinks(t.TempDir())
 	link1 := filepath.Join(dir, "link1.go")
 	link2 := filepath.Join(dir, "link2.go")
 	// Create a loop: link1 -> link2 and link2 -> link1
@@ -284,12 +297,12 @@ func TestNewFileJobDuplicateCounting(t *testing.T) {
 		t.Skip("skipping symlink test on Windows due to privilege requirements")
 	}
 	ProcessConstants()
+	cleanVisitedPaths()
 	IncludeSymLinks = true
 	defer func() { IncludeSymLinks = false }()
-	visitedPaths = sync.Map{}
 
-	// Create Temp directory
-	dir := t.TempDir()
+	// on some systems like macOS, t.TempDir is also a symlink
+	dir, _ := filepath.EvalSymlinks(t.TempDir())
 	// Create a test file
 	testFile := filepath.Join(dir, "file.go")
 
@@ -300,7 +313,7 @@ func TestNewFileJobDuplicateCounting(t *testing.T) {
 	// Create a symlink to the same file
 	linkFile := filepath.Join(dir, "link.go")
 	if err := os.Symlink(testFile, linkFile); err != nil {
-		t.Skip("Symlinks not supported:", err)
+		t.Fatalf("Failed to create link file: %s", err)
 	}
 	// Process the test file
 	fi1, _ := os.Lstat(testFile)

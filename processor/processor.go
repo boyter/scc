@@ -625,6 +625,7 @@ func Process() {
 
 	ProcessConstants()
 	processFlags()
+	cleanVisitedPaths()
 
 	// Clean up any invalid arguments before setting everything up
 	if len(DirFilePaths) == 0 {
