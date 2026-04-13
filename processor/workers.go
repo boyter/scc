@@ -172,7 +172,7 @@ func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, cu
 
 // This is a special state check pretty much only ever used by Python codebases
 // but potentially it could be expanded to deal with other types
-func docStringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie, endString []byte, currentState int64) (int, int64) {
+func docStringState(fileJob *FileJob, index int, endPoint int, endString []byte, currentState int64) (int, int64) {
 	// It's not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
 	// without checking if it is out of bounds first
 	for i := index; i < endPoint; i++ {
@@ -187,7 +187,7 @@ func docStringState(fileJob *FileJob, index int, endPoint int, stringTrie *Trie,
 		}
 
 		if fileJob.Content[i-1] != '\\' {
-			if ok, _, _ := stringTrie.Match(fileJob.Content[i:]); ok != 0 {
+			if checkForMatchSingle(fileJob.Content[i], index, endPoint, endString, fileJob) {
 				// So we have hit end of docstring at this point in which case check if only whitespace characters till the next
 				// newline and if so we change to a comment otherwise to code
 				// need to start the loop after ending definition of docstring, therefore adding the length of the string to
@@ -515,7 +515,7 @@ func CountStats(fileJob *FileJob) {
 			case SDocString:
 				// For a docstring we can either move into blank in which case we count it as a docstring
 				// or back into code in which case it should be counted as code
-				index, currentState = docStringState(fileJob, index, endPoint, langFeatures.Strings, endString, currentState)
+				index, currentState = docStringState(fileJob, index, endPoint, endString, currentState)
 			case SMulticomment, SMulticommentCode:
 				index, currentState, endString, endComments = commentState(
 					fileJob,
