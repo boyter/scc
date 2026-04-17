@@ -907,7 +907,6 @@ func fileSummarizeLong(input chan *FileJob) string {
 
 	langs := map[string]LanguageSummary{}
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumBytes int64 = 0, 0, 0, 0, 0, 0, 0
-	var sumWeightedComplexity float64
 
 	for res := range input {
 		sumFiles++
@@ -923,7 +922,6 @@ func fileSummarizeLong(input chan *FileJob) string {
 			weightedComplexity = (float64(res.Complexity) / float64(res.Code)) * 100
 		}
 		res.WeightedComplexity = weightedComplexity
-		sumWeightedComplexity += weightedComplexity
 
 		_, ok := langs[res.Language]
 
@@ -972,6 +970,11 @@ func fileSummarizeLong(input chan *FileJob) string {
 
 	startTime := makeTimestampMilli()
 	for _, summary := range language {
+		if summary.Code != 0 {
+			summary.WeightedComplexity = (float64(summary.Complexity) / float64(summary.Code)) * 100
+		} else {
+			summary.WeightedComplexity = 0
+		}
 		if Files {
 			str.WriteString(getTabularWideBreak())
 		}
@@ -1028,7 +1031,11 @@ func fileSummarizeLong(input chan *FileJob) string {
 	printDebugF("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime)
 
 	str.WriteString(getTabularWideBreak())
-	_, _ = fmt.Fprintf(str, tabularWideFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumWeightedComplexity)
+	var totalWeightedComplexity float64
+	if sumCode != 0 {
+		totalWeightedComplexity = (float64(sumComplexity) / float64(sumCode)) * 100
+	}
+	_, _ = fmt.Fprintf(str, tabularWideFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, totalWeightedComplexity)
 	str.WriteString(getTabularWideBreak())
 
 	if UlocMode {
