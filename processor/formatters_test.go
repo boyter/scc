@@ -1833,3 +1833,52 @@ func TestToJSON2Keys(t *testing.T) {
 		t.Error("JSON2 estimatedPeople check failed")
 	}
 }
+
+func TestFileSummarizeLongComplexityLines(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+
+	// Creating 3 dummy files to test the Complexity/Lines
+	inputChan <- &FileJob{
+		Language:   "C Header",
+		Filename:   "File1",
+		Location:   "File1",
+		Lines:      1000,
+		Code:       2000,
+		Comment:    43,
+		Blank:      42,
+		Complexity: 100,
+	}
+	inputChan <- &FileJob{
+		Language:   "C Header",
+		Filename:   "File2",
+		Location:   "File2",
+		Lines:      200,
+		Code:       300,
+		Comment:    23,
+		Blank:      21,
+		Complexity: 20,
+	}
+	inputChan <- &FileJob{
+		Language:   "C Header",
+		Filename:   "File3",
+		Location:   "File3",
+		Lines:      10,
+		Code:       90,
+		Comment:    5,
+		Blank:      4,
+		Complexity: 8,
+	}
+	close(inputChan)
+
+	Files = true
+	res := fileSummarizeLong(inputChan)
+	Files = false
+
+	// The language row and total row should show 7.99, not 44.70
+	if strings.Contains(res, "20.56") {
+		t.Error("WeightedComplexity is being summed incorrectly, got 20.56 instead of 5.36")
+	}
+	if !strings.Contains(res, "5.36") {
+		t.Error("Expected WeightedComplexity of 5.63 ((128/2390)*100), got:", "\n", res)
+	}
+}
