@@ -1874,7 +1874,6 @@ func TestFileSummarizeLongComplexityLines(t *testing.T) {
 	res := fileSummarizeLong(inputChan)
 	Files = false
 
-	// The language row and total row should show 7.99, not 44.70
 	if strings.Contains(res, "20.56") {
 		t.Error("WeightedComplexity is being summed incorrectly, got 20.56 instead of 5.36")
 	}
