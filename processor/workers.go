@@ -88,12 +88,53 @@ func isWhitespace(currentByte byte) bool {
 	return true
 }
 
-// isIdentifierStart reports whether b can start an identifier. Used by the
-// TComplexityPostfix matcher to distinguish Rust's `?` try operator (followed
-// by punctuation / end-of-expression) from the `?Trait` trait-bound prefix
-// (e.g. `?Sized`, which is followed by an identifier).
-func isIdentifierStart(b byte) bool {
-	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') || b == '_'
+func isIdentifierContinue(b byte) bool {
+	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') || (b >= '0' && b <= '9') || b == '_'
+}
+
+func hasNonWhitespaceBefore(content []byte, index int) bool {
+	for i := index - 1; i >= 0; i-- {
+		if !isWhitespace(content[i]) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func nextNonWhitespaceIndex(content []byte, index int) int {
+	for index < len(content) && isWhitespace(content[index]) {
+		index++
+	}
+
+	return index
+}
+
+func isRustRelaxedSizedBound(content []byte, index, offsetJump int) bool {
+	if content[index] != '?' {
+		return false
+	}
+
+	next := nextNonWhitespaceIndex(content, index+offsetJump)
+	if next+len("Sized") > len(content) || string(content[next:next+len("Sized")]) != "Sized" {
+		return false
+	}
+
+	afterSized := next + len("Sized")
+	return afterSized == len(content) || !isIdentifierContinue(content[afterSized])
+}
+
+func countComplexityPostfix(fileJob *FileJob, index, offsetJump int) {
+	if !hasNonWhitespaceBefore(fileJob.Content, index) {
+		return
+	}
+
+	if fileJob.Language == "Rust" && isRustRelaxedSizedBound(fileJob.Content, index, offsetJump) {
+		return
+	}
+
+	fileJob.Complexity++
+	fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] = fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] + 1
 }
 
 // Check if this file is binary by checking for nul byte and if so bail out
@@ -296,13 +337,7 @@ func codeState(
 				}
 
 			case TComplexityPostfix:
-				if index > 0 && !isWhitespace(fileJob.Content[index-1]) {
-					next := index + offsetJump
-					if next >= len(fileJob.Content) || !isIdentifierStart(fileJob.Content[next]) {
-						fileJob.Complexity++
-						fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] = fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] + 1
-					}
-				}
+				countComplexityPostfix(fileJob, index, offsetJump)
 			}
 		}
 	}
@@ -417,13 +452,7 @@ func blankState(
 		if fileJob.ContentByteType != nil {
 			fileJob.ContentByteType[index] = ByteTypeCode
 		}
-		if index > 0 && !isWhitespace(fileJob.Content[index-1]) {
-			next := index + offsetJump
-			if next >= len(fileJob.Content) || !isIdentifierStart(fileJob.Content[next]) {
-				fileJob.Complexity++
-				fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] = fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] + 1
-			}
-		}
+		countComplexityPostfix(fileJob, index, offsetJump)
 
 	default:
 		currentState = SCode

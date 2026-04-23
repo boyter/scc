@@ -344,7 +344,9 @@ func TestCountStatsComplexityRustQuestionOperator(t *testing.T) {
 		want    int64
 	}{
 		{"foo()?;", 1},
+		{"foo() ?;", 1},
 		{"foo()?.bar();", 1},
+		{"foo()? as u16;", 1},
 		{"foo()??;", 2},
 		{"let y = x?;", 1},
 	}
@@ -368,6 +370,7 @@ func TestCountStatsComplexityRustQuestionSizedNotCounted(t *testing.T) {
 	checks := []string{
 		"fn foo<T: ?Sized>() {}",
 		"fn foo<T:?Sized>() {}",
+		"fn foo<T:? Sized>() {}",
 		"struct Bar<T: ?Sized>(T);",
 		"where T: Debug + ?Sized,",
 		"where T: Debug+?Sized,",
