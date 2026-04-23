@@ -10287,6 +10287,9 @@ var languageDatabase = map[string]Language{
 			"match ",
 			"match(",
 		},
+		ComplexityChecksPostfix: []string{
+			"?",
+		},
 		Extensions: []string{
 			"rs",
 		},

@@ -88,6 +88,14 @@ func isWhitespace(currentByte byte) bool {
 	return true
 }
 
+// isIdentifierStart reports whether b can start an identifier. Used by the
+// TComplexityPostfix matcher to distinguish Rust's `?` try operator (followed
+// by punctuation / end-of-expression) from the `?Trait` trait-bound prefix
+// (e.g. `?Sized`, which is followed by an identifier).
+func isIdentifierStart(b byte) bool {
+	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') || b == '_'
+}
+
 // Check if this file is binary by checking for nul byte and if so bail out
 // this is how GNU Grep, git and ripgrep check for binary files
 func isBinary(index int, currentByte byte) bool {
@@ -286,6 +294,15 @@ func codeState(
 					fileJob.Complexity++
 					fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] = fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] + 1
 				}
+
+			case TComplexityPostfix:
+				if index > 0 && !isWhitespace(fileJob.Content[index-1]) {
+					next := index + offsetJump
+					if next >= len(fileJob.Content) || !isIdentifierStart(fileJob.Content[next]) {
+						fileJob.Complexity++
+						fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] = fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] + 1
+					}
+				}
 			}
 		}
 	}
@@ -393,6 +410,19 @@ func blankState(
 		if index == 0 || isWhitespace(fileJob.Content[index-1]) {
 			fileJob.Complexity++
 			fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] = fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] + 1
+		}
+
+	case TComplexityPostfix:
+		currentState = SCode
+		if fileJob.ContentByteType != nil {
+			fileJob.ContentByteType[index] = ByteTypeCode
+		}
+		if index > 0 && !isWhitespace(fileJob.Content[index-1]) {
+			next := index + offsetJump
+			if next >= len(fileJob.Content) || !isIdentifierStart(fileJob.Content[next]) {
+				fileJob.Complexity++
+				fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] = fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] + 1
+			}
 		}
 
 	default:

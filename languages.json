@@ -6358,6 +6358,7 @@
       "match ",
       "match("
     ],
+    "complexitychecks_postfix": ["?"],
     "extensions": ["rs"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],

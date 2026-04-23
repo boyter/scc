@@ -482,6 +482,13 @@ func processLanguageFeature(name string, value Language) {
 		processMask |= complexityMask
 	}
 
+	for _, v := range value.ComplexityChecksPostfix {
+		if !Complexity {
+			tokenTrie.Insert(TComplexityPostfix, []byte(v))
+			processMask |= v[0]
+		}
+	}
+
 	for _, v := range value.LineComment {
 		singleLineCommentMask |= v[0]
 		slCommentTrie.Insert(TSlcomment, []byte(v))
