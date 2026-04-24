@@ -110,26 +110,35 @@ func nextNonWhitespaceIndex(content []byte, index int) int {
 	return index
 }
 
-func isRustRelaxedSizedBound(content []byte, index, offsetJump int) bool {
-	if content[index] != '?' {
-		return false
+func hasPostfixExclude(content []byte, index, offsetJump int, excludes [][]byte) bool {
+	for _, exclude := range excludes {
+		if len(exclude) < offsetJump || !bytes.Equal(content[index:index+offsetJump], exclude[:offsetJump]) {
+			continue
+		}
+
+		remaining := exclude[offsetJump:]
+		next := nextNonWhitespaceIndex(content, index+offsetJump)
+		if next+len(remaining) > len(content) || !bytes.Equal(content[next:next+len(remaining)], remaining) {
+			continue
+		}
+
+		afterExclude := next + len(remaining)
+		if len(remaining) != 0 && isIdentifierContinue(remaining[len(remaining)-1]) {
+			return afterExclude == len(content) || !isIdentifierContinue(content[afterExclude])
+		}
+
+		return true
 	}
 
-	next := nextNonWhitespaceIndex(content, index+offsetJump)
-	if next+len("Sized") > len(content) || string(content[next:next+len("Sized")]) != "Sized" {
-		return false
-	}
-
-	afterSized := next + len("Sized")
-	return afterSized == len(content) || !isIdentifierContinue(content[afterSized])
+	return false
 }
 
-func countComplexityPostfix(fileJob *FileJob, index, offsetJump int) {
+func countComplexityPostfix(fileJob *FileJob, index, offsetJump int, langFeatures LanguageFeature) {
 	if !hasNonWhitespaceBefore(fileJob.Content, index) {
 		return
 	}
 
-	if fileJob.Language == "Rust" && isRustRelaxedSizedBound(fileJob.Content, index, offsetJump) {
+	if hasPostfixExclude(fileJob.Content, index, offsetJump, langFeatures.PostfixExcludes) {
 		return
 	}
 
@@ -337,7 +346,7 @@ func codeState(
 				}
 
 			case TComplexityPostfix:
-				countComplexityPostfix(fileJob, index, offsetJump)
+				countComplexityPostfix(fileJob, index, offsetJump, langFeatures)
 			}
 		}
 	}
@@ -452,7 +461,7 @@ func blankState(
 		if fileJob.ContentByteType != nil {
 			fileJob.ContentByteType[index] = ByteTypeCode
 		}
-		countComplexityPostfix(fileJob, index, offsetJump)
+		countComplexityPostfix(fileJob, index, offsetJump, langFeatures)
 
 	default:
 		currentState = SCode

@@ -10290,6 +10290,9 @@ var languageDatabase = map[string]Language{
 		ComplexityChecksPostfix: []string{
 			"?",
 		},
+		ComplexityChecksPostfixExcludes: []string{
+			"?Sized",
+		},
 		Extensions: []string{
 			"rs",
 		},
