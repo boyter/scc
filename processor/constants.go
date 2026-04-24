@@ -12294,9 +12294,11 @@ var languageDatabase = map[string]Language{
 			"=== ",
 			"case ",
 			"case(",
+		},
+		ComplexityChecksPostfix: []string{
 			"?.",
-			"?? ",
-			"??= ",
+			"??",
+			"??=",
 		},
 		Extensions: []string{
 			"ts",
@@ -12356,9 +12358,11 @@ var languageDatabase = map[string]Language{
 			"=== ",
 			"case ",
 			"case(",
+		},
+		ComplexityChecksPostfix: []string{
 			"?.",
-			"?? ",
-			"??= ",
+			"??",
+			"??=",
 		},
 		Extensions: []string{
 			"d.ts",

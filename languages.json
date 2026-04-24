@@ -7578,11 +7578,9 @@
       "== ",
       "=== ",
       "case ",
-      "case(",
-      "?.",
-      "?? ",
-      "??= "
+      "case("
     ],
+    "complexitychecks_postfix": ["?.", "??", "??="],
     "extensions": ["ts", "tsx", "cts", "mts"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
@@ -7617,11 +7615,9 @@
       "== ",
       "=== ",
       "case ",
-      "case(",
-      "?.",
-      "?? ",
-      "??= "
+      "case("
     ],
+    "complexitychecks_postfix": ["?.", "??", "??="],
     "extensions": ["d.ts"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],

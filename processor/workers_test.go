@@ -386,6 +386,32 @@ func TestCountStatsComplexityRustQuestionSizedNotCounted(t *testing.T) {
 	}
 }
 
+func TestCountStatsComplexityTypeScriptPostfixOperators(t *testing.T) {
+	ProcessConstants()
+
+	checks := []struct {
+		content string
+		want    int64
+	}{
+		{"obj.attr?.method();", 1},
+		{"path ?? url;", 1},
+		{"path??url;", 1},
+		{"value ??= fallback;", 1},
+		{"value??=fallback;", 1},
+		{"function get(path?: string) { return path ?? url; }", 1},
+		{"interface User { age?: number; method?(): void; }", 0},
+	}
+
+	for _, c := range checks {
+		fileJob := FileJob{Language: "TypeScript"}
+		fileJob.SetContent(c.content)
+		CountStats(&fileJob)
+		if fileJob.Complexity != c.want {
+			t.Errorf("Expected complexity of %d got %d for %q", c.want, fileJob.Complexity, c.content)
+		}
+	}
+}
+
 type linecounter struct {
 	blanks   int
 	comments int
