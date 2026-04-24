@@ -111,19 +111,24 @@ func nextNonWhitespaceIndex(content []byte, index int) int {
 }
 
 func hasPostfixExclude(content []byte, index, offsetJump int, excludes [][]byte) bool {
+	token := content[index : index+offsetJump]
 	for _, exclude := range excludes {
-		if len(exclude) < offsetJump || !bytes.Equal(content[index:index+offsetJump], exclude[:offsetJump]) {
+		if len(exclude) < offsetJump || !bytes.Equal(token, exclude[:offsetJump]) {
 			continue
 		}
 
 		remaining := exclude[offsetJump:]
+		if len(remaining) == 0 {
+			return true
+		}
+
 		next := nextNonWhitespaceIndex(content, index+offsetJump)
 		if next+len(remaining) > len(content) || !bytes.Equal(content[next:next+len(remaining)], remaining) {
 			continue
 		}
 
 		afterExclude := next + len(remaining)
-		if len(remaining) != 0 && isIdentifierContinue(remaining[len(remaining)-1]) {
+		if isIdentifierContinue(remaining[len(remaining)-1]) {
 			return afterExclude == len(content) || !isIdentifierContinue(content[afterExclude])
 		}
 
@@ -133,12 +138,17 @@ func hasPostfixExclude(content []byte, index, offsetJump int, excludes [][]byte)
 	return false
 }
 
-func countComplexityPostfix(fileJob *FileJob, index, offsetJump int, langFeatures LanguageFeature) {
-	if !hasNonWhitespaceBefore(fileJob.Content, index) {
+func countComplexityPostfix(fileJob *FileJob, index, offsetJump int, postfixExcludes [][]byte) {
+	if index == 0 {
 		return
 	}
 
-	if hasPostfixExclude(fileJob.Content, index, offsetJump, langFeatures.PostfixExcludes) {
+	content := fileJob.Content
+	if isWhitespace(content[index-1]) && !hasNonWhitespaceBefore(content, index-1) {
+		return
+	}
+
+	if len(postfixExcludes) > 0 && hasPostfixExclude(content, index, offsetJump, postfixExcludes) {
 		return
 	}
 
@@ -346,7 +356,7 @@ func codeState(
 				}
 
 			case TComplexityPostfix:
-				countComplexityPostfix(fileJob, index, offsetJump, langFeatures)
+				countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
 			}
 		}
 	}
@@ -461,7 +471,7 @@ func blankState(
 		if fileJob.ContentByteType != nil {
 			fileJob.ContentByteType[index] = ByteTypeCode
 		}
-		countComplexityPostfix(fileJob, index, offsetJump, langFeatures)
+		countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
 
 	default:
 		currentState = SCode
