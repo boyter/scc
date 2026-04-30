@@ -1,0 +1,6 @@
+TYPE "MotorState" :
+STRUCT
+    IsRunning : BOOL; // Current motor state
+    SpeedRpm : INT;
+END_STRUCT;
+END_TYPE

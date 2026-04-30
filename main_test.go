@@ -850,6 +850,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"Hare",
 		"Haskell",
 		"HCL",
+		"IEC61131-3",
 		"ignore",
 		"INI",
 		"Java",

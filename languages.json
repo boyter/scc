@@ -3337,6 +3337,90 @@
       }
     ]
   },
+  "IEC61131-3": {
+    "complexitychecks": [
+      "IF ",
+      "ELSIF ",
+      "ELSE ",
+      "CASE ",
+      "FOR ",
+      "WHILE ",
+      "REPEAT ",
+      "UNTIL ",
+      " if ",
+      " elsif ",
+      " else ",
+      " case ",
+      " for ",
+      " while ",
+      " repeat ",
+      " until "
+    ],
+    "extensions": ["scl", "s7dcl"],
+    "keywords": [
+      "FUNCTION_BLOCK",
+      "ORGANIZATION_BLOCK",
+      "END_FUNCTION_BLOCK",
+      "END_ORGANIZATION_BLOCK",
+      "END_VAR",
+      "END_IF",
+      "END_CASE",
+      "END_FOR",
+      "END_WHILE",
+      "END_REPEAT",
+      "VAR_INPUT",
+      "VAR_OUTPUT",
+      "VAR_IN_OUT",
+      "TYPE",
+      "STRUCT",
+      "END_STRUCT",
+      "FUNCTION",
+      "PROGRAM",
+      "BEGIN",
+      "THEN",
+      "ELSIF",
+      "REPEAT",
+      "UNTIL",
+      "function_block",
+      "organization_block",
+      "end_function_block",
+      "end_organization_block",
+      "end_var",
+      "end_if",
+      "end_case",
+      "end_for",
+      "end_while",
+      "end_repeat",
+      "var_input",
+      "var_output",
+      "var_in_out",
+      "type",
+      "struct",
+      "end_struct",
+      "function",
+      "program",
+      "begin",
+      "then",
+      "elsif",
+      "repeat",
+      "until"
+    ],
+    "line_comment": ["//"],
+    "multi_line": [
+      ["(*", "*)"],
+      ["/*", "*/"]
+    ],
+    "quotes": [
+      {
+        "end": "'",
+        "start": "'"
+      },
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "INI": {
     "extensions": ["ini"],
     "line_comment": ["#", ";"],
@@ -6626,6 +6710,14 @@
       "< "
     ],
     "extensions": ["scl"],
+    "keywords": [
+      "rel ",
+      "query ",
+      "count(",
+      "where ",
+      "forall(",
+      "exists("
+    ],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
     "quotes": [

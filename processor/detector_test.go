@@ -382,6 +382,58 @@ func TestGuessLanguageSystemVerilog(t *testing.T) {
 	}
 }
 
+func TestDetectLanguageIEC61131S7DCL(t *testing.T) {
+	ProcessConstants()
+
+	possible, ext := DetectLanguage("types.s7dcl")
+	if ext != "s7dcl" {
+		t.Error("Expected s7dcl got", ext)
+	}
+	found := false
+	for _, language := range possible {
+		if language == "IEC61131-3" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("Expected IEC61131-3 got", possible)
+	}
+}
+
+func TestGuessLanguageIEC61131SCL(t *testing.T) {
+	ProcessConstants()
+
+	content := []byte(`FUNCTION_BLOCK "MotorControl"
+VAR_INPUT
+    Start : BOOL;
+END_VAR
+BEGIN
+    IF Start THEN
+        Speed := 100;
+    END_IF;
+END_FUNCTION_BLOCK`)
+
+	res := DetermineLanguage("motor.scl", "", []string{"IEC61131-3", "Scallop"}, content)
+	if res != "IEC61131-3" {
+		t.Error("Expected guessed language to have been IEC61131-3 got", res)
+	}
+}
+
+func TestGuessLanguageScallopSCL(t *testing.T) {
+	ProcessConstants()
+
+	content := []byte(`rel classes = {0, 1, 2}
+rel count_enroll_cs_in_class(c, n) :-
+  n = count(s: student(c, s), enroll(s, "CS") where c: classes(c))
+query count_enroll_cs_in_class`)
+
+	res := DetermineLanguage("scallop.scl", "", []string{"IEC61131-3", "Scallop"}, content)
+	if res != "Scallop" {
+		t.Error("Expected guessed language to have been Scallop got", res)
+	}
+}
+
 func TestGuessLanguageLanguageSetNoPossible(t *testing.T) {
 	res := DetermineLanguage("", "Java", []string{}, []byte(`endmodule posedge edge always wire`))
 
