@@ -15,6 +15,20 @@ var languageDatabase = map[string]Language{
 			{{quote .}},
 			{{- end}}
 		},
+		{{- if $value.ComplexityChecksPostfix}}
+		ComplexityChecksPostfix: []string{
+			{{- range $value.ComplexityChecksPostfix}}
+			{{quote .}},
+			{{- end}}
+		},
+		{{- end}}
+		{{- if $value.ComplexityChecksPostfixExcludes}}
+		ComplexityChecksPostfixExcludes: []string{
+			{{- range $value.ComplexityChecksPostfixExcludes}}
+			{{quote .}},
+			{{- end}}
+		},
+		{{- end}}
 		Extensions: []string{
 			{{- range $value.Extensions}}
 			{{quote .}},

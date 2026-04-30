@@ -464,6 +464,7 @@ func processLanguageFeature(name string, value Language) {
 	stringTrie := &Trie{}
 	tokenTrie := &Trie{}
 	keywordBytes := make([][]byte, 0, len(value.Keywords))
+	postfixExcludes := make([][]byte, 0, len(value.ComplexityChecksPostfixExcludes))
 
 	complexityMask := byte(0)
 	singleLineCommentMask := byte(0)
@@ -480,6 +481,17 @@ func processLanguageFeature(name string, value Language) {
 	}
 	if !Complexity {
 		processMask |= complexityMask
+	}
+
+	for _, v := range value.ComplexityChecksPostfix {
+		if !Complexity {
+			tokenTrie.Insert(TComplexityPostfix, []byte(v))
+			processMask |= v[0]
+		}
+	}
+
+	for _, v := range value.ComplexityChecksPostfixExcludes {
+		postfixExcludes = append(postfixExcludes, []byte(v))
 	}
 
 	for _, v := range value.LineComment {
@@ -517,6 +529,7 @@ func processLanguageFeature(name string, value Language) {
 		Strings:               stringTrie,
 		Tokens:                tokenTrie,
 		Nested:                value.NestedMultiLine,
+		PostfixExcludes:       postfixExcludes,
 		ComplexityCheckMask:   complexityMask,
 		MultiLineCommentMask:  multiLineCommentMask,
 		SingleLineCommentMask: singleLineCommentMask,

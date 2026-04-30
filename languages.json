@@ -6442,6 +6442,8 @@
       "match ",
       "match("
     ],
+    "complexitychecks_postfix": ["?"],
+    "complexitychecks_postfix_excludes": ["?Sized"],
     "extensions": ["rs"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
@@ -7668,11 +7670,9 @@
       "== ",
       "=== ",
       "case ",
-      "case(",
-      "?.",
-      "?? ",
-      "??= "
+      "case("
     ],
+    "complexitychecks_postfix": ["?.", "??", "??="],
     "extensions": ["ts", "tsx", "cts", "mts"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
@@ -7707,11 +7707,9 @@
       "== ",
       "=== ",
       "case ",
-      "case(",
-      "?.",
-      "?? ",
-      "??= "
+      "case("
     ],
+    "complexitychecks_postfix": ["?.", "??", "??="],
     "extensions": ["d.ts"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
