@@ -874,6 +874,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"Mojo",
 		"Monkey C",
 		"Moonbit",
+		"Move",
 		"Nature",
 		"Nushell",
 		"OpenQASM",

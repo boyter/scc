@@ -7896,6 +7896,52 @@ var languageDatabase = map[string]Language{
 		FileNames:       []string{},
 		SheBangs:        []string{},
 	},
+	"Move": {
+		LineComment: []string{
+			"//",
+		},
+		ComplexityChecks: []string{
+			"for ",
+			"for(",
+			"if ",
+			"if(",
+			"while ",
+			"while(",
+			"loop ",
+			"loop{",
+			"else ",
+			"else{",
+			"match ",
+			"match(",
+			"|| ",
+			"&& ",
+			"!= ",
+			"== ",
+			"abort ",
+		},
+		Extensions: []string{
+			"move",
+		},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"/*",
+				"*/",
+			},
+		},
+		Quotes: []Quote{
+			{
+				Start:        "\"",
+				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+		},
+		NestedMultiLine: true,
+		Keywords:        []string{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"Mustache": {
 		LineComment: []string{},
 		ComplexityChecks: []string{

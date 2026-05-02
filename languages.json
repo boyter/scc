@@ -4918,6 +4918,37 @@
       }
     ]
   },
+  "Move": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "while ",
+      "while(",
+      "loop ",
+      "loop{",
+      "else ",
+      "else{",
+      "match ",
+      "match(",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== ",
+      "abort "
+    ],
+    "extensions": ["move"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
+    "nestedmultiline": true,
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "Mustache": {
     "complexitychecks": [
       "for ",
