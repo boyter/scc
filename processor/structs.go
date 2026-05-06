@@ -15,6 +15,7 @@ const (
 	TSlcomment
 	TMlcomment
 	TComplexity
+	TComplexityPostfix
 )
 
 // ByteType constants for per-byte content classification.
@@ -37,16 +38,18 @@ type Quote struct {
 
 // Language is a struct which contains the values for each language stored in languages.json
 type Language struct {
-	LineComment      []string   `json:"line_comment"`
-	ComplexityChecks []string   `json:"complexitychecks"`
-	Extensions       []string   `json:"extensions"`
-	MultiLine        [][]string `json:"multi_line"`
-	Quotes           []Quote    `json:"quotes"`
-	Keywords         []string   `json:"keywords"`
-	FileNames        []string   `json:"filenames"`
-	SheBangs         []string   `json:"shebangs"`
-	ExtensionFile    bool       `json:"extensionFile"`
-	NestedMultiLine  bool       `json:"nestedmultiline"`
+	LineComment                     []string   `json:"line_comment"`
+	ComplexityChecks                []string   `json:"complexitychecks"`
+	ComplexityChecksPostfix         []string   `json:"complexitychecks_postfix"`
+	ComplexityChecksPostfixExcludes []string   `json:"complexitychecks_postfix_excludes"`
+	Extensions                      []string   `json:"extensions"`
+	MultiLine                       [][]string `json:"multi_line"`
+	Quotes                          []Quote    `json:"quotes"`
+	Keywords                        []string   `json:"keywords"`
+	FileNames                       []string   `json:"filenames"`
+	SheBangs                        []string   `json:"shebangs"`
+	ExtensionFile                   bool       `json:"extensionFile"`
+	NestedMultiLine                 bool       `json:"nestedmultiline"`
 }
 
 // LanguageFeature is a struct which represents the conversion from Language into what is used for matching
@@ -59,6 +62,7 @@ type LanguageFeature struct {
 	Strings               *Trie
 	Tokens                *Trie
 	Nested                bool
+	PostfixExcludes       [][]byte
 	ComplexityCheckMask   byte
 	SingleLineCommentMask byte
 	MultiLineCommentMask  byte

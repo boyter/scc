@@ -336,6 +336,82 @@ func TestCountStatsComplexityCountFalse(t *testing.T) {
 
 }
 
+func TestCountStatsComplexityRustQuestionOperator(t *testing.T) {
+	ProcessConstants()
+
+	checks := []struct {
+		content string
+		want    int64
+	}{
+		{"foo()?;", 1},
+		{"foo() ?;", 1},
+		{"foo()?.bar();", 1},
+		{"foo()? as u16;", 1},
+		{"foo()??;", 2},
+		{"let y = x?;", 1},
+	}
+
+	for _, c := range checks {
+		fileJob := FileJob{Language: "Rust"}
+		fileJob.SetContent(c.content)
+		CountStats(&fileJob)
+		if fileJob.Complexity != c.want {
+			t.Errorf("Expected complexity of %d got %d for %q", c.want, fileJob.Complexity, c.content)
+		}
+	}
+}
+
+// ?Sized is a trait-bound prefix, not the try operator. The postfix matcher
+// must skip it whether or not whitespace separates it from the preceding
+// token (`T: ?Sized`, `T:?Sized`, `Debug+?Sized` are all valid Rust).
+func TestCountStatsComplexityRustQuestionSizedNotCounted(t *testing.T) {
+	ProcessConstants()
+
+	checks := []string{
+		"fn foo<T: ?Sized>() {}",
+		"fn foo<T:?Sized>() {}",
+		"fn foo<T:? Sized>() {}",
+		"struct Bar<T: ?Sized>(T);",
+		"where T: Debug + ?Sized,",
+		"where T: Debug+?Sized,",
+	}
+
+	for _, content := range checks {
+		fileJob := FileJob{Language: "Rust"}
+		fileJob.SetContent(content)
+		CountStats(&fileJob)
+		if fileJob.Complexity != 0 {
+			t.Errorf("Expected complexity of 0 got %d for %q (?Sized must not count)", fileJob.Complexity, content)
+		}
+	}
+}
+
+func TestCountStatsComplexityTypeScriptPostfixOperators(t *testing.T) {
+	ProcessConstants()
+
+	checks := []struct {
+		content string
+		want    int64
+	}{
+		{"obj.attr?.method();", 1},
+		{"path ?? url;", 1},
+		{"path??url;", 1},
+		{"value ??= fallback;", 1},
+		{"value??=fallback;", 1},
+		{"function get(path?: string) { return path ?? url; }", 1},
+		{"interface User { age?: number; method?(): void; }", 0},
+	}
+
+	for _, c := range checks {
+		fileJob := FileJob{Language: "TypeScript"}
+		fileJob.SetContent(c.content)
+		CountStats(&fileJob)
+		if fileJob.Complexity != c.want {
+			t.Errorf("Expected complexity of %d got %d for %q", c.want, fileJob.Complexity, c.content)
+		}
+	}
+}
+
 type linecounter struct {
 	blanks   int
 	comments int

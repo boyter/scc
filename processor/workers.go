@@ -88,6 +88,74 @@ func isWhitespace(currentByte byte) bool {
 	return true
 }
 
+func isIdentifierContinue(b byte) bool {
+	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') || (b >= '0' && b <= '9') || b == '_'
+}
+
+func hasNonWhitespaceBefore(content []byte, index int) bool {
+	for i := index - 1; i >= 0; i-- {
+		if !isWhitespace(content[i]) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func nextNonWhitespaceIndex(content []byte, index int) int {
+	for index < len(content) && isWhitespace(content[index]) {
+		index++
+	}
+
+	return index
+}
+
+func hasPostfixExclude(content []byte, index, offsetJump int, excludes [][]byte) bool {
+	token := content[index : index+offsetJump]
+	for _, exclude := range excludes {
+		if len(exclude) < offsetJump || !bytes.Equal(token, exclude[:offsetJump]) {
+			continue
+		}
+
+		remaining := exclude[offsetJump:]
+		if len(remaining) == 0 {
+			return true
+		}
+
+		next := nextNonWhitespaceIndex(content, index+offsetJump)
+		if next+len(remaining) > len(content) || !bytes.Equal(content[next:next+len(remaining)], remaining) {
+			continue
+		}
+
+		afterExclude := next + len(remaining)
+		if isIdentifierContinue(remaining[len(remaining)-1]) {
+			return afterExclude == len(content) || !isIdentifierContinue(content[afterExclude])
+		}
+
+		return true
+	}
+
+	return false
+}
+
+func countComplexityPostfix(fileJob *FileJob, index, offsetJump int, postfixExcludes [][]byte) {
+	if index == 0 {
+		return
+	}
+
+	content := fileJob.Content
+	if isWhitespace(content[index-1]) && !hasNonWhitespaceBefore(content, index-1) {
+		return
+	}
+
+	if len(postfixExcludes) > 0 && hasPostfixExclude(content, index, offsetJump, postfixExcludes) {
+		return
+	}
+
+	fileJob.Complexity++
+	fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] = fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] + 1
+}
+
 // Check if this file is binary by checking for nul byte and if so bail out
 // this is how GNU Grep, git and ripgrep check for binary files
 func isBinary(index int, currentByte byte) bool {
@@ -286,6 +354,9 @@ func codeState(
 					fileJob.Complexity++
 					fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] = fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] + 1
 				}
+
+			case TComplexityPostfix:
+				countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
 			}
 		}
 	}
@@ -394,6 +465,13 @@ func blankState(
 			fileJob.Complexity++
 			fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] = fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] + 1
 		}
+
+	case TComplexityPostfix:
+		currentState = SCode
+		if fileJob.ContentByteType != nil {
+			fileJob.ContentByteType[index] = ByteTypeCode
+		}
+		countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
 
 	default:
 		currentState = SCode
