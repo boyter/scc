@@ -1,0 +1,49 @@
+diff --git a/LANGUAGES.md b/LANGUAGES.md
+index 54e07ec..2f9940c 100644
+--- a/LANGUAGES.md
++++ b/LANGUAGES.md
+@@ -206,6 +206,7 @@ Mog (mog)
+ Mojo (mojo)
+ Monkey C (mc)
+ Moonbit (mbt)
++Move (move)
+ MQL Header (mqh)
+ MQL4 (mq4)
+ MQL5 (mq5)
+diff --git a/languages.json b/languages.json
+index 69cbd87..56d67ed 100644
+--- a/languages.json
++++ b/languages.json
+@@ -5504,7 +5504,7 @@
+   },
+   "Patch": {
+     "complexitychecks": [],
+-    "extensions": ["patch"],
++    "extensions": ["patch", "diff"],
+     "line_comment": [],
+     "multi_line": [],
+     "quotes": []
+diff --git a/main_test.go b/main_test.go
+index 1db23d3..45a3724 100644
+--- a/main_test.go
++++ b/main_test.go
+@@ -879,6 +879,7 @@ func TestSpecificLanguages(t *testing.T) {
+ 		"Nushell",
+ 		"OpenQASM",
+ 		"OpenTofu",
++		"Patch",
+ 		"Perl",
+ 		"Pkl",
+ 		"Plain Text",
+diff --git a/processor/constants.go b/processor/constants.go
+index bc4eedd..e5b8ed8 100644
+--- a/processor/constants.go
++++ b/processor/constants.go
+@@ -8858,6 +8858,7 @@ var languageDatabase = map[string]Language{
+ 		ComplexityChecks: []string{},
+ 		Extensions: []string{
+ 			"patch",
++			"diff",
+ 		},
+ 		ExtensionFile:   false,
+ 		MultiLine:       [][]string{},

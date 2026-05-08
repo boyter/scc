@@ -8858,6 +8858,7 @@ var languageDatabase = map[string]Language{
 		ComplexityChecks: []string{},
 		Extensions: []string{
 			"patch",
+			"diff",
 		},
 		ExtensionFile:   false,
 		MultiLine:       [][]string{},

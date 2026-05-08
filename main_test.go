@@ -879,6 +879,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"Nushell",
 		"OpenQASM",
 		"OpenTofu",
+		"Patch",
 		"Perl",
 		"Pkl",
 		"Plain Text",
