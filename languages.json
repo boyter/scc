@@ -5504,7 +5504,7 @@
   },
   "Patch": {
     "complexitychecks": [],
-    "extensions": ["patch"],
+    "extensions": ["patch", "diff"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
