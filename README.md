@@ -41,7 +41,7 @@ Licensed under MIT licence.
 
 ### scc for Teams & Enterprise
 
-While scc will always be a free and tool for individual developers, companies and businesses, we are exploring an enhanced version designed for teams and businesses. scc Enterprise will build on the core scc engine to provide historical analysis, team-level dashboards, and policy enforcement to help engineering leaders track code health, manage technical debt, and forecast project costs.
+While scc will always be a free and open tool for individual developers, companies and businesses, we are exploring an enhanced version designed for teams and businesses. scc Enterprise will build on the core scc engine to provide historical analysis, team-level dashboards, and policy enforcement to help engineering leaders track code health, manage technical debt, and forecast project costs.
 
 We are currently gathering interest for a private beta. If you want to visualize your codebase's evolution, integrate quality gates into your CI/CD pipeline, and get a big-picture view across all your projects,
 sign up for the early access list [here](https://docs.google.com/forms/d/e/1FAIpQLScIBKy3y2m0rKu89L67qwe26Xyn9Scu0gW-HQX9lC0qEAx9nQ/viewform)
@@ -255,7 +255,7 @@ features listed below may be missing from your installation.
 
 ```text
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 3.5.0 (beta)
+Version 3.7.0
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
@@ -268,6 +268,7 @@ Flags:
   -m, --character                          calculate max and mean characters per line
       --ci                                 enable CI output settings where stdout is ASCII
       --cocomo-project-type string         change COCOMO model type [organic, semi-detached, embedded, "custom,1,1,1,1"] (default "organic")
+      --cost-comparison                    show both COCOMO and LOCOMO estimates side by side
       --count-as string                    count extension as language [e.g. jsp:htm,chead:"C Header" maps extension jsp to html and chead to C Header]
       --count-ignore                       set to allow .gitignore and .ignore files to be counted
       --currency-symbol string             set currency symbol (default "$")
@@ -294,17 +295,16 @@ Flags:
       --large-line-count int               number of lines a file can contain before being removed from output (default 40000)
       --locomo                             enable LOCOMO (LLM Output COst MOdel) cost estimation
       --locomo-config string               LOCOMO power-user config "tokensPerLine,inputPerLine,complexityWeight,iterations,iterationWeight"
-      --locomo-cycles float               override estimated LLM iteration cycles (default: calculated from complexity)
+      --locomo-cycles float                override estimated LLM iteration cycles (default: calculated from complexity)
       --locomo-input-price float           LOCOMO cost per 1M input tokens in dollars (overrides preset)
       --locomo-output-price float          LOCOMO cost per 1M output tokens in dollars (overrides preset)
       --locomo-preset string               LOCOMO model preset [large, medium, small, local] (default "medium")
       --locomo-review float                human review minutes per line of code for LOCOMO estimate (default 0.01)
       --locomo-tps float                   LOCOMO output tokens per second (overrides preset)
-      --cost-comparison                    show both COCOMO and LOCOMO estimates side by side
+      --mcp                                start as an MCP (Model Context Protocol) server over stdio
       --min                                identify minified files
   -z, --min-gen                            identify minified or generated files
       --min-gen-line-length int            number of bytes per average line for file to be considered minified or generated (default 255)
-      --mcp                                start as an MCP (Model Context Protocol) server over stdio
       --no-cocomo                          remove COCOMO calculation output
   -c, --no-complexity                      skip calculation of code complexity
   -d, --no-duplicates                      remove duplicate files from stats and output
