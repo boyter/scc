@@ -29,6 +29,7 @@ Licensed under MIT licence.
 - [Unique Lines of Code (ULOC)](#unique-lines-of-code-uloc)
 - [COCOMO](#cocomo)
 - [LOCOMO](#locomo)
+- [Git Insight Reports](#git-insight-reports)
 - [Output Formats](#output-formats)
 - [Performance](#performance)
 - [Development](#development)
@@ -679,6 +680,123 @@ LOCOMO is a rough estimator with known limitations:
 | `--locomo-review` | 0.01 | Human review minutes per line of code |
 | `--locomo-cycles` | (calculated) | Override estimated LLM iteration cycles |
 | `--locomo-config` | 10,20,5,1.5,2 | Power-user config: tokensPerLine, inputPerLine, complexityWeight, iterations, iterationWeight |
+
+### Git Insight Reports
+
+In addition to counting the working tree, `scc` can run four git-aware reports over recent commit history. Each is selected by a flag and rendered as `tabular` (default), `csv`, or `json` via `--format`. All four are derived from one in-process walk of the repository — there is no `exec("git")`, so the `git` binary does not need to be on `PATH`.
+
+> **Note:** these reports are **slower** than a normal `scc` run. They walk the repository history (one diff per commit using pure-Go Myers diff via [go-git](https://github.com/go-git/go-git)) instead of just counting the current working tree. Runtime scales with `--depth` (the commit window size, default `1000`; `0` means entire history). On large repositories with deep history, expect runtimes measured in seconds to minutes rather than the millisecond-scale you get from a plain `scc` run. Use `--depth` to bound the window.
+
+When no report flag is set, `scc` behaves exactly as today — these flags are strictly opt-in.
+
+| Flag | Report | Answers |
+|---|---|---|
+| `--hotspots` | Hotspots | Which files are defect-prone — high complexity × high churn. |
+| `--by-author` | Author rollup | Bus factor — who last-touched the surviving code. |
+| `--by-author --timeline` | Author timeline | How each author's activity rises and falls over time. |
+| `--timeline` | Languages over time | How the language mix shifts — rewrites, migrations. |
+
+Shared flags for these reports:
+
+| Flag | Default | Purpose |
+|---|---|---|
+| `--depth N` | 1000 | Commit window size (newest N commits). `0` walks the entire history (slow on big repos). |
+| `--buckets N` | 60 | Time-bucket resolution for timeline reports. CSV/JSON always emit full-resolution; tabular sparklines downsample to fit. |
+| `-w, --wide` | — | 109-column variant of any report (extra columns where applicable). |
+
+`--hotspots` is mutually exclusive with `--by-author` / `--timeline`; combining them is an error. With `--by-author` set, `--timeline` switches from the author rollup to the author timeline. Alone, `--timeline` renders the languages timeline.
+
+#### Hotspots — `--hotspots`
+
+Ranks files by defect-proneness: complexity × change frequency over the window. Surfaces *where to review*, not a defect probability.
+
+```text
+$ scc --hotspots
+───────────────────────────────────────────────────────────────────────────────
+Hotspots · last 500 commits · 2024-01-09 → 2026-05-20
+───────────────────────────────────────────────────────────────────────────────
+File                            Lang   Cmplx  Commits   Lines±  Authrs  Hotspot
+───────────────────────────────────────────────────────────────────────────────
+processor/workers.go              Go     488       62    7,240       9    100.0
+processor/processor.go            Go     402       41    3,910       7     71.4
+processor/formatters.go           Go     233       38    2,980       6     51.8
+main.go                           Go     180       44    2,510       8     48.2
+───────────────────────────────────────────────────────────────────────────────
+   complexity × change-frequency, normalised · 20 of 142 files shown
+───────────────────────────────────────────────────────────────────────────────
+```
+
+Tabular output shows the top files (≈20). `--wide` adds a hotspot bar and a code-vs-comment churn split. `--format csv|json` emits every file with a positive score along with the full per-file detail and window metadata.
+
+#### Author rollup — `--by-author`
+
+Bus factor and last-toucher attribution. Lines untouched in the window collect under the sentinel `(before window)` so percentages reconcile to 100%.
+
+```text
+$ scc --by-author
+───────────────────────────────────────────────────────────────────────────────
+Authors · last 500 commits · 2024-01-09 → 2026-05-20
+───────────────────────────────────────────────────────────────────────────────
+Author                               Code     Cmplx   Files     Owns  Last seen
+───────────────────────────────────────────────────────────────────────────────
+Alice Smith                         24,110     4,180     118    38.6%  2026-05-22
+Bob Jones                           15,447     1,902      74    24.7%  2026-03-14
+Carol Lee                            9,205     3,640      51    14.7%  2026-05-19
+(before window)                      6,540       810      29    10.4%          —
+others (12)                          1,300       190       —     2.1%          —
+───────────────────────────────────────────────────────────────────────────────
+Bus factor 2 · Alice + Bob last-touched 63% of code
+───────────────────────────────────────────────────────────────────────────────
+```
+
+Bus factor is the fewest authors whose combined ownership exceeds 50%. `.mailmap` is honoured so authors who used several emails are folded into one identity. `--wide` adds a Comment column.
+
+#### Author timeline — `--by-author --timeline`
+
+How each author's activity rises and falls across the window. The Activity column is a Unicode sparkline normalised per row; the trailing tag is `quiet Nmo` (recently silent) or `↑` (currently near peak).
+
+```text
+$ scc --by-author --timeline
+───────────────────────────────────────────────────────────────────────────────
+Authors · last 500 commits · 2024-01-09 → 2026-05-20
+───────────────────────────────────────────────────────────────────────────────
+Author                   Activity                  Commits     Code±
+───────────────────────────────────────────────────────────────────────────────
+Alice Smith              ▂▃▅▇█▇▆▅▄▄▃▃                   210      +38k
+Bob Jones                ▇█▆▄▂▁▁▁▁▁▁▁                   142      +21k  quiet 2mo
+Carol Lee                ▁▁▁▁▂▃▄▅▆▇██                    96      +14k  ↑
+───────────────────────────────────────────────────────────────────────────────
+```
+
+CSV is long format (one row per `(author, bucket)`); JSON includes per-author full-resolution series. Under `--ci` or non-TTY output the sparkline falls back to ASCII.
+
+#### Languages over time — `--timeline`
+
+How the language mix shifts: rewrites, migrations (e.g. JS → TS), gradual additions. The Trend sparkline plots each language's **absolute** trajectory, not deltas — so "rising" means "more code in this language now than at window-start".
+
+```text
+$ scc --timeline
+───────────────────────────────────────────────────────────────────────────────
+Languages · last 500 commits · 2024-01-09 → 2026-05-20
+───────────────────────────────────────────────────────────────────────────────
+Language             Trend                             Code    Share     Change
+───────────────────────────────────────────────────────────────────────────────
+TypeScript           ▁▁▂▃▄▅▆▇████                     36,840    58.0%    +36,840
+Go                   ▃▃▄▄▅▅▅▆▆▆▆▆                     24,110    38.0%     +9,205
+JavaScript           ██▇▆▅▄▃▂▁▁▁▁                      2,540     4.0%    -18,300
+Markdown             ▂▃▃▄▄▅▅▆▆▆▇▇                      1,204     1.9%       +994
+───────────────────────────────────────────────────────────────────────────────
+```
+
+Totals reconcile with a plain `scc` against the current HEAD tree. CSV/JSON include every non-empty language with the full per-bucket series.
+
+#### Output format and caveats
+
+- Tabular is for humans (sparklines, bars, ASCII fallback under `--ci`). CSV/JSON carry raw numbers only — no presentation glyphs — and include a `window` object (depth, commit count, date range) so downstream tools can reproduce the slice.
+- `.gitignore` is already applied by git when each commit was recorded; `.ignore` / `.sccignore` are honoured by the engine (disable with `--no-ignore` / `--no-scc-ignore`).
+- Merge commits are diffed against their first parent (`git log --first-parent` semantics).
+- Rename detection uses go-git's similarity heuristic; large renames may inflate hotspot churn and reset blame attribution. Shallow clones produce a clear error rather than a panic.
+- Symlinks are skipped (v1). Binary detection is unchanged.
 
 ### Large File Detection
 

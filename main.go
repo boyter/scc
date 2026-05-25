@@ -529,6 +529,37 @@ func main() {
 		"override estimated LLM iteration cycles (default: calculated from complexity)",
 	)
 
+	flags.BoolVar(
+		&processor.Hotspots,
+		"hotspots",
+		false,
+		"render the hotspots report (files ranked by complexity × change frequency over recent git history)",
+	)
+	flags.BoolVar(
+		&processor.ByAuthor,
+		"by-author",
+		false,
+		"render the author rollup report (bus factor and last-toucher attribution over recent git history)",
+	)
+	flags.IntVar(
+		&processor.HistoryDepth,
+		"depth",
+		1000,
+		"commit window size for git history reports; 0 means entire history (large repos may be slow)",
+	)
+	flags.BoolVar(
+		&processor.Timeline,
+		"timeline",
+		false,
+		"render an over-time view; with --by-author runs the author timeline, alone runs the languages timeline",
+	)
+	flags.IntVar(
+		&processor.HistoryBuckets,
+		"buckets",
+		60,
+		"time-bucket resolution for the timeline reports (default 60)",
+	)
+
 	// --mcp is intercepted before cobra runs, but we register it here so it appears in --help
 	var mcpDummy bool
 	flags.BoolVar(

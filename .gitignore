@@ -40,3 +40,6 @@ gitignorefile.txt
 .DS_Store
 
 dist/
+
+# other
+PLANS/

@@ -287,6 +287,21 @@ var LargeLineCount int64 = 40000
 // LargeByteCount number of bytes before being counted as a large file based on https://github.com/pinpt/ripsrc/blob/master/ripsrc/fileinfo/fileinfo.go#L44
 var LargeByteCount int64 = 1000000
 
+// Hotspots toggles the hotspots git-history report
+var Hotspots = false
+
+// ByAuthor toggles the author-rollup git-history report
+var ByAuthor = false
+
+// Timeline selects an over-time view. With ByAuthor, runs the author
+// timeline report (plan 04); alone, runs the languages-over-time report
+// (plan 05). With Hotspots set, the combination errors out.
+var Timeline = false
+
+// HistoryBuckets is the time-bucket resolution for the timeline reports.
+// Wired to --buckets in main.go; default 60.
+var HistoryBuckets = 60
+
 // DirFilePaths is not set via flags but by arguments following the flags for file or directory to process
 var DirFilePaths = []string{}
 
@@ -643,6 +658,43 @@ func Process() {
 	// Clean up any invalid arguments before setting everything up
 	if len(DirFilePaths) == 0 {
 		DirFilePaths = append(DirFilePaths, ".")
+	}
+
+	if Hotspots && (ByAuthor || Timeline) {
+		fmt.Println("--hotspots is mutually exclusive with --by-author / --timeline; pick one report")
+		os.Exit(1)
+	}
+
+	if Hotspots {
+		if err := runHotspotsReport(DirFilePaths[0]); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		return
+	}
+
+	if ByAuthor && Timeline {
+		if err := runAuthorTimelineReport(DirFilePaths[0]); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		return
+	}
+
+	if ByAuthor {
+		if err := runAuthorsReport(DirFilePaths[0]); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		return
+	}
+
+	if Timeline {
+		if err := runLanguagesTimelineReport(DirFilePaths[0]); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		return
 	}
 
 	filePaths := []string{}
