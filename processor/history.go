@@ -440,8 +440,8 @@ func buildFileChange(change *object.Change, ignore *historyIgnore) (FileChange, 
 		return FileChange{}, false
 	}
 
-	patch, err := change.Patch()
-	if err != nil {
+	patch, ok := safePatch(change)
+	if !ok {
 		return FileChange{}, false
 	}
 
@@ -490,6 +490,33 @@ func buildFileChange(change *object.Change, ignore *historyIgnore) (FileChange, 
 		Complexity:    complexityLineNumbers(job),
 		NewBlob:       blob,
 	}, true
+}
+
+// safePatch wraps change.Patch() with panic recovery. The underlying
+// sergi/go-diff line-to-rune encoding panics when a file has more distinct
+// lines than fit in the Unicode code-point space (generated SQL, huge
+// minified bundles, vendored data files). Treat any panic or error as
+// "skip this file" so one bad file does not abort the whole report.
+func safePatch(change *object.Change) (patch *object.Patch, ok bool) {
+	defer func() {
+		if r := recover(); r != nil {
+			path := ""
+			if change != nil {
+				path = change.To.Name
+				if path == "" {
+					path = change.From.Name
+				}
+			}
+			printWarnF("history: skipping %s — diff library panicked: %v", path, r)
+			patch = nil
+			ok = false
+		}
+	}()
+	p, err := change.Patch()
+	if err != nil {
+		return nil, false
+	}
+	return p, true
 }
 
 // readBlob fetches the raw bytes for a tree entry.

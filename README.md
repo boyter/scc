@@ -553,11 +553,11 @@ and also the developers need to be sufficiently experienced and creative to deve
 
 ### LOCOMO
 
-LOCOMO (LLM Output COst MOdel) estimates the cost to regenerate a codebase using a large language model. It is the LLM-era counterpart to COCOMO — a rough ballpark estimator, not a project planning tool.
+LOCOMO (LLM Output COst MOdel) estimates the cost to regenerate a codebase using a large language model. It is the LLM-era counterpart to COCOMO - a rough ballpark estimator, not a project planning tool.
 
 Note: LOCOMO was developed as part of `scc` and is not an industry-standard model. Unlike COCOMO, which is based on decades of empirical research by Barry Boehm, LOCOMO is an experimental heuristic designed to give a useful order-of-magnitude estimate for LLM-assisted development costs. Treat its output as a conversation starter, not a definitive answer.
 
-**Important distinction:** LOCOMO estimates the cost to **regenerate** known code — essentially "given this exact codebase, how much would it cost to have an LLM produce it?" This is fundamentally different from the cost to **create** something from scratch, which involves exploration, architectural decisions, dead ends, debugging, and iteration that can cost orders of magnitude more. COCOMO estimates the human *creation* cost; LOCOMO estimates the LLM *regeneration* cost. They answer different questions.
+**Important distinction:** LOCOMO estimates the cost to **regenerate** known code - essentially "given this exact codebase, how much would it cost to have an LLM produce it?" This is fundamentally different from the cost to **create** something from scratch, which involves exploration, architectural decisions, dead ends, debugging, and iteration that can cost orders of magnitude more. COCOMO estimates the human *creation* cost; LOCOMO estimates the LLM *regeneration* cost. They answer different questions.
 
 LOCOMO is opt-in. Enable it with `--locomo` or use `--cost-comparison` to display both COCOMO and LOCOMO side by side.
 
@@ -578,12 +578,12 @@ LOCOMO LLM Cost Estimate (medium)
 
 LOCOMO uses SLOC and complexity data that `scc` already computes. The model works per-file and aggregates:
 
-1. **Output tokens** — each line of code maps to ~10 LLM output tokens (configurable).
-2. **Input tokens** — estimated prompting cost, scaled by code complexity. More complex code (higher branch density) requires more detailed prompts. Scales to prevent runaway estimates.
-3. **Iteration factor** — LLMs rarely produce correct code on the first try. A retry multiplier scales with complexity, also scales.
-4. **Dollar cost** — input and output tokens multiplied by per-token pricing.
-5. **Generation time** — total serial output tokens divided by tokens-per-second throughput.
-6. **Human review time** — estimated per-line overhead for planning, review, testing, and integration.
+1. **Output tokens** - each line of code maps to ~10 LLM output tokens (configurable).
+2. **Input tokens** - estimated prompting cost, scaled by code complexity. More complex code (higher branch density) requires more detailed prompts. Scales to prevent runaway estimates.
+3. **Iteration factor** - LLMs rarely produce correct code on the first try. A retry multiplier scales with complexity, also scales.
+4. **Dollar cost** - input and output tokens multiplied by per-token pricing.
+5. **Generation time** - total serial output tokens divided by tokens-per-second throughput.
+6. **Human review time** - estimated per-line overhead for planning, review, testing, and integration.
 
 #### Model presets
 
@@ -641,7 +641,7 @@ The defaults are `"10,20,5,1.5,2"`. Here is what each parameter controls:
 | 4 | iterations | 1.5 | Base iteration/retry cycles before complexity adjustment |
 | 5 | iterationWeight | 2 | How much complexity density adds extra cycles: `cycles = iterations + sqrt(density) * weight` |
 
-The iteration factor (cycles) scales both input and output tokens — it represents how many generation attempts the LLM needs. Simple code (~0.05 complexity density) produces ~1.9 cycles; complex code (~0.3 density) produces ~2.6 cycles. Use `--locomo-cycles` to override this with a fixed value.
+The iteration factor (cycles) scales both input and output tokens - it represents how many generation attempts the LLM needs. Simple code (~0.05 complexity density) produces ~1.9 cycles; complex code (~0.3 density) produces ~2.6 cycles. Use `--locomo-cycles` to override this with a fixed value.
 
 For example, to model a cheaper/faster LLM that needs fewer tokens but more retries:
 
@@ -665,7 +665,7 @@ LOCOMO is a rough estimator with known limitations:
 - **Boilerplate vs algorithmic code.** A 500-line CRUD controller and a 500-line compression algorithm have very different real costs, but the model only differentiates them via complexity density.
 - **Code that LLMs can't write well.** Complex concurrency, platform-specific edge cases, and security-critical crypto need human authoring, not just review.
 - **No test generation cost.** The model estimates source code generation only, not test suites.
-- **Pricing changes.** LLM pricing drops rapidly. Preset defaults will become stale — use explicit price flags for current estimates.
+- **Pricing changes.** LLM pricing drops rapidly. Preset defaults will become stale - use explicit price flags for current estimates.
 
 #### All LOCOMO flags
 
@@ -683,18 +683,18 @@ LOCOMO is a rough estimator with known limitations:
 
 ### Git Insight Reports
 
-In addition to counting the working tree, `scc` can run four git-aware reports over recent commit history. Each is selected by a flag and rendered as `tabular` (default), `csv`, or `json` via `--format`. All four are derived from one in-process walk of the repository — there is no `exec("git")`, so the `git` binary does not need to be on `PATH`.
+In addition to counting the working tree, `scc` can run four git-aware reports over recent commit history. Each is selected by a flag and rendered as `tabular` (default), `csv`, or `json` via `--format`. All four are derived from one in-process walk of the repository - there is no `exec("git")`, so the `git` binary does not need to be on `PATH`.
 
 > **Note:** these reports are **slower** than a normal `scc` run. They walk the repository history (one diff per commit using pure-Go Myers diff via [go-git](https://github.com/go-git/go-git)) instead of just counting the current working tree. Runtime scales with `--depth` (the commit window size, default `1000`; `0` means entire history). On large repositories with deep history, expect runtimes measured in seconds to minutes rather than the millisecond-scale you get from a plain `scc` run. Use `--depth` to bound the window.
 
-When no report flag is set, `scc` behaves exactly as today — these flags are strictly opt-in.
+When no report flag is set, `scc` behaves exactly as today, these flags are strictly opt-in.
 
 | Flag | Report | Answers |
 |---|---|---|
-| `--hotspots` | Hotspots | Which files are defect-prone — high complexity × high churn. |
-| `--by-author` | Author rollup | Bus factor — who last-touched the surviving code. |
+| `--hotspots` | Hotspots | Which files are defect-prone - high complexity × high churn. |
+| `--by-author` | Author rollup | Bus factor - who last-touched the surviving code. |
 | `--by-author --timeline` | Author timeline | How each author's activity rises and falls over time. |
-| `--timeline` | Languages over time | How the language mix shifts — rewrites, migrations. |
+| `--timeline` | Languages over time | How the language mix shifts - rewrites, migrations. |
 
 Shared flags for these reports:
 
@@ -702,11 +702,11 @@ Shared flags for these reports:
 |---|---|---|
 | `--depth N` | 1000 | Commit window size (newest N commits). `0` walks the entire history (slow on big repos). |
 | `--buckets N` | 60 | Time-bucket resolution for timeline reports. CSV/JSON always emit full-resolution; tabular sparklines downsample to fit. |
-| `-w, --wide` | — | 109-column variant of any report (extra columns where applicable). |
+| `-w, --wide` | - | 109-column variant of any report (extra columns where applicable). |
 
 `--hotspots` is mutually exclusive with `--by-author` / `--timeline`; combining them is an error. With `--by-author` set, `--timeline` switches from the author rollup to the author timeline. Alone, `--timeline` renders the languages timeline.
 
-#### Hotspots — `--hotspots`
+#### Hotspots - `--hotspots`
 
 Ranks files by defect-proneness: complexity × change frequency over the window. Surfaces *where to review*, not a defect probability.
 
@@ -728,7 +728,7 @@ main.go                           Go     180       44    2,510       8     48.2
 
 Tabular output shows the top files (≈20). `--wide` adds a hotspot bar and a code-vs-comment churn split. `--format csv|json` emits every file with a positive score along with the full per-file detail and window metadata.
 
-#### Author rollup — `--by-author`
+#### Author rollup - `--by-author`
 
 Bus factor and last-toucher attribution. Lines untouched in the window collect under the sentinel `(before window)` so percentages reconcile to 100%.
 
@@ -742,8 +742,8 @@ Author                               Code     Cmplx   Files     Owns  Last seen
 Alice Smith                         24,110     4,180     118    38.6%  2026-05-22
 Bob Jones                           15,447     1,902      74    24.7%  2026-03-14
 Carol Lee                            9,205     3,640      51    14.7%  2026-05-19
-(before window)                      6,540       810      29    10.4%          —
-others (12)                          1,300       190       —     2.1%          —
+(before window)                      6,540       810      29    10.4%          -
+others (12)                          1,300       190       -     2.1%          -
 ───────────────────────────────────────────────────────────────────────────────
 Bus factor 2 · Alice + Bob last-touched 63% of code
 ───────────────────────────────────────────────────────────────────────────────
@@ -751,7 +751,7 @@ Bus factor 2 · Alice + Bob last-touched 63% of code
 
 Bus factor is the fewest authors whose combined ownership exceeds 50%. `.mailmap` is honoured so authors who used several emails are folded into one identity. `--wide` adds a Comment column.
 
-#### Author timeline — `--by-author --timeline`
+#### Author timeline - `--by-author --timeline`
 
 How each author's activity rises and falls across the window. The Activity column is a Unicode sparkline normalised per row; the trailing tag is `quiet Nmo` (recently silent) or `↑` (currently near peak).
 
@@ -770,9 +770,9 @@ Carol Lee                ▁▁▁▁▂▃▄▅▆▇██                   
 
 CSV is long format (one row per `(author, bucket)`); JSON includes per-author full-resolution series. Under `--ci` or non-TTY output the sparkline falls back to ASCII.
 
-#### Languages over time — `--timeline`
+#### Languages over time - `--timeline`
 
-How the language mix shifts: rewrites, migrations (e.g. JS → TS), gradual additions. The Trend sparkline plots each language's **absolute** trajectory, not deltas — so "rising" means "more code in this language now than at window-start".
+How the language mix shifts: rewrites, migrations (e.g. JS → TS), gradual additions. The Trend sparkline plots each language's **absolute** trajectory, not deltas - so "rising" means "more code in this language now than at window-start".
 
 ```text
 $ scc --timeline
@@ -792,7 +792,7 @@ Totals reconcile with a plain `scc` against the current HEAD tree. CSV/JSON incl
 
 #### Output format and caveats
 
-- Tabular is for humans (sparklines, bars, ASCII fallback under `--ci`). CSV/JSON carry raw numbers only — no presentation glyphs — and include a `window` object (depth, commit count, date range) so downstream tools can reproduce the slice.
+- Tabular is for humans (sparklines, bars, ASCII fallback under `--ci`). CSV/JSON carry raw numbers only - no presentation glyphs - and include a `window` object (depth, commit count, date range) so downstream tools can reproduce the slice.
 - `.gitignore` is already applied by git when each commit was recorded; `.ignore` / `.sccignore` are honoured by the engine (disable with `--no-ignore` / `--no-scc-ignore`).
 - Merge commits are diffed against their first parent (`git log --first-parent` semantics).
 - Rename detection uses go-git's similarity heuristic; large renames may inflate hotspot churn and reset blame attribution. Shallow clones produce a clear error rather than a panic.
@@ -1375,7 +1375,7 @@ Add to your `claude_desktop_config.json`:
 
 The MCP server exposes one tool:
 
-**`analyze`** — Count lines of code, comments, blanks and estimate complexity for a project directory or file.
+**`analyze`** - Count lines of code, comments, blanks and estimate complexity for a project directory or file.
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
