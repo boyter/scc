@@ -241,15 +241,17 @@ func runHistory(repoPath string, observer CommitObserver) (HistoryWindow, error)
 		printWarnF("history: ignore matcher: %s", err)
 	}
 
+	cache := newBlobClassifyCache()
+
 	if bo, ok := observer.(BaselineObserver); ok {
-		baseline := buildBaselineForObserver(collected, ignore)
+		baseline := buildBaselineForObserver(collected, ignore, cache)
 		bo.Seed(baseline)
 	}
 
 	ctx := context.Background()
 	for i := len(collected) - 1; i >= 0; i-- {
 		commit := collected[i]
-		changes, err := commitChanges(ctx, commit, ignore)
+		changes, err := commitChanges(ctx, commit, ignore, cache)
 		if err != nil {
 			printWarnF("history: diff %s: %s", commit.Hash, err)
 			continue
@@ -262,7 +264,7 @@ func runHistory(repoPath string, observer CommitObserver) (HistoryWindow, error)
 		}, changes)
 	}
 
-	snapshot, err := buildHeadSnapshot(collected[0], ignore)
+	snapshot, err := buildHeadSnapshot(collected[0], ignore, cache)
 	if err != nil {
 		printWarnF("history: head snapshot: %s", err)
 		snapshot = emptySnapshot()
@@ -276,7 +278,7 @@ func runHistory(repoPath string, observer CommitObserver) (HistoryWindow, error)
 // tree at the window's start commit. The start commit is the first-parent of
 // the oldest commit in the window; if that commit has no parents (the window
 // covers all history) the baseline files map is empty.
-func buildBaselineForObserver(collected []*object.Commit, ignore *historyIgnore) BaselineSnapshot {
+func buildBaselineForObserver(collected []*object.Commit, ignore *historyIgnore, cache *blobClassifyCache) BaselineSnapshot {
 	baseline := BaselineSnapshot{Files: map[string]BaselineFile{}}
 	if len(collected) == 0 {
 		return baseline
@@ -303,6 +305,11 @@ func buildBaselineForObserver(collected []*object.Commit, ignore *historyIgnore)
 	}
 
 	_ = tree.Files().ForEach(func(f *object.File) error {
+		defer func() {
+			if r := recover(); r != nil {
+				printWarnF("history: skipping %s in baseline — panicked: %v", f.Name, r)
+			}
+		}()
 		if f.Mode == filemode.Dir || f.Mode == filemode.Submodule || f.Mode == filemode.Symlink {
 			return nil
 		}
@@ -318,15 +325,15 @@ func buildBaselineForObserver(collected []*object.Commit, ignore *historyIgnore)
 		if err != nil {
 			return nil
 		}
-		job, lineTypes, ok := classifyHistoryBlob(f.Name, blob)
-		if !ok {
+		res := cache.classify(f.Hash, f.Name, blob)
+		if !res.ok {
 			return nil
 		}
 		baseline.Files[f.Name] = BaselineFile{
 			Path:       f.Name,
-			Language:   job.Language,
-			LineTypes:  lineTypes,
-			Complexity: complexityLineNumbers(job),
+			Language:   res.language,
+			LineTypes:  res.lineTypes,
+			Complexity: res.complexLine,
 		}
 		return nil
 	})
@@ -337,7 +344,7 @@ func buildBaselineForObserver(collected []*object.Commit, ignore *historyIgnore)
 // buildHeadSnapshot walks the HEAD commit's tree and runs scc's classifier
 // on each file. Used by hotspots (and future reports) to know each surviving
 // file's current language and complexity.
-func buildHeadSnapshot(headCommit *object.Commit, ignore *historyIgnore) (HeadSnapshot, error) {
+func buildHeadSnapshot(headCommit *object.Commit, ignore *historyIgnore, cache *blobClassifyCache) (HeadSnapshot, error) {
 	tree, err := headCommit.Tree()
 	if err != nil {
 		return emptySnapshot(), err
@@ -345,6 +352,11 @@ func buildHeadSnapshot(headCommit *object.Commit, ignore *historyIgnore) (HeadSn
 
 	snap := HeadSnapshot{Files: map[string]HeadFile{}}
 	err = tree.Files().ForEach(func(f *object.File) error {
+		defer func() {
+			if r := recover(); r != nil {
+				printWarnF("history: skipping %s in HEAD snapshot — panicked: %v", f.Name, r)
+			}
+		}()
 		if f.Mode == filemode.Dir || f.Mode == filemode.Submodule || f.Mode == filemode.Symlink {
 			return nil
 		}
@@ -361,15 +373,15 @@ func buildHeadSnapshot(headCommit *object.Commit, ignore *historyIgnore) (HeadSn
 			return nil
 		}
 
-		job, _, ok := classifyHistoryBlob(f.Name, blob)
-		if !ok {
+		res := cache.classify(f.Hash, f.Name, blob)
+		if !res.ok {
 			return nil
 		}
 
 		snap.Files[f.Name] = HeadFile{
 			Path:       f.Name,
-			Language:   job.Language,
-			Complexity: job.Complexity,
+			Language:   res.language,
+			Complexity: res.complexity,
 		}
 		return nil
 	})
@@ -381,7 +393,19 @@ func buildHeadSnapshot(headCommit *object.Commit, ignore *historyIgnore) (HeadSn
 // (binary blobs, no language detected, submodules, symlinks, ignored paths).
 // Deletes are dropped because hotspots-style reports can't render files that
 // no longer exist.
-func commitChanges(ctx context.Context, commit *object.Commit, ignore *historyIgnore) ([]FileChange, error) {
+//
+// The outer recover catches anything the per-call wrappers don't (corrupt
+// packfiles via go-git object resolution, future regressions in the diff
+// pipeline). One bad commit becomes a warning, not a crash.
+func commitChanges(ctx context.Context, commit *object.Commit, ignore *historyIgnore, cache *blobClassifyCache) (out []FileChange, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			printWarnF("history: skipping commit %s — diff pipeline panicked: %v", commit.Hash, r)
+			out = nil
+			err = nil
+		}
+	}()
+
 	toTree, err := commit.Tree()
 	if err != nil {
 		return nil, err
@@ -404,9 +428,9 @@ func commitChanges(ctx context.Context, commit *object.Commit, ignore *historyIg
 		return nil, err
 	}
 
-	out := make([]FileChange, 0, len(changes))
+	out = make([]FileChange, 0, len(changes))
 	for _, change := range changes {
-		fc, ok := buildFileChange(change, ignore)
+		fc, ok := buildFileChange(change, ignore, cache)
 		if !ok {
 			continue
 		}
@@ -416,7 +440,7 @@ func commitChanges(ctx context.Context, commit *object.Commit, ignore *historyIg
 }
 
 // buildFileChange converts a single object.Change into a FileChange.
-func buildFileChange(change *object.Change, ignore *historyIgnore) (FileChange, bool) {
+func buildFileChange(change *object.Change, ignore *historyIgnore, cache *blobClassifyCache) (FileChange, bool) {
 	action, err := change.Action()
 	if err != nil {
 		return FileChange{}, false
@@ -476,18 +500,18 @@ func buildFileChange(change *object.Change, ignore *historyIgnore) (FileChange, 
 		return FileChange{}, false
 	}
 
-	job, lineTypes, ok := classifyHistoryBlob(path, blob)
-	if !ok {
+	res := cache.classify(toEntry.Hash, path, blob)
+	if !res.ok {
 		return FileChange{}, false
 	}
 
 	return FileChange{
 		Path:          path,
-		Language:      job.Language,
+		Language:      res.language,
 		AddedRanges:   added,
 		RemovedRanges: removed,
-		LineTypes:     lineTypes,
-		Complexity:    complexityLineNumbers(job),
+		LineTypes:     res.lineTypes,
+		Complexity:    res.complexLine,
 		NewBlob:       blob,
 	}, true
 }
@@ -519,6 +543,28 @@ func safePatch(change *object.Change) (patch *object.Patch, ok bool) {
 	return p, true
 }
 
+// classifyFn is the indirect reference to classifyHistoryBlob used by
+// safeClassify. Tests substitute a panicking stub to exercise the recover
+// path; production behaviour is unchanged.
+var classifyFn = classifyHistoryBlob
+
+// safeClassify wraps the classifier with panic recovery. The history walk
+// feeds the classifier many more blob shapes than the working-tree counter
+// ever sees (legacy encodings, partial UTF-8, oversized blobs, vendored
+// data). A panic in any one path-blob pair must not abort the report —
+// skip the file with a warning instead.
+func safeClassify(path string, blob []byte) (job *FileJob, lineTypes []LineType, ok bool) {
+	defer func() {
+		if r := recover(); r != nil {
+			printWarnF("history: skipping %s — classifier panicked: %v", path, r)
+			job = nil
+			lineTypes = nil
+			ok = false
+		}
+	}()
+	return classifyFn(path, blob)
+}
+
 // readBlob fetches the raw bytes for a tree entry.
 func readBlob(tree *object.Tree, entry *object.TreeEntry) ([]byte, error) {
 	file, err := tree.TreeEntryFile(entry)
@@ -531,6 +577,52 @@ func readBlob(tree *object.Tree, entry *object.TreeEntry) ([]byte, error) {
 	}
 	defer reader.Close()
 	return io.ReadAll(reader)
+}
+
+// blobClassifyResult is the cached output of classifyHistoryBlob for a single
+// blob hash. ok=false means the classifier rejected the blob (binary, no
+// language); the vectors are nil in that case.
+type blobClassifyResult struct {
+	language    string
+	complexity  int64
+	lineTypes   []LineType
+	complexLine []int
+	ok          bool
+}
+
+// blobClassifyCache memoises classifyHistoryBlob output keyed by blob hash so
+// the same blob seen in baseline, commit changes, and HEAD is classified once
+// per runHistory. The walk is sequential, so no mutex is required.
+type blobClassifyCache struct {
+	entries map[plumbing.Hash]blobClassifyResult
+}
+
+func newBlobClassifyCache() *blobClassifyCache {
+	return &blobClassifyCache{entries: make(map[plumbing.Hash]blobClassifyResult)}
+}
+
+// classify returns the classifier output for blob, computing and caching it
+// on first sight. Slices in the returned result are shared between callers —
+// they must be treated as read-only. Negative results (ok=false) are cached
+// too so binary/unknown blobs aren't re-attempted.
+func (c *blobClassifyCache) classify(hash plumbing.Hash, path string, blob []byte) blobClassifyResult {
+	if c != nil {
+		if hit, found := c.entries[hash]; found {
+			return hit
+		}
+	}
+	job, lineTypes, ok := safeClassify(path, blob)
+	res := blobClassifyResult{ok: ok}
+	if ok {
+		res.language = job.Language
+		res.complexity = job.Complexity
+		res.lineTypes = lineTypes
+		res.complexLine = complexityLineNumbers(job)
+	}
+	if c != nil {
+		c.entries[hash] = res
+	}
+	return res
 }
 
 // classifyHistoryBlob runs scc's existing classifier on a git blob's bytes

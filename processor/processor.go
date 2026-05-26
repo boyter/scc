@@ -302,6 +302,10 @@ var Timeline = false
 // Wired to --buckets in main.go; default 60.
 var HistoryBuckets = 60
 
+// FoldAuthors enables the name+domain identity folding fallback applied
+// after the mailmap. Toggled off via --no-fold-authors.
+var FoldAuthors = true
+
 // DirFilePaths is not set via flags but by arguments following the flags for file or directory to process
 var DirFilePaths = []string{}
 
@@ -663,6 +667,13 @@ func Process() {
 	if Hotspots && (ByAuthor || Timeline) {
 		fmt.Println("--hotspots is mutually exclusive with --by-author / --timeline; pick one report")
 		os.Exit(1)
+	}
+
+	if Hotspots || ByAuthor || Timeline {
+		if err := validateHistoryFlags(os.Stderr); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 	}
 
 	if Hotspots {

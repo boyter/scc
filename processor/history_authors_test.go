@@ -257,6 +257,97 @@ func TestAuthorsBusFactorBalanced(t *testing.T) {
 	}
 }
 
+func TestAuthorsBusFactorIgnoresSentinel(t *testing.T) {
+	saveDepth := HistoryDepth
+	HistoryDepth = 2
+	t.Cleanup(func() { HistoryDepth = saveDepth })
+
+	// Big baseline commit predates the window (depth=2 keeps only the last
+	// two commits). Alice and Bob each add a small amount in-window. The
+	// surviving HEAD is dominated by the baseline (sentinel), but bus factor
+	// must reflect Alice/Bob, not be diluted by the sentinel.
+	baseline := "package x\n" + strings.Repeat("func B() {}\n", 50)
+	aliceAdd := baseline + "func A1() {}\nfunc A2() {}\nfunc A3() {}\n"
+	bobAdd := aliceAdd + "func Bo1() {}\nfunc Bo2() {}\n"
+
+	dir := makeAuthoredRepo(t, []authoredCommit{
+		{Files: map[string]string{"a.go": baseline}, Author: "Zed", Email: "zed@x"},
+		{Files: map[string]string{"a.go": aliceAdd}, Author: "Alice", Email: "alice@x"},
+		{Files: map[string]string{"a.go": bobAdd}, Author: "Bob", Email: "bob@x"},
+	})
+
+	obs := newHistoryAuthorsObserver()
+	if _, err := runHistory(dir, obs); err != nil {
+		t.Fatalf("runHistory: %v", err)
+	}
+
+	if obs.busFactor < 1 || obs.busFactor > 2 {
+		t.Errorf("busFactor = %d, want 1 or 2", obs.busFactor)
+	}
+
+	// Sentinel must exist and dominate share-of-all, but must not appear in
+	// the bus-factor walk.
+	var sentinelFound bool
+	for _, r := range obs.rows {
+		if r.Sentinel {
+			sentinelFound = true
+			if r.OwnsPercent < 50 {
+				t.Errorf("sentinel OwnsPercent = %.1f, want > 50 (most code is pre-window)", r.OwnsPercent)
+			}
+			if r.InWindowPercent != 0 {
+				t.Errorf("sentinel InWindowPercent = %.1f, want 0", r.InWindowPercent)
+			}
+		}
+	}
+	if !sentinelFound {
+		t.Fatalf("no sentinel row; got rows %+v", obs.rows)
+	}
+
+	// busCovered is over in-window code; with only Alice+Bob in-window it
+	// must reach > 50 within the (1 or 2) walked authors. The old behavior
+	// would have left busCovered ~ a few percent, diluted by the sentinel.
+	if obs.busCovered <= 50 {
+		t.Errorf("busCovered = %.1f, want > 50 (in-window denominator)", obs.busCovered)
+	}
+}
+
+func TestAuthorsBusFactorAllPreWindow(t *testing.T) {
+	saveDepth := HistoryDepth
+	HistoryDepth = 1
+	t.Cleanup(func() { HistoryDepth = saveDepth })
+
+	// Two commits: depth=1 keeps only the second. The second commit just
+	// deletes a file, so every surviving line at HEAD came from the baseline
+	// — there is no in-window code at all.
+	first := "package a\nfunc A() {}\nfunc B() {}\nfunc C() {}\n"
+	dir := makeAuthoredRepo(t, []authoredCommit{
+		{Files: map[string]string{
+			"a.go": first,
+			"b.go": "package b\nfunc B() {}\n",
+		}, Author: "Alice", Email: "alice@x"},
+		// Second commit: rewrite b.go to be empty — does not modify a.go,
+		// so the only HEAD code is Alice's a.go, all pre-window.
+		{Files: map[string]string{"b.go": ""}, Author: "Bob", Email: "bob@x"},
+	})
+
+	obs := newHistoryAuthorsObserver()
+	if _, err := runHistory(dir, obs); err != nil {
+		t.Fatalf("runHistory: %v", err)
+	}
+
+	if obs.inWindowCode != 0 {
+		t.Errorf("inWindowCode = %d, want 0", obs.inWindowCode)
+	}
+	if obs.busFactor != 0 {
+		t.Errorf("busFactor = %d, want 0", obs.busFactor)
+	}
+
+	footer := formatAuthorsFooter(obs, 79)
+	if !strings.Contains(footer, "no code touched in window") {
+		t.Errorf("footer = %q, want 'no code touched in window'", footer)
+	}
+}
+
 func TestAuthorsCSVIncludesEveryAuthorAndSentinel(t *testing.T) {
 	saveDepth, saveFormat := HistoryDepth, Format
 	HistoryDepth, Format = 1, "csv"

@@ -700,9 +700,10 @@ Shared flags for these reports:
 
 | Flag | Default | Purpose |
 |---|---|---|
-| `--depth N` | 1000 | Commit window size (newest N commits). `0` walks the entire history (slow on big repos). |
-| `--buckets N` | 60 | Time-bucket resolution for timeline reports. CSV/JSON always emit full-resolution; tabular sparklines downsample to fit. |
+| `--depth N` | 1000 | Commit window size (newest N commits). `0` walks the entire history (slow on big repos). Negative values are rejected. |
+| `--buckets N` | 60 | Time-bucket resolution for timeline reports. Must be `>= 1` when `--timeline` is set. CSV/JSON always emit full-resolution; tabular sparklines downsample to fit. |
 | `-w, --wide` | - | 109-column variant of any report (extra columns where applicable). |
+| `--no-fold-authors` | off | Disable the name + email-domain identity folding fallback applied after `.mailmap`. |
 
 `--hotspots` is mutually exclusive with `--by-author` / `--timeline`; combining them is an error. With `--by-author` set, `--timeline` switches from the author rollup to the author timeline. Alone, `--timeline` renders the languages timeline.
 
@@ -726,7 +727,7 @@ main.go                           Go     180       44    2,510       8     48.2
 ───────────────────────────────────────────────────────────────────────────────
 ```
 
-Tabular output shows the top files (≈20). `--wide` adds a hotspot bar and a code-vs-comment churn split. `--format csv|json` emits every file with a positive score along with the full per-file detail and window metadata.
+Tabular output shows the top files (≈20). `--wide` adds a hotspot bar and an added-lines code-vs-comment split (`+Code%`). `--format csv|json` emits every file with a positive score along with the full per-file detail and window metadata.
 
 #### Author rollup - `--by-author`
 
@@ -745,11 +746,13 @@ Carol Lee                            9,205     3,640      51    14.7%  2026-05-1
 (before window)                      6,540       810      29    10.4%          -
 others (12)                          1,300       190       -     2.1%          -
 ───────────────────────────────────────────────────────────────────────────────
-Bus factor 2 · Alice + Bob last-touched 63% of code
+Bus factor 2 · Alice + Bob last-touched 63% of in-window code
 ───────────────────────────────────────────────────────────────────────────────
 ```
 
-Bus factor is the fewest authors whose combined ownership exceeds 50%. `.mailmap` is honoured so authors who used several emails are folded into one identity. `--wide` adds a Comment column.
+Bus factor is the fewest authors whose combined share of *in-window* code exceeds 50%. The `(before window)` sentinel is excluded from that denominator so the footer reflects who could realistically pick up recent work, not who's stamped on long-frozen lines. The `Owns` column on each row still uses the share-of-all denominator (sentinel included; rows reconcile to 100%).
+
+Identity folding is layered: `.mailmap` is honoured first; then, by default, two commits sharing a lowercased name *and* an email domain collapse to one author (a fallback for repos without a mailmap). Generic names (`root`, `admin`, `unknown`, …) are excluded from the heuristic to avoid false merges. Disable the fallback with `--no-fold-authors` if you'd rather see every email as its own row. `--wide` adds a Comment column.
 
 #### Author timeline - `--by-author --timeline`
 
@@ -796,6 +799,7 @@ Totals reconcile with a plain `scc` against the current HEAD tree. CSV/JSON incl
 - `.gitignore` is already applied by git when each commit was recorded; `.ignore` / `.sccignore` are honoured by the engine (disable with `--no-ignore` / `--no-scc-ignore`).
 - Merge commits are diffed against their first parent (`git log --first-parent` semantics).
 - Rename detection uses go-git's similarity heuristic; large renames may inflate hotspot churn and reset blame attribution. Shallow clones produce a clear error rather than a panic.
+- `Lines±` is the sum of added and removed lines, so files rewritten in place count twice the displaced size.
 - Symlinks are skipped (v1). Binary detection is unchanged.
 
 ### Large File Detection

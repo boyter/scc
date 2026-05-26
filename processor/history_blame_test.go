@@ -167,6 +167,101 @@ func TestParseMailmapTrimsWhitespace(t *testing.T) {
 	}
 }
 
+// TestAuthorRegistryFoldsByNameAndDomain documents the canonical scc-repo
+// case: the same human committing from a personal address and a
+// github-noreply address. The two have different domains so under the
+// strict (name, domain) rule they intentionally stay split — folding here
+// would require the looser name-only mode which is not the default.
+func TestAuthorRegistryFoldsByNameAndDomain(t *testing.T) {
+	r := newAuthorRegistryWithFold(nil, true)
+	id1 := r.intern("Ben Boyter", "ben@boyter.org")
+	id2 := r.intern("Ben Boyter", "boyter@users.noreply.github.com")
+	if id1 == id2 {
+		t.Errorf("different domains should not fold under strict (name,domain): %d == %d", id1, id2)
+	}
+}
+
+func TestAuthorRegistryFoldsSameDomainDifferentEmail(t *testing.T) {
+	r := newAuthorRegistryWithFold(nil, true)
+	id1 := r.intern("Alice", "alice@x.com")
+	id2 := r.intern("Alice", "alice.smith@x.com")
+	if id1 != id2 {
+		t.Errorf("same (name,domain) should fold: %d vs %d", id1, id2)
+	}
+}
+
+func TestAuthorRegistryDoesNotFoldDifferentDomain(t *testing.T) {
+	r := newAuthorRegistryWithFold(nil, true)
+	id1 := r.intern("Daniel", "d@a.com")
+	id2 := r.intern("Daniel", "d@b.com")
+	if id1 == id2 {
+		t.Errorf("different domains should stay split: %d == %d", id1, id2)
+	}
+}
+
+func TestAuthorRegistrySkipsGenericNames(t *testing.T) {
+	r := newAuthorRegistryWithFold(nil, true)
+	id1 := r.intern("root", "root@host-a")
+	id2 := r.intern("root", "root@host-b")
+	if id1 == id2 {
+		t.Errorf("generic name 'root' must not fold across hosts: %d == %d", id1, id2)
+	}
+	// Even within the same domain, the skip list keeps them split — the
+	// name is too generic to assume identity.
+	id3 := r.intern("root", "root@host-a")
+	if id3 != id1 {
+		t.Errorf("identical (name,email) for skipped names should still dedupe by primary key: %d vs %d", id3, id1)
+	}
+}
+
+func TestAuthorRegistryFoldsBots(t *testing.T) {
+	r := newAuthorRegistryWithFold(nil, true)
+	id1 := r.intern("dependabot[bot]", "x@y.com")
+	id2 := r.intern("dependabot[bot]", "x@y.com")
+	if id1 != id2 {
+		t.Errorf("identical bot identities should collapse: %d vs %d", id1, id2)
+	}
+}
+
+func TestAuthorRegistryMailmapBeatsFold(t *testing.T) {
+	// Mailmap maps A→C and B→D. Even though A and B share a name+domain
+	// after the (unrelated) folding key would suggest, the mailmap routes
+	// them to distinct canonical identities and they must stay split.
+	mm := parseMailmap([]byte(
+		"Carol <carol@example.com> Sam <a@example.com>\n" +
+			"Dave <dave@example.com> Sam <b@example.com>\n"))
+	r := newAuthorRegistryWithFold(mm, true)
+	id1 := r.intern("Sam", "a@example.com")
+	id2 := r.intern("Sam", "b@example.com")
+	if id1 == id2 {
+		t.Errorf("mailmap-distinct identities must not fold: %d == %d", id1, id2)
+	}
+}
+
+func TestAuthorRegistryFoldDisabled(t *testing.T) {
+	r := newAuthorRegistryWithFold(nil, false)
+	id1 := r.intern("Alice", "alice@x.com")
+	id2 := r.intern("Alice", "alice.smith@x.com")
+	if id1 == id2 {
+		t.Errorf("with fold disabled, distinct emails must stay split: %d == %d", id1, id2)
+	}
+}
+
+func TestEmailDomain(t *testing.T) {
+	cases := []struct{ in, want string }{
+		{"a@b.com", "b.com"},
+		{"A@B.COM", "b.com"},
+		{"a@b@c.com", "c.com"},
+		{"noatsign", ""},
+		{"", ""},
+	}
+	for _, c := range cases {
+		if got := emailDomain(c.in); got != c.want {
+			t.Errorf("emailDomain(%q) = %q, want %q", c.in, got, c.want)
+		}
+	}
+}
+
 func equalIDs(a, b []authorID) bool {
 	if len(a) != len(b) {
 		return false

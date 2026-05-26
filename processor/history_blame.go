@@ -28,19 +28,55 @@ type authorRecord struct {
 // authorRegistry interns (name, email) pairs into stable authorIDs after
 // folding them through the mailmap, if one is set. It is keyed by canonical
 // name+email so two commit identities mapped to the same canonical pair
-// collapse to one authorID.
+// collapse to one authorID. When fold is true, a second index folds
+// distinct emails that share the same (lowercase name, email domain) — a
+// best-effort fallback for repos without a .mailmap.
 type authorRegistry struct {
-	nameToID map[string]authorID
-	records  []authorRecord
-	mm       *mailmap
+	nameToID     map[string]authorID
+	byNameDomain map[string]authorID
+	records      []authorRecord
+	mm           *mailmap
+	fold         bool
 }
 
 func newAuthorRegistry(mm *mailmap) *authorRegistry {
+	return newAuthorRegistryWithFold(mm, FoldAuthors)
+}
+
+func newAuthorRegistryWithFold(mm *mailmap, fold bool) *authorRegistry {
 	return &authorRegistry{
-		nameToID: map[string]authorID{},
-		records:  []authorRecord{{}}, // slot 0 = sentinelAuthorID
-		mm:       mm,
+		nameToID:     map[string]authorID{},
+		byNameDomain: map[string]authorID{},
+		records:      []authorRecord{{}}, // slot 0 = sentinelAuthorID
+		mm:           mm,
+		fold:         fold,
 	}
+}
+
+// foldSkipNames are generic identity names common in default git configs.
+// Two commits sharing one of these names plus a domain are very likely
+// unrelated humans, so we refuse to fold them and let them stay split.
+var foldSkipNames = map[string]struct{}{
+	"":          {},
+	"unknown":   {},
+	"root":      {},
+	"user":      {},
+	"admin":     {},
+	"dev":       {},
+	"developer": {},
+	"guest":     {},
+	"nobody":    {},
+	"none":      {},
+}
+
+// emailDomain returns the lowercased substring after the last '@' in email,
+// or "" when there is no '@'.
+func emailDomain(email string) string {
+	i := strings.LastIndexByte(email, '@')
+	if i < 0 {
+		return ""
+	}
+	return strings.ToLower(email[i+1:])
 }
 
 func (r *authorRegistry) intern(name, email string) authorID {
@@ -51,6 +87,24 @@ func (r *authorRegistry) intern(name, email string) authorID {
 	key := canonName + "\x00" + canonEmail
 	if id, ok := r.nameToID[key]; ok {
 		return id
+	}
+	if r.fold {
+		lowerName := strings.ToLower(canonName)
+		if _, skip := foldSkipNames[lowerName]; !skip {
+			domain := emailDomain(canonEmail)
+			if domain != "" {
+				ndKey := lowerName + "\x00" + domain
+				if id, ok := r.byNameDomain[ndKey]; ok {
+					r.nameToID[key] = id
+					return id
+				}
+				id := authorID(len(r.records))
+				r.records = append(r.records, authorRecord{Name: canonName, Email: canonEmail})
+				r.nameToID[key] = id
+				r.byNameDomain[ndKey] = id
+				return id
+			}
+		}
 	}
 	id := authorID(len(r.records))
 	r.records = append(r.records, authorRecord{Name: canonName, Email: canonEmail})

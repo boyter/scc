@@ -157,9 +157,10 @@ func countRangeLines(ranges []LineRange) int {
 	return total
 }
 
-// splitChurnByType classifies the lines covered by added ranges into code vs
-// comment buckets using the per-line LineType vector for the new blob.
-// Blank lines don't count toward either bucket.
+// splitChurnByType classifies *added* lines only into code vs comment buckets
+// using the per-line LineType vector for the new blob. Removed lines aren't
+// classified — the old blob isn't fetched on the churn path. Reported as
+// +Code% in the tabular output. Blank lines don't count toward either bucket.
 func splitChurnByType(added []LineRange, lineTypes []LineType) (code, comment int) {
 	for _, r := range added {
 		for i := 0; i < r.Count; i++ {
@@ -199,8 +200,8 @@ func renderHotspots(o *hotspotsObserver) (string, error) {
 var tabularShortHotspotsFormatHead = "%-27s %8s %7s %8s %8s %7s %8s\n"
 var tabularShortHotspotsFormatBody = "%-27s %8s %7d %8d %8s %7d %8.1f\n"
 
-// Wide variant — 109 columns, adds a 9-char hotspot bar and a Code/Comment
-// churn split column (%-share of churned lines that were code).
+// Wide variant — 109 columns, adds a 9-char hotspot bar and a +Code% column
+// (%-share of *added* lines that were code; removed lines aren't classified).
 //
 //	%-27s %8s %7s %8s %8s %7s %8s %7s %11s
 //	27 + 1 + 8 + 1 + 7 + 1 + 8 + 1 + 8 + 1 + 7 + 1 + 8 + 1 + 7 + 1 + 11 = 98
@@ -217,7 +218,7 @@ func renderHotspotsTabular(o *hotspotsObserver) string {
 	printer := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
 	if wide {
 		_, _ = fmt.Fprintf(&sb, tabularWideHotspotsFormatHead,
-			"File", "Lang", "Cmplx", "Commits", "Lines±", "Authrs", "Hotspot", "Code%", "Bar")
+			"File", "Lang", "Cmplx", "Commits", "Lines±", "Authrs", "Hotspot", "+Code%", "Bar")
 	} else {
 		_, _ = fmt.Fprintf(&sb, tabularShortHotspotsFormatHead,
 			"File", "Lang", "Cmplx", "Commits", "Lines±", "Authrs", "Hotspot")

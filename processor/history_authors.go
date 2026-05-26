@@ -32,15 +32,16 @@ const (
 // authorRow is one materialised row in the report. Sentinel is true for the
 // "(before window)" pseudo-author whose lines pre-date the walk window.
 type authorRow struct {
-	Name        string
-	Email       string
-	Code        int64
-	Comment     int64
-	Complexity  int64
-	Files       int
-	OwnsPercent float64
-	LastCommit  time.Time
-	Sentinel    bool
+	Name            string
+	Email           string
+	Code            int64
+	Comment         int64
+	Complexity      int64
+	Files           int
+	OwnsPercent     float64
+	InWindowPercent float64
+	LastCommit      time.Time
+	Sentinel        bool
 }
 
 // historyAuthorsObserver accumulates per-file forward-replay blame during
@@ -58,10 +59,11 @@ type historyAuthorsObserver struct {
 	window   HistoryWindow
 	snapshot HeadSnapshot
 
-	rows       []authorRow
-	busFactor  int
-	busAuthors []string
-	busCovered float64
+	rows         []authorRow
+	busFactor    int
+	busAuthors   []string
+	busCovered   float64
+	inWindowCode int64
 }
 
 func newHistoryAuthorsObserver() *historyAuthorsObserver {
@@ -170,6 +172,13 @@ func (o *historyAuthorsObserver) Finalise(window HistoryWindow, head HeadSnapsho
 		}
 	}
 
+	var sentinelCode int64
+	if s, ok := totals[sentinelAuthorID]; ok {
+		sentinelCode = s.Code
+	}
+	inWindowCode := grandCode - sentinelCode
+	o.inWindowCode = inWindowCode
+
 	rows := make([]authorRow, 0, len(totals))
 	for aid, a := range totals {
 		rec := o.registry.record(aid)
@@ -186,8 +195,13 @@ func (o *historyAuthorsObserver) Finalise(window HistoryWindow, head HeadSnapsho
 		}
 		if aid == sentinelAuthorID {
 			row.Sentinel = true
-		} else if when, ok := o.lastSeen[aid]; ok {
-			row.LastCommit = when
+		} else {
+			if inWindowCode > 0 {
+				row.InWindowPercent = float64(a.Code) / float64(inWindowCode) * 100.0
+			}
+			if when, ok := o.lastSeen[aid]; ok {
+				row.LastCommit = when
+			}
 		}
 		rows = append(rows, row)
 	}
@@ -218,7 +232,7 @@ func (o *historyAuthorsObserver) Finalise(window HistoryWindow, head HeadSnapsho
 		if r.Code == 0 {
 			break
 		}
-		cumPercent += r.OwnsPercent
+		cumPercent += r.InWindowPercent
 		o.busAuthors = append(o.busAuthors, r.Name)
 		if cumPercent > 50 {
 			break
@@ -378,6 +392,9 @@ func writeAuthorRow(sb *strings.Builder, p *gmessage.Printer, wide bool,
 }
 
 func formatAuthorsFooter(o *historyAuthorsObserver, width int) string {
+	if o.inWindowCode == 0 {
+		return "Bus factor 0 · no code touched in window"
+	}
 	if o.busFactor == 0 {
 		return "Bus factor 0 · no authored code in window"
 	}
@@ -389,9 +406,9 @@ func formatAuthorsFooter(o *historyAuthorsObserver, width int) string {
 	prefix := fmt.Sprintf("Bus factor %d · ", o.busFactor)
 	var suffix string
 	if o.busFactor == 1 {
-		suffix = fmt.Sprintf(" last-touched %.0f%% of code (single point of failure)", covered)
+		suffix = fmt.Sprintf(" last-touched %.0f%% of in-window code (single point of failure)", covered)
 	} else {
-		suffix = fmt.Sprintf(" last-touched %.0f%% of code", covered)
+		suffix = fmt.Sprintf(" last-touched %.0f%% of in-window code", covered)
 	}
 
 	single := prefix + strings.Join(o.busAuthors, " + ") + suffix
@@ -480,15 +497,16 @@ func renderAuthorsCSV(o *historyAuthorsObserver) (string, error) {
 }
 
 type authorsJSONAuthor struct {
-	Name         *string `json:"name"`
-	Email        *string `json:"email"`
-	Code         int64   `json:"code"`
-	Complexity   int64   `json:"complexity"`
-	Comment      int64   `json:"comment"`
-	Files        int     `json:"files"`
-	OwnsPercent  float64 `json:"ownsPercent"`
-	LastCommit   string  `json:"lastCommit,omitempty"`
-	BeforeWindow bool    `json:"beforeWindow"`
+	Name            *string `json:"name"`
+	Email           *string `json:"email"`
+	Code            int64   `json:"code"`
+	Complexity      int64   `json:"complexity"`
+	Comment         int64   `json:"comment"`
+	Files           int     `json:"files"`
+	OwnsPercent     float64 `json:"ownsPercent"`
+	InWindowPercent float64 `json:"inWindowPercent"`
+	LastCommit      string  `json:"lastCommit,omitempty"`
+	BeforeWindow    bool    `json:"beforeWindow"`
 }
 
 type authorsJSONWindow struct {
@@ -519,11 +537,12 @@ func renderAuthorsJSON(o *historyAuthorsObserver) (string, error) {
 	}
 	for _, r := range o.rows {
 		a := authorsJSONAuthor{
-			Code:        r.Code,
-			Complexity:  r.Complexity,
-			Comment:     r.Comment,
-			Files:       r.Files,
-			OwnsPercent: round1(r.OwnsPercent),
+			Code:            r.Code,
+			Complexity:      r.Complexity,
+			Comment:         r.Comment,
+			Files:           r.Files,
+			OwnsPercent:     round1(r.OwnsPercent),
+			InWindowPercent: round1(r.InWindowPercent),
 		}
 		if r.Sentinel {
 			a.BeforeWindow = true

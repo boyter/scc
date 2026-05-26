@@ -93,6 +93,10 @@ func main() {
 			processor.LocomoTPSSet = cmd.PersistentFlags().Changed("locomo-tps")
 			processor.LocomoCyclesSet = cmd.PersistentFlags().Changed("locomo-cycles")
 
+			if v, err := cmd.PersistentFlags().GetBool("no-fold-authors"); err == nil && v {
+				processor.FoldAuthors = false
+			}
+
 			processor.Process()
 		},
 	}
@@ -558,6 +562,13 @@ func main() {
 		"buckets",
 		60,
 		"time-bucket resolution for the timeline reports (default 60)",
+	)
+	var noFoldAuthors bool
+	flags.BoolVar(
+		&noFoldAuthors,
+		"no-fold-authors",
+		false,
+		"disable the name+email-domain identity folding fallback for author reports (mailmap still applied)",
 	)
 
 	// --mcp is intercepted before cobra runs, but we register it here so it appears in --help
