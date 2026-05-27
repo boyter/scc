@@ -555,20 +555,20 @@ func main() {
 		&processor.Timeline,
 		"timeline",
 		false,
-		"render an over-time view; with --by-author runs the author timeline, alone runs the languages timeline",
+		"render an over-time view of recent git history; with --by-author runs the author timeline, alone runs the languages timeline",
 	)
 	flags.IntVar(
 		&processor.HistoryBuckets,
 		"buckets",
 		60,
-		"time-bucket resolution for the timeline reports (default 60)",
+		"time-bucket resolution for the git timeline reports (default 60)",
 	)
 	var noFoldAuthors bool
 	flags.BoolVar(
 		&noFoldAuthors,
 		"no-fold-authors",
 		false,
-		"disable the name+email-domain identity folding fallback for author reports (mailmap still applied)",
+		"disable the name+email-domain identity folding fallback for git author reports (mailmap still applied)",
 	)
 
 	// --mcp is intercepted before cobra runs, but we register it here so it appears in --help
