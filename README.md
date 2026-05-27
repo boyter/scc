@@ -257,7 +257,7 @@ features listed below may be missing from your installation.
 ```text
 $ scc -h
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 3.7.0
+Version 3.8.0 (beta)
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
