@@ -48,7 +48,7 @@ type hotspotsRecord struct {
 	Complexity   int64
 	Commits      int
 	LinesChanged int64
-	Authors      map[string]struct{}
+	Authors      map[authorID]struct{}
 	CodeChurn    int64
 	CommentChurn int64
 	Score        float64
@@ -56,9 +56,12 @@ type hotspotsRecord struct {
 
 // hotspotsObserver accumulates per-file commit / churn / author stats during
 // the walk, then materialises the table at Finalise using the HEAD snapshot
-// for current language and complexity.
+// for current language and complexity. Implements MailmapObserver so the
+// Authrs column folds identities the same way the author rollup does,
+// without paying for the full baseline tree classification.
 type hotspotsObserver struct {
 	files    map[string]*hotspotsRecord
+	registry *authorRegistry
 	window   HistoryWindow
 	snapshot HeadSnapshot
 	records  []hotspotsRecord
@@ -66,20 +69,36 @@ type hotspotsObserver struct {
 }
 
 func newHotspotsObserver() *hotspotsObserver {
-	return &hotspotsObserver{files: map[string]*hotspotsRecord{}}
+	return &hotspotsObserver{
+		files:    map[string]*hotspotsRecord{},
+		registry: newAuthorRegistry(nil),
+	}
+}
+
+// SetMailmap satisfies MailmapObserver — rebuilds the registry with the
+// repo's .mailmap so Authrs folds identities the same way the author rollup
+// does.
+func (o *hotspotsObserver) SetMailmap(mm *mailmap) {
+	o.registry = newAuthorRegistry(mm)
 }
 
 func (o *hotspotsObserver) Observe(c CommitInfo, changes []FileChange) {
-	author := c.Author
-	if author == "" {
-		author = c.Email
-	}
+	aid := o.registry.intern(c.Author, c.Email)
 	for _, fc := range changes {
+		// Rename: migrate the old path's accumulator so churn history is
+		// continuous across the rename.
+		if fc.FromPath != "" && fc.FromPath != fc.Path {
+			if old, ok := o.files[fc.FromPath]; ok {
+				old.File = fc.Path
+				o.files[fc.Path] = old
+				delete(o.files, fc.FromPath)
+			}
+		}
 		rec := o.files[fc.Path]
 		if rec == nil {
 			rec = &hotspotsRecord{
 				File:    fc.Path,
-				Authors: map[string]struct{}{},
+				Authors: map[authorID]struct{}{},
 			}
 			o.files[fc.Path] = rec
 		}
@@ -87,9 +106,7 @@ func (o *hotspotsObserver) Observe(c CommitInfo, changes []FileChange) {
 		added := countRangeLines(fc.AddedRanges)
 		removed := countRangeLines(fc.RemovedRanges)
 		rec.LinesChanged += int64(added + removed)
-		if author != "" {
-			rec.Authors[author] = struct{}{}
-		}
+		rec.Authors[aid] = struct{}{}
 
 		code, comment := splitChurnByType(fc.AddedRanges, fc.LineTypes)
 		rec.CodeChurn += int64(code)

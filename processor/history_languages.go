@@ -93,7 +93,7 @@ func (o *historyLanguagesObserver) Seed(baseline BaselineSnapshot) {
 func (o *historyLanguagesObserver) Observe(c CommitInfo, changes []FileChange) {
 	for _, fc := range changes {
 		added := splitAddedCodeLines(fc.AddedRanges, fc.LineTypes)
-		removed := countRangeLines(fc.RemovedRanges)
+		removed := splitRemovedCodeLines(fc.RemovedRanges, fc.RemovedLineTypes)
 		delta := int64(added) - int64(removed)
 		if delta == 0 {
 			continue

@@ -43,13 +43,15 @@ type CommitInfo struct {
 // scc's classifier output for the new blob (one LineType per line, one entry
 // in Complexity per line that fired a complexity tick).
 type FileChange struct {
-	Path          string
-	Language      string
-	AddedRanges   []LineRange
-	RemovedRanges []LineRange
-	LineTypes     []LineType
-	Complexity    []int
-	NewBlob       []byte
+	Path             string
+	FromPath         string // != Path on a detected rename; "" on a pure add
+	Language         string
+	AddedRanges      []LineRange
+	RemovedRanges    []LineRange
+	LineTypes        []LineType
+	RemovedLineTypes []LineType // old-blob line types, for code-filtered removals
+	Complexity       []int
+	NewBlob          []byte
 }
 
 // CommitObserver is implemented by each report's accumulator. The engine
@@ -107,6 +109,16 @@ type BaselineSnapshot struct {
 // Hotspots) skip the expense by not implementing the interface.
 type BaselineObserver interface {
 	Seed(BaselineSnapshot)
+}
+
+// MailmapObserver is an optional extension to CommitObserver. The engine
+// always parses the repo's .mailmap from HEAD — one small blob — and hands
+// it to observers that implement this, before the walk. Unlike
+// BaselineObserver it does NOT trigger the expensive start-tree
+// classification, so observers that only need author folding (e.g. Hotspots,
+// the author timeline) can implement it cheaply.
+type MailmapObserver interface {
+	SetMailmap(*mailmap)
 }
 
 // errStopIter is a local sentinel used to terminate iter.ForEach once we've
@@ -243,6 +255,10 @@ func runHistory(repoPath string, observer CommitObserver) (HistoryWindow, error)
 
 	cache := newBlobClassifyCache()
 
+	if mo, ok := observer.(MailmapObserver); ok {
+		mo.SetMailmap(loadMailmapForHead(collected[0]))
+	}
+
 	if bo, ok := observer.(BaselineObserver); ok {
 		baseline := buildBaselineForObserver(collected, ignore, cache)
 		bo.Seed(baseline)
@@ -274,6 +290,22 @@ func runHistory(repoPath string, observer CommitObserver) (HistoryWindow, error)
 	return window, nil
 }
 
+// loadMailmapForHead parses .mailmap from the HEAD commit's tree. Returns
+// nil when there is no .mailmap or the HEAD tree cannot be read. Cheap
+// compared to building the full baseline, so observers that only need
+// author folding (Hotspots, author timeline) can satisfy MailmapObserver
+// without paying for the start-tree classification.
+func loadMailmapForHead(headCommit *object.Commit) *mailmap {
+	if headCommit == nil {
+		return nil
+	}
+	tree, err := headCommit.Tree()
+	if err != nil {
+		return nil
+	}
+	return loadMailmapFromTree(tree)
+}
+
 // buildBaselineForObserver loads the mailmap from HEAD and classifies the
 // tree at the window's start commit. The start commit is the first-parent of
 // the oldest commit in the window; if that commit has no parents (the window
@@ -284,10 +316,7 @@ func buildBaselineForObserver(collected []*object.Commit, ignore *historyIgnore,
 		return baseline
 	}
 
-	headCommit := collected[0]
-	if headTree, err := headCommit.Tree(); err == nil {
-		baseline.Mailmap = loadMailmapFromTree(headTree)
-	}
+	baseline.Mailmap = loadMailmapForHead(collected[0])
 
 	oldest := collected[len(collected)-1]
 	if oldest.NumParents() == 0 {
@@ -388,6 +417,12 @@ func buildHeadSnapshot(headCommit *object.Commit, ignore *historyIgnore, cache *
 	return snap, err
 }
 
+// historyDiffOptions forces rename detection on. The rename-aware reports
+// (author rollup, hotspots) depend on renames arriving as a single change
+// rather than a delete + add pair, so pin it explicitly — a future go-git
+// bump can't silently disable it.
+var historyDiffOptions = &object.DiffTreeOptions{DetectRenames: true}
+
 // commitChanges computes the first-parent diff for commit and projects every
 // change into a FileChange. Skips paths that the engine can't count
 // (binary blobs, no language detected, submodules, symlinks, ignored paths).
@@ -423,7 +458,7 @@ func commitChanges(ctx context.Context, commit *object.Commit, ignore *historyIg
 		}
 	}
 
-	changes, err := object.DiffTreeWithOptions(ctx, fromTree, toTree, object.DefaultDiffTreeOptions)
+	changes, err := object.DiffTreeWithOptions(ctx, fromTree, toTree, historyDiffOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -450,6 +485,7 @@ func buildFileChange(change *object.Change, ignore *historyIgnore, cache *blobCl
 	}
 
 	path := change.To.Name
+	fromPath := change.From.Name
 	toEntry := change.To.TreeEntry
 	if toEntry.Mode == filemode.Dir || toEntry.Mode == filemode.Submodule || toEntry.Mode == filemode.Symlink {
 		return FileChange{}, false
@@ -505,14 +541,35 @@ func buildFileChange(change *object.Change, ignore *historyIgnore, cache *blobCl
 		return FileChange{}, false
 	}
 
+	// Classify the parent blob so removed lines can be filtered to code —
+	// the timeline reports need a symmetric code-only delta. The blob cache
+	// makes this near-free: the old blob is normally an earlier commit's
+	// new blob. Skip entirely when there are no removals (pure adds, or
+	// when the diff produced no removed ranges).
+	var removedLineTypes []LineType
+	if len(removed) > 0 && change.From.Name != "" {
+		fromEntry := change.From.TreeEntry
+		if fromEntry.Mode != filemode.Dir &&
+			fromEntry.Mode != filemode.Submodule &&
+			fromEntry.Mode != filemode.Symlink {
+			if oldBlob, rerr := readBlob(change.From.Tree, &fromEntry); rerr == nil {
+				if oldRes := cache.classify(fromEntry.Hash, change.From.Name, oldBlob); oldRes.ok {
+					removedLineTypes = oldRes.lineTypes
+				}
+			}
+		}
+	}
+
 	return FileChange{
-		Path:          path,
-		Language:      res.language,
-		AddedRanges:   added,
-		RemovedRanges: removed,
-		LineTypes:     res.lineTypes,
-		Complexity:    res.complexLine,
-		NewBlob:       blob,
+		Path:             path,
+		FromPath:         fromPath,
+		Language:         res.language,
+		AddedRanges:      added,
+		RemovedRanges:    removed,
+		LineTypes:        res.lineTypes,
+		RemovedLineTypes: removedLineTypes,
+		Complexity:       res.complexLine,
+		NewBlob:          blob,
 	}, true
 }
 
@@ -639,12 +696,13 @@ func classifyHistoryBlob(path string, blob []byte) (*FileJob, []LineType, bool) 
 	}
 
 	job := &FileJob{
-		Location:          path,
-		Filename:          basename(path),
-		Extension:         extension,
-		PossibleLanguages: languages,
-		Bytes:             int64(len(blob)),
-		Content:           blob,
+		Location:             path,
+		Filename:             basename(path),
+		Extension:            extension,
+		PossibleLanguages:    languages,
+		Bytes:                int64(len(blob)),
+		Content:              blob,
+		TrackComplexityLines: true,
 	}
 
 	job.Language = DetermineLanguage(job.Filename, job.Language, job.PossibleLanguages, job.Content)

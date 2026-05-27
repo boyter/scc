@@ -81,31 +81,32 @@ type FileJobCallback interface {
 
 // FileJob is a struct used to hold all of the results of processing internally before sent to the formatter
 type FileJob struct {
-	Language           string
-	PossibleLanguages  []string // Used to hold potentially more than one language which populates language when determined
-	Filename           string
-	Extension          string
-	Location           string
-	Symlocation        string
-	Content            []byte `json:"-"`
-	Bytes              int64
-	Lines              int64
-	Code               int64
-	Comment            int64
-	Blank              int64
-	Complexity         int64
-	ComplexityLine     []int64 `json:"-"`
-	WeightedComplexity float64
-	Hash               hash.Hash
-	Callback           FileJobCallback `json:"-"`
-	Binary             bool
-	Minified           bool
-	Generated          bool
-	EndPoint           int
-	Uloc               int
-	LineLength         []int  `json:"-"`
-	ClassifyContent    bool   `json:"-"` // When true, CountStats populates ContentByteType
-	ContentByteType    []byte `json:"-"` // Per-byte classification, allocated by CountStats when ClassifyContent is true
+	Language             string
+	PossibleLanguages    []string // Used to hold potentially more than one language which populates language when determined
+	Filename             string
+	Extension            string
+	Location             string
+	Symlocation          string
+	Content              []byte `json:"-"`
+	Bytes                int64
+	Lines                int64
+	Code                 int64
+	Comment              int64
+	Blank                int64
+	Complexity           int64
+	ComplexityLine       []int64 `json:"-"`
+	WeightedComplexity   float64
+	Hash                 hash.Hash
+	Callback             FileJobCallback `json:"-"`
+	Binary               bool
+	Minified             bool
+	Generated            bool
+	EndPoint             int
+	Uloc                 int
+	LineLength           []int  `json:"-"`
+	ClassifyContent      bool   `json:"-"` // When true, CountStats populates ContentByteType
+	ContentByteType      []byte `json:"-"` // Per-byte classification, allocated by CountStats when ClassifyContent is true
+	TrackComplexityLines bool   `json:"-"` // When true, CountStats populates ComplexityLine
 }
 
 // FilterContentByType returns a copy of Content with bytes not matching any of

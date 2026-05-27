@@ -153,7 +153,16 @@ func countComplexityPostfix(fileJob *FileJob, index, offsetJump int, postfixExcl
 	}
 
 	fileJob.Complexity++
-	fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] = fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] + 1
+	fileJob.bumpComplexityLine()
+}
+
+// bumpComplexityLine adds one complexity tick to the line currently being
+// counted. No-op when TrackComplexityLines is off — ComplexityLine is left
+// empty by CountStats in that case, so there is no slot to bump.
+func (fileJob *FileJob) bumpComplexityLine() {
+	if n := len(fileJob.ComplexityLine); n > 0 {
+		fileJob.ComplexityLine[n-1]++
+	}
 }
 
 // Check if this file is binary by checking for nul byte and if so bail out
@@ -352,7 +361,7 @@ func codeState(
 			case TComplexity:
 				if index == 0 || isWhitespace(fileJob.Content[index-1]) {
 					fileJob.Complexity++
-					fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] = fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] + 1
+					fileJob.bumpComplexityLine()
 				}
 
 			case TComplexityPostfix:
@@ -463,7 +472,7 @@ func blankState(
 		}
 		if index == 0 || isWhitespace(fileJob.Content[index-1]) {
 			fileJob.Complexity++
-			fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] = fileJob.ComplexityLine[len(fileJob.ComplexityLine)-1] + 1
+			fileJob.bumpComplexityLine()
 		}
 
 	case TComplexityPostfix:
@@ -559,7 +568,9 @@ func CountStats(fileJob *FileJob) {
 
 	// TODO needs to be set via langFeatures.Quotes[0].IgnoreEscape for the matching feature
 	ignoreEscape := false
-	fileJob.ComplexityLine = append(fileJob.ComplexityLine, 0)
+	if fileJob.TrackComplexityLines {
+		fileJob.ComplexityLine = append(fileJob.ComplexityLine, 0)
+	}
 
 	if fileJob.ClassifyContent {
 		fileJob.ContentByteType = make([]byte, fileJob.Bytes)
@@ -635,7 +646,9 @@ func CountStats(fileJob *FileJob) {
 		// we are currently in
 		if fileJob.Content[index] == '\n' || index >= endPoint {
 			fileJob.Lines++
-			fileJob.ComplexityLine = append(fileJob.ComplexityLine, 0)
+			if fileJob.TrackComplexityLines {
+				fileJob.ComplexityLine = append(fileJob.ComplexityLine, 0)
+			}
 
 			if NoLarge && fileJob.Lines >= LargeLineCount {
 				// Save memory by unsetting the content as we no longer require it
@@ -730,7 +743,9 @@ func CountStats(fileJob *FileJob) {
 		minifiedGeneratedCheck(avgLineByteCount, fileJob)
 	}
 
-	fileJob.ComplexityLine = fileJob.ComplexityLine[:fileJob.Lines]
+	if fileJob.TrackComplexityLines {
+		fileJob.ComplexityLine = fileJob.ComplexityLine[:fileJob.Lines]
+	}
 }
 
 func minifiedGeneratedCheck(avgLineByteCount int, fileJob *FileJob) {

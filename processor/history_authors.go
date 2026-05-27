@@ -99,6 +99,20 @@ func (o *historyAuthorsObserver) Observe(c CommitInfo, changes []FileChange) {
 	}
 	for _, fc := range changes {
 		prev := o.blame[fc.Path]
+		// Rename: carry the old path's per-line blame forward as the prior
+		// state, then drop the stale key so it is not double-counted. A
+		// pure rename has no Added/Removed ranges, so applyDiffToBlame just
+		// copies the carried-forward blame — every line keeps its original
+		// author. A rename with edits attributes only the edited lines to
+		// the renaming commit.
+		if fc.FromPath != "" && fc.FromPath != fc.Path {
+			if oldBlame, ok := o.blame[fc.FromPath]; ok {
+				prev = oldBlame
+				delete(o.blame, fc.FromPath)
+				delete(o.lineTypes, fc.FromPath)
+				delete(o.complexity, fc.FromPath)
+			}
+		}
 		newN := len(fc.LineTypes)
 		o.blame[fc.Path] = applyDiffToBlame(prev, newN, fc.AddedRanges, fc.RemovedRanges, aid)
 		o.lineTypes[fc.Path] = fc.LineTypes

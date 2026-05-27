@@ -50,8 +50,9 @@ type authorTimelineEvent struct {
 
 // historyAuthorTimelineObserver collects per-commit events during the walk
 // and bins them into per-(author, bucket) totals on Finalise. It implements
-// BaselineObserver only to pick up the mailmap; per-line baseline state is
-// not needed since the report tracks deltas, not last-toucher attribution.
+// MailmapObserver to pick up the mailmap without paying for the full
+// start-tree classification — the report tracks deltas, not last-toucher
+// attribution, so per-line baseline state is not needed.
 type historyAuthorTimelineObserver struct {
 	registry    *authorRegistry
 	events      []authorTimelineEvent
@@ -72,8 +73,11 @@ func newHistoryAuthorTimelineObserver(buckets int) *historyAuthorTimelineObserve
 	}
 }
 
-func (o *historyAuthorTimelineObserver) Seed(baseline BaselineSnapshot) {
-	o.registry = newAuthorRegistry(baseline.Mailmap)
+// SetMailmap satisfies MailmapObserver — rebuilds the registry with the
+// repo's .mailmap so the timeline folds identities the same way the author
+// rollup does.
+func (o *historyAuthorTimelineObserver) SetMailmap(mm *mailmap) {
+	o.registry = newAuthorRegistry(mm)
 }
 
 func (o *historyAuthorTimelineObserver) Observe(c CommitInfo, changes []FileChange) {
@@ -82,7 +86,7 @@ func (o *historyAuthorTimelineObserver) Observe(c CommitInfo, changes []FileChan
 	var delta int64
 	for _, fc := range changes {
 		added := splitAddedCodeLines(fc.AddedRanges, fc.LineTypes)
-		removed := countRangeLines(fc.RemovedRanges)
+		removed := splitRemovedCodeLines(fc.RemovedRanges, fc.RemovedLineTypes)
 		delta += int64(added) - int64(removed)
 	}
 	o.events = append(o.events, authorTimelineEvent{
@@ -150,6 +154,27 @@ func splitAddedCodeLines(added []LineRange, lineTypes []LineType) int {
 				continue
 			}
 			if lineTypes[ln] == LINE_CODE {
+				code++
+			}
+		}
+	}
+	return code
+}
+
+// splitRemovedCodeLines counts removed lines classified as code by the OLD
+// blob's LineTypes vector. RemovedRanges are in old-blob (pre-diff) line
+// coordinates, so they index removedLineTypes directly. Removed-side mirror
+// of splitAddedCodeLines — together they yield a symmetric code-only delta.
+// Returns 0 when the old blob could not be classified.
+func splitRemovedCodeLines(removed []LineRange, removedLineTypes []LineType) int {
+	code := 0
+	for _, r := range removed {
+		for i := 0; i < r.Count; i++ {
+			ln := r.Start - 1 + i
+			if ln < 0 || ln >= len(removedLineTypes) {
+				continue
+			}
+			if removedLineTypes[ln] == LINE_CODE {
 				code++
 			}
 		}

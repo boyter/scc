@@ -228,7 +228,8 @@ a =
 func TestCountStatsComplexityLines(t *testing.T) {
 	ProcessConstants()
 	fileJob := FileJob{
-		Language: "Go",
+		Language:             "Go",
+		TrackComplexityLines: true,
 	}
 
 	fileJob.SetContent(`fileJob.Comment++
