@@ -170,14 +170,25 @@ func (o *historyAuthorsObserver) Finalise(window HistoryWindow, head HeadSnapsho
 			a.Complexity++
 		}
 
-		// Plurality of code lines: who has the most code in this file.
-		// Tie-break on smaller authorID for determinism (sentinel wins
-		// only when no real author has code).
+		// Plurality of code lines: who has the most code in this file. A
+		// real author always outranks the sentinel — the sentinel only owns
+		// the file when no real author has any code here. Tie-break on
+		// smaller authorID for determinism.
 		var plur authorID
 		var plurCount int64
 		for aid, c := range perFile {
+			if aid == sentinelAuthorID {
+				continue
+			}
 			if c > plurCount || (c == plurCount && aid < plur) {
 				plur = aid
+				plurCount = c
+			}
+		}
+		if plurCount == 0 {
+			// No real author has code here; fall back to the sentinel.
+			if c, ok := perFile[sentinelAuthorID]; ok {
+				plur = sentinelAuthorID
 				plurCount = c
 			}
 		}

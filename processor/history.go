@@ -310,8 +310,17 @@ func loadMailmapForHead(headCommit *object.Commit) *mailmap {
 // tree at the window's start commit. The start commit is the first-parent of
 // the oldest commit in the window; if that commit has no parents (the window
 // covers all history) the baseline files map is empty.
-func buildBaselineForObserver(collected []*object.Commit, ignore *historyIgnore, cache *blobClassifyCache) BaselineSnapshot {
-	baseline := BaselineSnapshot{Files: map[string]BaselineFile{}}
+func buildBaselineForObserver(collected []*object.Commit, ignore *historyIgnore, cache *blobClassifyCache) (baseline BaselineSnapshot) {
+	baseline = BaselineSnapshot{Files: map[string]BaselineFile{}}
+	// Backstop for panics outside the per-file recover below — go-git's
+	// tree.Files() iterator can itself panic on a corrupt object, and the
+	// per-file handler is not in scope for that. Return whatever was
+	// accumulated so far rather than crashing the report.
+	defer func() {
+		if r := recover(); r != nil {
+			printWarnF("history: baseline walk panicked, using partial result: %v", r)
+		}
+	}()
 	if len(collected) == 0 {
 		return baseline
 	}
@@ -336,7 +345,11 @@ func buildBaselineForObserver(collected []*object.Commit, ignore *historyIgnore,
 	_ = tree.Files().ForEach(func(f *object.File) error {
 		defer func() {
 			if r := recover(); r != nil {
-				printWarnF("history: skipping %s in baseline — panicked: %v", f.Name, r)
+				name := "<unknown>"
+				if f != nil {
+					name = f.Name
+				}
+				printWarnF("history: skipping %s in baseline — panicked: %v", name, r)
 			}
 		}()
 		if f.Mode == filemode.Dir || f.Mode == filemode.Submodule || f.Mode == filemode.Symlink {
@@ -373,17 +386,32 @@ func buildBaselineForObserver(collected []*object.Commit, ignore *historyIgnore,
 // buildHeadSnapshot walks the HEAD commit's tree and runs scc's classifier
 // on each file. Used by hotspots (and future reports) to know each surviving
 // file's current language and complexity.
-func buildHeadSnapshot(headCommit *object.Commit, ignore *historyIgnore, cache *blobClassifyCache) (HeadSnapshot, error) {
+func buildHeadSnapshot(headCommit *object.Commit, ignore *historyIgnore, cache *blobClassifyCache) (snap HeadSnapshot, err error) {
+	snap = emptySnapshot()
+	// Backstop for panics outside the per-file recover below — go-git's
+	// tree.Files() iterator can itself panic on a corrupt object. Return the
+	// partial snapshot with no error so the caller keeps what we collected.
+	defer func() {
+		if r := recover(); r != nil {
+			printWarnF("history: HEAD snapshot walk panicked, using partial result: %v", r)
+			err = nil
+		}
+	}()
+
 	tree, err := headCommit.Tree()
 	if err != nil {
 		return emptySnapshot(), err
 	}
 
-	snap := HeadSnapshot{Files: map[string]HeadFile{}}
+	snap = HeadSnapshot{Files: map[string]HeadFile{}}
 	err = tree.Files().ForEach(func(f *object.File) error {
 		defer func() {
 			if r := recover(); r != nil {
-				printWarnF("history: skipping %s in HEAD snapshot — panicked: %v", f.Name, r)
+				name := "<unknown>"
+				if f != nil {
+					name = f.Name
+				}
+				printWarnF("history: skipping %s in HEAD snapshot — panicked: %v", name, r)
 			}
 		}()
 		if f.Mode == filemode.Dir || f.Mode == filemode.Submodule || f.Mode == filemode.Symlink {
