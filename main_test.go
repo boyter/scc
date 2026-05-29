@@ -928,6 +928,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"XML Schema",
 		"YAML",
 		"Yarn",
+		"Zen C",
 		"Zig",
 		"ZoKrates",
 		"Zsh",

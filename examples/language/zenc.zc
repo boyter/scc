@@ -1,0 +1,28 @@
+// An example from https://docs.zenc-lang.org/examples/rosetta/strip-comments-from-a-string/
+import "std/string.zc"
+
+fn strip_comments(s: string) -> String {
+    let str = String::from(s);
+    let tokens = ['#', ';'];
+    for token in tokens {
+        let t = str.split(token);
+        defer { for i in 0..t.length() { t[i].free(); } }
+        if t.length() > 1 {
+            return t[0].trim();
+        }
+    }
+    return str.trim();
+}
+
+fn main() {
+    let strings = [
+        " apples, pears # and bananas",
+        " apples, pears ; and bananas",
+        " apples, pears \t     "
+    ]
+
+    for s in strings {
+        let t = strip_comments(s);
+        println "'{s}' -> '{t}'";
+    }
+}
