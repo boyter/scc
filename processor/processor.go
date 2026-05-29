@@ -3,6 +3,7 @@
 package processor
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -145,6 +146,9 @@ var RemapUnknown = ""
 
 // RemapAll allows remapping of all files with a string to search the content for
 var RemapAll = ""
+
+// LanguagesFile is the path to a custom languages.json file
+var LanguagesFile = ""
 
 type remapRule struct {
 	pattern  []byte
@@ -343,6 +347,21 @@ func ConfigureLazy(lazy bool) {
 // Needs to be called at least once in order for anything to actually happen
 func ProcessConstants() {
 	startTime := makeTimestampNano()
+	if LanguagesFile != "" {
+		data, err := os.ReadFile(LanguagesFile)
+		if err != nil {
+			printError("failed to read languages file: " + err.Error())
+		} else {
+			var customLanguages map[string]Language
+			if err := json.Unmarshal(data, &customLanguages); err != nil {
+				printError("failed to parse languages file: " + err.Error())
+			} else {
+				for name, lang := range customLanguages {
+					languageDatabase[name] = lang
+				}
+			}
+		}
+	}
 	for name, value := range languageDatabase {
 		for _, ext := range value.Extensions {
 			ExtensionToLanguage[ext] = append(ExtensionToLanguage[ext], name)
