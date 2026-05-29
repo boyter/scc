@@ -8584,6 +8584,49 @@
     "line_comment": [],
     "quotes": []
   },
+  "Zen C": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "switch ",
+      "switch(",
+      "while ",
+      "while(",
+      "else ",
+      "else{",
+      "match ",
+      "match(",
+      "guard ",
+      "guard(",
+      "unless ",
+      "unless(",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== ",
+      "and ",
+      "or ",
+      "eq ",
+      "neq "
+    ],
+    "complexitychecks_postfix": ["?", "?.", "??", "??="],
+    "extensions": ["zc"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"\"\"",
+        "start": "r\"\"\""
+      }
+    ]
+  },
   "Zig": {
     "complexitychecks": [
       "catch ",
