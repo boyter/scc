@@ -1,5 +1,5 @@
 {{- /*
-  scc share card. 1200×630 — the canonical OpenGraph dimensions.
+  scc share card. 1200×630, the canonical OpenGraph dimensions.
   Rendered first and embedded as a data: URL in the og:image meta tag.
   Self-contained: only inline fonts and colours, no external refs.
 */ -}}

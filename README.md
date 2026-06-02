@@ -30,6 +30,7 @@ Licensed under MIT licence.
 - [COCOMO](#cocomo)
 - [LOCOMO](#locomo)
 - [Git Insight Reports](#git-insight-reports)
+- [HTML Report](#html-report)
 - [Output Formats](#output-formats)
 - [Performance](#performance)
 - [Development](#development)
@@ -808,6 +809,25 @@ Totals reconcile with a plain `scc` against the current HEAD tree. CSV/JSON incl
 - Rename detection uses go-git's similarity heuristic; large renames may inflate hotspot churn and reset blame attribution. Shallow clones produce a clear error rather than a panic.
 - `Lines±` is the sum of added and removed lines, so files rewritten in place count twice the displaced size.
 - Symlinks are skipped (v1). Binary detection is unchanged.
+
+### HTML Report
+
+`scc --report` writes a self-contained, infographic-style HTML page summarising the codebase: overview metrics, language breakdown, line-length histogram, hotspots, author rollup, language and author timelines, COCOMO / LOCOMO cost estimates, and a per-file table. The page bundles its own CSS and inline SVG — no external network requests, no JavaScript runtime dependencies — so it can be opened locally, committed to a repo, attached to a release, or hosted as a static artifact.
+
+```text
+$ scc --report                       # writes scc-report.html (prompts before overwriting)
+$ scc --report=docs/code.html        # explicit path; overwrites silently
+```
+
+A bare `--report` is non-destructive: if `scc-report.html` already exists in the current directory, `scc` prompts before clobbering it. Naming the file explicitly (`--report=path/out.html`) is treated as consent and overwrites without asking.
+
+| Flag | Purpose |
+|---|---|
+| `--report[=path]` | Write the HTML report. Bare flag writes `scc-report.html`; explicit path overwrites silently. |
+| `--report-title NAME` | Override the repo name shown in the report banner. Defaults to the `origin` remote name or the directory basename. |
+| `--report-skip LIST` | Comma-separated sections to omit: `cocomo`, `locomo`, `hotspots`, `authors`, `timeline`, `files`, `uloc`, `linelength`, `card`. |
+
+The git-history sections (hotspots, authors, timelines) only render when the directory is a git repository; outside a repo they're omitted gracefully. The report embeds an OpenGraph share card as a `data:` URL so links unfurl on most social platforms — pass `--report-skip card` to drop it.
 
 ### Large File Detection
 
