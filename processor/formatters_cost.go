@@ -34,21 +34,27 @@ func calculateCocomoSLOCCount(sumCode int64, str *strings.Builder) {
 	_, _ = p.Fprintf(str, " (average salary = %s%d/year, overhead = %.2f)\n", CurrencySymbol, AverageWage, Overhead)
 }
 
-func calculateCocomo(sumCode int64, str *strings.Builder) {
-	estimatedCost, estimatedScheduleMonths, estimatedPeopleRequired := esstimateCostScheduleMonths(sumCode)
-
-	p := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
-
-	_, _ = p.Fprintf(str, "Estimated Cost to Develop (%s) %s%d\n", CocomoProjectType, CurrencySymbol, int64(estimatedCost))
-	_, _ = p.Fprintf(str, "Estimated Schedule Effort (%s) %.2f months\n", CocomoProjectType, estimatedScheduleMonths)
-	if math.IsNaN(estimatedPeopleRequired) {
-		_, _ = p.Fprintf(str, "Estimated People Required 1 Grandparent\n")
-	} else {
-		_, _ = p.Fprintf(str, "Estimated People Required (%s) %.2f\n", CocomoProjectType, estimatedPeopleRequired)
-	}
+// CocomoResult is the structured output of the basic COCOMO model so callers
+// can render it however they need (HTML report, tabular, JSON). The
+// summary-line tabular output is produced by calculateCocomo from these
+// values.
+type CocomoResult struct {
+	ProjectType     string
+	SumCode         int64
+	EstimatedEffort float64 // person-months
+	EstimatedCost   float64 // dollars
+	ScheduleMonths  float64
+	PeopleRequired  float64
+	AverageWage     int64
+	Overhead        float64
+	EAF             float64
+	CurrencySymbol  string
 }
 
-func esstimateCostScheduleMonths(sumCode int64) (float64, float64, float64) {
+// computeCocomo runs the basic COCOMO calculation against the current
+// processor-level cost flags and returns the result as a struct. No I/O, no
+// formatting.
+func computeCocomo(sumCode int64) CocomoResult {
 	estimatedEffort := EstimateEffort(int64(sumCode), EAF)
 	estimatedCost := EstimateCost(estimatedEffort, AverageWage, Overhead)
 	estimatedScheduleMonths := EstimateScheduleMonths(estimatedEffort)
@@ -56,11 +62,55 @@ func esstimateCostScheduleMonths(sumCode int64) (float64, float64, float64) {
 	if estimatedScheduleMonths > 0 {
 		estimatedPeopleRequired = estimatedEffort / estimatedScheduleMonths
 	}
-	return estimatedCost, estimatedScheduleMonths, estimatedPeopleRequired
+	return CocomoResult{
+		ProjectType:     CocomoProjectType,
+		SumCode:         sumCode,
+		EstimatedEffort: estimatedEffort,
+		EstimatedCost:   estimatedCost,
+		ScheduleMonths:  estimatedScheduleMonths,
+		PeopleRequired:  estimatedPeopleRequired,
+		AverageWage:     AverageWage,
+		Overhead:        Overhead,
+		EAF:             EAF,
+		CurrencySymbol:  CurrencySymbol,
+	}
+}
+
+// PrettyCost renders EstimatedCost as a currency-prefixed, comma-separated
+// integer (e.g. "$1,234,567"). Used by the HTML report's headline template
+// where the trailing decimals add noise without value.
+func (r CocomoResult) PrettyCost() string {
+	return r.CurrencySymbol + commaFmt(int64(r.EstimatedCost))
+}
+
+func calculateCocomo(sumCode int64, str *strings.Builder) {
+	r := computeCocomo(sumCode)
+
+	p := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
+
+	_, _ = p.Fprintf(str, "Estimated Cost to Develop (%s) %s%d\n", r.ProjectType, r.CurrencySymbol, int64(r.EstimatedCost))
+	_, _ = p.Fprintf(str, "Estimated Schedule Effort (%s) %.2f months\n", r.ProjectType, r.ScheduleMonths)
+	if math.IsNaN(r.PeopleRequired) {
+		_, _ = p.Fprintf(str, "Estimated People Required 1 Grandparent\n")
+	} else {
+		_, _ = p.Fprintf(str, "Estimated People Required (%s) %.2f\n", r.ProjectType, r.PeopleRequired)
+	}
+}
+
+func esstimateCostScheduleMonths(sumCode int64) (float64, float64, float64) {
+	r := computeCocomo(sumCode)
+	return r.EstimatedCost, r.ScheduleMonths, r.PeopleRequired
+}
+
+// computeLocomo runs the LOCOMO estimate against the current processor-level
+// LOCOMO flags. Thin alias for LocomoEstimate so the report-side caller in
+// CollectReportData lines up with computeCocomo.
+func computeLocomo(sumCode, sumComplexity int64) LocomoResult {
+	return LocomoEstimate(sumCode, sumComplexity)
 }
 
 func calculateLocomo(sumCode, sumComplexity int64, str *strings.Builder) {
-	result := LocomoEstimate(sumCode, sumComplexity)
+	result := computeLocomo(sumCode, sumComplexity)
 
 	p := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
 

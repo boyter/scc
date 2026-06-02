@@ -664,6 +664,24 @@ func Process() {
 		DirFilePaths = append(DirFilePaths, ".")
 	}
 
+	// --report mode short-circuits the normal format dispatch and writes a
+	// self-contained HTML report. Mutually exclusive with --format / -f: if
+	// the user passed both, warn on stderr and let --report win.
+	if ReportOut != "" {
+		if Format != "" && Format != "tabular" {
+			fmt.Fprintf(os.Stderr, "warning: --report overrides --format=%s\n", Format)
+		}
+		parseReportSkip(ReportSkip)
+		if len(DirFilePaths) > 1 {
+			fmt.Fprintf(os.Stderr, "warning: --report only analyses the first positional path (%s); other paths ignored\n", DirFilePaths[0])
+		}
+		if err := runReport(DirFilePaths); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		return
+	}
+
 	if Hotspots && (ByAuthor || Timeline) {
 		fmt.Println("--hotspots is mutually exclusive with --by-author / --timeline; pick one report")
 		os.Exit(1)

@@ -78,9 +78,12 @@ func main() {
 	}
 
 	rootCmd := &cobra.Command{
-		Use:     "scc [flags] [files or directories]",
-		Short:   "scc [files or directories]",
-		Long:    fmt.Sprintf("Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.\nVersion %s\nBen Boyter <ben@boyter.org> + Contributors", processor.Version),
+		Use:   "scc [flags] [files or directories]",
+		Short: "scc [files or directories]",
+		Long:  fmt.Sprintf("Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.\nVersion %s\nBen Boyter <ben@boyter.org> + Contributors", processor.Version),
+		Example: `  Generate a self-contained HTML infographic report:
+    scc --report
+    scc --report=out.html --report-title "myrepo" --report-skip cocomo`,
 		Version: processor.Version,
 		Run: func(cmd *cobra.Command, args []string) {
 			processor.DirFilePaths = args
@@ -227,6 +230,28 @@ func main() {
 		"f",
 		"tabular",
 		"set output format [tabular, wide, json, json2, csv, csv-stream, cloc-yaml, html, html-table, sql, sql-insert, openmetrics]",
+	)
+	flags.StringVar(
+		&processor.ReportOut,
+		"report",
+		"",
+		"write a self-contained HTML report; bare flag writes scc-report.html and prompts before overwriting, --report=path/out.html overwrites silently",
+	)
+	// NoOptDefVal makes a bare `--report` work (no `=value`). runReport
+	// compares ReportOut to processor.DefaultReportName to tell "bare
+	// flag" apart from an explicit path, so the two must stay in sync.
+	flags.Lookup("report").NoOptDefVal = processor.DefaultReportName
+	flags.StringVar(
+		&processor.ReportSkip,
+		"report-skip",
+		"",
+		"comma-separated sections to omit (cocomo,locomo,hotspots,authors,timeline,files,uloc,linelength,card)",
+	)
+	flags.StringVar(
+		&processor.ReportTitle,
+		"report-title",
+		"",
+		"override the repo name shown in the report banner",
 	)
 	flags.StringSliceVarP(
 		&processor.AllowListExtensions,
