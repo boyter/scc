@@ -1,0 +1,551 @@
+{{- define "headline" -}}
+{{ comma .Totals.Files }} files · {{ comma .Totals.Code }} SLOC{{ if .ULOC }} · {{ commaInt .ULOC.Global }} ULOC ({{ pctFloat .ULOC.Dryness }} DRYness){{ end }}{{ if .Authors }} · bus factor {{ .Authors.BusFactor }}{{ end }}{{ if .Cocomo }} · est. cost {{ .Cocomo.PrettyCost }}{{ end }}
+{{- end -}}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>scc report - {{ .RepoName }}</title>
+  <meta name="description" content="{{ template "headline" . }}">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="scc analysed {{ .RepoName }}">
+  <meta property="og:description" content="{{ template "headline" . }}">
+  {{- if .CardSVG }}
+  <meta property="og:image" content="{{ dataURLCard .CardSVG }}">
+  {{- end }}
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="scc analysed {{ .RepoName }}">
+  <meta name="twitter:description" content="{{ template "headline" . }}">
+  {{- if .CardSVG }}
+  <meta name="twitter:image" content="{{ dataURLCard .CardSVG }}">
+  {{- end }}
+
+  <!-- Theme: apply persisted preference BEFORE first paint to avoid a flash. -->
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('scc-theme');
+        if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+    :root {
+      --bg: #ffffff; --bg-sunken: #fafafa; --fg: #1a1a1a; --fg-muted: #555555; --fg-dim: #888888;
+      --border: #e5e5e5; --border-strong: #cfcfcf; --link: #0b5ea8; --accent: #4a7daa; --accent-2: #2c7a7b;
+      --code-bg: #f5f5f3; --good: #0a7d4f; --warn: #b25400; --danger: #b3261e;
+      --code: #4a7daa; --blank: #cfcfcf; --comment: #93a6b8;
+      --hover-row: rgba(0,0,0,0.025);
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1115; --bg-sunken: #161a20; --fg: #e8e6e3; --fg-muted: #a8aeb6; --fg-dim: #7a818a;
+        --border: #262b33; --border-strong: #3a4049; --link: #6cb6ff; --accent: #6b9fd0; --accent-2: #5cb8b8;
+        --code-bg: #181c22; --good: #4ec9a0; --warn: #e0a060; --danger: #f08a82;
+        --code: #6b9fd0; --blank: #3a4049; --comment: #5d7a96;
+        --hover-row: rgba(255,255,255,0.04);
+        color-scheme: dark;
+      }
+    }
+    html[data-theme="light"] {
+      --bg: #ffffff; --bg-sunken: #fafafa; --fg: #1a1a1a; --fg-muted: #555555; --fg-dim: #888888;
+      --border: #e5e5e5; --border-strong: #cfcfcf; --link: #0b5ea8; --accent: #4a7daa; --accent-2: #2c7a7b;
+      --code-bg: #f5f5f3; --good: #0a7d4f; --warn: #b25400; --danger: #b3261e;
+      --code: #4a7daa; --blank: #cfcfcf; --comment: #93a6b8;
+      --hover-row: rgba(0,0,0,0.025); color-scheme: light;
+    }
+    html[data-theme="dark"] {
+      --bg: #0f1115; --bg-sunken: #161a20; --fg: #e8e6e3; --fg-muted: #a8aeb6; --fg-dim: #7a818a;
+      --border: #262b33; --border-strong: #3a4049; --link: #6cb6ff; --accent: #6b9fd0; --accent-2: #5cb8b8;
+      --code-bg: #181c22; --good: #4ec9a0; --warn: #e0a060; --danger: #f08a82;
+      --code: #6b9fd0; --blank: #3a4049; --comment: #5d7a96;
+      --hover-row: rgba(255,255,255,0.04); color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, ui-sans-serif, system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    .mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .wrap { max-width: 960px; margin: 0 auto; padding: 48px 32px 96px; }
+
+    /* ===== HERO ===== */
+    header.hero {
+      padding-bottom: 28px; margin-bottom: 56px;
+      border-bottom: 1px solid var(--border);
+    }
+    .crumb {
+      font: 500 12px ui-monospace, monospace;
+      color: var(--fg-dim); text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 12px;
+    }
+    h1.title {
+      font-size: 38px; line-height: 1.15; font-weight: 700; margin: 0 0 10px;
+      letter-spacing: -0.015em;
+    }
+    p.tagline { margin: 0; color: var(--fg-muted); font-size: 16px; max-width: 64ch; }
+    .actions {
+      margin-top: 22px; display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .actions a, .actions button {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; font-size: 13px;
+      background: var(--bg); border: 1px solid var(--border-strong);
+      color: var(--fg); border-radius: 4px; text-decoration: none; cursor: pointer;
+      font-family: inherit; line-height: 1;
+    }
+    .actions a:hover, .actions button:hover { border-color: var(--fg-muted); background: var(--bg-sunken); text-decoration: none; }
+
+    /* ===== SECTION ===== */
+    section { margin: 0 0 64px; }
+    section h2 {
+      font-size: 24px; font-weight: 700; margin: 0 0 18px;
+      display: flex; align-items: baseline; gap: 14px;
+      letter-spacing: -0.01em;
+    }
+    section h2 .num {
+      font-family: ui-monospace, monospace; font-size: 14px;
+      color: var(--fg-dim); font-weight: 500;
+      letter-spacing: 0.08em;
+    }
+    section h2 .count { color: var(--fg-dim); font-size: 13px; font-weight: 400; letter-spacing: 0; }
+    section .lede { margin: 0 0 22px; color: var(--fg-muted); font-size: 14px; max-width: 70ch; }
+
+    .submodel {
+      font-size: 12px; font-weight: 600; margin: 28px 0 10px;
+      color: var(--fg); text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .submodel:first-of-type { margin-top: 4px; }
+    .submodel-meaning {
+      display: inline; color: var(--fg-dim); font-weight: 400;
+      text-transform: none; letter-spacing: 0; margin-left: 4px;
+      font-size: 13px;
+    }
+
+    /* ===== OVERVIEW METRICS ===== */
+    .metrics {
+      display: grid; grid-template-columns: repeat(6, 1fr); gap: 0;
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    }
+    .metric { padding: 14px 16px; border-right: 1px solid var(--border); }
+    .metric:last-child { border-right: none; }
+    .metric .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-dim); }
+    .metric .value { font-family: ui-monospace, monospace; font-size: 22px; font-weight: 600; margin-top: 4px; color: var(--fg); }
+    .metric .sub { font-size: 11px; color: var(--fg-dim); margin-top: 2px; }
+    @media (max-width: 820px) { .metrics { grid-template-columns: repeat(3, 1fr); } .metric:nth-child(3n) { border-right: none; } }
+    @media (max-width: 480px) { .metrics { grid-template-columns: repeat(2, 1fr); } .metric { border-right: 1px solid var(--border) !important; } .metric:nth-child(2n) { border-right: none !important; } }
+
+    /* ===== COMPOSITION BAR ===== */
+    .composition { margin-top: 28px; }
+    .composition .bar {
+      display: flex; width: 100%; height: 14px; border-radius: 2px; overflow: hidden;
+      background: var(--bg-sunken);
+    }
+    .composition .bar > span { display: block; height: 100%; }
+    .composition .legend {
+      margin-top: 10px; display: flex; gap: 22px; flex-wrap: wrap;
+      font-size: 13px; color: var(--fg-muted);
+    }
+    .composition .legend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 1px; vertical-align: middle; margin-right: 6px; }
+    .composition .legend strong { color: var(--fg); font-family: ui-monospace, monospace; font-weight: 600; margin-left: 4px; }
+
+    /* ===== TABLES ===== */
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); }
+    th { font-weight: 600; color: var(--fg-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border-strong); }
+    td.num, th.num { text-align: right; font-family: ui-monospace, monospace; }
+    tbody tr:hover td { background: var(--hover-row); }
+    .ratio-cell { width: 120px; }
+    .ratio-cell .track {
+      display: block; width: 100%; height: 6px; background: var(--bg-sunken); border-radius: 1px; position: relative;
+    }
+    .ratio-cell .fill {
+      position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 1px;
+    }
+
+    /* ===== PILLS / TAGS ===== */
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag {
+      display: inline-flex; align-items: baseline; gap: 6px;
+      padding: 3px 9px; border: 1px solid var(--border-strong); border-radius: 3px;
+      font-size: 12.5px; color: var(--fg); background: var(--bg);
+      font-family: ui-monospace, monospace;
+    }
+    .tag.warn { border-color: rgba(178,84,0,0.35); color: var(--warn); }
+    .tag.danger { border-color: rgba(179,38,30,0.35); color: var(--danger); }
+    .tag.good { border-color: rgba(10,125,79,0.35); color: var(--good); }
+
+    /* ===== SPARKLINES ===== */
+    .spark { height: 22px; width: 140px; vertical-align: middle; display: inline-block; }
+    .spark path { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+    .spark .fill { fill: var(--accent); opacity: 0.12; stroke: none; }
+
+    /* ===== HISTOGRAM ===== */
+    .histo { width: 100%; height: auto; display: block; }
+    .histo rect { fill: var(--accent); }
+    .histo .label { font: 10px ui-monospace, monospace; fill: var(--fg-dim); }
+    .histo .value { font: 10px ui-monospace, monospace; fill: var(--fg); }
+    .histo .axis { stroke: var(--border); }
+
+    /* ===== FILES ===== */
+    details.files { margin-top: 10px; }
+    details.files > summary {
+      list-style: none; cursor: pointer; font-size: 13px; color: var(--link);
+      padding: 6px 0;
+    }
+    details.files > summary::-webkit-details-marker { display: none; }
+    details.files > summary::before { content: "▸ "; color: var(--fg-dim); }
+    details.files[open] > summary::before { content: "▾ "; }
+    details.files .inner { margin-top: 8px; max-height: 480px; overflow: auto; border: 1px solid var(--border); border-radius: 3px; }
+
+    /* ===== FOOTER ===== */
+    footer.bottom {
+      margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      color: var(--fg-dim); font-size: 12px; flex-wrap: wrap; gap: 8px;
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============================= HERO ============================= -->
+  <header class="hero">
+    <div class="crumb">scc report</div>
+    <h1 class="title">{{ .RepoName }}</h1>
+    <p class="tagline">Generated by <a href="https://github.com/boyter/scc">scc</a> - Sloc, Cloc and Code.</p>
+    <div class="actions">
+      <button type="button" onclick="navigator.clipboard&amp;&amp;navigator.clipboard.writeText(location.href);this.textContent='Copied';setTimeout(()=>this.textContent='Copy link',1500)">Copy link</button>
+      <button type="button" id="theme-toggle" title="Cycle theme: auto → light → dark" aria-label="Toggle theme">Theme: auto</button>
+    </div>
+  </header>
+
+  {{- /* ============================= 01 OVERVIEW ============================= */}}
+  <section>
+    <h2><span class="num">01</span> Overview</h2>
+    <p class="lede">Aggregate counts across all source files in the working tree{{ if or .Cocomo .Locomo }}, with cost estimates{{ end }}{{ if .ULOC }} and ULOC-based DRYness{{ end }}.</p>
+
+    <div class="metrics">
+      <div class="metric"><div class="label">Files</div><div class="value">{{ comma .Totals.Files }}</div><div class="sub">{{ sliceLen .Summary }} languages</div></div>
+      <div class="metric"><div class="label">SLOC</div><div class="value">{{ comma .Totals.Code }}</div><div class="sub">code lines</div></div>
+      <div class="metric"><div class="label">Comments</div><div class="value">{{ comma .Totals.Comment }}</div><div class="sub">{{ pct .Totals.Comment .Totals.Lines }}</div></div>
+      <div class="metric"><div class="label">Complexity</div><div class="value">{{ comma .Totals.Complexity }}</div><div class="sub">cyclomatic est.</div></div>
+      {{- if .ULOC }}
+      <div class="metric"><div class="label">ULOC</div><div class="value">{{ commaInt .ULOC.Global }}</div><div class="sub">DRYness {{ pctFloat .ULOC.Dryness }}</div></div>
+      {{- end }}
+      <div class="metric"><div class="label">Bytes</div><div class="value">{{ bytes .Totals.Bytes }}</div><div class="sub">on disk</div></div>
+    </div>
+
+    {{- if gt .Totals.Lines 0 }}
+    <div class="composition">
+      <div class="bar" aria-label="Line composition: {{ pct .Totals.Code .Totals.Lines }} code, {{ pct .Totals.Blank .Totals.Lines }} blank, {{ pct .Totals.Comment .Totals.Lines }} comment">
+        <span style="width: {{ printf "%.1f" (pctRaw .Totals.Code .Totals.Lines) }}%; background: var(--code);"></span>
+        <span style="width: {{ printf "%.1f" (pctRaw .Totals.Blank .Totals.Lines) }}%; background: var(--blank);"></span>
+        <span style="width: {{ printf "%.1f" (pctRaw .Totals.Comment .Totals.Lines) }}%; background: var(--comment);"></span>
+      </div>
+      <div class="legend">
+        <span><span class="sw" style="background: var(--code)"></span>Code <strong>{{ pct .Totals.Code .Totals.Lines }}</strong></span>
+        <span><span class="sw" style="background: var(--blank)"></span>Blank <strong>{{ pct .Totals.Blank .Totals.Lines }}</strong></span>
+        <span><span class="sw" style="background: var(--comment)"></span>Comment <strong>{{ pct .Totals.Comment .Totals.Lines }}</strong></span>
+        <span style="margin-left: auto; color: var(--fg-dim);">{{ comma .Totals.Lines }} total lines</span>
+      </div>
+    </div>
+    {{- end }}
+  </section>
+
+  {{- /* ============================= 02 LANGUAGES ============================= */}}
+  <section>
+    <h2><span class="num">02</span> Languages <span class="count">· {{ sliceLen .Summary }} detected</span></h2>
+    <p class="lede">Per-language counts and share of total code. Bar shows code share; ULOC indicates how many lines are unique.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Language</th>
+          <th class="num">Files</th>
+          <th class="num">Code</th>
+          <th class="num">Comment</th>
+          <th class="num">Blank</th>
+          <th class="num">Complexity</th>
+          <th class="num">ULOC</th>
+          <th class="ratio-cell">Share</th>
+        </tr>
+      </thead>
+      <tbody>
+      {{- $totals := .Totals }}
+      {{- range .Summary }}
+        <tr>
+          <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:{{ langColor .Name }};margin-right:6px;vertical-align:middle;"></span>{{ .Name }}</td>
+          <td class="num">{{ comma .Count }}</td>
+          <td class="num">{{ comma .Code }}</td>
+          <td class="num">{{ comma .Comment }}</td>
+          <td class="num">{{ comma .Blank }}</td>
+          <td class="num">{{ comma .Complexity }}</td>
+          <td class="num">{{ commaInt .ULOC }}</td>
+          <td class="ratio-cell"><span class="track"><span class="fill" style="width: {{ printf "%.1f" (pctRaw .Code $totals.Code) }}%;"></span></span></td>
+        </tr>
+      {{- end }}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th>Total</th>
+          <th class="num">{{ comma .Totals.Files }}</th>
+          <th class="num">{{ comma .Totals.Code }}</th>
+          <th class="num">{{ comma .Totals.Comment }}</th>
+          <th class="num">{{ comma .Totals.Blank }}</th>
+          <th class="num">{{ comma .Totals.Complexity }}</th>
+          <th class="num">{{ if .ULOC }}{{ commaInt .ULOC.Global }}{{ else }}-{{ end }}</th>
+          <th></th>
+        </tr>
+      </tfoot>
+    </table>
+  </section>
+
+  {{- /* ============================= 03 LINE LENGTH ============================= */}}
+  {{- if .LineLength }}
+  <section>
+    <h2><span class="num">03</span> Line length</h2>
+    <p class="lede">Distribution of characters per line, bucketed across all files. Helps spot files with unusually long lines.</p>
+    {{- $bars := histoBars .LineLength.Buckets 128 }}
+    <svg class="histo" viewBox="0 0 720 170" role="img" aria-label="Line length histogram">
+      <line class="axis" x1="40" y1="140" x2="700" y2="140"/>
+      <g>
+        {{- range $bars }}
+        <rect x="{{ add 40 .X }}" y="{{ sub 140 .H }}" width="{{ .W }}" height="{{ .H }}"/>
+        {{- end }}
+      </g>
+      <g text-anchor="middle">
+        {{- range $bars }}
+        <text class="value" x="{{ add 40 (add .X (div .W 2)) }}" y="{{ sub 138 .H }}" dy="-2">{{ comma .Count }}</text>
+        <text class="label" x="{{ add 40 (add .X (div .W 2)) }}" y="158">{{ .Label }}</text>
+        {{- end }}
+      </g>
+    </svg>
+    <div style="display: flex; gap: 32px; margin-top: 14px; font-size: 13px; color: var(--fg-muted); flex-wrap: wrap;">
+      <div><span class="mono" style="color: var(--fg); font-weight: 600;">{{ printf "%.1f" .LineLength.Mean }}</span> mean</div>
+      <div><span class="mono" style="color: var(--fg); font-weight: 600;">{{ commaInt .LineLength.Max }}</span> longest line (chars)</div>
+      {{- if .LineLength.Outliers }}
+      <div><span class="mono" style="color: var(--fg); font-weight: 600;">{{ sliceLen .LineLength.Outliers }}</span> outlier files tracked</div>
+      {{- end }}
+    </div>
+  </section>
+  {{- end }}
+
+  {{- /* ============================= 04 HOTSPOTS ============================= */}}
+  {{- if .Hotspots }}
+  <section>
+    <h2><span class="num">04</span> Hotspots <span class="count">· top {{ sliceLen (firstN 12 .Hotspots.Records) }} of {{ .Hotspots.TotalRaw }}</span></h2>
+    <p class="lede">Files with the highest churn × complexity. High score = touched often and hard to reason about, prime targets for refactoring or test coverage.</p>
+    <table>
+      <thead>
+        <tr><th>File</th><th class="num">Score</th><th class="num">Commits</th><th class="num">Authors</th><th class="num">Churn</th><th class="num">Complexity</th></tr>
+      </thead>
+      <tbody>
+      {{- range firstN 12 .Hotspots.Records }}
+        <tr>
+          <td class="mono">{{ .File }}</td>
+          <td class="num">{{ printf "%.1f" .Score }}</td>
+          <td class="num">{{ commaInt .Commits }}</td>
+          <td class="num">{{ commaInt .Authors }}</td>
+          <td class="num">{{ comma .LinesChanged }}</td>
+          <td class="num">{{ comma .Complexity }}</td>
+        </tr>
+      {{- end }}
+      </tbody>
+    </table>
+  </section>
+  {{- end }}
+
+  {{- /* ============================= 05 AUTHORS ============================= */}}
+  {{- if .Authors }}
+  <section>
+    <h2><span class="num">05</span> Authors <span class="count">· {{ sliceLen .Authors.Rows }} contributors</span></h2>
+    <p class="lede">
+      Ownership measured by line-level git blame across the analysis window.
+      <span class="tag warn">Bus factor: {{ .Authors.BusFactor }}</span>
+      {{- if .Authors.BusAuthors }}; {{ index .Authors.BusAuthors 0 }} owns the most code in window.{{ end }}
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Author</th>
+          <th class="num">Code</th>
+          <th class="num">Files</th>
+          <th class="num">Owns</th>
+          <th class="num">In window</th>
+          <th>Last commit</th>
+        </tr>
+      </thead>
+      <tbody>
+      {{- range firstN 20 .Authors.Rows }}
+        <tr{{ if .Sentinel }} style="color: var(--fg-dim);"{{ end }}>
+          <td>{{ .Name }}{{ if .Email }} <span style="color: var(--fg-dim);" class="mono">&lt;{{ .Email }}&gt;</span>{{ end }}</td>
+          <td class="num">{{ if .Sentinel }}-{{ else }}{{ comma .Code }}{{ end }}</td>
+          <td class="num">{{ if .Sentinel }}-{{ else }}{{ commaInt .Files }}{{ end }}</td>
+          <td class="num">{{ if .Sentinel }}-{{ else }}{{ printf "%.1f%%" .OwnsPercent }}{{ end }}</td>
+          <td class="num">{{ if .Sentinel }}-{{ else }}{{ printf "%.1f%%" .InWindowPercent }}{{ end }}</td>
+          <td class="mono">{{ if .Sentinel }}before window{{ else }}{{ .LastCommit.Format "2006-01-02" }}{{ end }}</td>
+        </tr>
+      {{- end }}
+      </tbody>
+    </table>
+  </section>
+  {{- end }}
+
+  {{- /* ============================= 06 TIMELINE ============================= */}}
+  {{- if or .LanguageTimeline .AuthorTimeline }}
+  <section>
+    <h2><span class="num">06</span> Timeline{{ if .LanguageTimeline }} <span class="count">· {{ .LanguageTimeline.Buckets }} buckets</span>{{ end }}</h2>
+    <p class="lede">Code lines by language over the analysed history window. Sparkline trajectory per language and per author.</p>
+
+    {{- if .LanguageTimeline }}
+    <table style="margin-top: 18px;">
+      <thead><tr><th>Language</th><th class="num">Start</th><th class="num">Now</th><th class="num">Δ</th><th>Trajectory</th></tr></thead>
+      <tbody>
+      {{- range firstN 12 .LanguageTimeline.Rows }}
+        <tr>
+          <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:{{ langColor .Language }};margin-right:6px;vertical-align:middle;"></span>{{ .Language }}</td>
+          <td class="num">{{ comma .StartingLines }}</td>
+          <td class="num">{{ comma .CodeNow }}</td>
+          <td class="num" style="color: {{ deltaColor .Change }}">{{ deltaSign .Change }}{{ comma .Change }}</td>
+          <td><svg class="spark" viewBox="0 0 140 22"><path class="fill" d="{{ sparklineFill64 .Trajectory 140 22 }}"/><path d="{{ sparklinePath64 .Trajectory 140 22 }}"/></svg></td>
+        </tr>
+      {{- end }}
+      </tbody>
+    </table>
+    {{- end }}
+
+    {{- if .AuthorTimeline }}
+    <h3 style="font-size: 14px; font-weight: 600; margin: 28px 0 8px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.06em;">Author activity</h3>
+    <table>
+      <thead><tr><th>Author</th><th class="num">Commits</th><th class="num">Δ code</th><th>Activity</th></tr></thead>
+      <tbody>
+      {{- range firstN 12 .AuthorTimeline.Rows }}
+        <tr>
+          <td>{{ .Name }}</td>
+          <td class="num">{{ commaInt .TotalCommits }}</td>
+          <td class="num" style="color: {{ deltaColor .CodeDelta }}">{{ deltaSign .CodeDelta }}{{ comma .CodeDelta }}</td>
+          <td>
+            <svg class="spark" viewBox="0 0 200 22"><path d="{{ sparklinePath64 (authorActivity .Series) 200 22 }}"/></svg>
+          </td>
+        </tr>
+      {{- end }}
+      </tbody>
+    </table>
+    {{- end }}
+  </section>
+  {{- end }}
+
+  {{- /* ============================= 07 COST ============================= */}}
+  {{- if or .Cocomo .Locomo }}
+  <section>
+    <h2><span class="num">07</span> Cost estimate</h2>
+    <p class="lede">Two ways to value the codebase: human-build effort (COCOMO, Boehm 1981){{ if .Locomo }} and machine-rebuild effort (LOCOMO, LLM regeneration model){{ end }}.</p>
+
+    {{- if .Cocomo }}
+    <h3 class="submodel">COCOMO <span class="submodel-meaning">: what it would have cost to write this from scratch with a team of developers</span></h3>
+    <div class="metrics">
+      <div class="metric"><div class="label">Effort</div><div class="value">{{ printf "%.1f" .Cocomo.EstimatedEffort }}</div><div class="sub">person-months · {{ .Cocomo.ProjectType }}</div></div>
+      <div class="metric"><div class="label">Cost to develop</div><div class="value">{{ .Cocomo.CurrencySymbol }}{{ printf "%.0f" .Cocomo.EstimatedCost }}</div><div class="sub">avg {{ .Cocomo.CurrencySymbol }}{{ comma .Cocomo.AverageWage }} · ×{{ printf "%.1f" .Cocomo.Overhead }} overhead</div></div>
+      <div class="metric"><div class="label">Schedule</div><div class="value">{{ printf "%.1f" .Cocomo.ScheduleMonths }} mo</div><div class="sub">≈ {{ printf "%.1f" .Cocomo.PeopleRequired }} devs in parallel</div></div>
+    </div>
+    {{- end }}
+
+    {{- if .Locomo }}
+    <h3 class="submodel">LOCOMO <span class="submodel-meaning">: what it would cost to regenerate this with an LLM and review the output</span></h3>
+    <div class="metrics">
+      <div class="metric"><div class="label">Regen tokens</div><div class="value">{{ bytes (intCast .Locomo.OutputTokens) }}</div><div class="sub">output (in + out: {{ bytes (intCast .Locomo.InputTokens) }})</div></div>
+      <div class="metric"><div class="label">Regen time</div><div class="value">{{ printf "%.1f" (divFloat .Locomo.GenerationSeconds 60) }} min</div><div class="sub">at typical stream rate</div></div>
+      <div class="metric"><div class="label">Human review</div><div class="value">{{ printf "%.0f" .Locomo.ReviewHours }} hr</div><div class="sub">post-regeneration</div></div>
+    </div>
+    {{- end }}
+  </section>
+  {{- end }}
+
+  {{- /* ============================= 08 NOTABLE FILES ============================= */}}
+  {{- if .Files }}
+  <section>
+    <h2><span class="num">08</span> Notable files</h2>
+    <p class="lede">Per-file detail for the full tree ({{ sliceLen .Files }} files). Sorted by lines descending; first ten shown, expand to see the rest.</p>
+    {{- $sorted := filesSorted .Files }}
+    <table>
+      <thead><tr><th>File</th><th class="num">Lines</th><th class="num">Code</th><th class="num">Comment</th><th class="num">Complexity</th><th class="num">Bytes</th><th class="num">ULOC</th></tr></thead>
+      <tbody>
+      {{- range firstN 10 $sorted }}
+        <tr>
+          <td class="mono">{{ .Location }}</td>
+          <td class="num">{{ comma .Lines }}</td>
+          <td class="num">{{ comma .Code }}</td>
+          <td class="num">{{ comma .Comment }}</td>
+          <td class="num">{{ comma .Complexity }}</td>
+          <td class="num">{{ comma .Bytes }}</td>
+          <td class="num">{{ commaInt .Uloc }}</td>
+        </tr>
+      {{- end }}
+      </tbody>
+    </table>
+    {{- if gt (sliceLen $sorted) 10 }}
+    <details class="files"><summary>Show all {{ sliceLen $sorted }} files</summary><div class="inner">
+      <table>
+        <thead><tr><th>File</th><th class="num">Lines</th><th class="num">Code</th><th class="num">Bytes</th></tr></thead>
+        <tbody>
+        {{- range $i, $f := $sorted }}{{ if ge $i 10 }}
+          <tr><td class="mono">{{ $f.Location }}</td><td class="num">{{ comma $f.Lines }}</td><td class="num">{{ comma $f.Code }}</td><td class="num">{{ comma $f.Bytes }}</td></tr>
+        {{- end }}{{- end }}
+        </tbody>
+      </table>
+    </div></details>
+    {{- end }}
+  </section>
+  {{- end }}
+
+  {{- if not .GitAvailable }}
+  <section>
+    <h2><span class="num">~~</span> Git history</h2>
+    <p class="lede" style="color: var(--fg-dim);">Not a git repository. Hotspots, authors, and timeline require git history.</p>
+  </section>
+  {{- end }}
+
+  <footer class="bottom">
+    <div>Generated by <a href="https://github.com/boyter/scc">scc</a> v{{ .SccVersion }} · {{ .GeneratedAt.Format "2006-01-02 15:04 UTC" }} · analysed in {{ printf "%.1fs" (durationSeconds .Duration) }}</div>
+    <div>Single self-contained HTML · view-source friendly</div>
+  </footer>
+
+</div>
+
+<script>
+  (function() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) return;
+    var html = document.documentElement;
+    var label = function() {
+      var t = html.getAttribute('data-theme');
+      btn.textContent = 'Theme: ' + (t || 'auto');
+    };
+    label();
+    btn.addEventListener('click', function() {
+      var current = html.getAttribute('data-theme');
+      var next = current === null ? 'light' : (current === 'light' ? 'dark' : null);
+      if (next === null) {
+        html.removeAttribute('data-theme');
+        try { localStorage.removeItem('scc-theme'); } catch (e) {}
+      } else {
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('scc-theme', next); } catch (e) {}
+      }
+      label();
+    });
+  })();
+</script>
+</body>
+</html>
