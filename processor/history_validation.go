@@ -27,7 +27,7 @@ func validateHistoryFlags(warnDst io.Writer) error {
 	}
 
 	if len(DirFilePaths) > 1 {
-		fmt.Fprintf(
+		_, _ = fmt.Fprintf(
 			warnDst,
 			"history reports run against a single repository; ignoring extra paths: %s\n",
 			strings.Join(DirFilePaths[1:], ", "),
@@ -36,7 +36,7 @@ func validateHistoryFlags(warnDst io.Writer) error {
 
 	ignored := collectIgnoredHistoryFlags()
 	if len(ignored) > 0 {
-		fmt.Fprintf(
+		_, _ = fmt.Fprintf(
 			warnDst,
 			"history reports ignore these flags: %s (they apply to the working-tree counter only)\n",
 			strings.Join(ignored, ", "),

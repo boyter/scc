@@ -69,9 +69,9 @@ func main() {
 			os.Exit(1)
 		}
 
-		args := strings.Split(string(b), "\n")
-		newArgs := make([]string, 0, len(args))
-		for _, x := range args {
+		sb := string(b)
+		newArgs := make([]string, 0, strings.Count(sb, "\n")+1)
+		for x := range strings.SplitSeq(sb, "\n") {
 			newArgs = append(newArgs, strings.TrimSpace(x))
 		}
 		os.Args = append([]string{os.Args[0]}, newArgs...)

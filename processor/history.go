@@ -739,7 +739,7 @@ func classifyHistoryBlob(path string, blob []byte) (*FileJob, []LineType, bool) 
 		if cutoff > 200 {
 			cutoff = 200
 		}
-		lang, err := DetectSheBang(string(blob[:cutoff]))
+		lang, err := DetectSheBang(blob[:cutoff])
 		if err != nil {
 			return nil, nil, false
 		}

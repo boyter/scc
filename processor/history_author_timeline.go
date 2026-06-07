@@ -331,7 +331,7 @@ func renderAuthorTimelineCSV(o *historyAuthorTimelineObserver) (string, error) {
 	var sb strings.Builder
 	sb.WriteString(formatWindowComment(o.window))
 	sb.WriteByte('\n')
-	sb.WriteString(fmt.Sprintf("# buckets: %d\n", o.bucket.N))
+	_, _ = fmt.Fprintf(&sb, "# buckets: %d\n", o.bucket.N)
 
 	w := csv.NewWriter(&sb)
 	_ = w.Write([]string{"Author", "Email", "BucketStart", "Commits", "CodeDelta"})

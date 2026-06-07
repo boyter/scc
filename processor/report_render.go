@@ -60,13 +60,13 @@ func parseReportSkipTo(raw string, warnW io.Writer) {
 	if strings.TrimSpace(raw) == "" {
 		return
 	}
-	for _, part := range strings.Split(raw, ",") {
+	for part := range strings.SplitSeq(raw, ",") {
 		name := strings.ToLower(strings.TrimSpace(part))
 		if name == "" {
 			continue
 		}
 		if !reportSkipRecognised[name] {
-			fmt.Fprintf(warnW, "warning: --report-skip: unknown section %q (recognised: cocomo, locomo, hotspots, authors, timeline, files, uloc, linelength, card)\n", name)
+			_, _ = fmt.Fprintf(warnW, "warning: --report-skip: unknown section %q (recognised: cocomo, locomo, hotspots, authors, timeline, files, uloc, linelength, card)\n", name)
 		}
 		ReportSkipNames[name] = true
 	}
@@ -123,7 +123,7 @@ func confirmReportOverwrite(outPath string, usedDefaultName, stdinIsTTY bool, in
 	if !stdinIsTTY {
 		return fmt.Errorf("%s already exists; rerun with --report=%s to overwrite explicitly", outPath, outPath)
 	}
-	fmt.Fprintf(out, "%s already exists. Overwrite? [y/N]: ", outPath)
+	_, _ = fmt.Fprintf(out, "%s already exists. Overwrite? [y/N]: ", outPath)
 	line, err := bufio.NewReader(in).ReadString('\n')
 	if err != nil && line == "" {
 		return fmt.Errorf("aborted: %w", err)

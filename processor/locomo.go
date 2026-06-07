@@ -138,18 +138,17 @@ func LocomoEstimate(sumCode, sumComplexity int64) LocomoResult {
 
 // parseLocomoConfig parses a comma-separated config string "tokensPerLine,baseInputPerLine,complexityWeight,iterations,iterationWeight"
 func parseLocomoConfig(config string, tokensPerLine, baseInputPerLine, complexityWeight, iterations, iterationWeight *float64) {
-	parts := strings.Split(config, ",")
-	if len(parts) != 5 {
+	if strings.Count(config, ",") != 4 {
 		return
 	}
 
-	vals := make([]float64, 5)
-	for i, part := range parts {
+	vals := make([]float64, 0, 5)
+	for part := range strings.SplitSeq(config, ",") {
 		f, err := strconv.ParseFloat(strings.TrimSpace(part), 64)
 		if err != nil {
 			return // if any part fails, use defaults
 		}
-		vals[i] = f
+		vals = append(vals, f)
 	}
 
 	*tokensPerLine = vals[0]
