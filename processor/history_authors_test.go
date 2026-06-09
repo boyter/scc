@@ -475,7 +475,7 @@ func TestWrapBusFactorFooterBreaksOnTokenBoundary(t *testing.T) {
 	if !strings.Contains(got, "\n") {
 		t.Errorf("long footer should wrap: %q", got)
 	}
-	for _, line := range strings.Split(got, "\n") {
+	for line := range strings.SplitSeq(got, "\n") {
 		if runewidthStringWidthForTest(line) > 79 {
 			t.Errorf("wrapped line exceeds 79 cols (%d): %q",
 				runewidthStringWidthForTest(line), line)

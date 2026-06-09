@@ -174,7 +174,7 @@ func TestRunHistoryWithoutGitInPath(t *testing.T) {
 	saveDepth := HistoryDepth
 	HistoryDepth = 10
 	t.Cleanup(func() {
-		os.Setenv("PATH", savePath)
+		_ = os.Setenv("PATH", savePath)
 		HistoryDepth = saveDepth
 	})
 

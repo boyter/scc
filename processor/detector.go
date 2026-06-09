@@ -56,19 +56,14 @@ func DetectLanguage(name string) ([]string, string) {
 }
 
 // DetectSheBang given some content attempt to determine if it has a #! that maps to a known language and return the language
-func DetectSheBang(content string) (string, error) {
-	if !strings.HasPrefix(content, "#!") {
+func DetectSheBang(content []byte) (string, error) {
+	if !bytes.HasPrefix(content, []byte("#!")) {
 		return "", errMissingShebang
 	}
 
-	index := strings.Index(content, "\n")
+	content, _, _ = bytes.Cut(content, []byte{'\n'})
 
-	if index != -1 {
-		content = content[:index]
-	}
-
-	cmd, err := scanForSheBang([]byte(content))
-
+	cmd, err := scanForSheBang(content)
 	if err != nil {
 		return "", err
 	}

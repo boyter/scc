@@ -859,7 +859,7 @@ func (ctx processorContext) processFile(job *FileJob) bool {
 		if !remapped {
 			cutoff := min(200, len(contents))
 
-			lang, err := DetectSheBang(string(contents[:cutoff]))
+			lang, err := DetectSheBang(contents[:cutoff])
 			if err != nil {
 				printWarnF("unable to determine #! language for %s", job.Location)
 				return false

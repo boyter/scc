@@ -21,7 +21,13 @@ func TestDetectLanguage(t *testing.T) {
 func TestDetectSheBangEmpty(t *testing.T) {
 	ProcessConstants()
 
-	x, y := DetectSheBang("")
+	x, y := DetectSheBang([]byte{})
+
+	if x != "" || y == nil {
+		t.Error("Expected no match got", x)
+	}
+
+	x, y = DetectSheBang(nil)
 
 	if x != "" || y == nil {
 		t.Error("Expected no match got", x)
@@ -44,7 +50,7 @@ func TestDetectSheBangPerl(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		x, y := DetectSheBang(c)
+		x, y := DetectSheBang([]byte(c))
 
 		if x != "Perl" || y != nil {
 			t.Error("Expected Perl match got", x, "for", c)
@@ -61,7 +67,7 @@ func TestDetectSheBangPhp(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		x, y := DetectSheBang(c)
+		x, y := DetectSheBang([]byte(c))
 
 		if x != "PHP" || y != nil {
 			t.Error("Expected PHP match got", x)
@@ -79,7 +85,7 @@ func TestDetectSheBangPython(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		x, y := DetectSheBang(c)
+		x, y := DetectSheBang([]byte(c))
 
 		if x != "Python" || y != nil {
 			t.Error("Expected Python match got", x)
@@ -97,7 +103,7 @@ func TestDetectSheBangAWK(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		x, y := DetectSheBang(c)
+		x, y := DetectSheBang([]byte(c))
 
 		if x != "AWK" || y != nil {
 			t.Error("Expected AWK match got", x)
@@ -114,7 +120,7 @@ func TestDetectSheBangCsh(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		x, y := DetectSheBang(c)
+		x, y := DetectSheBang([]byte(c))
 
 		if x != "C Shell" || y != nil {
 			t.Error("Expected C Shell match got", x)
@@ -130,7 +136,7 @@ func TestDetectSheBangD(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		x, y := DetectSheBang(c)
+		x, y := DetectSheBang([]byte(c))
 
 		if x != "D" || y != nil {
 			t.Error("Expected D match got", x)
@@ -147,7 +153,7 @@ func TestDetectSheBangNode(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		x, y := DetectSheBang(c)
+		x, y := DetectSheBang([]byte(c))
 
 		if x != "JavaScript" || y != nil {
 			t.Error("Expected JavaScript match got", x)
@@ -164,7 +170,7 @@ func TestDetectSheBangLisp(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		x, y := DetectSheBang(c)
+		x, y := DetectSheBang([]byte(c))
 
 		if x != "Lisp" || y != nil {
 			t.Error("Expected Lisp match got", x)
@@ -181,7 +187,7 @@ func TestDetectSheBangRacket(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		x, y := DetectSheBang(c)
+		x, y := DetectSheBang([]byte(c))
 
 		if x != "Racket" || y != nil {
 			t.Error("Expected Racket match got", x)
@@ -199,7 +205,7 @@ func TestDetectSheBangFish(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		x, y := DetectSheBang(c)
+		x, y := DetectSheBang([]byte(c))
 
 		if x != "Fish" || y != nil {
 			t.Error("Expected Fish match got", x)
@@ -216,7 +222,7 @@ func TestDetectSheBangShell(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		x, y := DetectSheBang(c)
+		x, y := DetectSheBang([]byte(c))
 
 		if x != "Shell" || y != nil {
 			t.Error("Expected Shell match got", x)
@@ -233,7 +239,7 @@ func TestDetectSheBangRuby(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		x, y := DetectSheBang(c)
+		x, y := DetectSheBang([]byte(c))
 
 		if x != "Ruby" || y != nil {
 			t.Error("Expected Ruby match got", x)
@@ -250,7 +256,7 @@ func TestDetectSheBangLua(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		x, y := DetectSheBang(c)
+		x, y := DetectSheBang([]byte(c))
 
 		if x != "Lua" || y != nil {
 			t.Error("Expected Lua match got", x)
@@ -261,7 +267,7 @@ func TestDetectSheBangLua(t *testing.T) {
 func TestDetectSheBangMultiple(t *testing.T) {
 	ProcessConstants()
 
-	x, y := DetectSheBang(`#!/python/perl/ruby`)
+	x, y := DetectSheBang([]byte(`#!/python/perl/ruby`))
 
 	if x != "Ruby" || y != nil {
 		t.Error("Expected Ruby match got", x)
@@ -271,8 +277,9 @@ func TestDetectSheBangMultiple(t *testing.T) {
 func TestDetectSheBangMultipleNewLine(t *testing.T) {
 	ProcessConstants()
 
-	x, y := DetectSheBang(`#!/python/perl/ruby
-python perl fish`)
+	data := `#!/python/perl/ruby
+python perl fish`
+	x, y := DetectSheBang([]byte(data))
 
 	if x != "Ruby" || y != nil {
 		t.Error("Expected Ruby match got", x)
