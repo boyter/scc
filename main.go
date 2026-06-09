@@ -605,6 +605,13 @@ func main() {
 		"start as an MCP (Model Context Protocol) server over stdio",
 	)
 
+	flags.StringVar(
+		&processor.LanguagesFile,
+		"languages-file",
+		"",
+		"path to a custom languages.json file to augment or override built-in languages",
+	)
+
 	// If invoked in the format of "scc completion --shell [name of shell]", generate command line completions instead.
 	// With the --shell option, unintentionally triggering shell completions should be highly unlikely.
 	args := os.Args

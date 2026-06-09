@@ -3,6 +3,9 @@
 package processor
 
 import (
+	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -153,4 +156,25 @@ func TestSetupCountAsMultiple(t *testing.T) {
 	}
 
 	CountAs = ""
+}
+func TestLanguagesFileIsValidJSON(t *testing.T) {
+	data, err := os.ReadFile("../languages.json")
+	if err != nil {
+		t.Fatal("failed to read languages.json", err)
+	}
+
+	var languages map[string]Language
+	if err := json.Unmarshal(data, &languages); err != nil {
+		t.Error("languages.json is not valid JSON", err)
+	}
+}
+
+func TestLanguagesFileInvalidJSON(t *testing.T) {
+	dir, _ := os.MkdirTemp("", "test-languages")
+	langFile := filepath.Join(dir, "languages.json")
+	_ = os.WriteFile(langFile, []byte(`not valid json`), 0644)
+
+	LanguagesFile = langFile
+	// should not panic
+	ProcessConstants()
 }
