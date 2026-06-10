@@ -149,12 +149,9 @@ func downsampleSeries(series []float64, n int) []float64 {
 		return out
 	}
 	step := float64(len(series)) / float64(n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		lo := int(float64(i) * step)
-		hi := int(float64(i+1) * step)
-		if hi > len(series) {
-			hi = len(series)
-		}
+		hi := min(int(float64(i+1)*step), len(series))
 		if hi <= lo {
 			hi = lo + 1
 		}

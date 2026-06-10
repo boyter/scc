@@ -93,7 +93,7 @@ func TestCountStatsLines(t *testing.T) {
 	}
 
 	content := ""
-	for i := 0; i < 5000; i++ {
+	for i := range 5000 {
 		content += "a\n"
 		fileJob.Lines = 0
 		fileJob.SetContent(content)
@@ -171,7 +171,7 @@ func TestCountStatsCode(t *testing.T) {
 	}
 
 	content := ""
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		content += "a\n"
 		fileJob.Code = 0
 		fileJob.SetContent(content)
@@ -1571,7 +1571,7 @@ func BenchmarkCountStatsLinesLongAlternateLine(b *testing.B) {
 func BenchmarkCountStatsLinesFiveHundredLongLines(b *testing.B) {
 	b.StopTimer()
 	content := ""
-	for i := 0; i < 500; i++ {
+	for range 500 {
 		content += "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890\n"
 	}
 
@@ -1587,7 +1587,7 @@ func BenchmarkCountStatsLinesFiveHundredLongLines(b *testing.B) {
 func BenchmarkCountStatsLinesFiveHundredLongLinesTriggerComplexityIf(b *testing.B) {
 	b.StopTimer()
 	content := ""
-	for i := 0; i < 500; i++ {
+	for range 500 {
 		content += "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii\n"
 	}
 
@@ -1603,7 +1603,7 @@ func BenchmarkCountStatsLinesFiveHundredLongLinesTriggerComplexityIf(b *testing.
 func BenchmarkCountStatsLinesFiveHundredLongLinesTriggerComplexityFor(b *testing.B) {
 	b.StopTimer()
 	content := ""
-	for i := 0; i < 500; i++ {
+	for range 500 {
 		content += "fofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofofo\n"
 	}
 
@@ -1619,7 +1619,7 @@ func BenchmarkCountStatsLinesFiveHundredLongLinesTriggerComplexityFor(b *testing
 func BenchmarkCountStatsLinesFourHundredLongLinesMixed(b *testing.B) {
 	b.StopTimer()
 	content := ""
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		content += "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890\n"
 		content += "1234567890          1234567890          1234567890          1234567890          1234567890          \n"
 		content += "                                                                                                    \n"
@@ -1714,7 +1714,7 @@ func BenchmarkCheckByteEqualityLoopWithAdditional(b *testing.B) {
 		equal := true
 
 		// Don't start at 1 like the above but 0 to do a full scan
-		for j := 0; j < len(one); j++ {
+		for j := range one {
 			if one[j] != two[j] {
 				equal = false
 				break
@@ -1791,7 +1791,7 @@ func BenchmarkStringLoop(b *testing.B) {
 	b.StopTimer()
 
 	var str strings.Builder
-	for i := 0; i < 10000; i++ {
+	for range 10000 {
 		str.WriteString("1")
 	}
 	search := str.String()
@@ -1813,7 +1813,7 @@ func BenchmarkByteLoop(b *testing.B) {
 	b.StopTimer()
 
 	var str strings.Builder
-	for i := 0; i < 10000; i++ {
+	for range 10000 {
 		str.WriteString("1")
 	}
 	search := []byte(str.String())
@@ -1821,7 +1821,7 @@ func BenchmarkByteLoop(b *testing.B) {
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		for j := 0; j < len(search); j++ {
+		for j := range search {
 			if search[j] != '\n' {
 				count++
 			}
@@ -1849,9 +1849,9 @@ func BenchmarkLoopInLoop(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 
 		potentialMatch = true
-		for index := 0; index < len(search); index++ {
+		for index := range search {
 
-			for k := 0; k < len(matches); k++ {
+			for k := range matches {
 
 				for j := 0; j < len(matches[k]); j++ {
 					if index+j >= endPoint || matches[k][j] != search[index+j] {
@@ -1878,7 +1878,7 @@ func BenchmarkFlattenedLoop(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 
 		potentialMatch = true
-		for j := 0; j < len(matches); j++ {
+		for j := range matches {
 			if matches[j] == ' ' {
 				count = 0
 			} else {
@@ -1940,7 +1940,7 @@ func BenchmarkCheckLen(b *testing.B) {
 
 	count := 0
 	for i := 0; i < b.N; i++ {
-		for j := 0; j < len(matches); j++ {
+		for range matches {
 			count++
 		}
 	}
@@ -1966,7 +1966,7 @@ func BenchmarkCheckLenPrecalc(b *testing.B) {
 	count := 0
 	for i := 0; i < b.N; i++ {
 		l := len(matches)
-		for j := 0; j < l; j++ {
+		for range l {
 			count++
 		}
 	}
@@ -1978,7 +1978,7 @@ func BenchmarkCountStatsNoClassify(b *testing.B) {
 	ProcessConstants()
 	b.StopTimer()
 	content := ""
-	for i := 0; i < 500; i++ {
+	for range 500 {
 		content += "x := 1 // comment\n"
 	}
 	fileJob := FileJob{
@@ -2003,7 +2003,7 @@ func BenchmarkCountStatsWithClassify(b *testing.B) {
 	ProcessConstants()
 	b.StopTimer()
 	content := ""
-	for i := 0; i < 500; i++ {
+	for range 500 {
 		content += "x := 1 // comment\n"
 	}
 	fileJob := FileJob{

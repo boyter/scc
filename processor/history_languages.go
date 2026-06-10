@@ -245,12 +245,9 @@ func renderLanguagesTimelineTabular(o *historyLanguagesObserver) string {
 	_, _ = fmt.Fprintf(&sb, format, "Language", "Trend", "Code", "Share", "Change")
 	sb.WriteString(brk)
 
-	limit := len(o.rows)
-	if limit > languagesTimelineTopN {
-		limit = languagesTimelineTopN
-	}
+	limit := min(len(o.rows), languagesTimelineTopN)
 
-	for i := 0; i < limit; i++ {
+	for i := range limit {
 		r := o.rows[i]
 		langCol := unicodeAwareTrim(r.Language, 19)
 		langCol = unicodeAwareRightPad(langCol, 20)

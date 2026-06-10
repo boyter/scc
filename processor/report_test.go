@@ -865,11 +865,8 @@ func TestRenderReport_Golden(t *testing.T) {
 // differ, or -1 if they're equal. Used by the golden test's failure
 // message so a reviewer can jump straight to the divergence.
 func firstByteDiff(a, b []byte) int {
-	n := len(a)
-	if len(b) < n {
-		n = len(b)
-	}
-	for i := 0; i < n; i++ {
+	n := min(len(b), len(a))
+	for i := range n {
 		if a[i] != b[i] {
 			return i
 		}

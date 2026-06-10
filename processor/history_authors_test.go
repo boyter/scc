@@ -467,7 +467,7 @@ func TestWrapBusFactorFooterFitsSingleLine(t *testing.T) {
 
 func TestWrapBusFactorFooterBreaksOnTokenBoundary(t *testing.T) {
 	names := []string{}
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		names = append(names, "Author"+itoa(i))
 	}
 	got := wrapBusFactorFooter("Bus factor 20 · ", names,

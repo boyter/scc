@@ -234,12 +234,9 @@ func renderAuthorTimelineTabular(o *historyAuthorTimelineObserver) string {
 		"Author", "Activity", "Commits", "Code±", "")
 	sb.WriteString(brk)
 
-	limit := len(o.rows)
-	if limit > authorTimelineTopN {
-		limit = authorTimelineTopN
-	}
+	limit := min(len(o.rows), authorTimelineTopN)
 
-	for i := 0; i < limit; i++ {
+	for i := range limit {
 		r := o.rows[i]
 		nameCol := unicodeAwareTrim(r.Name, 23)
 		nameCol = unicodeAwareRightPad(nameCol, 24)
@@ -311,10 +308,7 @@ func authorTimelineTag(series []authorTimelineBucket, width time.Duration) strin
 	if totalQuiet < month {
 		return ""
 	}
-	months := int((totalQuiet + month/2) / month)
-	if months < 1 {
-		months = 1
-	}
+	months := max(int((totalQuiet+month/2)/month), 1)
 	return fmt.Sprintf("quiet %dmo", months)
 }
 

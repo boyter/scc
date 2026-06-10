@@ -28,7 +28,7 @@ func BloomHash(b byte) uint64 {
 	// make the hash not unique enough, more leads to overcrowding the bloom
 	// filter.
 	var hash uint64
-	for i := uint64(0); i < 3; i++ {
+	for i := range uint64(3) {
 		n := k >> (i * 8) & mask64
 		hash |= 1 << n
 	}
