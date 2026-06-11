@@ -413,37 +413,47 @@ func ProcessConstants() {
 func setupCountAs() {
 	for s := range strings.SplitSeq(CountAs, ",") {
 		t := strings.Split(s, ":")
-		if len(t) == 2 {
+		if len(t) != 2 {
+			printError(fmt.Sprintf("ignoring malformed count-as rule %q: expected format <from>:<to>", s))
+			continue
+		}
 
-			identified := false
+		identified := false
 
-			// There are two cases here.
-			// first is they provide the name e.g. "Cargo Lock"
-			// second is that the user supplies the extension EG wsdl
-			// we should support BOTH cases
-			// always remember we only need to validate t[1] as that's the one
-			// that tells us where we are trying to map
+		// There are two cases here.
+		// first is they provide the name e.g. "Cargo Lock"
+		// second is that the user supplies the extension EG wsdl
+		// we should support BOTH cases
+		// always remember we only need to validate t[1] as that's the one
+		// that tells us where we are trying to map
 
-			// See if we can identify based on language name which is the most
-			// reliable as the name should be unique
-			for name := range languageDatabase {
-				if strings.EqualFold(name, t[1]) {
-					ExtensionToLanguage[strings.ToLower(t[0])] = []string{name}
-					identified = true
-					printDebugF("set to count extension: %s as language %s by language", t[0], name)
-				}
+		// See if we can identify based on language name which is the most
+		// reliable as the name should be unique
+		for name := range languageDatabase {
+			if strings.EqualFold(name, t[1]) {
+				ExtensionToLanguage[strings.ToLower(t[0])] = []string{name}
+				identified = true
+				printDebugF("set to count extension: %s as language %s by language", t[0], name)
 			}
+		}
 
-			// If the above did not work, its a matter of extension match
-			// note that this is less reliable as some languages share extensions
-			if !identified {
-				target, ok := ExtensionToLanguage[strings.ToLower(t[1])]
+		// If the above did not work, its a matter of extension match
+		// note that this is less reliable as some languages share extensions
+		if !identified {
+			target, ok := ExtensionToLanguage[strings.ToLower(t[1])]
 
-				if ok {
-					ExtensionToLanguage[strings.ToLower(t[0])] = target
-					printDebugF("set to count extension: %s as language %s by extension", t[0], target)
-				}
+			if ok {
+				ExtensionToLanguage[strings.ToLower(t[0])] = target
+				identified = true
+				printDebugF("set to count extension: %s as language %s by extension", t[0], target)
 			}
+		}
+
+		// The target t[1] matched neither a known language name nor a known
+		// extension, so no mapping was registered. Warn rather than silently
+		// ignoring the rule, since count-as cannot mint new categories yet.
+		if !identified {
+			printError(fmt.Sprintf("ignoring count-as rule %q: target %q is not a known language or extension", s, t[1]))
 		}
 	}
 }
