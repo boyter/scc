@@ -735,10 +735,7 @@ func classifyHistoryBlob(path string, blob []byte) (*FileJob, []LineType, bool) 
 
 	job.Language = DetermineLanguage(job.Filename, job.Language, job.PossibleLanguages, job.Content)
 	if job.Language == SheBang {
-		cutoff := len(blob)
-		if cutoff > 200 {
-			cutoff = 200
-		}
+		cutoff := min(len(blob), 200)
 		lang, err := DetectSheBang(blob[:cutoff])
 		if err != nil {
 			return nil, nil, false

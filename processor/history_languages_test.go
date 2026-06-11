@@ -41,7 +41,7 @@ func TestLanguagesTimelineTSRisesJSFalls(t *testing.T) {
 
 	// Commit 0 (outside window when depth=9): app.js has 20 lines.
 	bigJS := "var x = 1;\n"
-	for i := 0; i < 19; i++ {
+	for i := range 19 {
 		bigJS += "var y" + itoa(i) + " = " + itoa(i) + ";\n"
 	}
 
@@ -61,7 +61,7 @@ func TestLanguagesTimelineTSRisesJSFalls(t *testing.T) {
 			jsLines = jsLines[:len(jsLines)-2]
 		}
 		currentJS = strings.Join(jsLines, "\n") + "\n"
-		for k := 0; k < 4; k++ {
+		for k := range 4 {
 			currentTS += "const z" + itoa(d) + "_" + itoa(k) + ": number = " + itoa(k) + ";\n"
 		}
 		commits = append(commits, timelineCommit{

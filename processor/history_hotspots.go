@@ -242,12 +242,9 @@ func renderHotspotsTabular(o *hotspotsObserver) string {
 	}
 	sb.WriteString(brk)
 
-	limit := len(o.records)
-	if limit > HotspotsTopN {
-		limit = HotspotsTopN
-	}
+	limit := min(len(o.records), HotspotsTopN)
 
-	for i := 0; i < limit; i++ {
+	for i := range limit {
 		r := o.records[i]
 		fileCol := unicodeAwareTrim(r.File, 26)
 		fileCol = unicodeAwareRightPad(fileCol, 27)

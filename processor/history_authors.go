@@ -340,12 +340,9 @@ func renderAuthorsTabular(o *historyAuthorsObserver) string {
 		}
 	}
 
-	limit := len(realRows)
-	if limit > authorsTopN {
-		limit = authorsTopN
-	}
+	limit := min(len(realRows), authorsTopN)
 
-	for i := 0; i < limit; i++ {
+	for i := range limit {
 		r := realRows[i]
 		writeAuthorRow(&sb, p, wide, r.Name, r.Code, r.Comment, r.Complexity,
 			fmt.Sprintf("%d", r.Files), r.OwnsPercent, lastSeenString(r))

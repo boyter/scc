@@ -275,7 +275,7 @@ var reportFuncs = template.FuncMap{
 	"bucketBars":      bucketBars,
 	"histoBars":       histoBars,
 	"authorActivity":  authorActivity,
-	"durationSeconds": func(d interface{}) float64 {
+	"durationSeconds": func(d any) float64 {
 		switch v := d.(type) {
 		case float64:
 			return v
@@ -310,7 +310,7 @@ var reportFuncs = template.FuncMap{
 	},
 	"int64":     func(n int) int64 { return int64(n) },
 	"fromInt64": func(n int64) int { return int(n) },
-	"fmtTime": func(layout string, t interface{}) string {
+	"fmtTime": func(layout string, t any) string {
 		switch v := t.(type) {
 		case string:
 			return v
@@ -318,7 +318,7 @@ var reportFuncs = template.FuncMap{
 			return fmt.Sprintf("%v", t)
 		}
 	},
-	"firstN": func(n int, items interface{}) interface{} {
+	"firstN": func(n int, items any) any {
 		// Generic slice truncation via reflection-free type switch on the
 		// concrete slice types the template uses.
 		switch s := items.(type) {
@@ -360,7 +360,7 @@ var reportFuncs = template.FuncMap{
 		}
 		return items
 	},
-	"sliceLen": func(items interface{}) int {
+	"sliceLen": func(items any) int {
 		switch s := items.(type) {
 		case []LanguageSummary:
 			return len(s)

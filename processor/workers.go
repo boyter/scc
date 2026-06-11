@@ -65,7 +65,7 @@ var duplicates = CheckDuplicates{
 func checkForMatchSingle(currentByte byte, index int, endPoint int, matches []byte, fileJob *FileJob) bool {
 	potentialMatch := true
 	if currentByte == matches[0] {
-		for j := 0; j < len(matches); j++ {
+		for j := range matches {
 			if index+j >= endPoint || matches[j] != fileJob.Content[index+j] {
 				potentialMatch = false
 				break
@@ -788,8 +788,7 @@ func (ctx processorContext) fileProcessorWorker(input chan *FileJob, output chan
 	var wg sync.WaitGroup
 
 	for i := 0; i < FileProcessJobWorkers; i++ {
-		wg.Add(1)
-		go func() {
+		wg.Go(func() {
 			reader := NewFileReader()
 
 			for job := range input {
@@ -822,8 +821,7 @@ func (ctx processorContext) fileProcessorWorker(input chan *FileJob, output chan
 				}
 			}
 
-			wg.Done()
-		}()
+		})
 	}
 
 	go func() {

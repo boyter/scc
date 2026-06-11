@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"slices"
 	"strings"
 
 	"github.com/boyter/scc/v3/processor"
@@ -53,11 +54,9 @@ func main() {
 	// defer pprof.StopCPUProfile()
 
 	// Handle --mcp flag before cobra to avoid interfering with stdio
-	for _, arg := range os.Args[1:] {
-		if arg == "--mcp" {
-			startMCPServer()
-			return
-		}
+	if slices.Contains(os.Args[1:], "--mcp") {
+		startMCPServer()
+		return
 	}
 
 	if len(os.Args) == 2 && strings.HasPrefix(os.Args[1], "@") {

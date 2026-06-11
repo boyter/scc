@@ -3,6 +3,7 @@
 package processor
 
 import (
+	"slices"
 	"strings"
 	"testing"
 )
@@ -309,7 +310,7 @@ func TestScanSheBang(t *testing.T) {
 
 // Randomly try things to see what happens
 func TestScanSheBangFuzz(t *testing.T) {
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		x, _ := scanForSheBang([]byte(randStringBytes(100)))
 
 		if x == "NEVERHAPPEN" {
@@ -396,13 +397,7 @@ func TestDetectLanguageIEC61131S7DCL(t *testing.T) {
 	if ext != "s7dcl" {
 		t.Error("Expected s7dcl got", ext)
 	}
-	found := false
-	for _, language := range possible {
-		if language == "IEC61131-3" {
-			found = true
-			break
-		}
-	}
+	found := slices.Contains(possible, "IEC61131-3")
 	if !found {
 		t.Error("Expected IEC61131-3 got", possible)
 	}
