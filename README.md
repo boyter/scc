@@ -265,6 +265,29 @@ Usage:
   scc [flags] [files or directories]
 
 Examples:
+  Count the current directory:
+    scc
+
+  Count a specific folder or file:
+    scc myproject/
+    scc main.go
+
+  Count several paths at once:
+    scc src/ docs/ README.md
+
+  Show a per-file breakdown instead of the per-language summary:
+    scc --by-file
+
+  Output as CSV or JSON (e.g. for further processing):
+    scc --format csv
+    scc --format json -o counts.json
+
+  Count an unrecognised extension as a known language:
+    scc --count-as jsp:html
+
+  Count files matching a path pattern as a new category (glob by default):
+    scc --count-as-pattern '*_spec.rb:Ruby Spec:Ruby'
+
   Generate a self-contained HTML infographic report:
     scc --report
     scc --report=out.html --report-title "myrepo" --report-skip cocomo

@@ -80,7 +80,30 @@ func main() {
 		Use:   "scc [flags] [files or directories]",
 		Short: "scc [files or directories]",
 		Long:  fmt.Sprintf("Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.\nVersion %s\nBen Boyter <ben@boyter.org> + Contributors", processor.Version),
-		Example: `  Generate a self-contained HTML infographic report:
+		Example: `  Count the current directory:
+    scc
+
+  Count a specific folder or file:
+    scc myproject/
+    scc main.go
+
+  Count several paths at once:
+    scc src/ docs/ README.md
+
+  Show a per-file breakdown instead of the per-language summary:
+    scc --by-file
+
+  Output as CSV or JSON (e.g. for further processing):
+    scc --format csv
+    scc --format json -o counts.json
+
+  Count an unrecognised extension as a known language:
+    scc --count-as jsp:html
+
+  Count files matching a path pattern as a new category (glob by default):
+    scc --count-as-pattern '*_spec.rb:Ruby Spec:Ruby'
+
+  Generate a self-contained HTML infographic report:
     scc --report
     scc --report=out.html --report-title "myrepo" --report-skip cocomo`,
 		Version: processor.Version,
