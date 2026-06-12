@@ -74,6 +74,44 @@ func TestGetExtensionSecondPass(t *testing.T) {
 	}
 }
 
+func TestNewFileJobCountAsPattern(t *testing.T) {
+	defer func() {
+		CountAsPattern = nil
+		CountRules = nil
+		compiledCountRules = nil
+		delete(languageDatabase, "Ruby Spec")
+		delete(languageDatabase, "Ruby App")
+		delete(languageDatabase, "Rescued")
+	}()
+
+	AllowListExtensions = []string{}
+	// First matching rule wins, so the spec rule is ordered before a broad rule
+	CountAsPattern = []string{
+		"glob:*_spec.rb:Ruby Spec:Ruby",
+		"glob:*.rb:Ruby App:Ruby",
+		"glob:*.unknownext:Rescued:JavaScript",
+	}
+	CountRules = nil
+	compiledCountRules = nil
+	ProcessConstants()
+	cleanVisitedPaths()
+
+	// A *_spec.rb path is relabelled to the new minted category
+	fi, _ := os.Stat("../examples/countaspattern/foo_spec.rb")
+	job := newFileJob("../examples/countaspattern/foo_spec.rb", "foo_spec.rb", fi)
+	if job == nil || job.PossibleLanguages[0] != "Ruby Spec" {
+		t.Fatalf("expected Ruby Spec, got %+v", job)
+	}
+
+	// First-match-wins: app.rb matches *.rb only, so falls to the second rule
+	cleanVisitedPaths()
+	fi, _ = os.Stat("../examples/countaspattern/app.rb")
+	job = newFileJob("../examples/countaspattern/app.rb", "app.rb", fi)
+	if job == nil || job.PossibleLanguages[0] != "Ruby App" {
+		t.Fatalf("expected Ruby App, got %+v", job)
+	}
+}
+
 func TestNewFileJobFullname(t *testing.T) {
 	ProcessConstants()
 	cleanVisitedPaths()
