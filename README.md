@@ -1609,20 +1609,18 @@ List of supported languages. The master version of `scc` supports 322 languages 
 
 ### Citation
 
-Please use the following bibtex entry to cite scc in a publication:
+Please use the following Bib**La**TeX entry to cite scc in a publication:
 
-<pre>
-@software{scc,
-  author       = {Ben Boyter},
-  title        = {scc: v3.5.0},
-  month        = ...,
-  year         = ...,
-  publisher    = {...},
-  version      = {v3.5.0},
-  doi          = {...},
-  url          = {...}
+```bib
+@Software{scc,
+ author     = {Ben Boyter and {Contributors}},
+ title      = {scc},
+ version    = {vx.y.z},
+ year       = {...},
+ month      = {...},
+ repository = {https://github.com/boyter/scc},
 }
-</pre>
+```
 
 You may need to check the release page <https://github.com/boyter/scc/releases> to find the correct year and month for the release you are using.
 
