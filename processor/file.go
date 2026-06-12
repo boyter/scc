@@ -100,6 +100,19 @@ func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 
 	language, extension := DetectLanguage(name)
 
+	// Path pattern count rules can relabel a file to a new minted category and
+	// can also rescue files that normal detection would otherwise skip. First
+	// matching rule wins, evaluated against the full path as supplied.
+	if len(compiledCountRules) != 0 {
+		for _, r := range compiledCountRules {
+			if r.re.MatchString(path) {
+				language = []string{r.name}
+				LoadLanguageFeature(r.name)
+				break
+			}
+		}
+	}
+
 	if len(language) != 0 {
 		// check if extensions in the allow list, which should limit to just those extensions
 		if len(AllowListExtensions) != 0 {

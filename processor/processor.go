@@ -183,6 +183,45 @@ func newRemapConfig(remapAll string, remapUnknown string) remapConfig {
 	}
 }
 
+// MatchEngine selects how a CountRule pattern is interpreted. Glob is the
+// default; regex is opt-in via the re: prefix.
+type MatchEngine int
+
+const (
+	// MatchGlob is the default. The pattern is a glob ('*' and '?') translated
+	// to an anchored regex and matched as a full match against the path.
+	MatchGlob MatchEngine = iota
+	// MatchRegex treats the pattern as a raw (unanchored) RE2 regex. Opt in
+	// with the re: prefix.
+	MatchRegex
+)
+
+// CountRule is the typed, library-facing form of a --count-as-pattern rule.
+// It matches files by their path and relabels them to a new named category
+// whose counting rules are cloned from an existing base language.
+type CountRule struct {
+	Engine       MatchEngine // MatchGlob (the default) or MatchRegex
+	Pattern      string      // glob or regex source
+	Name         string      // new category display name
+	BaseLanguage string      // existing language whose counting rules are cloned
+}
+
+// CountRules is the typed input set either directly by library users or by the
+// CLI after parsing CountAsPattern. Setup happens in setupCountRules.
+var CountRules []CountRule
+
+// CountAsPattern holds the raw repeatable --count-as-pattern flag values. Each
+// is parsed into a CountRule at setup. Library users may set CountRules directly.
+var CountAsPattern []string
+
+// compiledCountRule is the runtime form scanned by newFileJob
+type compiledCountRule struct {
+	re   *regexp.Regexp
+	name string
+}
+
+var compiledCountRules []compiledCountRule
+
 // CurrencySymbol allows setting the currency symbol for cocomo project cost estimation
 var CurrencySymbol = ""
 
@@ -364,6 +403,13 @@ func ProcessConstants() {
 
 	printTraceF("nanoseconds build extension to language: %d", makeTimestampNano()-startTime)
 
+	// Set up any path pattern count rules, minting new categories backed by a
+	// base language. The function clones the base language and builds its
+	// features so counting works in both lazy and non-lazy modes.
+	if len(CountAsPattern) != 0 || len(CountRules) != 0 {
+		setupCountRules()
+	}
+
 	// Configure COCOMO setting
 	_, ok := projectType[strings.ToLower(CocomoProjectType)]
 	if !ok {
@@ -418,43 +464,163 @@ func setupCountAs() {
 			continue
 		}
 
-		identified := false
-
 		// There are two cases here.
 		// first is they provide the name e.g. "Cargo Lock"
 		// second is that the user supplies the extension EG wsdl
 		// we should support BOTH cases
 		// always remember we only need to validate t[1] as that's the one
 		// that tells us where we are trying to map
-
-		// See if we can identify based on language name which is the most
-		// reliable as the name should be unique
-		for name := range languageDatabase {
-			if strings.EqualFold(name, t[1]) {
-				ExtensionToLanguage[strings.ToLower(t[0])] = []string{name}
-				identified = true
-				printDebugF("set to count extension: %s as language %s by language", t[0], name)
-			}
-		}
-
-		// If the above did not work, its a matter of extension match
-		// note that this is less reliable as some languages share extensions
-		if !identified {
-			target, ok := ExtensionToLanguage[strings.ToLower(t[1])]
-
-			if ok {
-				ExtensionToLanguage[strings.ToLower(t[0])] = target
-				identified = true
-				printDebugF("set to count extension: %s as language %s by extension", t[0], target)
-			}
+		target, ok := resolveBaseLanguage(t[1])
+		if ok {
+			ExtensionToLanguage[strings.ToLower(t[0])] = []string{target}
+			printDebugF("set to count extension: %s as language %s", t[0], target)
+			continue
 		}
 
 		// The target t[1] matched neither a known language name nor a known
 		// extension, so no mapping was registered. Warn rather than silently
 		// ignoring the rule, since count-as cannot mint new categories yet.
-		if !identified {
-			printError(fmt.Sprintf("ignoring count-as rule %q: target %q is not a known language or extension", s, t[1]))
+		printError(fmt.Sprintf("ignoring count-as rule %q: target %q is not a known language or extension", s, t[1]))
+	}
+}
+
+// resolveBaseLanguage resolves a user supplied target to a canonical language
+// name. It first tries to match a language name (most reliable as names are
+// unique) and falls back to matching a known extension. Returns the canonical
+// language name and whether it was resolved.
+func resolveBaseLanguage(target string) (string, bool) {
+	// Match by language name which is the most reliable as the name is unique
+	for name := range languageDatabase {
+		if strings.EqualFold(name, target) {
+			return name, true
 		}
+	}
+
+	// Fall back to extension match, note this is less reliable as some
+	// languages share extensions so we take the first registered language
+	langs, ok := ExtensionToLanguage[strings.ToLower(target)]
+	if ok && len(langs) != 0 {
+		return langs[0], true
+	}
+
+	return "", false
+}
+
+// parseCountAsPattern parses a single --count-as-pattern rule of the form
+// [engine:]pattern:name:baselang into a CountRule.
+//
+// The engine prefix is optional and the pattern is treated as a GLOB BY
+// DEFAULT; prefix with re: to opt into a regex (or glob: to be explicit). We
+// keep glob and regex as distinct modes rather than inferring, because the same
+// string is valid in both engines with different meaning (e.g. "foo.rb" matches
+// only foo.rb as a glob but also fooXrb as a regex), so guessing would silently
+// match the wrong files.
+//
+// Because regex patterns and paths legitimately contain ':', name and baselang
+// are peeled from the right and the pattern is whatever remains in between.
+func parseCountAsPattern(s string) (CountRule, error) {
+	engine := MatchGlob
+	rest := s
+
+	switch {
+	case strings.HasPrefix(rest, "re:"):
+		engine = MatchRegex
+		rest = rest[len("re:"):]
+	case strings.HasPrefix(rest, "glob:"):
+		engine = MatchGlob
+		rest = rest[len("glob:"):]
+	}
+
+	// baselang = after the last ':', name = between the 2nd-last and last ':'
+	lastColon := strings.LastIndex(rest, ":")
+	if lastColon == -1 {
+		return CountRule{}, fmt.Errorf("expected format [engine:]pattern:name:baselang")
+	}
+	baseLanguage := rest[lastColon+1:]
+
+	nameColon := strings.LastIndex(rest[:lastColon], ":")
+	if nameColon == -1 {
+		return CountRule{}, fmt.Errorf("expected format [engine:]pattern:name:baselang")
+	}
+	name := rest[nameColon+1 : lastColon]
+	pattern := rest[:nameColon]
+
+	if pattern == "" || name == "" || baseLanguage == "" {
+		return CountRule{}, fmt.Errorf("pattern, name and baselang must all be non-empty")
+	}
+
+	return CountRule{Engine: engine, Pattern: pattern, Name: name, BaseLanguage: baseLanguage}, nil
+}
+
+// globToRegex converts a simple glob into an anchored regex. Glob is the
+// default --count-as-pattern engine. Only '*' (any run of characters) and '?'
+// (single character) are special, everything else is matched literally. The
+// result is anchored as a full match.
+func globToRegex(glob string) string {
+	var b strings.Builder
+	b.WriteByte('^')
+	for _, r := range glob {
+		switch r {
+		case '*':
+			b.WriteString(".*")
+		case '?':
+			b.WriteByte('.')
+		default:
+			b.WriteString(regexp.QuoteMeta(string(r)))
+		}
+	}
+	b.WriteByte('$')
+	return b.String()
+}
+
+// setupCountRules parses CountAsPattern into CountRules, compiles each rule and
+// registers a cloned language under its new name so counting works. Invalid
+// rules are reported to stderr and skipped, consistent with --count-as.
+func setupCountRules() {
+	for _, s := range CountAsPattern {
+		rule, err := parseCountAsPattern(s)
+		if err != nil {
+			printError(fmt.Sprintf("ignoring malformed count-as-pattern rule %q: %s", s, err))
+			continue
+		}
+		CountRules = append(CountRules, rule)
+	}
+
+	for _, rule := range CountRules {
+		base, ok := resolveBaseLanguage(rule.BaseLanguage)
+		if !ok {
+			printError(fmt.Sprintf("ignoring count-as-pattern rule for %q: base language %q is not a known language or extension", rule.Name, rule.BaseLanguage))
+			continue
+		}
+
+		source := rule.Pattern
+		if rule.Engine == MatchGlob {
+			source = globToRegex(rule.Pattern)
+		}
+
+		re, err := regexp.Compile(source)
+		if err != nil {
+			printError(fmt.Sprintf("ignoring count-as-pattern rule for %q: invalid pattern %q: %s", rule.Name, rule.Pattern, err))
+			continue
+		}
+
+		// Clone the base language under the new name so it has counting rules,
+		// clearing the matchers so the minted category never participates in
+		// normal extension/filename/shebang detection.
+		cloned := languageDatabase[base]
+		cloned.Extensions = nil
+		cloned.FileNames = nil
+		cloned.SheBangs = nil
+		languageDatabase[rule.Name] = cloned
+
+		// Populate features now in non-lazy mode, otherwise LoadLanguageFeature
+		// will build them on first use since the name is in languageDatabase.
+		if !isLazy {
+			processLanguageFeature(rule.Name, cloned)
+		}
+
+		compiledCountRules = append(compiledCountRules, compiledCountRule{re: re, name: rule.Name})
+		printDebugF("set to count path matching %q as new language %s based on %s", rule.Pattern, rule.Name, base)
 	}
 }
 

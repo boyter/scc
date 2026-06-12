@@ -472,6 +472,14 @@ func main() {
 		"",
 		"count extension as language [e.g. jsp:htm,chead:\"C Header\" maps extension jsp to html and chead to C Header]",
 	)
+	flags.StringArrayVar(
+		&processor.CountAsPattern,
+		"count-as-pattern",
+		nil,
+		"count files matching a path pattern as a new named category backed by a base language "+
+			"[repeatable; pattern is glob by default, prefix with re: for regex; "+
+			"e.g. *_spec.rb:\"Ruby Spec\":Ruby or re:\\.test\\.js$:\"JavaScript Tests\":JavaScript]",
+	)
 	flags.StringVar(
 		&processor.FormatMulti,
 		"format-multi",

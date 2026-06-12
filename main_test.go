@@ -628,6 +628,47 @@ func TestCountAs(t *testing.T) {
 	}
 }
 
+func TestCountAsPattern(t *testing.T) {
+	// foo_spec.rb is relabelled to the new Ruby Spec category, app.rb stays Ruby
+	output, err := runSCC("-f", "csv", "--count-as-pattern", "glob:*_spec.rb:Ruby Spec:Ruby", "./examples/countaspattern/")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// The minted category row, with non-zero comment and complexity counts which
+	// proves the counting rules were cloned from the Ruby base language
+	if !strings.Contains(output, "Ruby Spec,9,7,1,1,1,") {
+		t.Errorf("count-as-pattern failed to produce Ruby Spec row, output:\n%s", output)
+	}
+	// The non matching file is still counted as plain Ruby
+	if !strings.Contains(output, "Ruby,7,5,1,1,1,") {
+		t.Errorf("count-as-pattern should leave app.rb as Ruby, output:\n%s", output)
+	}
+
+	// The regex engine should produce the same relabelling
+	output, err = runSCC("-f", "csv", "--count-as-pattern", `re:_spec\.rb$:Ruby Spec:Ruby`, "./examples/countaspattern/")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(output, "Ruby Spec,") {
+		t.Errorf("regex count-as-pattern failed, output:\n%s", output)
+	}
+}
+
+func TestCountAsPatternInvalidSkipped(t *testing.T) {
+	// An unresolvable base language is reported and skipped, the run still works
+	output, err := runSCC("-f", "csv", "--count-as-pattern", "glob:*_spec.rb:Ruby Spec:Nonexistent", "./examples/countaspattern/")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(output, "is not a known language or extension") {
+		t.Errorf("expected error message for unknown base language, output:\n%s", output)
+	}
+	if strings.Contains(output, "Ruby Spec,") {
+		t.Errorf("Ruby Spec should not appear when the rule was skipped, output:\n%s", output)
+	}
+}
+
 func TestRemapUnknown(t *testing.T) {
 	t.Parallel()
 	output, err := runSCC("-f", "csv", "--remap-unknown", "-*- C++ -*-:C Header", "./examples/remap/unknown")
