@@ -280,7 +280,7 @@ Flags:
       --cocomo-project-type string          change COCOMO model type [organic, semi-detached, embedded, "custom,1,1,1,1"] (default "organic")
       --cost-comparison                     show both COCOMO and LOCOMO estimates side by side
       --count-as string                     count extension as language [e.g. jsp:htm,chead:"C Header" maps extension jsp to html and chead to C Header]
-      --count-as-pattern stringArray        count files matching a path pattern as a new named category backed by a base language [repeatable; e.g. glob:*_spec.rb:"Ruby Spec":Ruby or re:\.test\.js$:"JavaScript Tests":JavaScript]
+      --count-as-pattern stringArray        count files matching a path pattern as a new named category backed by a base language [repeatable; pattern is glob by default, prefix with re: for regex; e.g. *_spec.rb:"Ruby Spec":Ruby or re:\.test\.js$:"JavaScript Tests":JavaScript]
       --count-ignore                        set to allow .gitignore and .ignore files to be counted
       --currency-symbol string              set currency symbol (default "$")
       --debug                               enable debug output
@@ -908,22 +908,28 @@ A common example is test files such as Ruby specs (`*_spec.rb`) or JavaScript te
 JavaScript but which you would like to see called out separately.
 
 The `--count-as-pattern` flag matches files by their path and counts them as a new named category, while borrowing the
-counting rules (comments, strings, complexity) of an existing base language. The format is `[engine:]pattern:name:baselang`:
+counting rules (comments, strings, complexity) of an existing base language. The format is `[engine:]pattern:name:baselang`.
+
+**Patterns are globs by default**, so you usually do not need a prefix:
 
 ```bash
- scc --count-as-pattern 'glob:*_spec.rb:Ruby Spec:Ruby'
+ scc --count-as-pattern '*_spec.rb:Ruby Spec:Ruby'
 ```
 
 The above counts every file whose path matches the glob `*_spec.rb` as a new `Ruby Spec` category, counted using the Ruby
-rules. The original Ruby files are unaffected and remain in the `Ruby` row.
+rules. The original Ruby files are unaffected and remain in the `Ruby` row. Globs support `*` (any characters) and `?`
+(single character) and are matched as a full match against the path.
 
-The `engine` prefix is optional and defaults to `glob`. Globs support `*` (any characters) and `?` (single character) and are
-matched as a full match against the path. For more control you can use a regular expression with the `re:` prefix, which is
-matched anywhere in the path (use `^` and `$` to anchor it yourself):
+For more control you can opt into a regular expression with the `re:` prefix, which is matched anywhere in the path (use `^`
+and `$` to anchor it yourself). You can also write `glob:` explicitly if you prefer:
 
 ```bash
  scc --count-as-pattern 're:\.test\.js$:JavaScript Tests:JavaScript'
 ```
+
+Glob and regex are kept as separate modes rather than being inferred, because the same pattern can be valid in both with
+different meaning (for example `foo.rb` matches only `foo.rb` as a glob, but also `fooXrb` as a regex), so guessing the engine
+could silently match the wrong files.
 
 The flag is repeatable, with the first matching rule winning:
 

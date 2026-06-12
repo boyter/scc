@@ -183,13 +183,16 @@ func newRemapConfig(remapAll string, remapUnknown string) remapConfig {
 	}
 }
 
-// MatchEngine selects how a CountRule pattern is interpreted
+// MatchEngine selects how a CountRule pattern is interpreted. Glob is the
+// default; regex is opt-in via the re: prefix.
 type MatchEngine int
 
 const (
-	// MatchGlob treats the pattern as a glob translated to an anchored regex
+	// MatchGlob is the default. The pattern is a glob ('*' and '?') translated
+	// to an anchored regex and matched as a full match against the path.
 	MatchGlob MatchEngine = iota
-	// MatchRegex treats the pattern as a raw (unanchored) RE2 regex
+	// MatchRegex treats the pattern as a raw (unanchored) RE2 regex. Opt in
+	// with the re: prefix.
 	MatchRegex
 )
 
@@ -197,10 +200,10 @@ const (
 // It matches files by their path and relabels them to a new named category
 // whose counting rules are cloned from an existing base language.
 type CountRule struct {
-	Engine       MatchEngine
-	Pattern      string // glob or regex source
-	Name         string // new category display name
-	BaseLanguage string // existing language whose counting rules are cloned
+	Engine       MatchEngine // MatchGlob (the default) or MatchRegex
+	Pattern      string      // glob or regex source
+	Name         string      // new category display name
+	BaseLanguage string      // existing language whose counting rules are cloned
 }
 
 // CountRules is the typed input set either directly by library users or by the
@@ -504,10 +507,17 @@ func resolveBaseLanguage(target string) (string, bool) {
 }
 
 // parseCountAsPattern parses a single --count-as-pattern rule of the form
-// [engine:]pattern:name:baselang into a CountRule. The engine prefix is
-// optional (defaults to glob). Because regex patterns and paths legitimately
-// contain ':', name and baselang are peeled from the right and the pattern is
-// whatever remains in between.
+// [engine:]pattern:name:baselang into a CountRule.
+//
+// The engine prefix is optional and the pattern is treated as a GLOB BY
+// DEFAULT; prefix with re: to opt into a regex (or glob: to be explicit). We
+// keep glob and regex as distinct modes rather than inferring, because the same
+// string is valid in both engines with different meaning (e.g. "foo.rb" matches
+// only foo.rb as a glob but also fooXrb as a regex), so guessing would silently
+// match the wrong files.
+//
+// Because regex patterns and paths legitimately contain ':', name and baselang
+// are peeled from the right and the pattern is whatever remains in between.
 func parseCountAsPattern(s string) (CountRule, error) {
 	engine := MatchGlob
 	rest := s
@@ -542,9 +552,10 @@ func parseCountAsPattern(s string) (CountRule, error) {
 	return CountRule{Engine: engine, Pattern: pattern, Name: name, BaseLanguage: baseLanguage}, nil
 }
 
-// globToRegex converts a simple glob into an anchored regex. Only '*' (any run
-// of characters) and '?' (single character) are special, everything else is
-// matched literally. The result is anchored as a full match.
+// globToRegex converts a simple glob into an anchored regex. Glob is the
+// default --count-as-pattern engine. Only '*' (any run of characters) and '?'
+// (single character) are special, everything else is matched literally. The
+// result is anchored as a full match.
 func globToRegex(glob string) string {
 	var b strings.Builder
 	b.WriteByte('^')

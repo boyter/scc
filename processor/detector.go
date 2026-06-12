@@ -203,10 +203,6 @@ func DetermineLanguage(filename string, fallbackLanguage string, possibleLanguag
 		return strings.Compare(a.Name, b.Name)
 	})
 
-	// fmt.Println(toSort)
-	// fmt.Println(possibleLanguages)
-	// fmt.Println(primary, toSort[0].Name, toSort[0].Count)
-
 	if primary != "" && len(toSort) != 0 {
 		// OK at this point we have a primary, which means we want 3 or more matches to count as something else
 		if toSort[0].Count < 3 {
