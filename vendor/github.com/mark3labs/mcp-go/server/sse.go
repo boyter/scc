@@ -21,18 +21,27 @@ import (
 
 // sseSession represents an active SSE connection.
 type sseSession struct {
+	clientInfoStore // provides Get/SetClientInfo and Get/SetClientCapabilities via method promotion
+
 	done                chan struct{}
+	doneOnce            sync.Once
 	eventQueue          chan string // Channel for queuing events
 	sessionID           string
 	requestID           atomic.Int64
 	notificationChannel chan mcp.JSONRPCNotification
 	initialized         atomic.Bool
 	loggingLevel        atomic.Value
-	tools               sync.Map     // stores session-specific tools
-	resources           sync.Map     // stores session-specific resources
-	resourceTemplates   sync.Map     // stores session-specific resource templates
-	clientInfo          atomic.Value // stores session-specific client info
-	clientCapabilities  atomic.Value // stores session-specific client capabilities
+	tools               sync.Map // stores session-specific tools
+	resources           sync.Map // stores session-specific resources
+	resourceTemplates   sync.Map // stores session-specific resource templates
+}
+
+// closeDone safely closes the session's done channel exactly once,
+// preventing panics from concurrent close attempts.
+func (s *sseSession) closeDone() {
+	s.doneOnce.Do(func() {
+		close(s.done)
+	})
 }
 
 // SSEContextFunc is a function that takes an existing context and the current
@@ -145,32 +154,6 @@ func (s *sseSession) SetSessionTools(tools map[string]ServerTool) {
 	}
 }
 
-func (s *sseSession) GetClientInfo() mcp.Implementation {
-	if value := s.clientInfo.Load(); value != nil {
-		if clientInfo, ok := value.(mcp.Implementation); ok {
-			return clientInfo
-		}
-	}
-	return mcp.Implementation{}
-}
-
-func (s *sseSession) SetClientInfo(clientInfo mcp.Implementation) {
-	s.clientInfo.Store(clientInfo)
-}
-
-func (s *sseSession) SetClientCapabilities(clientCapabilities mcp.ClientCapabilities) {
-	s.clientCapabilities.Store(clientCapabilities)
-}
-
-func (s *sseSession) GetClientCapabilities() mcp.ClientCapabilities {
-	if value := s.clientCapabilities.Load(); value != nil {
-		if clientCapabilities, ok := value.(mcp.ClientCapabilities); ok {
-			return clientCapabilities
-		}
-	}
-	return mcp.ClientCapabilities{}
-}
-
 var (
 	_ ClientSession                = (*sseSession)(nil)
 	_ SessionWithTools             = (*sseSession)(nil)
@@ -198,6 +181,18 @@ type SSEServer struct {
 
 	keepAlive         bool
 	keepAliveInterval time.Duration
+
+	// protectedResourceMetadata, when non-nil, is served as RFC 9728 OAuth
+	// 2.0 Protected Resource Metadata. The well-known path is derived from
+	// the configured Resource via ProtectedResourceMetadataPath.
+	protectedResourceMetadata        *ProtectedResourceMetadataConfig
+	protectedResourceMetadataPath    string
+	protectedResourceMetadataHandler http.Handler
+
+	// corsConfig, when non-nil and with at least one allowed origin, makes
+	// the SSE server emit CORS headers and handle preflight requests. See
+	// WithSSECORS.
+	corsConfig *CORSConfig
 
 	mu sync.RWMutex
 }
@@ -315,6 +310,53 @@ func WithKeepAlive(keepAlive bool) SSEOption {
 	}
 }
 
+// WithSSEProtectedResourceMetadata configures the SSEServer to serve OAuth
+// 2.0 Protected Resource Metadata (RFC 9728) at the well-known endpoint
+// derived from the configured Resource (see ProtectedResourceMetadataPath).
+//
+// The metadata is served both when the server is started via Start (the
+// well-known path is dispatched from ServeHTTP) and when the server is used
+// directly as an http.Handler. When using WithHTTPServer with a custom
+// http.Server whose Handler is not the SSEServer itself, mount the metadata
+// endpoint manually via NewProtectedResourceMetadataHandler.
+func WithSSEProtectedResourceMetadata(config ProtectedResourceMetadataConfig) SSEOption {
+	return func(s *SSEServer) {
+		cfg := config
+		s.protectedResourceMetadata = &cfg
+		s.protectedResourceMetadataPath = ProtectedResourceMetadataPath(cfg.Resource)
+		s.protectedResourceMetadataHandler = NewProtectedResourceMetadataHandler(cfg)
+	}
+}
+
+// WithSSECORS configures Cross-Origin Resource Sharing for the SSE server.
+//
+// CORS handling is opt-in: callers must specify at least one allowed origin
+// via WithCORSAllowedOrigins for any Access-Control-* headers to be emitted.
+// When enabled, preflight (OPTIONS) requests are handled directly by the
+// server and simple cross-origin responses get the appropriate Allow-Origin,
+// Allow-Credentials, Expose-Headers and Vary headers attached.
+//
+// Example:
+//
+//	srv := server.NewSSEServer(mcpServer,
+//	    server.WithSSECORS(
+//	        server.WithCORSAllowedOrigins("https://example.com"),
+//	        server.WithCORSAllowCredentials(),
+//	    ),
+//	)
+func WithSSECORS(opts ...CORSOption) SSEOption {
+	return func(s *SSEServer) {
+		if s.corsConfig == nil {
+			s.corsConfig = &CORSConfig{}
+		}
+		for _, opt := range opts {
+			if opt != nil {
+				opt(s.corsConfig)
+			}
+		}
+	}
+}
+
 // WithSSEContextFunc sets a function that will be called to customise the context
 // to the server using the incoming request.
 func WithSSEContextFunc(fn SSEContextFunc) SSEOption {
@@ -393,17 +435,26 @@ func (s *SSEServer) Shutdown(ctx context.Context) error {
 	s.mu.RUnlock()
 
 	if srv != nil {
-		s.sessions.Range(func(key, value any) bool {
-			if session, ok := value.(*sseSession); ok {
-				close(session.done)
-			}
-			s.sessions.Delete(key)
-			return true
-		})
-
+		s.CloseSessions()
 		return srv.Shutdown(ctx)
 	}
 	return nil
+}
+
+// CloseSessions terminates all active SSE sessions without stopping the HTTP
+// server. This is useful when the SSE server is embedded within another HTTP
+// service and you need to disconnect all clients independently of the server
+// lifecycle (e.g., during a configuration reload or maintenance window).
+// This signals termination; in-flight handlers exit asynchronously.
+// Sessions connecting concurrently with this call may not be terminated.
+func (s *SSEServer) CloseSessions() {
+	s.sessions.Range(func(key, value any) bool {
+		if session, ok := value.(*sseSession); ok {
+			session.closeDone()
+		}
+		s.sessions.Delete(key)
+		return true
+	})
 }
 
 // handleSSE handles incoming SSE connection requests.
@@ -417,7 +468,13 @@ func (s *SSEServer) handleSSE(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	// Preserve historical default of allowing any origin for browser-based
+	// EventSource clients, unless the caller has opted into an explicit
+	// CORS configuration via WithSSECORS (which has already populated the
+	// Access-Control-* headers on the response).
+	if !s.corsConfig.enabled() {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+	}
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
@@ -489,7 +546,7 @@ func (s *SSEServer) handleSSE(w http.ResponseWriter, r *http.Request) {
 						JSONRPC: "2.0",
 						ID:      mcp.NewRequestId(session.requestID.Add(1)),
 						Request: mcp.Request{
-							Method: "ping",
+							Method: string(mcp.MethodPing),
 						},
 					}
 					messageBytes, _ := json.Marshal(message)
@@ -525,7 +582,7 @@ func (s *SSEServer) handleSSE(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, event)
 			flusher.Flush()
 		case <-r.Context().Done():
-			close(session.done)
+			session.closeDone()
 			return
 		case <-session.done:
 			return
@@ -596,6 +653,21 @@ func (s *SSEServer) handleMessage(w http.ResponseWriter, r *http.Request) {
 
 	go func(ctx context.Context) {
 		defer cancel()
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("panic recovered in SSE message handler for session %s: %v", sessionID, r)
+				// Send error response so the client doesn't hang waiting.
+				errResp := createErrorResponse(nil, mcp.INTERNAL_ERROR, fmt.Sprintf("internal panic: %v", r))
+				if eventData, err := json.Marshal(errResp); err == nil {
+					message := fmt.Sprintf("event: message\ndata: %s\n\n", eventData)
+					select {
+					case session.eventQueue <- message:
+					case <-session.done:
+					default:
+					}
+				}
+			}
+		}()
 		// Use the context that will be canceled when session is done
 		// Process message through MCPServer
 		response := s.server.HandleMessage(ctx, rawMessage)
@@ -631,17 +703,13 @@ func (s *SSEServer) writeJSONRPCError(
 	code int,
 	message string,
 ) {
-	response := createErrorResponse(id, code, message)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusBadRequest)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(
-			w,
-			fmt.Sprintf("Failed to encode response: %v", err),
-			http.StatusInternalServerError,
-		)
-		return
-	}
+	writeJSONRPCError(w, id, code, message, func(err error) {
+		// The 400 status and partial JSON body have already been written
+		// by writeJSONRPCError, so we cannot escalate to a different HTTP
+		// status here without producing a malformed response. Log instead,
+		// matching the streamable HTTP transport's behavior.
+		log.Printf("Failed to encode response: %v", err)
+	})
 }
 
 // SendEventToSession sends an event to a specific SSE session identified by sessionID.
@@ -723,6 +791,10 @@ func (s *SSEServer) CompleteMessagePath() string {
 
 // SSEHandler returns an http.Handler for the SSE endpoint.
 //
+// When CORS has been configured via WithSSECORS, the returned handler
+// transparently handles preflight requests and applies the appropriate
+// Access-Control-* headers to simple responses.
+//
 // This method allows you to mount the SSE handler at any arbitrary path
 // using your own router (e.g. net/http, gorilla/mux, chi, etc.). It is
 // intended for advanced scenarios where you want to control the routing or
@@ -747,7 +819,7 @@ func (s *SSEServer) CompleteMessagePath() string {
 //
 // For non-dynamic cases, use ServeHTTP method instead.
 func (s *SSEServer) SSEHandler() http.Handler {
-	return http.HandlerFunc(s.handleSSE)
+	return s.withCORS(http.HandlerFunc(s.handleSSE))
 }
 
 // MessageHandler returns an http.Handler for the message endpoint.
@@ -776,11 +848,36 @@ func (s *SSEServer) SSEHandler() http.Handler {
 //
 // For non-dynamic cases, use ServeHTTP method instead.
 func (s *SSEServer) MessageHandler() http.Handler {
-	return http.HandlerFunc(s.handleMessage)
+	return s.withCORS(http.HandlerFunc(s.handleMessage))
+}
+
+// withCORS wraps next with CORS preflight and header handling using the
+// SSE server's configured CORSConfig. It is a no-op when CORS is disabled.
+func (s *SSEServer) withCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if s.corsConfig.enabled() {
+			if s.corsConfig.handlePreflight(w, r) {
+				return
+			}
+			s.corsConfig.applySimple(w, r)
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // ServeHTTP implements the http.Handler interface.
+//
+// When CORS is configured via WithSSECORS, preflight (OPTIONS) requests are
+// answered directly and simple cross-origin responses are decorated with the
+// configured Access-Control-* headers before being dispatched to the SSE or
+// message handlers.
 func (s *SSEServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if s.corsConfig.enabled() {
+		if s.corsConfig.handlePreflight(w, r) {
+			return
+		}
+		s.corsConfig.applySimple(w, r)
+	}
 	if s.dynamicBasePathFunc != nil {
 		http.Error(
 			w,
@@ -790,6 +887,10 @@ func (s *SSEServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	path := r.URL.Path
+	if s.protectedResourceMetadataHandler != nil && path == s.protectedResourceMetadataPath {
+		s.protectedResourceMetadataHandler.ServeHTTP(w, r)
+		return
+	}
 	// Use exact path matching rather than Contains
 	ssePath := s.CompleteSsePath()
 	if ssePath != "" && path == ssePath {

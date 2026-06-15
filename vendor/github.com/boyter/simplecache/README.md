@@ -57,6 +57,56 @@ sc := simplecache.New[string](simplecache.Option{
 })
 ```
 
+## Stale-While-Revalidate
+
+You can configure a `StaleAge` alongside `MaxAge` to distinguish between fresh, stale, and expired entries. This
+is useful when you want to serve stale data immediately while triggering a background refresh — a pattern commonly
+known as stale-while-revalidate.
+
+```go
+staleAge := 30 * time.Second
+maxAge := 2 * time.Minute
+
+sc := simplecache.New[string](simplecache.Option{
+    StaleAge: &staleAge, // after 30s the entry is considered stale
+    MaxAge:   &maxAge,   // after 2m the entry is hard-expired and deleted
+})
+
+_ = sc.Set("config", "v1")
+
+result := sc.GetWithStatus("config")
+switch result.Status {
+case simplecache.CacheHit:
+    // Fresh — use result.Value directly
+case simplecache.CacheStale:
+    // Stale — use result.Value now, but kick off a background refresh
+    go refreshConfig()
+case simplecache.CacheMiss:
+    // Expired or never existed — must fetch synchronously
+}
+```
+
+### Peek — non-evicting read
+
+`Peek` works like `GetWithStatus` but never deletes the entry from the cache, even when it is past `MaxAge`. This
+is useful when you always want the last known value and prefer to let the caller decide when to evict.
+
+```go
+result := sc.Peek("config")
+switch result.Status {
+case simplecache.CacheHit:
+    // Fresh
+case simplecache.CacheStale:
+    // Past staleAge or maxAge, but the value is still returned and the
+    // entry remains in the cache — the caller decides what to do
+case simplecache.CacheMiss:
+    // Key was never set
+}
+```
+
+A common use case for `Peek` is showing a previously cached result in a UI while a fresh value is being fetched,
+without risking the entry being evicted between the read and the refresh completing.
+
 # Benchmarks?
 
 I don't have any. It's a Go map with some locking. It should be fine. Being 5% faster or slower than any other

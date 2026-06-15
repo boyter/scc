@@ -1,6 +1,7 @@
 package zerolog
 
 import (
+	"bytes"
 	"encoding/json"
 	"strconv"
 	"sync/atomic"
@@ -23,6 +24,16 @@ const (
 	// TimeFormatUnixNano defines a time format that makes time fields to be
 	// serialized as Unix timestamp integers in nanoseconds.
 	TimeFormatUnixNano = "UNIXNANO"
+
+	// DurationFormatFloat defines a format for Duration fields that makes duration fields to be
+	// serialized as floating point numbers.
+	DurationFormatFloat = "float"
+	// DurationFormatInt defines a format for Duration fields that makes duration fields to be
+	// serialized as integers.
+	DurationFormatInt = "int"
+	// DurationFormatString defines a format for Duration fields that makes duration fields to be
+	// serialized as string.
+	DurationFormatString = "string"
 )
 
 var (
@@ -81,8 +92,22 @@ var (
 	}
 
 	// InterfaceMarshalFunc allows customization of interface marshaling.
-	// Default: "encoding/json.Marshal"
-	InterfaceMarshalFunc = json.Marshal
+	// Default: "encoding/json.Marshal" with disabled HTML escaping
+	InterfaceMarshalFunc = func(v interface{}) ([]byte, error) {
+		var buf bytes.Buffer
+		encoder := json.NewEncoder(&buf)
+		encoder.SetEscapeHTML(false)
+		err := encoder.Encode(v)
+		if err != nil {
+			return nil, err
+		}
+		b := buf.Bytes()
+		if len(b) > 0 {
+			// Remove trailing \n which is added by Encode.
+			return b[:len(b)-1], nil
+		}
+		return b, nil
+	}
 
 	// TimeFieldFormat defines the time format of the Time field type. If set to
 	// TimeFormatUnix, TimeFormatUnixMs, TimeFormatUnixMicro or TimeFormatUnixNano, the time is formatted as a UNIX
@@ -92,12 +117,16 @@ var (
 	// TimestampFunc defines the function called to generate a timestamp.
 	TimestampFunc = time.Now
 
+	// DurationFieldFormat defines the format of the Duration field type.
+	DurationFieldFormat = DurationFormatFloat
+
 	// DurationFieldUnit defines the unit for time.Duration type fields added
 	// using the Dur method.
 	DurationFieldUnit = time.Millisecond
 
 	// DurationFieldInteger renders Dur fields as integer instead of float if
 	// set to true.
+	// Deprecated: use DurationFieldFormat with DurationFormatInt instead.
 	DurationFieldInteger = false
 
 	// ErrorHandler is called whenever zerolog fails to write an event on its
@@ -105,9 +134,46 @@ var (
 	// be thread safe and non-blocking.
 	ErrorHandler func(err error)
 
+	// FatalExitFunc is called by log.Fatal() instead of os.Exit(1). If not set,
+	// os.Exit(1) is called.
+	FatalExitFunc func()
+
 	// DefaultContextLogger is returned from Ctx() if there is no logger associated
 	// with the context.
 	DefaultContextLogger *Logger
+
+	// LevelColors are used by ConsoleWriter's consoleDefaultFormatLevel to color
+	// log levels.
+	LevelColors = map[Level]int{
+		TraceLevel: colorBlue,
+		DebugLevel: 0,
+		InfoLevel:  colorGreen,
+		WarnLevel:  colorYellow,
+		ErrorLevel: colorRed,
+		FatalLevel: colorRed,
+		PanicLevel: colorRed,
+	}
+
+	// FormattedLevels are used by ConsoleWriter's consoleDefaultFormatLevel
+	// for a short level name.
+	FormattedLevels = map[Level]string{
+		TraceLevel: "TRC",
+		DebugLevel: "DBG",
+		InfoLevel:  "INF",
+		WarnLevel:  "WRN",
+		ErrorLevel: "ERR",
+		FatalLevel: "FTL",
+		PanicLevel: "PNC",
+	}
+
+	// TriggerLevelWriterBufferReuseLimit is a limit in bytes that a buffer is dropped
+	// from the TriggerLevelWriter buffer pool if the buffer grows above the limit.
+	TriggerLevelWriterBufferReuseLimit = 64 * 1024
+
+	// FloatingPointPrecision, if set to a value other than -1, controls the number
+	// of digits when formatting float numbers in JSON. See strconv.FormatFloat for
+	// more details.
+	FloatingPointPrecision = -1
 )
 
 var (

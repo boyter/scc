@@ -15,7 +15,7 @@ import (
 func (s *MCPServer) HandleMessage(
 	ctx context.Context,
 	message json.RawMessage,
-) mcp.JSONRPCMessage {
+) (resp mcp.JSONRPCMessage) {
 	// Add server to context
 	ctx = context.WithValue(ctx, serverKey{}, s)
 	var err *requestError
@@ -79,6 +79,21 @@ func (s *MCPServer) HandleMessage(
 	if headers == nil || !ok {
 		headers = make(http.Header)
 	}
+
+	// Wrap context with cancel for in-flight request cancellation (MCP spec: notifications/cancelled)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// Store cancel func so notifications/cancelled can cancel this request.
+	// Use session-scoped keys to prevent cross-session request ID collisions.
+	if baseMessage.ID != nil {
+		key := inflightKey(ctx, baseMessage.ID)
+		s.inflightCancels.Store(key, cancel)
+		defer s.inflightCancels.Delete(key)
+	}
+
+	ctx, endSpan := s.startMessageSpan(ctx, headers, string(baseMessage.Method))
+	defer func() { endSpan(resp) }()
 
 	switch baseMessage.Method {
 	case mcp.MethodInitialize:
@@ -224,6 +239,58 @@ func (s *MCPServer) HandleMessage(
 			return err.ToJSONRPCError()
 		}
 		s.hooks.afterReadResource(ctx, baseMessage.ID, &request, result)
+		return createResponse(baseMessage.ID, *result)
+	case mcp.MethodResourcesSubscribe:
+		var request mcp.SubscribeRequest
+		var result *mcp.EmptyResult
+		if s.capabilities.resources == nil {
+			err = &requestError{
+				id:   baseMessage.ID,
+				code: mcp.METHOD_NOT_FOUND,
+				err:  fmt.Errorf("resources %w", ErrUnsupported),
+			}
+		} else if unmarshalErr := json.Unmarshal(message, &request); unmarshalErr != nil {
+			err = &requestError{
+				id:   baseMessage.ID,
+				code: mcp.INVALID_REQUEST,
+				err:  &UnparsableMessageError{message: message, err: unmarshalErr, method: baseMessage.Method},
+			}
+		} else {
+			request.Header = headers
+			s.hooks.beforeSubscribe(ctx, baseMessage.ID, &request)
+			result, err = s.handleSubscribe(ctx, baseMessage.ID, request)
+		}
+		if err != nil {
+			s.hooks.onError(ctx, baseMessage.ID, baseMessage.Method, &request, err)
+			return err.ToJSONRPCError()
+		}
+		s.hooks.afterSubscribe(ctx, baseMessage.ID, &request, result)
+		return createResponse(baseMessage.ID, *result)
+	case mcp.MethodResourcesUnsubscribe:
+		var request mcp.UnsubscribeRequest
+		var result *mcp.EmptyResult
+		if s.capabilities.resources == nil {
+			err = &requestError{
+				id:   baseMessage.ID,
+				code: mcp.METHOD_NOT_FOUND,
+				err:  fmt.Errorf("resources %w", ErrUnsupported),
+			}
+		} else if unmarshalErr := json.Unmarshal(message, &request); unmarshalErr != nil {
+			err = &requestError{
+				id:   baseMessage.ID,
+				code: mcp.INVALID_REQUEST,
+				err:  &UnparsableMessageError{message: message, err: unmarshalErr, method: baseMessage.Method},
+			}
+		} else {
+			request.Header = headers
+			s.hooks.beforeUnsubscribe(ctx, baseMessage.ID, &request)
+			result, err = s.handleUnsubscribe(ctx, baseMessage.ID, request)
+		}
+		if err != nil {
+			s.hooks.onError(ctx, baseMessage.ID, baseMessage.Method, &request, err)
+			return err.ToJSONRPCError()
+		}
+		s.hooks.afterUnsubscribe(ctx, baseMessage.ID, &request, result)
 		return createResponse(baseMessage.ID, *result)
 	case mcp.MethodPromptsList:
 		var request mcp.ListPromptsRequest

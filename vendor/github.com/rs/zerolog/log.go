@@ -2,85 +2,85 @@
 //
 // A global Logger can be use for simple logging:
 //
-//     import "github.com/rs/zerolog/log"
+//	import "github.com/rs/zerolog/log"
 //
-//     log.Info().Msg("hello world")
-//     // Output: {"time":1494567715,"level":"info","message":"hello world"}
+//	log.Info().Msg("hello world")
+//	// Output: {"time":1494567715,"level":"info","message":"hello world"}
 //
 // NOTE: To import the global logger, import the "log" subpackage "github.com/rs/zerolog/log".
 //
 // Fields can be added to log messages:
 //
-//     log.Info().Str("foo", "bar").Msg("hello world")
-//     // Output: {"time":1494567715,"level":"info","message":"hello world","foo":"bar"}
+//	log.Info().Str("foo", "bar").Msg("hello world")
+//	// Output: {"time":1494567715,"level":"info","message":"hello world","foo":"bar"}
 //
 // Create logger instance to manage different outputs:
 //
-//     logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
-//     logger.Info().
-//            Str("foo", "bar").
-//            Msg("hello world")
-//     // Output: {"time":1494567715,"level":"info","message":"hello world","foo":"bar"}
+//	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
+//	logger.Info().
+//	       Str("foo", "bar").
+//	       Msg("hello world")
+//	// Output: {"time":1494567715,"level":"info","message":"hello world","foo":"bar"}
 //
 // Sub-loggers let you chain loggers with additional context:
 //
-//     sublogger := log.With().Str("component": "foo").Logger()
-//     sublogger.Info().Msg("hello world")
-//     // Output: {"time":1494567715,"level":"info","message":"hello world","component":"foo"}
+//	sublogger := log.With().Str("component", "foo").Logger()
+//	sublogger.Info().Msg("hello world")
+//	// Output: {"time":1494567715,"level":"info","message":"hello world","component":"foo"}
 //
 // Level logging
 //
-//     zerolog.SetGlobalLevel(zerolog.InfoLevel)
+//	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 //
-//     log.Debug().Msg("filtered out message")
-//     log.Info().Msg("routed message")
+//	log.Debug().Msg("filtered out message")
+//	log.Info().Msg("routed message")
 //
-//     if e := log.Debug(); e.Enabled() {
-//         // Compute log output only if enabled.
-//         value := compute()
-//         e.Str("foo": value).Msg("some debug message")
-//     }
-//     // Output: {"level":"info","time":1494567715,"routed message"}
+//	if e := log.Debug(); e.Enabled() {
+//	    // Compute log output only if enabled.
+//	    value := compute()
+//	    e.Str("foo": value).Msg("some debug message")
+//	}
+//	// Output: {"level":"info","time":1494567715,"routed message"}
 //
 // Customize automatic field names:
 //
-//     log.TimestampFieldName = "t"
-//     log.LevelFieldName = "p"
-//     log.MessageFieldName = "m"
+//	log.TimestampFieldName = "t"
+//	log.LevelFieldName = "p"
+//	log.MessageFieldName = "m"
 //
-//     log.Info().Msg("hello world")
-//     // Output: {"t":1494567715,"p":"info","m":"hello world"}
+//	log.Info().Msg("hello world")
+//	// Output: {"t":1494567715,"p":"info","m":"hello world"}
 //
 // Log with no level and message:
 //
-//     log.Log().Str("foo","bar").Msg("")
-//     // Output: {"time":1494567715,"foo":"bar"}
+//	log.Log().Str("foo","bar").Msg("")
+//	// Output: {"time":1494567715,"foo":"bar"}
 //
 // Add contextual fields to global Logger:
 //
-//     log.Logger = log.With().Str("foo", "bar").Logger()
+//	log.Logger = log.With().Str("foo", "bar").Logger()
 //
 // Sample logs:
 //
-//     sampled := log.Sample(&zerolog.BasicSampler{N: 10})
-//     sampled.Info().Msg("will be logged every 10 messages")
+//	sampled := log.Sample(&zerolog.BasicSampler{N: 10})
+//	sampled.Info().Msg("will be logged every 10 messages")
 //
 // Log with contextual hooks:
 //
-//     // Create the hook:
-//     type SeverityHook struct{}
+//	// Create the hook:
+//	type SeverityHook struct{}
 //
-//     func (h SeverityHook) Run(e *zerolog.Event, level zerolog.Level, msg string) {
-//          if level != zerolog.NoLevel {
-//              e.Str("severity", level.String())
-//          }
-//     }
+//	func (h SeverityHook) Run(e *zerolog.Event, level zerolog.Level, msg string) {
+//	     if level != zerolog.NoLevel {
+//	         e.Str("severity", level.String())
+//	     }
+//	}
 //
-//     // And use it:
-//     var h SeverityHook
-//     log := zerolog.New(os.Stdout).Hook(h)
-//     log.Warn().Msg("")
-//     // Output: {"level":"warn","severity":"warn"}
+//	// And use it:
+//	var h SeverityHook
+//	log := zerolog.New(os.Stdout).Hook(h)
+//	log.Warn().Msg("")
+//	// Output: {"level":"warn","severity":"warn"}
 //
 // # Caveats
 //
@@ -89,11 +89,11 @@
 // There is no fields deduplication out-of-the-box.
 // Using the same key multiple times creates new key in final JSON each time.
 //
-//     logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
-//     logger.Info().
-//            Timestamp().
-//            Msg("dup")
-//     // Output: {"level":"info","time":1494567715,"time":1494567715,"message":"dup"}
+//	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
+//	logger.Info().
+//	       Timestamp().
+//	       Msg("dup")
+//	// Output: {"level":"info","time":1494567715,"time":1494567715,"message":"dup"}
 //
 // In this case, many consumers will take the last value,
 // but this is not guaranteed; check yours if in doubt.
@@ -102,15 +102,15 @@
 //
 // Be careful when calling UpdateContext. It is not concurrency safe. Use the With method to create a child logger:
 //
-//     func handler(w http.ResponseWriter, r *http.Request) {
-//         // Create a child logger for concurrency safety
-//         logger := log.Logger.With().Logger()
+//	func handler(w http.ResponseWriter, r *http.Request) {
+//	    // Create a child logger for concurrency safety
+//	    logger := log.Logger.With().Logger()
 //
-//         // Add context fields, for example User-Agent from HTTP headers
-//         logger.UpdateContext(func(c zerolog.Context) zerolog.Context {
-//             ...
-//         })
-//     }
+//	    // Add context fields, for example User-Agent from HTTP headers
+//	    logger.UpdateContext(func(c zerolog.Context) zerolog.Context {
+//	        ...
+//	    })
+//	}
 package zerolog
 
 import (
@@ -118,7 +118,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -246,11 +245,11 @@ type Logger struct {
 // you may consider using sync wrapper.
 func New(w io.Writer) Logger {
 	if w == nil {
-		w = ioutil.Discard
+		w = io.Discard
 	}
 	lw, ok := w.(LevelWriter)
 	if !ok {
-		lw = levelWriterAdapter{w}
+		lw = LevelWriterAdapter{w}
 	}
 	return Logger{w: lw, level: TraceLevel}
 }
@@ -295,7 +294,7 @@ func (l Logger) With() Context {
 // Caution: This method is not concurrency safe.
 // Use the With method to create a child logger before modifying the context from concurrent goroutines.
 func (l *Logger) UpdateContext(update func(c Context) Context) {
-	if l == disabledLogger {
+	if l.disabled() {
 		return
 	}
 	if cap(l.context) == 0 {
@@ -326,10 +325,13 @@ func (l Logger) Sample(s Sampler) Logger {
 }
 
 // Hook returns a logger with the h Hook.
-func (l Logger) Hook(h Hook) Logger {
-	newHooks := make([]Hook, len(l.hooks), len(l.hooks)+1)
+func (l Logger) Hook(hooks ...Hook) Logger {
+	if len(hooks) == 0 {
+		return l
+	}
+	newHooks := make([]Hook, len(l.hooks), len(l.hooks)+len(hooks))
 	copy(newHooks, l.hooks)
-	l.hooks = append(newHooks, h)
+	l.hooks = append(newHooks, hooks...)
 	return l
 }
 
@@ -380,12 +382,25 @@ func (l *Logger) Err(err error) *Event {
 	return l.Info()
 }
 
-// Fatal starts a new message with fatal level. The os.Exit(1) function
-// is called by the Msg method, which terminates the program immediately.
+// Fatal starts a new message with fatal level. The FatalExitFunc interceptor function
+// is called by the Msg method, which by default terminates the program immediately
+// using os.Exit(1), any desired behavior can be implemented by setting FatalExitFunc.
 //
 // You must call Msg on the returned event in order to send the event.
 func (l *Logger) Fatal() *Event {
-	return l.newEvent(FatalLevel, func(msg string) { os.Exit(1) })
+	return l.newEvent(FatalLevel, func(msg string) {
+		if closer, ok := l.w.(io.Closer); ok {
+			// Close the writer to flush any buffered message. Otherwise the message
+			// could be lost if FatalExitFunc() terminates the program immediately or
+			// os.Exit(1) is called if not FatalExitFunc isn't set (default).
+			closer.Close()
+		}
+		if FatalExitFunc != nil {
+			FatalExitFunc()
+		} else {
+			os.Exit(1) // untestable: terminates the program, cannot be covered
+		}
+	})
 }
 
 // Panic starts a new message with panic level. The panic() function
@@ -450,6 +465,14 @@ func (l *Logger) Printf(format string, v ...interface{}) {
 	}
 }
 
+// Println sends a log event using debug level and no extra field.
+// Arguments are handled in the manner of fmt.Println.
+func (l *Logger) Println(v ...interface{}) {
+	if e := l.Debug(); e.Enabled() {
+		e.CallerSkipFrame(1).Msg(fmt.Sprintln(v...))
+	}
+}
+
 // Write implements the io.Writer interface. This is useful to set as a writer
 // for the standard library log.
 func (l Logger) Write(p []byte) (n int, err error) {
@@ -470,24 +493,31 @@ func (l *Logger) newEvent(level Level, done func(string)) *Event {
 		}
 		return nil
 	}
-	e := newEvent(l.w, level)
+	e := newEvent(l.w, level, l.stack, l.ctx, l.hooks)
 	e.done = done
-	e.ch = l.hooks
-	e.ctx = l.ctx
 	if level != NoLevel && LevelFieldName != "" {
 		e.Str(LevelFieldName, LevelFieldMarshalFunc(level))
 	}
-	if l.context != nil && len(l.context) > 1 {
+	if len(l.context) > 1 {
 		e.buf = enc.AppendObjectData(e.buf, l.context)
-	}
-	if l.stack {
-		e.Stack()
 	}
 	return e
 }
 
+func (l *Logger) scratchEvent() *Event {
+	return newEvent(LevelWriterAdapter{io.Discard}, DebugLevel, l.stack, l.ctx, l.hooks)
+}
+
+// disabled returns true if the logger is a disabled or nop logger.
+func (l *Logger) disabled() bool {
+	return l.w == nil || l.level == Disabled
+}
+
 // should returns true if the log event should be logged.
 func (l *Logger) should(lvl Level) bool {
+	if l.disabled() {
+		return false
+	}
 	if lvl < l.level || lvl < GlobalLevel() {
 		return false
 	}

@@ -95,7 +95,7 @@ func decodeFloat(src *bufio.Reader) (float64, int) {
 
 	switch minor {
 	case additionalTypeFloat16:
-		panic(fmt.Errorf("float16 is not suppported in decodeFloat"))
+		panic(fmt.Errorf("float16 is not supported in decodeFloat"))
 
 	case additionalTypeFloat32:
 		pb := readNBytes(src, 4)
@@ -490,7 +490,7 @@ func decodeTimeStamp(src *bufio.Reader) []byte {
 		tsb = append(tsb, '"')
 		return tsb
 	}
-	panic(fmt.Errorf("TS format is neigther int nor float: %d", tsMajor))
+	panic(fmt.Errorf("TS format is neither int nor float: %d", tsMajor))
 }
 
 func decodeSimpleFloat(src *bufio.Reader) []byte {

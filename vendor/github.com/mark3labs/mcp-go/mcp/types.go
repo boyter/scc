@@ -35,6 +35,14 @@ const (
 	// https://modelcontextprotocol.io/specification/2024-11-05/server/resources/
 	MethodResourcesRead MCPMethod = "resources/read"
 
+	// MethodResourcesSubscribe subscribes the client to updates for a resource.
+	// https://modelcontextprotocol.io/specification/2025-11-25/server/resources
+	MethodResourcesSubscribe MCPMethod = "resources/subscribe"
+
+	// MethodResourcesUnsubscribe cancels a previous resources/subscribe request.
+	// https://modelcontextprotocol.io/specification/2025-11-25/server/resources
+	MethodResourcesUnsubscribe MCPMethod = "resources/unsubscribe"
+
 	// MethodPromptsList lists all available prompt templates.
 	// https://modelcontextprotocol.io/specification/2024-11-05/server/prompts/
 	MethodPromptsList MCPMethod = "prompts/list"
@@ -81,6 +89,22 @@ const (
 	// MethodTasksCancel cancels an in-progress task.
 	// https://modelcontextprotocol.io/specification/2025-11-25/basic/utilities/tasks
 	MethodTasksCancel MCPMethod = "tasks/cancel"
+
+	// MethodNotificationInitialized indicates that the client completed initialization.
+	// https://modelcontextprotocol.io/specification/2024-11-05/basic/lifecycle/#initialization
+	MethodNotificationInitialized MCPMethod = "notifications/initialized"
+
+	// MethodNotificationCancelled cancels an in-flight request.
+	// https://modelcontextprotocol.io/specification/2025-11-25/basic/utilities/cancellation
+	MethodNotificationCancelled MCPMethod = "notifications/cancelled"
+
+	// MethodNotificationProgress reports progress for a long-running request.
+	// https://modelcontextprotocol.io/specification/2025-11-25/basic/utilities/progress
+	MethodNotificationProgress MCPMethod = "notifications/progress"
+
+	// MethodNotificationMessage is a server-pushed log message.
+	// https://modelcontextprotocol.io/specification/2025-11-25/server/utilities/logging
+	MethodNotificationMessage MCPMethod = "notifications/message"
 
 	// MethodNotificationResourcesListChanged notifies when the list of available resources changes.
 	// https://modelcontextprotocol.io/specification/2025-03-26/server/resources#list-changed-notification
@@ -206,7 +230,7 @@ func NewMetaFromMap(m map[string]any) *Meta {
 
 type Request struct {
 	Method string        `json:"method"`
-	Params RequestParams `json:"params,omitempty"`
+	Params RequestParams `json:"params,omitzero"`
 }
 
 type RequestParams struct {
@@ -217,7 +241,7 @@ type Params map[string]any
 
 type Notification struct {
 	Method string             `json:"method"`
-	Params NotificationParams `json:"params,omitempty"`
+	Params NotificationParams `json:"params,omitzero"`
 }
 
 type NotificationParams struct {
@@ -400,6 +424,25 @@ type JSONRPCErrorDetails struct {
 	Data any `json:"data,omitempty"`
 }
 
+// UnmarshalJSON handles both the standard JSON-RPC error object
+// ({"code": -32600, "message": "..."}) and non-compliant servers that
+// return the error as a plain string (e.g. "cursor_invalid").
+func (e *JSONRPCErrorDetails) UnmarshalJSON(data []byte) error {
+	// Try the spec-compliant object shape first.
+	type plain JSONRPCErrorDetails
+	if err := json.Unmarshal(data, (*plain)(e)); err == nil {
+		return nil
+	}
+	// Some servers (e.g. Slack MCP) return a bare string.
+	var msg string
+	if err := json.Unmarshal(data, &msg); err != nil {
+		return fmt.Errorf("error field is neither an object nor a string: %w", err)
+	}
+	e.Code = INTERNAL_ERROR
+	e.Message = msg
+	return nil
+}
+
 // Standard JSON-RPC error codes
 const (
 	// PARSE_ERROR indicates invalid JSON was received by the server.
@@ -511,6 +554,8 @@ type InitializedNotification struct {
 // capabilities are defined here, in this schema, but this is not a closed set: any
 // client can define its own, additional capabilities.
 type ClientCapabilities struct {
+	// Optional, present if the client is advertising extension support.
+	Extensions map[string]any `json:"extensions,omitempty"`
 	// Experimental, non-standard capabilities that the client supports.
 	Experimental map[string]any `json:"experimental,omitempty"`
 	// Present if the client supports listing roots.
@@ -519,7 +564,7 @@ type ClientCapabilities struct {
 		ListChanged bool `json:"listChanged,omitempty"`
 	} `json:"roots,omitempty"`
 	// Present if the client supports sampling from an LLM.
-	Sampling *struct{} `json:"sampling,omitempty"`
+	Sampling *SamplingCapability `json:"sampling,omitempty"`
 	// Present if the client supports elicitation requests from the server.
 	Elicitation *ElicitationCapability `json:"elicitation,omitempty"`
 	// Present if the client supports task-based execution.
@@ -530,6 +575,8 @@ type ClientCapabilities struct {
 // capabilities are defined here, in this schema, but this is not a closed set: any
 // server can define its own, additional capabilities.
 type ServerCapabilities struct {
+	// Optional, present if the server is advertising extension support.
+	Extensions map[string]any `json:"extensions,omitempty"`
 	// Experimental, non-standard capabilities that the server supports.
 	Experimental map[string]any `json:"experimental,omitempty"`
 	// Present if the server supports sending log messages to the client.
@@ -548,7 +595,7 @@ type ServerCapabilities struct {
 		ListChanged bool `json:"listChanged,omitempty"`
 	} `json:"resources,omitempty"`
 	// Present if the server supports sending sampling requests to clients.
-	Sampling *struct{} `json:"sampling,omitempty"`
+	Sampling *SamplingCapability `json:"sampling,omitempty"`
 	// Present if the server offers any tools to call.
 	Tools *struct {
 		// Whether this server supports notifications for changes to the tool list.
@@ -563,6 +610,16 @@ type ServerCapabilities struct {
 	// Present if the server supports completions requests to the client.
 	Completions *struct{} `json:"completions,omitempty"`
 }
+
+// IconTheme is the background theme an icon is designed to be displayed on.
+type IconTheme string
+
+const (
+	// IconThemeLight indicates the icon is designed for use with a light background.
+	IconThemeLight IconTheme = "light"
+	// IconThemeDark indicates the icon is designed for use with a dark background.
+	IconThemeDark IconTheme = "dark"
+)
 
 // Icon represents a visual identifier for MCP entities.
 //
@@ -581,6 +638,10 @@ type Icon struct {
 
 	// Optional size specifications (e.g., ["48x48"], ["any"] for SVG)
 	Sizes []string `json:"sizes,omitempty"`
+
+	// Theme is an optional specifier for the background theme this icon is designed for.
+	// Use IconThemeLight for light backgrounds or IconThemeDark for dark backgrounds.
+	Theme IconTheme `json:"theme,omitempty"`
 }
 
 // Implementation describes the name and version of an MCP implementation.
@@ -631,13 +692,18 @@ type ProgressNotificationParams struct {
 
 type PaginatedRequest struct {
 	Request
-	Params PaginatedParams `json:"params,omitempty"`
+	Params PaginatedParams `json:"params,omitzero"`
 }
 
 type PaginatedParams struct {
 	// An opaque token representing the current pagination position.
 	// If provided, the server should return results starting after this cursor.
 	Cursor Cursor `json:"cursor,omitempty"`
+	// Meta carries protocol-level metadata. PaginatedRequest embeds Request
+	// and shadows its Params with this type, so Meta must be declared here
+	// to be marshaled on paginated requests (tools/list, resources/list,
+	// resources/templates/list, prompts/list, tasks/list).
+	Meta *Meta `json:"_meta,omitempty"`
 }
 
 type PaginatedResult struct {
@@ -761,6 +827,9 @@ type Resource struct {
 	//
 	// This can be used by clients to populate UI elements.
 	Name string `json:"name"`
+	// Title is an optional human-readable, UI-friendly display name for this resource.
+	// If not provided, clients should fall back to Name.
+	Title string `json:"title,omitempty"`
 	// A description of what this resource represents.
 	//
 	// This can be used by clients to improve the LLM's understanding of
@@ -770,6 +839,13 @@ type Resource struct {
 	MIMEType string `json:"mimeType,omitempty"`
 	// Icons provides visual identifiers for the resource
 	Icons []Icon `json:"icons,omitempty"`
+	// Size is the size of the raw resource content, in bytes (i.e., before base64
+	// encoding or any tokenization), if known. This can be used by hosts to
+	// display file sizes and estimate context window usage.
+	//
+	// A pointer is used so that an explicit zero size remains distinguishable
+	// from an unset value.
+	Size *int64 `json:"size,omitempty"`
 }
 
 // GetName returns the name of the resource.
@@ -790,6 +866,9 @@ type ResourceTemplate struct {
 	//
 	// This can be used by clients to populate UI elements.
 	Name string `json:"name"`
+	// Title is an optional human-readable, UI-friendly display name for this resource template.
+	// If not provided, clients should fall back to Name.
+	Title string `json:"title,omitempty"`
 	// A description of what this template is for.
 	//
 	// This can be used by clients to improve the LLM's understanding of
@@ -1022,6 +1101,38 @@ type CreateMessageParams struct {
 	MaxTokens        int               `json:"maxTokens"`
 	StopSequences    []string          `json:"stopSequences,omitempty"`
 	Metadata         any               `json:"metadata,omitempty"`
+	// Tools the model may use during generation.
+	//
+	// Per the 2025-11-25 spec, the client MUST return an error if this field
+	// is provided but ClientCapabilities.Sampling.Tools is not declared.
+	Tools []Tool `json:"tools,omitempty"`
+	// ToolChoice controls how the model uses tools during generation.
+	//
+	// Per the 2025-11-25 spec, the client MUST return an error if this field
+	// is provided but ClientCapabilities.Sampling.Tools is not declared.
+	// When omitted the client defaults to {Mode: ToolChoiceModeAuto}.
+	ToolChoice *ToolChoice `json:"toolChoice,omitempty"`
+}
+
+// ToolChoiceMode controls tool selection behaviour during sampling.
+type ToolChoiceMode string
+
+const (
+	// ToolChoiceModeAuto lets the model decide whether to use tools. This is
+	// the default when ToolChoice is omitted.
+	ToolChoiceModeAuto ToolChoiceMode = "auto"
+	// ToolChoiceModeRequired forces the model to call at least one tool.
+	ToolChoiceModeRequired ToolChoiceMode = "required"
+	// ToolChoiceModeNone disables tool use for this sampling request.
+	ToolChoiceModeNone ToolChoiceMode = "none"
+)
+
+// ToolChoice controls tool selection behaviour for a sampling request as
+// defined by the 2025-11-25 protocol revision.
+type ToolChoice struct {
+	// Mode controls tool selection. Empty is treated as ToolChoiceModeAuto by
+	// the client.
+	Mode ToolChoiceMode `json:"mode,omitempty"`
 }
 
 // CreateMessageResult is the client's response to a sampling/create_message
@@ -1040,7 +1151,7 @@ type CreateMessageResult struct {
 // SamplingMessage describes a message issued to or received from an LLM API.
 type SamplingMessage struct {
 	Role    Role `json:"role"`
-	Content any  `json:"content"` // Can be TextContent, ImageContent or AudioContent
+	Content any  `json:"content"` // Can be TextContent, ImageContent, AudioContent, ToolUseContent or ToolResultContent
 }
 
 type Annotations struct {
@@ -1123,10 +1234,20 @@ type ResourceLink struct {
 	URI string `json:"uri"`
 	// The name of the resource.
 	Name string `json:"name"`
+	// Title is an optional human-readable, UI-friendly display name for this resource.
+	// If not provided, clients should fall back to Name.
+	Title string `json:"title,omitempty"`
 	// The description of the resource.
 	Description string `json:"description"`
 	// The MIME type of the resource.
 	MIMEType string `json:"mimeType"`
+	// Size is the size of the raw resource content, in bytes (i.e., before base64
+	// encoding or any tokenization), if known. This can be used by hosts to
+	// display file sizes and estimate context window usage.
+	//
+	// A pointer is used so that an explicit zero size remains distinguishable
+	// from an unset value.
+	Size *int64 `json:"size,omitempty"`
 }
 
 func (ResourceLink) isContent() {}
@@ -1144,6 +1265,77 @@ type EmbeddedResource struct {
 }
 
 func (EmbeddedResource) isContent() {}
+
+// ToolUseContent represents a request from the assistant to call a tool within a sampling message.
+// It must have Type set to "tool_use".
+type ToolUseContent struct {
+	Annotated
+	// Meta is a metadata object that is reserved by MCP for storing additional information.
+	Meta *Meta  `json:"_meta,omitempty"`
+	Type string `json:"type"` // Must be "tool_use"
+	// ID is a unique identifier for this tool use, used to match tool results to their corresponding tool uses.
+	ID string `json:"id"`
+	// Name is the name of the tool to call.
+	Name string `json:"name"`
+	// Input contains the arguments to pass to the tool, conforming to the tool's input schema.
+	Input any `json:"input"`
+}
+
+func (ToolUseContent) isContent() {}
+
+// ToolResultContent represents the result of a tool invocation within a sampling message.
+// It must have Type set to "tool_result".
+type ToolResultContent struct {
+	Annotated
+	// Meta is a metadata object that is reserved by MCP for storing additional information.
+	Meta *Meta  `json:"_meta,omitempty"`
+	Type string `json:"type"` // Must be "tool_result"
+	// ToolUseID is the ID of the tool use this result corresponds to.
+	// This MUST match the ID from a previous ToolUseContent.
+	ToolUseID string `json:"toolUseId"`
+	// Content is the unstructured result content of the tool use.
+	Content []Content `json:"content"`
+	// Whether the tool use resulted in an error.
+	IsError bool `json:"isError,omitempty"`
+}
+
+func (ToolResultContent) isContent() {}
+
+// toolResultContentJSON is a helper type for unmarshaling ToolResultContent.
+type toolResultContentJSON struct {
+	Annotated
+	Meta      *Meta             `json:"_meta,omitempty"`
+	Type      string            `json:"type"`
+	ToolUseID string            `json:"toolUseId"`
+	Content   []json.RawMessage `json:"content"`
+	IsError   bool              `json:"isError,omitempty"`
+}
+
+// UnmarshalJSON implements custom JSON unmarshaling for ToolResultContent
+// to handle the nested Content interface slice.
+func (t *ToolResultContent) UnmarshalJSON(data []byte) error {
+	var raw toolResultContentJSON
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	t.Annotated = raw.Annotated
+	t.Meta = raw.Meta
+	t.Type = raw.Type
+	t.ToolUseID = raw.ToolUseID
+	t.IsError = raw.IsError
+
+	if len(raw.Content) > 0 {
+		t.Content = make([]Content, 0, len(raw.Content))
+		for _, rawContent := range raw.Content {
+			c, err := UnmarshalContent(rawContent)
+			if err != nil {
+				return fmt.Errorf("unmarshaling tool result content: %w", err)
+			}
+			t.Content = append(t.Content, c)
+		}
+	}
+	return nil
+}
 
 // ModelPreferences represents the server's preferences for model selection,
 // requested of the client during sampling.
@@ -1434,7 +1626,10 @@ type TaskParams struct {
 // It contains task metadata rather than the actual operation result.
 type CreateTaskResult struct {
 	Result
-	Task Task `json:"task"`
+	Task              Task      `json:"task"`
+	Content           []Content `json:"-"`
+	StructuredContent any       `json:"-"`
+	IsError           bool      `json:"-"`
 }
 
 // GetTaskRequest retrieves the current status of a task.
@@ -1543,12 +1738,14 @@ func MarshalContent(content Content) ([]byte, error) {
 
 // UnmarshalContent implements custom JSON unmarshaling for Content interface
 func UnmarshalContent(data []byte) (Content, error) {
-	var raw map[string]any
+	var raw struct {
+		Type any `json:"type"`
+	}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil, err
 	}
 
-	contentType, ok := raw["type"].(string)
+	contentType, ok := raw.Type.(string)
 	if !ok {
 		return nil, fmt.Errorf("missing or invalid type field")
 	}
@@ -1574,6 +1771,14 @@ func UnmarshalContent(data []byte) (Content, error) {
 		var content EmbeddedResource
 		err := json.Unmarshal(data, &content)
 		return content, err
+	case ContentTypeToolUse:
+		var content ToolUseContent
+		err := json.Unmarshal(data, &content)
+		return content, err
+	case ContentTypeToolResult:
+		var content ToolResultContent
+		err := json.Unmarshal(data, &content)
+		return content, err
 	default:
 		return nil, fmt.Errorf("unknown content type: %s", contentType)
 	}
@@ -1583,6 +1788,24 @@ func UnmarshalContent(data []byte) (Content, error) {
 type ElicitationCapability struct {
 	Form *struct{} `json:"form,omitempty"` // Supports form mode
 	URL  *struct{} `json:"url,omitempty"`  // Supports URL mode
+}
+
+// SamplingCapability represents the sampling capabilities of a client or server
+// as defined by the 2025-11-25 protocol revision.
+//
+// A nil pointer means the peer does not support sampling at all. A non-nil but
+// empty value (the zero value) advertises baseline sampling support without the
+// optional context-inclusion or tool-use extensions.
+type SamplingCapability struct {
+	// Context, if non-nil, advertises that the client honours the
+	// CreateMessageParams.IncludeContext field. If a peer does not declare this
+	// sub-capability, servers SHOULD only use IncludeContext "none" or omit it.
+	Context *struct{} `json:"context,omitempty"`
+	// Tools, if non-nil, advertises that the client honours the
+	// CreateMessageParams.Tools and CreateMessageParams.ToolChoice fields
+	// (sampling with tools). Servers MUST NOT send those fields unless this
+	// sub-capability is declared.
+	Tools *struct{} `json:"tools,omitempty"`
 }
 
 // NewElicitationCompleteNotification creates a new elicitation complete notification.
