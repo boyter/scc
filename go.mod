@@ -1,6 +1,6 @@
 module github.com/boyter/scc/v3
 
-go 1.25.5
+go 1.26.4
 
 ignore ./examples
 
@@ -10,7 +10,7 @@ require (
 	github.com/boyter/simplecache v0.0.0-20260310220729-445661819a53
 	github.com/go-git/go-git/v5 v5.19.1
 	github.com/json-iterator/go v1.1.12
-	github.com/mark3labs/mcp-go v0.54.1
+	github.com/mark3labs/mcp-go v0.55.0
 	github.com/mattn/go-isatty v0.0.22
 	github.com/mattn/go-runewidth v0.0.24
 	github.com/rs/zerolog v1.35.1

@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"maps"
 	"slices"
 	"sort"
@@ -71,13 +72,19 @@ type ToolHandlerMiddleware func(ToolHandlerFunc) ToolHandlerFunc
 // ResourceHandlerMiddleware is a middleware function that wraps a ResourceHandlerFunc.
 type ResourceHandlerMiddleware func(ResourceHandlerFunc) ResourceHandlerFunc
 
-// ToolFilterFunc is a function that filters tools based on context, typically using session information.
+// ToolFilterFunc is a function that filters tools based on context, typically
+// using session information. Filters are applied both when listing tools
+// (tools/list) and when calling tools (tools/call), so a filtered-out tool
+// cannot be discovered or invoked.
 type ToolFilterFunc func(ctx context.Context, tools []mcp.Tool) []mcp.Tool
 
 // PromptHandlerMiddleware is a middleware function that wraps a PromptHandlerFunc.
 type PromptHandlerMiddleware func(PromptHandlerFunc) PromptHandlerFunc
 
-// PromptFilterFunc is a function that filters prompts based on context, typically using session information.
+// PromptFilterFunc is a function that filters prompts based on context,
+// typically using session information. Filters are applied both when listing
+// prompts (prompts/list) and when retrieving prompts (prompts/get), so a
+// filtered-out prompt cannot be discovered or accessed.
 type PromptFilterFunc func(ctx context.Context, prompts []mcp.Prompt) []mcp.Prompt
 
 // ServerTool combines a Tool with its ToolHandlerFunc.
@@ -221,6 +228,8 @@ type MCPServer struct {
 	strictInputSchemaDefault   bool
 	tracer                     tracing.Tracer
 	propagator                 tracing.Propagator
+	metaPropagator             tracing.MetaPropagator
+	requestLogger              *slog.Logger
 }
 
 // WithPaginationLimit sets the pagination limit for the server.
@@ -342,7 +351,11 @@ func WithResourceRecovery() ServerOption {
 	})
 }
 
-// WithToolFilter adds a filter function that will be applied to tools before they are returned in list_tools
+// WithToolFilter adds a filter function that controls tool visibility and access.
+// The filter is applied both when listing tools (tools/list) and when calling
+// tools (tools/call). A tool that is filtered out cannot be discovered or
+// invoked, ensuring that filters act as an access control boundary rather than
+// just a visibility hint.
 func WithToolFilter(
 	toolFilter ToolFilterFunc,
 ) ServerOption {
@@ -365,7 +378,10 @@ func WithPromptHandlerMiddleware(
 	}
 }
 
-// WithPromptFilter adds a filter function that will be applied to prompts before they are returned in list_prompts
+// WithPromptFilter adds a filter function that controls prompt visibility and
+// access. The filter is applied both when listing prompts (prompts/list) and
+// when retrieving a prompt (prompts/get). A prompt that is filtered out cannot
+// be discovered or accessed.
 func WithPromptFilter(
 	promptFilter PromptFilterFunc,
 ) ServerOption {
@@ -1606,11 +1622,11 @@ func matchesTemplate(uri string, template *mcp.URITemplate) bool {
 	return template.Regexp().MatchString(uri)
 }
 
-func (s *MCPServer) handleListPrompts(
-	ctx context.Context,
-	id any,
-	request mcp.ListPromptsRequest,
-) (*mcp.ListPromptsResult, *requestError) {
+// filteredPrompts builds the full prompt candidate set and applies all
+// registered prompt filters. This is the single source of truth for which
+// prompts are visible in a given context, used by both handleListPrompts
+// and handleGetPrompt to guarantee consistent behavior.
+func (s *MCPServer) filteredPrompts(ctx context.Context) []mcp.Prompt {
 	s.promptsMu.RLock()
 	prompts := make([]mcp.Prompt, 0, len(s.prompts))
 	for _, prompt := range s.prompts {
@@ -1631,6 +1647,16 @@ func (s *MCPServer) handleListPrompts(
 		}
 	}
 	s.promptFiltersMu.RUnlock()
+
+	return prompts
+}
+
+func (s *MCPServer) handleListPrompts(
+	ctx context.Context,
+	id any,
+	request mcp.ListPromptsRequest,
+) (*mcp.ListPromptsResult, *requestError) {
+	prompts := s.filteredPrompts(ctx)
 
 	promptsToReturn, nextCursor, err := listByPagination(
 		ctx,
@@ -1671,6 +1697,30 @@ func (s *MCPServer) handleGetPrompt(
 		}
 	}
 
+	// Enforce prompt filters at get time to prevent access to filtered-out
+	// prompts. Uses the same filteredPrompts helper as prompts/list so that
+	// filters see the identical full candidate set.
+	s.promptFiltersMu.RLock()
+	hasFilters := len(s.promptFilters) > 0
+	s.promptFiltersMu.RUnlock()
+	if hasFilters {
+		visible := s.filteredPrompts(ctx)
+		found := false
+		for _, p := range visible {
+			if p.Name == request.Params.Name {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, &requestError{
+				id:   id,
+				code: mcp.INVALID_PARAMS,
+				err:  fmt.Errorf("prompt '%s' not found: %w", request.Params.Name, ErrPromptNotFound),
+			}
+		}
+	}
+
 	finalHandler := handler
 
 	s.promptMiddlewareMu.RLock()
@@ -1694,11 +1744,11 @@ func (s *MCPServer) handleGetPrompt(
 	return result, nil
 }
 
-func (s *MCPServer) handleListTools(
-	ctx context.Context,
-	id any,
-	request mcp.ListToolsRequest,
-) (*mcp.ListToolsResult, *requestError) {
+// filteredTools builds the full tool candidate set (global + task + session)
+// and applies all registered tool filters. This is the single source of truth
+// for which tools are visible in a given context, used by both handleListTools
+// and handleToolCall to guarantee consistent behavior.
+func (s *MCPServer) filteredTools(ctx context.Context) []mcp.Tool {
 	// Get the base tools from the server (both regular and task tools)
 	s.toolsMu.RLock()
 	tools := make([]mcp.Tool, 0, len(s.tools)+len(s.taskTools))
@@ -1766,6 +1816,16 @@ func (s *MCPServer) handleListTools(
 		}
 	}
 	s.toolFiltersMu.RUnlock()
+
+	return tools
+}
+
+func (s *MCPServer) handleListTools(
+	ctx context.Context,
+	id any,
+	request mcp.ListToolsRequest,
+) (*mcp.ListToolsResult, *requestError) {
+	tools := s.filteredTools(ctx)
 
 	// Apply pagination
 	toolsToReturn, nextCursor, err := listByPagination(
@@ -1839,6 +1899,30 @@ func (s *MCPServer) handleToolCall(
 			id:   id,
 			code: mcp.INVALID_PARAMS,
 			err:  fmt.Errorf("tool '%s' not found: %w", request.Params.Name, ErrToolNotFound),
+		}
+	}
+
+	// Enforce tool filters at call time to prevent access to filtered-out
+	// tools. Uses the same filteredTools helper as tools/list so that filters
+	// see the identical full candidate set (global + task + session tools).
+	s.toolFiltersMu.RLock()
+	hasFilters := len(s.toolFilters) > 0
+	s.toolFiltersMu.RUnlock()
+	if hasFilters {
+		visible := s.filteredTools(ctx)
+		found := false
+		for _, t := range visible {
+			if t.Name == request.Params.Name {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, &requestError{
+				id:   id,
+				code: mcp.INVALID_PARAMS,
+				err:  fmt.Errorf("tool '%s' not found: %w", request.Params.Name, ErrToolNotFound),
+			}
 		}
 	}
 
