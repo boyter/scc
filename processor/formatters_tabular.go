@@ -55,7 +55,6 @@ func fileSummarizeLong(input chan *FileJob) string {
 
 	langs := map[string]LanguageSummary{}
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumBytes int64 = 0, 0, 0, 0, 0, 0, 0
-	var sumWeightedComplexity float64
 
 	for res := range input {
 		sumFiles++
@@ -71,7 +70,6 @@ func fileSummarizeLong(input chan *FileJob) string {
 			weightedComplexity = (float64(res.Complexity) / float64(res.Code)) * 100
 		}
 		res.WeightedComplexity = weightedComplexity
-		sumWeightedComplexity += weightedComplexity
 
 		_, ok := langs[res.Language]
 
@@ -80,16 +78,15 @@ func fileSummarizeLong(input chan *FileJob) string {
 			files = append(files, res)
 
 			langs[res.Language] = LanguageSummary{
-				Name:               res.Language,
-				Lines:              res.Lines,
-				Code:               res.Code,
-				Comment:            res.Comment,
-				Blank:              res.Blank,
-				Complexity:         res.Complexity,
-				Count:              1,
-				WeightedComplexity: weightedComplexity,
-				Files:              files,
-				LineLength:         res.LineLength,
+				Name:       res.Language,
+				Lines:      res.Lines,
+				Code:       res.Code,
+				Comment:    res.Comment,
+				Blank:      res.Blank,
+				Complexity: res.Complexity,
+				Count:      1,
+				Files:      files,
+				LineLength: res.LineLength,
 			}
 		} else {
 			tmp := langs[res.Language]
@@ -97,16 +94,15 @@ func fileSummarizeLong(input chan *FileJob) string {
 			lineLength := append(tmp.LineLength, res.LineLength...)
 
 			langs[res.Language] = LanguageSummary{
-				Name:               res.Language,
-				Lines:              tmp.Lines + res.Lines,
-				Code:               tmp.Code + res.Code,
-				Comment:            tmp.Comment + res.Comment,
-				Blank:              tmp.Blank + res.Blank,
-				Complexity:         tmp.Complexity + res.Complexity,
-				Count:              tmp.Count + 1,
-				WeightedComplexity: tmp.WeightedComplexity + weightedComplexity,
-				Files:              files,
-				LineLength:         lineLength,
+				Name:       res.Language,
+				Lines:      tmp.Lines + res.Lines,
+				Code:       tmp.Code + res.Code,
+				Comment:    tmp.Comment + res.Comment,
+				Blank:      tmp.Blank + res.Blank,
+				Complexity: tmp.Complexity + res.Complexity,
+				Count:      tmp.Count + 1,
+				Files:      files,
+				LineLength: lineLength,
 			}
 		}
 	}
@@ -129,7 +125,12 @@ func fileSummarizeLong(input chan *FileJob) string {
 			trimmedName = summary.Name[:longNameTruncate-1] + "…"
 		}
 
-		_, _ = fmt.Fprintf(str, tabularWideFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summary.WeightedComplexity)
+		var summaryWeightedComplexity float64
+		if summary.Code != 0 {
+			summaryWeightedComplexity = (float64(summary.Complexity) / float64(summary.Code)) * 100
+		}
+
+		_, _ = fmt.Fprintf(str, tabularWideFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summaryWeightedComplexity)
 
 		if Percent {
 			_, _ = fmt.Fprintf(str,
@@ -175,8 +176,13 @@ func fileSummarizeLong(input chan *FileJob) string {
 
 	printDebugF("milliseconds to build formatted string: %d", makeTimestampMilli()-startTime)
 
+	var totalWeightedComplexity float64
+	if sumCode != 0 {
+		totalWeightedComplexity = (float64(sumComplexity) / float64(sumCode)) * 100
+	}
+
 	str.WriteString(getTabularWideBreak())
-	_, _ = fmt.Fprintf(str, tabularWideFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumWeightedComplexity)
+	_, _ = fmt.Fprintf(str, tabularWideFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, totalWeightedComplexity)
 	str.WriteString(getTabularWideBreak())
 
 	if UlocMode {

@@ -1173,6 +1173,44 @@ func TestFileSummarizeLong(t *testing.T) {
 	}
 }
 
+// TestFileSummarizeLongWeightedComplexity guards against regression of issue #412 where the
+// language and total Complexity/Lines columns summed each file's ratio instead of recomputing
+// from the aggregated complexity and code totals.
+func TestFileSummarizeLongWeightedComplexity(t *testing.T) {
+	Files = false
+
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:   "Go",
+		Filename:   "aaaa.go",
+		Extension:  "go",
+		Location:   "./",
+		Lines:      1000,
+		Code:       1000,
+		Complexity: 1000,
+	}
+	inputChan <- &FileJob{
+		Language:   "Go",
+		Filename:   "bbbb.go",
+		Extension:  "go",
+		Location:   "./",
+		Lines:      1000,
+		Code:       1000,
+		Complexity: 500,
+	}
+	close(inputChan)
+	res := fileSummarizeLong(inputChan)
+
+	// Aggregate is complexity 1500 / code 2000 * 100 = 75.00 for both the language and total rows.
+	// The old buggy behaviour summed the per-file ratios (100.00 + 50.00 = 150.00).
+	if !strings.Contains(res, "75.00") {
+		t.Errorf("Expected aggregated Complexity/Lines of 75.00, got:\n%s", res)
+	}
+	if strings.Contains(res, "150.00") {
+		t.Errorf("Complexity/Lines was summed across files instead of recomputed:\n%s", res)
+	}
+}
+
 func TestFileSummarizeShort(t *testing.T) {
 	inputChan := make(chan *FileJob, 1000)
 	inputChan <- &FileJob{
