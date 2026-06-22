@@ -197,7 +197,7 @@ func (l *location) String() string {
 	loc := ".com/"
 	ext := ".git"
 	switch strings.ToLower(l.Provider) {
-	case "bitbucket":
+	case "bitbucket", "codeberg":
 		loc = ".org/"
 	case "git.sr.ht":
 		loc = "/"
