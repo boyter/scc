@@ -1552,7 +1552,7 @@ ENTRYPOINT ["scc"]
 
 ### Badges
 
-You can use `scc` to provide badges on your github/bitbucket/gitlab/sr.ht open repositories. For example, [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/)](https://github.com/boyter/scc/)
+You can use `scc` to provide badges on your github/bitbucket/gitlab/sr.ht/codeberg open repositories. For example, [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/)](https://github.com/boyter/scc/)
  The format to do so is,
 
 <https://sloc.xyz/PROVIDER/USER/REPO>
@@ -1623,6 +1623,7 @@ You can find the source code for badges in the repository at <https://github.com
 - sr.ht - <https://sloc.xyz/sr.ht/~nektro/magnolia-desktop/>
 - Bitbucket - <https://sloc.xyz/bitbucket/boyter/decodingcaptchas>
 - Gitlab - <https://sloc.xyz/gitlab/esr/loccount>
+- Codeberg - <https://sloc.xyz/codeberg/NextBroomTeam/NextBroom>
 
 ### Languages
 
