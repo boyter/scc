@@ -1068,7 +1068,17 @@
       "!= ",
       "== "
     ],
-    "extensions": ["hh", "hpp", "hxx", "h++", "inl", "ipp", "ixx", "tpp"],
+    "extensions": ["h", "hh", "hpp", "hxx", "h++", "inl", "ipp", "ixx", "tpp"],
+    "heuristics": [
+      "(?m)^\\s*#\\s*include <(cstdint|string|vector|map|list|array|bitset|queue|stack|forward_list|unordered_map|unordered_set|(i|o|io)stream)>",
+      "(?m)^\\s*template\\s*<",
+      "(?m)^[ \\t]*(try|constexpr)",
+      "(?m)^[ \\t]*catch\\s*\\(",
+      "(?m)^[ \\t]*(class|(using[ \\t]+)?namespace)\\s+\\w+",
+      "(?m)^[ \\t]*(private|public|protected):$",
+      "__has_cpp_attribute|__cplusplus >",
+      "std::\\w+"
+    ],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
     "quotes": [
@@ -5168,7 +5178,10 @@
       "!= ",
       "== "
     ],
-    "extensions": ["m"],
+    "extensions": ["m", "h"],
+    "heuristics": [
+      "(?m)^\\s*(@(interface|class|protocol|property|end|synchronised|selector|implementation)\\b|#import\\s+.+\\.h[\">])"
+    ],
     "keywords": [
       "#include",
       "printf",

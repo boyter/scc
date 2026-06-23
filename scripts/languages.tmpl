@@ -60,6 +60,11 @@ var languageDatabase = map[string]Language{
 			{{quote .}},
 			{{- end}}
 		},
+		Heuristics: []string{
+			{{- range $value.Heuristics}}
+			{{quote .}},
+			{{- end}}
+		},
 		FileNames: []string{
 			{{- range $value.FileNames}}
 			{{quote .}},

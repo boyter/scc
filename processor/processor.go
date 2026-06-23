@@ -714,6 +714,20 @@ func processLanguageFeature(name string, value Language) {
 		keywordBytes = append(keywordBytes, []byte(v))
 	}
 
+	// Compile any regex heuristics used to disambiguate shared extensions such
+	// as .h between C / C++ / Objective-C. The patterns are validated at
+	// generation time (scripts/include.go) so MustCompile is safe here, but we
+	// guard with Compile anyway to honour the no-panics policy.
+	heuristics := make([]*regexp.Regexp, 0, len(value.Heuristics))
+	for _, v := range value.Heuristics {
+		re, err := regexp.Compile(v)
+		if err != nil {
+			printWarnF("failed to compile heuristic %q for language %s: %v", v, name, err)
+			continue
+		}
+		heuristics = append(heuristics, re)
+	}
+
 	LanguageFeaturesMutex.Lock()
 	LanguageFeatures[name] = LanguageFeature{
 		Complexity:            complexityTrie,
@@ -732,6 +746,7 @@ func processLanguageFeature(name string, value Language) {
 		ProcessMask:           processMask,
 		Keywords:              value.Keywords,
 		KeywordBytes:          keywordBytes,
+		Heuristics:            heuristics,
 		Quotes:                value.Quotes,
 	}
 	LanguageFeaturesMutex.Unlock()
