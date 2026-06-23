@@ -148,6 +148,13 @@ type LanguageSummary struct {
 	Files              []*FileJob
 	LineLength         []int
 	ULOC               int
+	CodePercent        *float64 `json:",omitempty"`
+	CommentPercent     *float64 `json:",omitempty"`
+	BlankPercent       *float64 `json:",omitempty"`
+	LinePercent        *float64 `json:",omitempty"`
+	ComplexityPercent  *float64 `json:",omitempty"`
+	BytePercent        *float64 `json:",omitempty"`
+	FilePercent        *float64 `json:",omitempty"`
 }
 
 // OpenClose is used to hold an open/close pair for matching such as multi line comments

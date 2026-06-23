@@ -341,6 +341,44 @@ else
     exit
 fi
 
+# https://github.com/boyter/scc/issues/710 percent flag should add percentage fields to json output
+if ./scc --percent --format json processor | grep -q "CodePercent"; then
+    echo -e "${GREEN}PASSED json percent test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED json output should contain percentage fields with --percent"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc --percent --format json2 processor | grep -q "CodePercent"; then
+    echo -e "${GREEN}PASSED json2 percent test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED json2 output should contain percentage fields with --percent"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+# backwards compatibility, without --percent the json output should not contain percentage fields
+if ./scc --format json processor | grep -q "CodePercent"; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED json output should not contain percentage fields without --percent"
+    echo -e "=======================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED json no percent test"
+fi
+
+if ./scc --format json2 processor | grep -q "CodePercent"; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED json2 output should not contain percentage fields without --percent"
+    echo -e "=======================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED json2 no percent test"
+fi
+
 echo -e  "${NC}Checking compile targets..."
 
 echo "   darwin..."
