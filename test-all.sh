@@ -323,6 +323,54 @@ else
     exit
 fi
 
+# https://github.com/boyter/scc/issues/627 paired behaviour flags should be order
+# sensitive so the last flag on the command line wins, allowing a flag set in a
+# shell alias to be temporarily overridden by a later flag.
+if ./scc --no-gen --gen ./examples/generated/ --no-scc-ignore | grep -q "(gen)"; then
+    echo -e "${GREEN}PASSED last flag wins --no-gen --gen"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED --gen after --no-gen should win and flag generated files"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc --gen --no-gen ./examples/generated/ --no-scc-ignore | grep -q "\$0"; then
+    echo -e "${GREEN}PASSED last flag wins --gen --no-gen"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED --no-gen after --gen should win and exclude generated files"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc -i js --no-min --min ./examples/minified/ --no-scc-ignore | grep -q "(mi"; then
+    echo -e "${GREEN}PASSED last flag wins --no-min --min"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED --min after --no-min should win and flag minified files"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc -i js --min --no-min ./examples/minified/ --no-scc-ignore | grep -q "\$0"; then
+    echo -e "${GREEN}PASSED last flag wins --min --no-min"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED --no-min after --min should win and exclude minified files"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc --no-min-gen -z ./examples/generated/ --no-scc-ignore | grep -q "(gen)"; then
+    echo -e "${GREEN}PASSED last flag wins --no-min-gen -z"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED -z after --no-min-gen should win and flag generated files"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 if ./scc --no-large --large-byte-count 0 ./examples/language | grep -q "\$0"; then
     echo -e "${GREEN}PASSED no large byte test"
 else
