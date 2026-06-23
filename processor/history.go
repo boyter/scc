@@ -201,6 +201,9 @@ func emptySnapshot() HeadSnapshot {
 // (newest first → oldest first), and feeds every commit's first-parent diff
 // to the observer.
 func runHistory(repoPath string, observer CommitObserver) (HistoryWindow, error) {
+	// Turn GC back on because we have no idea how much we are about to process
+	EnableGc()
+
 	repo, err := git.PlainOpenWithOptions(repoPath, &git.PlainOpenOptions{DetectDotGit: true})
 	if err != nil {
 		return HistoryWindow{}, fmt.Errorf("open git repository: %w", err)

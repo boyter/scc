@@ -373,6 +373,14 @@ func ConfigureGc() {
 	gcPercent = debug.SetGCPercent(gcPercent)
 }
 
+// EnableGc restores the garbage collector to the percentage captured by
+// ConfigureGc.
+func EnableGc() {
+	if gcPercent != -1 {
+		debug.SetGCPercent(gcPercent)
+	}
+}
+
 // ConfigureLazy is a simple setter used to turn on lazy loading used only by command line
 func ConfigureLazy(lazy bool) {
 	isLazy = lazy
