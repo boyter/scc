@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 	"slices"
 	"strconv"
@@ -109,7 +110,17 @@ func main() {
     scc --report=out.html --report-title "myrepo" --report-skip cocomo`,
 		Version: processor.Version,
 		Run: func(cmd *cobra.Command, args []string) {
-			processor.DirFilePaths = args
+			filepaths := make([]string, 0)
+			for _, arg := range args {
+				matches, err := filepath.Glob(arg)
+				if err != nil {
+					// Invalid pattern for glob, assume the arg is a literal filename
+					filepaths = append(filepaths, arg)
+				} else {
+					filepaths = append(filepaths, matches...)
+				}
+			}
+			processor.DirFilePaths = filepaths
 			processor.ConfigureGc()
 			processor.ConfigureLazy(true)
 
