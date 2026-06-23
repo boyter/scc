@@ -438,13 +438,19 @@ https://paste.c-net.org/Example
 
 ### Ignore Files
 
-`scc` mostly supports .ignore files inside directories that it scans. This is similar to how ripgrep, ag and tokei work. .ignore files are 100% the same as .gitignore files with the same syntax, and as such `scc` will ignore files and directories listed in them. You can add .ignore files to ignore things like vendored dependency checked in files and such. The idea is allowing you to add a file or folder to git and have ignored in the count.
+`scc` mostly supports .ignore files inside directories that it scans. This is similar to how ripgrep, ag and tokei work. 
+.ignore files are 100% the same as .gitignore files with the same syntax, and as such `scc` will ignore files and 
+directories listed in them. You can add .ignore files to ignore things like vendored dependency checked in files and 
+such. The idea is allowing you to add a file or folder to git and have ignored in the count.
 
-It also supports its own ignore file `.sccignore` if you want `scc` to ignore things while having ripgrep, ag, tokei and others support them.
+It also supports its own ignore file `.sccignore` if you want `scc` to ignore things while having ripgrep, ag, tokei 
+and others support them.
 
 ### Configuration Files
 
-`scc` can read default flags from a configuration file so you do not have to retype them or hide them in shell aliases. The format is an *opts-list* in the style of ripgrep and bat: the file is simply a list of the same command-line flags you would otherwise type, and anything valid on the command line is valid in the file.
+`scc` can read default flags from a configuration file so you do not have to retype them or hide them in shell aliases. 
+The format is an *opts-list* in the style of ripgrep and bat: the file is simply a list of the same command-line flags 
+you would otherwise type, and anything valid on the command line is valid in the file.
 
 Format rules:
 
@@ -469,8 +475,8 @@ Example `.scc`:
 
 There are two configuration tiers:
 
-- **Global** — there is no fixed default location and no per-run home-directory stat. The global source is consulted only when you point at it explicitly, via the `SCC_CONFIG_PATH` environment variable (a set-but-empty value is treated as unset) or the `--config <path>` flag. `--config` overrides `SCC_CONFIG_PATH`. This mirrors ripgrep's `RIPGREP_CONFIG_PATH` model.
-- **Project** — a file named `.scc` in the current working directory (`./.scc`), found with a single stat and **no walk-up**. This mirrors tokei's project-level config. `cd project && scc` picks up `project/.scc`; running `scc` from a subdirectory does **not** pick up an ancestor's `.scc`. Path arguments do not move the anchor — `scc ./project` still reads `./.scc`, not `./project/.scc`.
+- **Global** — there is no fixed default location and no per-run home-directory stat. The global source is consulted only when you point at it explicitly, via the `SCC_CONFIG_PATH` environment variable (a set-but-empty value is treated as unset) or the `--config <path>` flag. `--config` overrides `SCC_CONFIG_PATH`.
+- **Project** — a file named `.scc` in the current working directory (`./.scc`), found with a single stat and **no walk-up**. `cd project && scc` picks up `project/.scc`; running `scc` from a subdirectory does **not** pick up an ancestor's `.scc`. Path arguments do not move the anchor — `scc ./project` still reads `./.scc`, not `./project/.scc`.
 
 To read the repository root's `.scc` from a subdirectory, pass `-r` / `--find-root`, which walks up from the current directory to the git/hg root (using the same reverse traversal as the sibling tool [`cs`](https://github.com/boyter/cs)). It is off by default and affects config discovery only — it changes which `.scc` is read, not which directory is counted. Outside a repository it degrades to `./.scc`.
 

@@ -17,15 +17,10 @@ import (
 )
 
 // SccConfigEnv is the environment variable naming the global config source.
-// Mirrors ripgrep's RIPGREP_CONFIG_PATH model: consulted only when set, with
-// no fixed default location and no home-directory stat on every run (§3.1).
 const SccConfigEnv = "SCC_CONFIG_PATH"
 
 // Default slice values are kept as Go constants rather than as cobra flag
-// defaults. pflag *replaces* a slice's default on the first Set then appends,
-// so a config/CLI value would otherwise silently drop these built-ins. The
-// flags are registered with an empty default and the real defaults are merged
-// back in post-parse (§7).
+// defaults.
 var (
 	defaultExcludeDirs      = []string{".git", ".hg", ".svn"}
 	defaultExcludeFiles     = []string{"package-lock.json", "Cargo.lock", "yarn.lock", "pubspec.lock", "Podfile.lock", "pnpm-lock.yaml"}
@@ -33,19 +28,13 @@ var (
 )
 
 // configSource records a config file that was loaded during discovery and the
-// tokens it contributed. Used to flush trace/debug messages after the flags are
-// set (§8.0a) and to attribute an unknown flag to its originating file (§8/05).
+// tokens it contributed.
 type configSource struct {
 	label  string
 	tokens []string
 }
 
-// configTrace holds "loaded config from X" messages buffered during discovery
-// (which runs before cobra parses --trace/--debug) and flushed from rootCmd.Run.
 var configTrace []string
-
-// configSources records each loaded config file and its tokens for unknown-flag
-// attribution.
 var configSources []configSource
 
 // parseConfigArgs tokenizes the contents of a config-ish source (a config file
@@ -170,10 +159,7 @@ func preScanConfig(args []string) (noConfig bool, findRoot bool, explicitPath st
 	return noConfig, findRoot, explicitPath
 }
 
-// discoverConfigArgs resolves the global and project config sources and reads
-// each through parseConfigArgs(content, false). An unreadable *explicit* source
-// (--config or SCC_CONFIG_PATH) is a hard error; a missing project ./.scc is
-// silent (§3, §8.1).
+// discoverConfigArgs resolves the global and project config sources
 func discoverConfigArgs(noConfig, findRoot bool, explicitPath string) (globalTokens, projectTokens []string, err error) {
 	// Global source: --config wins, else SCC_CONFIG_PATH (when non-empty and not
 	// disabled), else nothing. No default location, no home-dir stat (§3.1).
@@ -201,17 +187,12 @@ func discoverConfigArgs(noConfig, findRoot bool, explicitPath string) (globalTok
 	if !noConfig {
 		projectPath := "./.scc"
 		if findRoot {
-			// FindRepositoryRoot returns an absolute os.Getwd() path on a walk-up
-			// hit and "." otherwise; filepath.Join avoids mixed separators on
-			// Windows (§3.2).
 			projectPath = filepath.Join(gocodewalker.FindRepositoryRoot("."), ".scc")
 		}
 
 		if _, statErr := os.Stat(projectPath); statErr == nil {
 			tokens, readErr := readConfigFile(projectPath, "project "+projectPath)
 			if readErr != nil {
-				// The file exists but could not be read/parsed; warn but do not
-				// abort (it is auto-discovered, not explicitly requested).
 				_, _ = fmt.Fprintf(os.Stderr, "warning: could not read config file %q: %s\n", projectPath, readErr)
 			} else {
 				projectTokens = tokens
@@ -358,8 +339,10 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.IntVar(intVar(&processor.FileSummaryJobQueueSize), "file-summary-job-queue-size", runtime.NumCPU(), "the size of the queue used to hold processed file statistics before formatting")
 	flags.IntVar(intVar(&processor.DirectoryWalkerJobWorkers), "directory-walker-job-workers", 8, "controls the maximum number of workers which will walk the directory tree")
 	flags.StringVarP(strVar(&processor.Format), "format", "f", "tabular", "set output format [tabular, wide, json, json2, csv, csv-stream, cloc-yaml, html, html-table, sql, sql-insert, openmetrics]")
+
 	// Write flag: bound via b so config can never reach the real var (§5).
 	flags.StringVar(b.report, "report", "", "write a self-contained HTML report; bare flag writes scc-report.html and prompts before overwriting, --report=path/out.html overwrites silently")
+
 	// NoOptDefVal makes a bare `--report` work (no `=value`). runReport compares
 	// ReportOut to processor.DefaultReportName to tell "bare flag" apart from an
 	// explicit path, so the two must stay in sync.

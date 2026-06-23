@@ -52,8 +52,7 @@ func main() {
 	// pprof.StartCPUProfile(f)
 	// defer pprof.StopCPUProfile()
 
-	// Handle --mcp flag before cobra to avoid interfering with stdio. The MCP
-	// server deliberately does not load global/project config (§3.3 step 0).
+	// Handle --mcp flag before cobra to avoid interfering with stdio.
 	if slices.Contains(os.Args[1:], "--mcp") {
 		startMCPServer()
 		return
@@ -73,13 +72,9 @@ func main() {
 		os.Args = append([]string{os.Args[0]}, parseConfigArgs(string(b), true)...)
 	}
 
-	// The genuine CLI is the args the user actually typed, captured after @file
-	// expansion (@file is trusted, §6) but before config tokens are prepended.
-	// It is the sole source of the write vars (§5.2).
+	// What the user actually specified
 	genuineCLI := slices.Clone(os.Args[1:])
 
-	// Pre-scan os.Args for the config-control flags, then discover and read the
-	// global/project config sources (§3, §4).
 	noConfig, findRoot, explicitPath := preScanConfig(os.Args)
 	globalTokens, projectTokens, discoverErr := discoverConfigArgs(noConfig, findRoot, explicitPath)
 	if discoverErr != nil {
