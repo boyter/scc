@@ -2138,53 +2138,6 @@
       }
     ]
   },
-  "Phoenix LiveView": {
-    "complexitychecks": [
-      "case ",
-      "cond ",
-      "if ",
-      "for ",
-      "with ",
-      "try ",
-      "catch ",
-      "rescue ",
-      "else ",
-      "and ",
-      "or ",
-      "not ",
-      "|| ",
-      "&& ",
-      "!= ",
-      "== ",
-      "|> ",
-      "<% ",
-      "<. "
-    ],
-    "extensions": ["heex", "leex"],
-    "line_comment": [
-      "#",
-      "<!--"
-    ],
-    "multi_line": [["<!--", "-->"]],
-    "quotes": [
-      {
-        "end": "\\\"\\\"\\\"",
-        "start": "\\\"\\\"\\\""
-      },
-      {
-        "end": "\\\"",
-        "start": "\\\""
-      },
-      {
-        "end": "'''",
-        "start": "'''"
-      },
-      {
-        "end": "'",
-        "start": "'"
-      }
-    ]
-  },
   "Elm": {
     "complexitychecks": [
       "for ",
@@ -3166,11 +3119,12 @@
       "== ",
       "|| ",
       "&& ",
-      "|> "
+      "|> ",
+      "<. "
     ],
-    "extensions": ["heex"],
+    "extensions": ["heex", "leex"],
     "line_comment": [],
-    "multi_line": [["<%!--", "--%>"]],
+    "multi_line": [["<!--", "-->"], ["<%!--", "--%>"]],
     "quotes": [
       {
         "end": "\"",

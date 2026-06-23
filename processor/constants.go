@@ -5181,12 +5181,18 @@ var languageDatabase = map[string]Language{
 			"|| ",
 			"&& ",
 			"|> ",
+			"<. ",
 		},
 		Extensions: []string{
 			"heex",
+			"leex",
 		},
 		ExtensionFile: false,
 		MultiLine: [][]string{
+			{
+				"<!--",
+				"-->",
+			},
 			{
 				"<%!--",
 				"--%>",
@@ -9191,75 +9197,6 @@ var languageDatabase = map[string]Language{
 			"perl",
 			"perl5",
 		},
-	},
-	"Phoenix LiveView": {
-		LineComment: []string{
-			"#",
-			"<!--",
-		},
-		ComplexityChecks: []string{
-			"case ",
-			"cond ",
-			"if ",
-			"for ",
-			"with ",
-			"try ",
-			"catch ",
-			"rescue ",
-			"else ",
-			"and ",
-			"or ",
-			"not ",
-			"|| ",
-			"&& ",
-			"!= ",
-			"== ",
-			"|> ",
-			"<% ",
-			"<. ",
-		},
-		Extensions: []string{
-			"heex",
-			"leex",
-		},
-		ExtensionFile: false,
-		MultiLine: [][]string{
-			{
-				"<!--",
-				"-->",
-			},
-		},
-		Quotes: []Quote{
-			{
-				Start:        "\\\"\\\"\\\"",
-				End:          "\\\"\\\"\\\"",
-				IgnoreEscape: false,
-				DocString:    false,
-			},
-			{
-				Start:        "\\\"",
-				End:          "\\\"",
-				IgnoreEscape: false,
-				DocString:    false,
-			},
-			{
-				Start:        "'''",
-				End:          "'''",
-				IgnoreEscape: false,
-				DocString:    false,
-			},
-			{
-				Start:        "'",
-				End:          "'",
-				IgnoreEscape: false,
-				DocString:    false,
-			},
-		},
-		NestedMultiLine: false,
-		Keywords:        []string{},
-		Heuristics:      []string{},
-		FileNames:       []string{},
-		SheBangs:        []string{},
 	},
 	"Picat": {
 		LineComment: []string{
