@@ -5,6 +5,7 @@ package processor
 import (
 	"bytes"
 	"hash"
+	"regexp"
 	"slices"
 	"sync"
 )
@@ -46,6 +47,7 @@ type Language struct {
 	MultiLine                       [][]string `json:"multi_line"`
 	Quotes                          []Quote    `json:"quotes"`
 	Keywords                        []string   `json:"keywords"`
+	Heuristics                      []string   `json:"heuristics"`
 	FileNames                       []string   `json:"filenames"`
 	SheBangs                        []string   `json:"shebangs"`
 	ExtensionFile                   bool       `json:"extensionFile"`
@@ -70,6 +72,7 @@ type LanguageFeature struct {
 	ProcessMask           byte
 	Keywords              []string
 	KeywordBytes          [][]byte
+	Heuristics            []*regexp.Regexp
 	Quotes                []Quote
 }
 

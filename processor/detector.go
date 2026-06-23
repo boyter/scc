@@ -144,6 +144,49 @@ type languageGuess struct {
 	Count int
 }
 
+func guessByHeuristics(filename string, possibleLanguages []string, toCheck []byte) (string, bool) {
+	guesses := make([]languageGuess, 0, len(possibleLanguages))
+	hasHeuristics := false
+
+	for _, lan := range possibleLanguages {
+		LanguageFeaturesMutex.Lock()
+		langFeatures := LanguageFeatures[lan]
+		LanguageFeaturesMutex.Unlock()
+
+		if len(langFeatures.Heuristics) == 0 {
+			continue
+		}
+		hasHeuristics = true
+
+		count := 0
+		for _, re := range langFeatures.Heuristics {
+			if re.Match(toCheck) {
+				count++
+			}
+		}
+
+		guesses = append(guesses, languageGuess{Name: lan, Count: count})
+	}
+
+	if !hasHeuristics {
+		return "", false
+	}
+
+	slices.SortFunc(guesses, func(a, b languageGuess) int {
+		if order := cmp.Compare(b.Count, a.Count); order != 0 {
+			return order
+		}
+		return strings.Compare(a.Name, b.Name)
+	})
+
+	if len(guesses) != 0 && guesses[0].Count > 0 {
+		printWarnF("guessing language %s for file %s via heuristics", guesses[0].Name, filename)
+		return guesses[0].Name, true
+	}
+
+	return "", false
+}
+
 // DetermineLanguage given a filename, fallback language, possible languages and content make a guess to the type.
 // If multiple possible it will guess based on keywords similar to how https://github.com/vmchale/polyglot does
 func DetermineLanguage(filename string, fallbackLanguage string, possibleLanguages []string, content []byte) string {
@@ -167,6 +210,15 @@ func DetermineLanguage(filename string, fallbackLanguage string, possibleLanguag
 		toCheck = content[:20_000]
 	}
 
+	// First attempt regex heuristic disambiguation, used for shared extensions
+	// such as .h between C / C++ / Objective-C.
+	// Based on how linguist does it https://github.com/github-linguist/linguist/
+	// which should be fine as its under MIT license
+	if lang, ok := guessByHeuristics(filename, possibleLanguages, toCheck); ok {
+		printTraceF("nanoseconds to guess language: %s: %d", filename, makeTimestampNano()-startTime)
+		return lang
+	}
+
 	primary := ""
 
 	toSort := make([]languageGuess, 0, len(possibleLanguages))
@@ -174,6 +226,11 @@ func DetermineLanguage(filename string, fallbackLanguage string, possibleLanguag
 		LanguageFeaturesMutex.Lock()
 		langFeatures := LanguageFeatures[lan]
 		LanguageFeaturesMutex.Unlock()
+
+		// We only do language checks if no heuristics exist
+		if len(langFeatures.Heuristics) != 0 {
+			continue
+		}
 
 		count := 0
 		for _, key := range langFeatures.KeywordBytes {
@@ -189,8 +246,12 @@ func DetermineLanguage(filename string, fallbackLanguage string, possibleLanguag
 		// YAML can have any form so it's not possible to say "this is a yaml file"
 		// so we can only say "this is likely to be a cloudformation file", and as such
 		// we need to handle a fallback case, which in this case is nothing
-		if len(langFeatures.Keywords) == 0 {
-			primary = lan
+		// When several candidates qualify as the fallback we pick the
+		// alphabetically first so the choice is deterministic.
+		if len(langFeatures.Keywords) == 0 && len(langFeatures.Heuristics) == 0 {
+			if primary == "" || lan < primary {
+				primary = lan
+			}
 		}
 
 		toSort = append(toSort, languageGuess{Name: lan, Count: count})
