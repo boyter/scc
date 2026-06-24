@@ -181,8 +181,7 @@ func discoverConfigArgs(noConfig, findRoot bool, explicitPath string) (globalTok
 		globalTokens = tokens
 	}
 
-	// Project source: ./.scc by default (single stat, no walk-up), or the repo
-	// root .scc when --find-root is set. Disabled entirely by --no-config
+	// Project source: ./.scc by default unless -r set
 	if !noConfig {
 		projectPath := "./.scc"
 		if findRoot {
