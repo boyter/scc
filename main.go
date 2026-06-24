@@ -141,7 +141,11 @@ func main() {
 
   Generate a self-contained HTML infographic report:
     scc --report
-    scc --report=out.html --report-title "myrepo" --report-skip cocomo`,
+    scc --report=out.html --report-title "myrepo" --report-skip cocomo
+
+  Use a project config file (./.scc) or a global one (precedence: global < project < CLI):
+    export SCC_CONFIG_PATH=~/.scc
+    scc --config team.scc`,
 		Version: processor.Version,
 		Run: func(cmd *cobra.Command, args []string) {
 			processor.DirFilePaths = args

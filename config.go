@@ -451,7 +451,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 // values are never read; registering them keeps --help complete and stops cobra
 // (and the CLI-only parse) treating them as unknown flags.
 func registerConfigControlFlags(flags *pflag.FlagSet) {
-	flags.String("config", "", "load this file as the global config source (always honored, even with --no-config)")
+	flags.String("config", "", "load this file as the global config source; overrides SCC_CONFIG_PATH, honored even with --no-config")
 	flags.Bool("no-config", false, "disable auto-discovery of the SCC_CONFIG_PATH global and the project ./.scc config")
 	flags.BoolP("find-root", "r", false, "discover the project .scc by walking up to the repository root instead of using ./.scc")
 }
