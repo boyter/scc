@@ -438,7 +438,7 @@ https://paste.c-net.org/Example
 
 ### Ignore Files
 
-`scc` mostly supports .ignore files inside directories that it scans. This is similar to how ripgrep, ag and tokei work. 
+`scc` supports .ignore files inside directories that it scans. This is similar to how ripgrep, ag and tokei work. 
 .ignore files are 100% the same as .gitignore files with the same syntax, and as such `scc` will ignore files and 
 directories listed in them. You can add .ignore files to ignore things like vendored dependency checked in files and 
 such. The idea is allowing you to add a file or folder to git and have ignored in the count.
@@ -448,9 +448,10 @@ and others support them.
 
 ### Configuration Files
 
-`scc` can read default flags from a configuration file so you do not have to retype them or hide them in shell aliases. 
+`scc` can read default flags from a configuration file to avoid creating shell aliases. 
 The format is an *opts-list* in the style of ripgrep and bat: the file is simply a list of the same command-line flags 
-you would otherwise type, and anything valid on the command line is valid in the file.
+you would otherwise type, and anything valid on the command line is valid in the file, with the exception
+of output flags.
 
 Format rules:
 
@@ -459,7 +460,7 @@ Format rules:
 - `#` begins a comment. Whole-line and inline trailing comments are stripped.
 - Blank lines are ignored.
 - Tokenization is quote-aware, so both `--exclude-dir vendor` and `--count-as 'jsp:html'` work. Quotes (single or double) are the only grouping mechanism; to include a literal quote, switch quote style (`--count-as "a'b"`).
-- Backslash is an ordinary literal, **not** an escape character, so a Windows path such as `--exclude-dir C:\build\out` survives verbatim.
+- Backslash is an ordinary literal, not an escape character, so a Windows path such as `--exclude-dir C:\build\out` survives verbatim.
 - A line whose first token does not start with `-` (a bare positional such as `src/`) is skipped with a warning, so a config file cannot inject extra count targets.
 
 Example `.scc`:
@@ -475,10 +476,10 @@ Example `.scc`:
 
 There are two configuration tiers:
 
-- **Global** — there is no fixed default location and no per-run home-directory stat. The global source is consulted only when you point at it explicitly, via the `SCC_CONFIG_PATH` environment variable (a set-but-empty value is treated as unset) or the `--config <path>` flag. `--config` overrides `SCC_CONFIG_PATH`.
+- **Global** — there is no fixed default location and no per-run home-directory stat. The global source is consulted only when set explicitly via the `SCC_CONFIG_PATH` environment variable or the `--config <path>` flag. `--config` which overrides `SCC_CONFIG_PATH`.
 - **Project** — a file named `.scc` in the current working directory (`./.scc`), found with a single stat and **no walk-up**. `cd project && scc` picks up `project/.scc`; running `scc` from a subdirectory does **not** pick up an ancestor's `.scc`. Path arguments do not move the anchor — `scc ./project` still reads `./.scc`, not `./project/.scc`.
 
-To read the repository root's `.scc` from a subdirectory, pass `-r` / `--find-root`, which walks up from the current directory to the git/hg root (using the same reverse traversal as the sibling tool [`cs`](https://github.com/boyter/cs)). It is off by default and affects config discovery only — it changes which `.scc` is read, not which directory is counted. Outside a repository it degrades to `./.scc`.
+To read the repository root's `.scc` from a subdirectory, pass `-r` / `--find-root`, which walks back from the current directory to the git/hg root. It is off by default and affects config discovery only - it changes which `.scc` is read, not which directory is counted. Outside a repository it degrades to `./.scc`.
 
 #### Precedence
 
@@ -496,7 +497,7 @@ The three slice flags that ship with built-in defaults — `--exclude-dir` (`.gi
 
 #### Config can never write a file
 
-A configuration file can change *how* `scc` counts and formats, including selecting a stdout format such as `--format json`, but it can **never** cause `scc` to write a file. The file-output flags — `--output` / `-o`, `--report` and `--format-multi` — are honoured only from the genuine command line; the same flags supplied by config are ignored (output goes to stdout, the default). This is because a project `.scc` is auto-discovered, so a cloned repository could otherwise silently overwrite one of your files. Only the command line can make `scc` write to disk.
+A configuration file can change how `scc` counts and formats, including selecting a stdout format such as `--format json`, but it can **never** cause `scc` to write a file. The file-output flags — `--output` / `-o`, `--report` and `--format-multi` — are honoured only from the command line; the same flags supplied by config are ignored (output goes to stdout, the default). This is because a project `.scc` is auto-discovered, so a cloned repository could otherwise silently overwrite one of your files. Only the command line can make `scc` write to disk.
 
 #### Control flags
 
