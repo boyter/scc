@@ -52,8 +52,12 @@ func main() {
 	// pprof.StartCPUProfile(f)
 	// defer pprof.StopCPUProfile()
 
-	// Handle --mcp flag before cobra to avoid interfering with stdio.
-	if slices.Contains(os.Args[1:], "--mcp") {
+	// Handle --mcp flag before cobra to avoid interfering with stdio. Match both
+	// the bare boolean form and the explicit --mcp=true form pflag accepts, so the
+	// server starts consistently however the flag is spelled.
+	if slices.ContainsFunc(os.Args[1:], func(a string) bool {
+		return a == "--mcp" || a == "--mcp=true"
+	}) {
 		startMCPServer()
 		return
 	}
