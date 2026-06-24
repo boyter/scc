@@ -556,3 +556,78 @@ func TestRegressionConfigFormatMultiIgnoredForStdout(t *testing.T) {
 		t.Errorf("expected the default tabular output, got:\n%s", out)
 	}
 }
+
+// TestRegressionConfigMinFlagClassifies fills a behavioural gap the existing
+// suite leaves open. TestConfigCoupledMinFlags only asserts the run does not
+// error; nothing proves a coupled min/gen flag (-z/--min/--gen, registered as
+// BoolFuncs whose closures mutate processor state during parse) actually reaches
+// Process when it comes from config. These are the flags spec-04 repeatedly
+// flags as fragile under the two-mode write split. With a project .scc present
+// the split engages: the merged parse fires the -z closure (real binding), then
+// resolveWriteFlags re-parses the genuine CLI with the closures made inert so it
+// cannot undo that. A long single line trips the minified heuristic, so the file
+// must surface as "(min)" - proving config's coupled flag survived end to end.
+func TestRegressionConfigMinFlagClassifies(t *testing.T) {
+	dir := t.TempDir()
+	// One ~415-byte line: avg bytes/line well over the 255 default, so -z flags
+	// it minified.
+	long := "var x = '" + strings.Repeat("a", 400) + "';\n"
+	if err := os.WriteFile(filepath.Join(dir, "app.js"), []byte(long), 0644); err != nil {
+		t.Fatal(err)
+	}
+	// Everything needed is in the config; the genuine CLI is empty, so the
+	// effect is purely config-sourced. -f csv keeps the "(min)" suffix off the
+	// truncating tabular language column.
+	if err := os.WriteFile(filepath.Join(dir, ".scc"), []byte("-z\n-i js\n--no-scc-ignore\n-f csv\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	out, err := runSCCDir(t, dir, noGlobalConfig)
+	if err != nil {
+		t.Fatalf("scc errored: %v\n%s", err, out)
+	}
+	if !strings.Contains(out, "(min)") {
+		t.Errorf("config-supplied -z should flag the minified file as (min) through the two-mode pipeline, output:\n%s", out)
+	}
+}
+
+// TestRegressionConfigCannotStartMcpServer guards a security invariant that
+// parallels the "config can never write a file" tests: a --mcp inside a project
+// .scc must NOT hijack stdio and start an MCP server. The interception reads
+// os.Args ONLY (before config is discovered), so config's --mcp lands in the
+// merged parse as the inert dummy flag registerFlags registers and the normal
+// scan runs instead. This pins that ordering so a future refactor that moves the
+// --mcp detection after the config merge - letting a checked-out .scc silently
+// turn a scan into a server - is caught. Empty stdin means even the bad case
+// EOFs rather than hanging; the context deadline is a backstop.
+func TestRegressionConfigCannotStartMcpServer(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, ".scc"), []byte("--mcp\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	bin, err := filepath.Abs(sccBinPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, bin, sccTestFlag, "-f", "csv", "--by-file")
+	cmd.Dir = dir
+	cmd.Env = append(os.Environ(), noGlobalConfig...)
+	cmd.Stdin = bytes.NewReader(nil) // a started server would EOF, not hang
+	out, _ := cmd.CombinedOutput()
+
+	if ctx.Err() == context.DeadlineExceeded {
+		t.Fatalf("config --mcp appears to have started a server (timed out), output:\n%s", out)
+	}
+	// The by-file scan ran: the source file appears in the CSV. An MCP server
+	// would speak JSON-RPC and never emit this.
+	if !strings.Contains(string(out), "main.go") {
+		t.Errorf("config --mcp must be an inert dummy flag and let the scan run, output:\n%s", string(out))
+	}
+}
