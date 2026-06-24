@@ -215,8 +215,10 @@ func TestRegressionCommentOnlyConfigAllowsWrite(t *testing.T) {
 // existing exhaustive test only checks long names, so a shorthand silently
 // dropped or rebound to the wrong flag during the move would slip through except
 // for the handful of shorthands the integration tests happen to exercise. This
-// pins the complete shorthand -> long-name map, including the config-control
-// -r/--find-root flag (registered separately by registerConfigControlFlags).
+// pins the complete shorthand -> long-name map. The config-control flags
+// (registered separately by registerConfigControlFlags) carry no shorthand: -r
+// is deliberately unbound, reserved for a future find-root that relocates the
+// scan directory like cs.
 func TestRegressionShorthandsPreserved(t *testing.T) {
 	t.Parallel()
 	fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
@@ -243,7 +245,6 @@ func TestRegressionShorthandsPreserved(t *testing.T) {
 		"t": "trace",
 		"v": "verbose",
 		"w": "wide",
-		"r": "find-root",
 	}
 	for short, longName := range want {
 		f := fs.ShorthandLookup(short)

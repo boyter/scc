@@ -479,7 +479,7 @@ There are two configuration tiers:
 - **Global** — there is no fixed default location and no per-run home-directory stat. The global source is consulted only when set explicitly via the `SCC_CONFIG_PATH` environment variable or the `--config <path>` flag. `--config` which overrides `SCC_CONFIG_PATH`.
 - **Project** — a file named `.scc` in the current working directory (`./.scc`), found with a single stat and **no walk-up**. `cd project && scc` picks up `project/.scc`; running `scc` from a subdirectory does **not** pick up an ancestor's `.scc`. Path arguments do not move the anchor — `scc ./project` still reads `./.scc`, not `./project/.scc`.
 
-To read the repository root's `.scc` from a subdirectory, pass `-r` / `--find-root`, which walks back from the current directory to the git/hg root. It is off by default and affects config discovery only - it changes which `.scc` is read, not which directory is counted. Outside a repository it degrades to `./.scc`.
+To read the repository root's `.scc` from a subdirectory, pass `--find-root-config`, which walks back from the current directory to the git/hg root. It is off by default and affects config discovery only - it changes which `.scc` is read, not which directory is counted. Outside a repository it degrades to `./.scc`.
 
 #### Precedence
 
@@ -505,7 +505,7 @@ A configuration file can change how `scc` counts and formats, including selectin
 |------|--------|
 | `--no-config` | Disable auto-discovery: skip the `SCC_CONFIG_PATH` global and the project `.scc`. |
 | `--config <path>` | Load this file as the global source. Always honoured, even with `--no-config`; overrides `SCC_CONFIG_PATH`. |
-| `-r` / `--find-root` | Discover the project `.scc` by walking up to the repository root instead of using `./.scc`. No-op under `--no-config`. |
+| `--find-root-config` | Discover the project `.scc` by walking up to the repository root instead of using `./.scc`. No-op under `--no-config`. |
 
 `--config test.scc --no-config` loads exactly `test.scc` and nothing else — a clean isolated-config mode. A `--config` or `--no-config` written *inside* a config file is inert (a config file cannot chain-load another config file).
 

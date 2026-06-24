@@ -147,16 +147,14 @@ func TestPreScanConfig(t *testing.T) {
 	}{
 		{name: "nothing", args: []string{"scc", "."}},
 		{name: "no-config", args: []string{"scc", "--no-config"}, wantNoConfig: true},
-		{name: "long find-root", args: []string{"scc", "--find-root"}, wantFindRoot: true},
-		{name: "short find-root", args: []string{"scc", "-r"}, wantFindRoot: true},
-		{name: "clustered -rv", args: []string{"scc", "-rv"}, wantFindRoot: true},
-		{name: "clustered -vr", args: []string{"scc", "-vr"}, wantFindRoot: true},
-		{name: "clustered -rzd", args: []string{"scc", "-rzd"}, wantFindRoot: true},
+		{name: "long find-root-config", args: []string{"scc", "--find-root-config"}, wantFindRoot: true},
+		{name: "no -r shorthand", args: []string{"scc", "-r"}},
+		{name: "-r no longer clusters into find-root", args: []string{"scc", "-rv"}},
 		{name: "non-r cluster", args: []string{"scc", "-vd"}},
 		{name: "config space form", args: []string{"scc", "--config", "team.scc"}, wantPath: "team.scc"},
 		{name: "config equals form", args: []string{"scc", "--config=team.scc"}, wantPath: "team.scc"},
 		{name: "config as final token (typo)", args: []string{"scc", "--config"}},
-		{name: "all three", args: []string{"scc", "--no-config", "-r", "--config=x"}, wantNoConfig: true, wantFindRoot: true, wantPath: "x"},
+		{name: "all three", args: []string{"scc", "--no-config", "--find-root-config", "--config=x"}, wantNoConfig: true, wantFindRoot: true, wantPath: "x"},
 	}
 
 	for _, tc := range tests {
@@ -646,12 +644,11 @@ func TestAtFileQuotedSpacePath(t *testing.T) {
 	}
 }
 
-// TestConfigFindRootWalkUp locks the headline -r/--find-root feature end-to-end
-// (§3.2): run from a subdirectory of a repo, -r must walk up to the repository
-// root (detected via a .git dir) and load the root .scc, where the default
-// ./.scc discovery finds nothing. TestConfigNoWalkUp already proves the default
-// does NOT walk; this proves -r does, and that the clustered short form (-rv)
-// is declustered and honored.
+// TestConfigFindRootWalkUp locks the headline --find-root-config feature
+// end-to-end (§3.2): run from a subdirectory of a repo, --find-root-config must
+// walk up to the repository root (detected via a .git dir) and load the root
+// .scc, where the default ./.scc discovery finds nothing. TestConfigNoWalkUp
+// already proves the default does NOT walk; this proves --find-root-config does.
 func TestConfigFindRootWalkUp(t *testing.T) {
 	root := t.TempDir()
 	if err := os.Mkdir(filepath.Join(root, ".git"), 0755); err != nil {
@@ -668,7 +665,7 @@ func TestConfigFindRootWalkUp(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Control: without -r, no walk-up, the root .scc is not seen (tabular).
+	// Control: without --find-root-config, no walk-up, the root .scc is not seen (tabular).
 	out, err := runSCCDir(t, sub, noGlobalConfig)
 	if err != nil {
 		t.Fatal(err)
@@ -677,37 +674,29 @@ func TestConfigFindRootWalkUp(t *testing.T) {
 		t.Errorf("default discovery must not walk up to the repo-root .scc, output:\n%s", out)
 	}
 
-	// -r walks up to the repo root and loads its .scc (csv).
-	out, err = runSCCDir(t, sub, noGlobalConfig, "-r")
+	// --find-root-config walks up to the repo root and loads its .scc (csv).
+	out, err = runSCCDir(t, sub, noGlobalConfig, "--find-root-config")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(out, "Language,Lines,Code") {
-		t.Errorf("-r should walk up to the repo-root .scc, output:\n%s", out)
-	}
-
-	// Clustered short form must be declustered and honored identically.
-	out, err = runSCCDir(t, sub, noGlobalConfig, "-rv")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !strings.Contains(out, "Language,Lines,Code") {
-		t.Errorf("clustered -rv should enable find-root, output:\n%s", out)
+		t.Errorf("--find-root-config should walk up to the repo-root .scc, output:\n%s", out)
 	}
 }
 
 // TestConfigFindRootOutsideRepoFallback locks the §3.2 graceful-degradation
 // guarantee: when the CWD is not inside any repo, FindRepositoryRoot returns the
-// supplied directory unchanged, so -r resolves to ./.scc - identical to default
-// discovery, never an error. -r must therefore always be safe to leave on.
+// supplied directory unchanged, so --find-root-config resolves to ./.scc -
+// identical to default discovery, never an error. --find-root-config must
+// therefore always be safe to leave on.
 func TestConfigFindRootOutsideRepoFallback(t *testing.T) {
 	dir := writeSccConfig(t, "--format csv\n") // ./.scc, no .git anywhere above
-	out, err := runSCCDir(t, dir, noGlobalConfig, "-r")
+	out, err := runSCCDir(t, dir, noGlobalConfig, "--find-root-config")
 	if err != nil {
-		t.Fatalf("-r outside a repo should not error, got: %v\n%s", err, out)
+		t.Fatalf("--find-root-config outside a repo should not error, got: %v\n%s", err, out)
 	}
 	if !strings.Contains(out, "Language,Lines,Code") {
-		t.Errorf("-r outside a repo should fall back to ./.scc, output:\n%s", out)
+		t.Errorf("--find-root-config outside a repo should fall back to ./.scc, output:\n%s", out)
 	}
 }
 

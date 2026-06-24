@@ -167,7 +167,7 @@ func preScanConfig(args []string) (noConfig bool, findRoot bool, explicitPath st
 		switch {
 		case a == "--no-config":
 			noConfig = true
-		case a == "--find-root":
+		case a == "--find-root-config":
 			findRoot = true
 		case a == "--config":
 			// Bounds-check: guard against --config being the final token (a
@@ -177,15 +177,6 @@ func preScanConfig(args []string) (noConfig bool, findRoot bool, explicitPath st
 			}
 		case strings.HasPrefix(a, "--config="):
 			explicitPath = strings.TrimPrefix(a, "--config=")
-		case len(a) > 1 && a[0] == '-' && a[1] != '-' && !strings.Contains(a, "="):
-			// Single-dash shorthand cluster (-r, -rv, -vr, -rzd ...). pflag lets
-			// short flags cluster, so decluster and look for 'r' rather than
-			// matching the literal "-r". Accepted false positive: a
-			// dash-value containing 'r' can be mis-read here, but find-root only
-			// relocates which .scc is read, so the impact is tiny.
-			if strings.ContainsRune(a[1:], 'r') {
-				findRoot = true
-			}
 		}
 	}
 
@@ -215,7 +206,7 @@ func discoverConfigArgs(noConfig, findRoot bool, explicitPath string) (globalTok
 		globalTokens = tokens
 	}
 
-	// Project source: ./.scc by default unless -r set
+	// Project source: ./.scc by default unless --find-root-config set
 	if !noConfig {
 		projectPath := "./.scc"
 		if findRoot {
@@ -291,9 +282,9 @@ type flagBindings struct {
 // registerFlags registers the full scc flag set on fs, binding write flags via
 // b and every other flag either to the real processor.* vars (b.inert == false)
 // or to throwaway sinks (b.inert == true). It does NOT register the three
-// config-control flags (--config/--no-config/--find-root); those are handled by
-// registerConfigControlFlags so they can be added to both the rootCmd and the
-// CLI-only flag set.
+// config-control flags (--config/--no-config/--find-root-config); those are
+// handled by registerConfigControlFlags so they can be added to both the
+// rootCmd and the CLI-only flag set.
 func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	// Binding-target selectors: return the real pointer in normal mode and a
 	// fresh throwaway in inert mode.
@@ -480,14 +471,16 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.Lookup("generated-markers").DefValue = "[" + strings.Join(defaultGeneratedMarkers, ",") + "]"
 }
 
-// registerConfigControlFlags registers --config, --no-config and -r/--find-root
-// as dummy-bound flags. They are pre-scanned from os.Args, so the bound
-// values are never read; registering them keeps --help complete and stops cobra
-// (and the CLI-only parse) treating them as unknown flags.
+// registerConfigControlFlags registers --config, --no-config and
+// --find-root-config as dummy-bound flags. They are pre-scanned from os.Args, so
+// the bound values are never read; registering them keeps --help complete and
+// stops cobra (and the CLI-only parse) treating them as unknown flags. Note: no
+// -r shorthand - that short flag is reserved for a future find-root that
+// relocates the scan directory, matching cs.
 func registerConfigControlFlags(flags *pflag.FlagSet) {
 	flags.String("config", "", "load this file as the global config source; overrides SCC_CONFIG_PATH, honored even with --no-config")
 	flags.Bool("no-config", false, "disable auto-discovery of the SCC_CONFIG_PATH global and the project ./.scc config")
-	flags.BoolP("find-root", "r", false, "discover the project .scc by walking up to the repository root instead of using ./.scc")
+	flags.Bool("find-root-config", false, "discover the project .scc by walking up to the repository root instead of using ./.scc")
 }
 
 // mergeSliceDefault implements the slice-default preservation. If set is
