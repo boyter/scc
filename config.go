@@ -122,10 +122,9 @@ func tokenizeConfigLine(line string) []string {
 	return tokens
 }
 
-// preScanConfig scans os.Args (only) for the three config-control flags before
+// preScanConfig scans os.Args for the three config-control flags before
 // cobra runs. Reading os.Args alone is what makes --config/--no-config inside a
-// config file inert (§4). The whole scan is recover-wrapped per the no-panics
-// policy.
+// config file inert.
 func preScanConfig(args []string) (noConfig bool, findRoot bool, explicitPath string) {
 	defer func() { _ = recover() }()
 
@@ -162,7 +161,7 @@ func preScanConfig(args []string) (noConfig bool, findRoot bool, explicitPath st
 // discoverConfigArgs resolves the global and project config sources
 func discoverConfigArgs(noConfig, findRoot bool, explicitPath string) (globalTokens, projectTokens []string, err error) {
 	// Global source: --config wins, else SCC_CONFIG_PATH (when non-empty and not
-	// disabled), else nothing. No default location, no home-dir stat (§3.1).
+	// disabled), else nothing. No default location, no home-dir stat.
 	globalPath := ""
 	switch {
 	case explicitPath != "":
@@ -183,7 +182,7 @@ func discoverConfigArgs(noConfig, findRoot bool, explicitPath string) (globalTok
 	}
 
 	// Project source: ./.scc by default (single stat, no walk-up), or the repo
-	// root .scc when --find-root is set. Disabled entirely by --no-config (§4).
+	// root .scc when --find-root is set. Disabled entirely by --no-config
 	if !noConfig {
 		projectPath := "./.scc"
 		if findRoot {
@@ -198,14 +197,13 @@ func discoverConfigArgs(noConfig, findRoot bool, explicitPath string) (globalTok
 				projectTokens = tokens
 			}
 		}
-		// A missing project .scc is normal and silent.
 	}
 
 	return globalTokens, projectTokens, nil
 }
 
 // readConfigFile reads and tokenizes a config source, recording it for trace
-// output and unknown-flag attribution. recover-wrapped per the no-panics policy.
+// output and unknown-flag attribution.
 func readConfigFile(path, label string) (tokens []string, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -225,8 +223,7 @@ func readConfigFile(path, label string) (tokens []string, err error) {
 	return tokens, nil
 }
 
-// flushConfigTrace emits the buffered discovery messages once Trace/Debug have
-// been set by cobra (§8.0a).
+// flushConfigTrace emits the buffered discovery messages once Trace/Debug have been set.
 func flushConfigTrace() {
 	for _, msg := range configTrace {
 		processor.PrintTrace(msg)
@@ -236,7 +233,7 @@ func flushConfigTrace() {
 
 // attributeConfigFlag returns the label of the config source that contributed
 // the named flag, or "" if it was not seen in any config source (came from the
-// genuine CLI, or is ambiguous). Best-effort only (§8/05).
+// genuine CLI, or is ambiguous).
 func attributeConfigFlag(name string) string {
 	want := "--" + name
 	for _, src := range configSources {
@@ -523,18 +520,14 @@ func warnIfConfigWrote(mergedFlags *pflag.FlagSet) {
 // processor.ReportOut and processor.FormatMulti vars when config was discovered.
 // It parses the genuine-CLI slice (post-@file, pre-config-prepend) through a
 // write-only flag set: the three write flags bind to the real vars, everything
-// else is inert. This makes file output a CLI-only capability — config tokens
-// are structurally incapable of reaching these vars (§5.2).
-//
-// Parsing degrades safely: the genuine CLI already parsed once via cobra, so an
-// error here is unexpected; if one occurs the write vars keep their empty
-// defaults (output -> stdout, the safe direction). recover-wrapped per policy.
+// else is inert. This makes file output a CLI-only capability - config tokens
+// are structurally incapable of reaching these vars.
 func resolveWriteFlags(genuineCLI []string) {
 	defer func() { _ = recover() }()
 
 	fs := pflag.NewFlagSet("scc-cli-only", pflag.ContinueOnError)
 	fs.SetOutput(io.Discard)
-	fs.ParseErrorsWhitelist.UnknownFlags = true
+	fs.ParseErrorsAllowlist.UnknownFlags = true
 
 	registerFlags(fs, &flagBindings{
 		output:      &processor.FileOutput,
@@ -542,9 +535,10 @@ func resolveWriteFlags(genuineCLI []string) {
 		formatMulti: &processor.FormatMulti,
 		inert:       true,
 	})
+
 	// The config-control flags are registered in main.go, not by registerFlags,
 	// so a genuine CLI like `scc --config team.scc -o out.json` would otherwise
-	// hit an unknown flag here and -o would silently stop writing (§5.2).
+	// hit an unknown flag here and -o would silently stop writing.
 	registerConfigControlFlags(fs)
 
 	_ = fs.Parse(genuineCLI)

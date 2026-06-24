@@ -373,8 +373,7 @@ func ConfigureGc() {
 	gcPercent = debug.SetGCPercent(gcPercent)
 }
 
-// EnableGc restores the garbage collector to the percentage captured by
-// ConfigureGc.
+// EnableGc restores the garbage collector to the percentage captured by ConfigureGc.
 func EnableGc() {
 	if gcPercent != -1 {
 		debug.SetGCPercent(gcPercent)

@@ -61,7 +61,7 @@ func main() {
 	// handle "scc @flags.txt" syntax. The sole-argument trigger is preserved;
 	// only the splitter is swapped for the shared tokenizer, which adds comment
 	// stripping, quote-aware tokenization and drops the old blank-line empty-arg
-	// bug. @file keeps positional lines (allowPositional=true), see §6.
+	// bug.
 	if len(os.Args) == 2 && strings.HasPrefix(os.Args[1], "@") {
 		filename := strings.TrimPrefix(os.Args[1], "@")
 		b, err := os.ReadFile(filename)
@@ -78,7 +78,6 @@ func main() {
 	noConfig, findRoot, explicitPath := preScanConfig(os.Args)
 	globalTokens, projectTokens, discoverErr := discoverConfigArgs(noConfig, findRoot, explicitPath)
 	if discoverErr != nil {
-		// Unreadable explicit source (--config / SCC_CONFIG_PATH): fatal (§8.1).
 		processor.PrintError(discoverErr.Error())
 		os.Exit(1)
 	}
@@ -86,13 +85,11 @@ func main() {
 	// Fast path when no config was discovered: the merged list *is* the genuine
 	// CLI, so bind write flags directly to the real vars and parse once, exactly
 	// as scc does today. The discard / CLI-only split engages only when config is
-	// actually present (§5.2 fast path).
+	// actually present.
 	configPresent := len(globalTokens) != 0 || len(projectTokens) != 0
 
-	// Build the merged argument list: [argv0] + global + project + CLI. Scalar
-	// precedence (global < project < CLI) falls out of prepend + last-wins, and
-	// slice flags union naturally (§3.3, §7).
-	merged := make([]string, 0, 1+len(globalTokens)+len(projectTokens)+len(genuineCLI))
+	// Build the merged argument list N.B. ORDER MATTERS HERE!
+	var merged []string
 	merged = append(merged, os.Args[0])
 	merged = append(merged, globalTokens...)
 	merged = append(merged, projectTokens...)
@@ -106,6 +103,9 @@ func main() {
 		report:      &processor.ReportOut,
 		formatMulti: &processor.FormatMulti,
 	}
+
+	// if we use config, we NEVER allow writing to disk because someone could use that as
+	// an attack vector, so we reset these options to ensure this is not a risk
 	if configPresent {
 		bindings.output = &discardOutput
 		bindings.report = &discardReport
@@ -148,7 +148,10 @@ func main() {
 			processor.ConfigureGc()
 			processor.ConfigureLazy(true)
 
-			// Detect if LOCOMO price/tps flags were explicitly set
+			// Detect if LOCOMO price/tps flags were explicitly set. Their default
+			// is 0, which is ambiguous (unset vs. an explicit 0), so the processor
+			// needs the "was it set?" bit to decide between the preset value and the
+			// user override. Only pflag's Changed() knows this, hence here not there.
 			processor.LocomoInputPriceSet = cmd.PersistentFlags().Changed("locomo-input-price")
 			processor.LocomoOutputPriceSet = cmd.PersistentFlags().Changed("locomo-output-price")
 			processor.LocomoTPSSet = cmd.PersistentFlags().Changed("locomo-tps")
@@ -159,14 +162,14 @@ func main() {
 			}
 
 			// Source the write vars from the genuine CLI alone (file output is a
-			// CLI-only capability), then warn if config tried to set one (§5.2).
+			// CLI-only capability), then warn if config tried to set one.
 			if configPresent {
 				resolveWriteFlags(genuineCLI)
 				warnIfConfigWrote(cmd.PersistentFlags())
 			}
 
 			// Merge the built-in defaults back into the empty-defaulted slice
-			// flags (§7), then flush any buffered config trace/debug (§8.0a).
+			// flags, then flush any buffered config trace/debug.
 			applySliceDefaults()
 			flushConfigTrace()
 
@@ -181,7 +184,7 @@ func main() {
 	// If invoked in the format of "scc completion --shell [name of shell]", generate command line completions instead.
 	// With the --shell option, unintentionally triggering shell completions should be highly unlikely. This reads the
 	// genuine os.Args (config tokens are handed to cobra via SetArgs below, never prepended into os.Args), so a ./.scc
-	// in the working directory cannot shift args[1] and break completion (§3.3 step 5).
+	// in the working directory cannot shift args[1] and break completion.
 	args := os.Args
 	if len(args) == 4 && args[1] == "completion" && args[2] == "--shell" {
 		err := printShellCompletion(rootCmd, args[3])
