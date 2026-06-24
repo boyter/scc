@@ -13,8 +13,25 @@ import (
 
 	"github.com/boyter/gocodewalker"
 	"github.com/boyter/scc/v3/processor"
+	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
+
+// isCompletionInvocation reports whether args is a cobra completion request:
+// the hidden __complete / __completeNoDesc commands the shell calls on TAB, or
+// the user-facing `completion` command. These must reach cobra with the genuine
+// argv, so config discovery is skipped for them.
+func isCompletionInvocation(args []string) bool {
+	if len(args) < 2 {
+		return false
+	}
+	switch args[1] {
+	case cobra.ShellCompRequestCmd, cobra.ShellCompNoDescRequestCmd, "completion":
+		return true
+	default:
+		return false
+	}
+}
 
 // SccConfigEnv is the environment variable naming the global config source.
 const SccConfigEnv = "SCC_CONFIG_PATH"

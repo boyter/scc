@@ -75,11 +75,21 @@ func main() {
 	// What the user actually specified
 	genuineCLI := slices.Clone(os.Args[1:])
 
-	noConfig, findRoot, explicitPath := preScanConfig(os.Args)
-	globalTokens, projectTokens, discoverErr := discoverConfigArgs(noConfig, findRoot, explicitPath)
-	if discoverErr != nil {
-		processor.PrintError(discoverErr.Error())
-		os.Exit(1)
+	// Cobra's completion machinery must see the genuine argv. The shell invokes
+	// the hidden __complete / __completeNoDesc commands on every TAB, and the
+	// user-facing `completion` command generates the scripts; both key on the
+	// subcommand sitting in args[0]. Prepending discovered config tokens would
+	// shift it and break dynamic completion in any directory containing a ./.scc.
+	// Config never influences completion output anyway, so skip discovery for it.
+	var globalTokens, projectTokens []string
+	if !isCompletionInvocation(os.Args) {
+		noConfig, findRoot, explicitPath := preScanConfig(os.Args)
+		var discoverErr error
+		globalTokens, projectTokens, discoverErr = discoverConfigArgs(noConfig, findRoot, explicitPath)
+		if discoverErr != nil {
+			processor.PrintError(discoverErr.Error())
+			os.Exit(1)
+		}
 	}
 
 	// Fast path when no config was discovered: the merged list *is* the genuine

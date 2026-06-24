@@ -534,6 +534,113 @@ func TestConfigInsideAtFileHonored(t *testing.T) {
 	}
 }
 
+// TestConfigCompleteDynamicUnaffected is the regression guard for cobra's
+// hidden __complete command (the one a shell calls on every TAB). Config tokens
+// are prepended ahead of the genuine argv, so without the completion bypass the
+// __complete subcommand is shifted out of args[0] and dynamic completion breaks
+// in any directory containing a ./.scc. (TestConfigCompletionUnaffected covers
+// only the separate `completion --shell` script-generation path.)
+func TestConfigCompleteDynamicUnaffected(t *testing.T) {
+	dir := writeSccConfig(t, "--format csv\n")
+	out, err := runSCCDir(t, dir, nil, "__complete", "--for")
+	if err != nil {
+		t.Fatalf("__complete errored with ./.scc present: %v\n%s", err, out)
+	}
+	if !strings.Contains(out, "--format") {
+		t.Errorf("dynamic completion broken with ./.scc present, output:\n%s", out)
+	}
+	// A leaked config token would surface as an unknown-flag / read error.
+	if strings.Contains(out, "unknown flag") || strings.Contains(out, "could not be read") {
+		t.Errorf("config tokens leaked into the completion invocation, output:\n%s", out)
+	}
+}
+
+// TestConfigSliceUnion locks the §7 union semantics end-to-end: a slice flag set
+// in the config file and again on the CLI must combine with each other AND with
+// the built-in defaults (defaults ∪ config ∪ CLI), rather than replacing them.
+func TestConfigSliceUnion(t *testing.T) {
+	dir := t.TempDir()
+	for _, d := range []string{"vendor", "dist", "keep", ".git"} {
+		if err := os.Mkdir(filepath.Join(dir, d), 0755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, f := range []string{"vendor/v.go", "dist/d.go", "keep/k.go", ".git/g.go"} {
+		if err := os.WriteFile(filepath.Join(dir, f), []byte("package x\n"), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// config excludes vendor; CLI excludes dist; .git is a built-in default.
+	if err := os.WriteFile(filepath.Join(dir, ".scc"), []byte("--exclude-dir vendor\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	out, err := runSCCDir(t, dir, nil, "--exclude-dir", "dist", "-f", "csv", "--by-file")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "k.go") {
+		t.Errorf("keep/k.go should be counted, output:\n%s", out)
+	}
+	for _, gone := range []string{"v.go", "d.go", "g.go"} {
+		if strings.Contains(out, gone) {
+			t.Errorf("%s should be excluded (defaults ∪ config ∪ CLI), output:\n%s", gone, out)
+		}
+	}
+}
+
+// TestAtFileMultiTokenAndComments locks the phase-01 @file improvements: a line
+// may carry multiple whitespace-separated tokens, '#' comments are stripped and
+// blank lines are dropped (the old splitter emitted one token per line and a
+// stray empty arg per blank line).
+func TestAtFileMultiTokenAndComments(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	atFile := filepath.Join(dir, "flags.txt")
+	// multi-token flag line, a whole-line comment, an inline comment and a blank.
+	content := "# count this project\n\n--format csv   # as CSV\n--no-cocomo\n"
+	if err := os.WriteFile(atFile, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runSCCDir(t, dir, nil, "@"+atFile)
+	if err != nil {
+		t.Fatalf("@file errored: %v\n%s", err, out)
+	}
+	if !strings.Contains(out, "Language,Lines,Code") {
+		t.Errorf("@file multi-token --format csv not applied, output:\n%s", out)
+	}
+	if strings.Contains(out, "Estimated Cost to Develop") {
+		t.Errorf("@file --no-cocomo not applied, output:\n%s", out)
+	}
+}
+
+// TestAtFileQuotedSpacePath documents the @file consequence of the shared
+// quote-aware tokenizer: a path containing spaces must be quoted (the old
+// splitter kept a whole line as one token, so unquoted spaces used to work).
+// This pins the supported workaround.
+func TestAtFileQuotedSpacePath(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "my file.go"), []byte("package x\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	atFile := filepath.Join(dir, "flags.txt")
+	if err := os.WriteFile(atFile, []byte("'my file.go'\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runSCCDir(t, dir, nil, "@"+atFile)
+	if err != nil {
+		t.Fatalf("@file errored: %v\n%s", err, out)
+	}
+	if strings.Contains(out, "could not be read") {
+		t.Errorf("quoted space path in @file should resolve as one token, output:\n%s", out)
+	}
+	if !strings.Contains(out, "Go") {
+		t.Errorf("quoted 'my file.go' should be counted, output:\n%s", out)
+	}
+}
+
 func TestNoConfigFastPathWritesFile(t *testing.T) {
 	// No config present: -o on the CLI writes exactly as today (fast path).
 	dir := t.TempDir()
