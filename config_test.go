@@ -166,7 +166,7 @@ func TestMergeSliceDefault(t *testing.T) {
 }
 
 // TestRegisterFlagsExhaustive asserts every flag registerFlags is meant to
-// register is present in the resulting flag set. The write-only mode (§5.2) must
+// register is present in the resulting flag set. The write-only mode must
 // give every non-write flag a sink; a missing flag there is silent state
 // corruption, so this check is the insurance.
 func TestRegisterFlagsExhaustive(t *testing.T) {
@@ -315,7 +315,7 @@ func TestConfigPresentCLICanWrite(t *testing.T) {
 
 func TestConfigControlFlagWithWriteFlag(t *testing.T) {
 	// scc --config x.scc -o out.csv: the CLI-only parse must accept --config so
-	// -o still writes (§5.2).
+	// -o still writes.
 	dir := t.TempDir()
 	cfg := filepath.Join(dir, "team.scc")
 	if err := os.WriteFile(cfg, []byte("--no-cocomo\n"), 0644); err != nil {
@@ -450,7 +450,7 @@ func TestConfigCompletionUnaffected(t *testing.T) {
 }
 
 func TestConfigInsideAtFileHonored(t *testing.T) {
-	// --config inside an @file IS honored (asymmetry vs config files, §4): @file
+	// --config inside an @file IS honored (asymmetry vs config files): @file
 	// replaces os.Args before the pre-scan, so it is part of the genuine CLI.
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0644); err != nil {

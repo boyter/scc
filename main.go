@@ -86,17 +86,17 @@ func main() {
 	// CLI, so bind write flags directly to the real vars and parse once, exactly
 	// as scc does today. The discard / CLI-only split engages only when config is
 	// actually present.
+	// Ensures we follow old scc logic without config
 	configPresent := len(globalTokens) != 0 || len(projectTokens) != 0
 
-	// Build the merged argument list N.B. ORDER MATTERS HERE!
+	// Build the merged argument list N.B. ORDER MATTERS HERE! CLI MUST COME LAST!
 	var merged []string
 	merged = append(merged, os.Args[0])
 	merged = append(merged, globalTokens...)
 	merged = append(merged, projectTokens...)
 	merged = append(merged, genuineCLI...)
 
-	// Write-flag bindings for the merged parse. Config present -> discards (config
-	// can never reach the real vars); no config -> the real vars directly.
+	// Write-flag bindings for the merged parse
 	var discardOutput, discardReport, discardFormatMulti string
 	bindings := &flagBindings{
 		output:      &processor.FileOutput,
@@ -201,8 +201,7 @@ func main() {
 		// If a flag does not exist and is not a shorthand, it may be a spelling error. Search for and print possible options.
 		if notExistError, ok := err.(*pflag.NotExistError); ok && len(notExistError.GetSpecifiedName()) > 1 {
 			name := notExistError.GetSpecifiedName()
-			// Best-effort: attribute the unknown flag to the config file it came
-			// from, if any (§8/05). Never blocks or alters the error itself.
+			// Best-effort: attribute the unknown flag to the config file it came.
 			if src := attributeConfigFlag(name); src != "" {
 				_, _ = fmt.Fprintf(os.Stderr, "in %s: unknown flag --%s\n", src, name)
 			}

@@ -38,7 +38,7 @@ var configTrace []string
 var configSources []configSource
 
 // parseConfigArgs tokenizes the contents of a config-ish source (a config file
-// or an @file) into a flat slice of CLI tokens. Format rules (§2):
+// or an @file) into a flat slice of CLI tokens. Format rules:
 //
 //   - One or more whitespace-separated tokens per line; blank lines ignored.
 //   - '#' begins a comment; whole-line and inline trailing comments are stripped.
@@ -146,9 +146,9 @@ func preScanConfig(args []string) (noConfig bool, findRoot bool, explicitPath st
 		case len(a) > 1 && a[0] == '-' && a[1] != '-' && !strings.Contains(a, "="):
 			// Single-dash shorthand cluster (-r, -rv, -vr, -rzd ...). pflag lets
 			// short flags cluster, so decluster and look for 'r' rather than
-			// matching the literal "-r" (§4). Accepted false positive: a
+			// matching the literal "-r". Accepted false positive: a
 			// dash-value containing 'r' can be mis-read here, but find-root only
-			// relocates which .scc is read, so the blast radius is tiny.
+			// relocates which .scc is read, so the impact is tiny.
 			if strings.ContainsRune(a[1:], 'r') {
 				findRoot = true
 			}
@@ -247,14 +247,6 @@ func attributeConfigFlag(name string) string {
 
 // flagBindings abstracts the three write-flag sinks plus a mode switch so
 // registerFlags can build either a real-binding flag set or an inert one.
-//
-//   - output/report/formatMulti: where --output/-o, --report and --format-multi
-//     write. The merged parse points these at discard vars (config can never
-//     write); the CLI-only parse points them at the real processor.* vars.
-//   - inert: when true, every *non-write* flag is bound to a throwaway sink and
-//     BoolFunc flags get empty closures, so parsing has no side effect beyond the
-//     write vars. Mandatory for the CLI-only parse so re-parsing the genuine CLI
-//     does not re-fire the coupled min/gen closures (§5.2 side-effect hazard).
 type flagBindings struct {
 	output      *string
 	report      *string
@@ -267,7 +259,7 @@ type flagBindings struct {
 // or to throwaway sinks (b.inert == true). It does NOT register the three
 // config-control flags (--config/--no-config/--find-root); those are handled by
 // registerConfigControlFlags so they can be added to both the rootCmd and the
-// CLI-only flag set (§9).
+// CLI-only flag set.
 func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	// Binding-target selectors: return the real pointer in normal mode and a
 	// fresh throwaway in inert mode.
@@ -327,7 +319,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.BoolVar(boolVar(&processor.GitModuleIgnore), "no-gitmodule", false, "disables .gitmodules file logic")
 	flags.BoolVar(boolVar(&processor.CountIgnore), "count-ignore", false, "set to allow .gitignore and .ignore files to be counted")
 	flags.BoolVar(boolVar(&processor.Debug), "debug", false, "enable debug output")
-	// Registered with an empty default; the real default is merged back post-parse (§7).
+	// Registered with an empty default; the real default is merged back post-parse.
 	flags.StringSliceVar(sliceVar(&processor.PathDenyList), "exclude-dir", []string{}, "directories to exclude")
 	flags.IntVar(intVar(&processor.GcFileCount), "file-gc-count", 10000, "number of files to parse before turning the GC on")
 	flags.IntVar(intVar(&processor.FileListQueueSize), "file-list-queue-size", runtime.NumCPU(), "the size of the queue of files found and ready to be read into memory")
@@ -336,7 +328,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.IntVar(intVar(&processor.DirectoryWalkerJobWorkers), "directory-walker-job-workers", 8, "controls the maximum number of workers which will walk the directory tree")
 	flags.StringVarP(strVar(&processor.Format), "format", "f", "tabular", "set output format [tabular, wide, json, json2, csv, csv-stream, cloc-yaml, html, html-table, sql, sql-insert, openmetrics]")
 
-	// Write flag: bound via b so config can never reach the real var (§5).
+	// Write flag: bound via b so config can never reach the real var.
 	flags.StringVar(b.report, "report", "", "write a self-contained HTML report; bare flag writes scc-report.html and prompts before overwriting, --report=path/out.html overwrites silently")
 
 	// NoOptDefVal makes a bare `--report` work (no `=value`). runReport compares
@@ -347,7 +339,8 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.StringVar(strVar(&processor.ReportTitle), "report-title", "", "override the repo name shown in the report banner")
 	flags.StringSliceVarP(sliceVar(&processor.AllowListExtensions), "include-ext", "i", []string{}, "limit to file extensions [comma separated list: e.g. go,java,js]")
 	flags.StringSliceVarP(sliceVar(&processor.ExcludeListExtensions), "exclude-ext", "x", []string{}, "ignore file extensions (overrides include-ext) [comma separated list: e.g. go,java,js]")
-	// Registered with an empty default; the real default is merged back post-parse (§7).
+
+	// Registered with an empty default; the real default is merged back post-parse.
 	flags.StringSliceVarP(sliceVar(&processor.ExcludeFilename), "exclude-file", "n", []string{}, "ignore files with matching names")
 	flags.BoolVarP(boolVar(&processor.Languages), "languages", "l", false, "print supported languages and extensions")
 	flags.Int64Var(int64Var(&processor.AverageWage), "avg-wage", 56286, "average wage value used for basic COCOMO calculation")
@@ -385,7 +378,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 		}
 		return nil
 	}))
-	// Registered with an empty default; the real default is merged back post-parse (§7).
+	// Registered with an empty default; the real default is merged back post-parse.
 	flags.StringSliceVar(sliceVar(&processor.GeneratedMarkers), "generated-markers", []string{}, "string markers in head of generated files")
 	flags.BoolFunc("no-min-gen", "ignore minified or generated files in output (implies --min-gen)", boolFunc(func(s string) error {
 		v, _ := strconv.ParseBool(s)
@@ -404,7 +397,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	}))
 	flags.IntVar(intVar(&processor.MinifiedGeneratedLineByteLength), "min-gen-line-length", 255, "number of bytes per average line for file to be considered minified or generated")
 	flags.StringArrayVarP(sliceVar(&processor.Exclude), "not-match", "M", []string{}, "ignore files and directories matching regular expression")
-	// Write flag: bound via b so config can never reach the real var (§5).
+	// Write flag: bound via b so config can never reach the real var.
 	flags.StringVarP(b.output, "output", "o", "", "output filename (default stdout)")
 	flags.StringVarP(strVar(&processor.SortBy), "sort", "s", "files", "column to sort by [files, name, lines, blanks, code, comments, complexity]")
 	flags.BoolVarP(boolVar(&processor.Trace), "trace", "t", false, "enable trace output (not recommended when processing multiple files)")
@@ -418,7 +411,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.StringArrayVar(sliceVar(&processor.CountAsPattern), "count-as-pattern", nil, "count files matching a path pattern as a new named category backed by a base language "+
 		"[repeatable; pattern is glob by default, prefix with re: for regex; "+
 		"e.g. *_spec.rb:\"Ruby Spec\":Ruby or re:\\.test\\.js$:\"JavaScript Tests\":JavaScript]")
-	// Write flag: bound via b so config can never reach the real var (§5).
+	// Write flag: bound via b so config can never reach the real var.
 	flags.StringVar(b.formatMulti, "format-multi", "", "have multiple format output overriding --format [e.g. tabular:stdout,csv:file.csv,json:file.json]")
 	flags.StringVar(strVar(&processor.SQLProject), "sql-project", "", "use supplied name as the project identifier for the current run. Only valid with the --format sql or sql-insert option")
 	flags.StringVar(strVar(&processor.RemapUnknown), "remap-unknown", "", "inspect files of unknown type and remap by checking for a string and remapping the language [e.g. \"-*- C++ -*-\":\"C Header\"]")
@@ -439,7 +432,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.BoolVar(boolVar(&processor.Timeline), "timeline", false, "render an over-time view of recent git history; with --by-author runs the author timeline, alone runs the languages timeline")
 	flags.IntVar(intVar(&processor.HistoryBuckets), "buckets", 60, "time-bucket resolution for the git timeline reports (default 60)")
 	// --no-fold-authors is read back via cmd.PersistentFlags().GetBool in Run, so
-	// its bound var is irrelevant; a throwaway sink is sufficient in both modes.
+	// its bound var is irrelevant; a throwaway sink is enough in both modes.
 	flags.BoolVar(new(bool), "no-fold-authors", false, "disable the name+email-domain identity folding fallback for git author reports (mailmap still applied)")
 	// --mcp is intercepted before cobra runs, but we register it here so it
 	// appears in --help and the CLI-only parse accepts it dummy-bound.
@@ -447,14 +440,14 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 
 	// Restore the displayed (default ...) text for the three slice flags whose
 	// runtime default was emptied above; DefValue is presentation only, the bound
-	// slice stays empty so the replace-on-first-Set footgun is still defused (§7).
+	// slice stays empty so the replace-on-first-Set footgun is still defused.
 	flags.Lookup("exclude-dir").DefValue = "[" + strings.Join(defaultExcludeDirs, ",") + "]"
 	flags.Lookup("exclude-file").DefValue = "[" + strings.Join(defaultExcludeFiles, ",") + "]"
 	flags.Lookup("generated-markers").DefValue = "[" + strings.Join(defaultGeneratedMarkers, ",") + "]"
 }
 
 // registerConfigControlFlags registers --config, --no-config and -r/--find-root
-// as dummy-bound flags. They are pre-scanned from os.Args (§4), so the bound
+// as dummy-bound flags. They are pre-scanned from os.Args, so the bound
 // values are never read; registering them keeps --help complete and stops cobra
 // (and the CLI-only parse) treating them as unknown flags.
 func registerConfigControlFlags(flags *pflag.FlagSet) {
@@ -463,18 +456,19 @@ func registerConfigControlFlags(flags *pflag.FlagSet) {
 	flags.BoolP("find-root", "r", false, "discover the project .scc by walking up to the repository root instead of using ./.scc")
 }
 
-// mergeSliceDefault implements the §7 slice-default preservation. If set is
+// mergeSliceDefault implements the slice-default preservation. If set is
 // empty (nobody supplied the flag) it returns the built-in defaults; otherwise
 // it returns defaults ∪ set, de-duplicated and order-stable (defaults first,
 // then the supplied values), so a config/CLI value is additive to the built-in
 // safety net rather than replacing it.
 func mergeSliceDefault(set, defaults []string) []string {
 	if len(set) == 0 {
-		return append([]string(nil), defaults...)
+		return append([]string{}, defaults...)
 	}
 
-	result := make([]string, 0, len(defaults)+len(set))
-	seen := make(map[string]struct{}, len(defaults)+len(set))
+	var result []string
+	seen := map[string]struct{}{}
+
 	for _, v := range defaults {
 		if _, ok := seen[v]; !ok {
 			seen[v] = struct{}{}
@@ -491,7 +485,7 @@ func mergeSliceDefault(set, defaults []string) []string {
 }
 
 // applySliceDefaults merges the built-in defaults back into the three slice
-// flags after parsing (§7). Called from rootCmd.Run on every path because the
+// flags after parsing. Called from rootCmd.Run on every path because the
 // flags are always registered with an empty runtime default.
 func applySliceDefaults() {
 	processor.PathDenyList = mergeSliceDefault(processor.PathDenyList, defaultExcludeDirs)
@@ -502,8 +496,7 @@ func applySliceDefaults() {
 // warnIfConfigWrote emits an ungated-stderr notice when a write flag was set in
 // the merged parse (i.e. by config, since its discard binding was hit) but the
 // genuine CLI did not set it — telling the user their config line was ignored
-// (§5 warning, §8.1). mergedFlags is the rootCmd flag set whose write flags were
-// bound to discards.
+// mergedFlags is the rootCmd flag set whose write flags were bound to discards.
 func warnIfConfigWrote(mergedFlags *pflag.FlagSet) {
 	check := func(name, cliValue string) {
 		if mergedFlags.Changed(name) && cliValue == "" {
