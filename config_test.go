@@ -13,6 +13,11 @@ import (
 	"github.com/spf13/pflag"
 )
 
+// noGlobalConfig forces SCC_CONFIG_PATH empty (treated as unset) so a value in
+// the developer's environment cannot pollute config tests. Pass it as the env
+// argument to runSCCDir for any test that does not set its own global config.
+var noGlobalConfig = []string{SccConfigEnv + "="}
+
 // runSCCDir runs the test binary as scc in the given working directory, with
 // optional extra environment entries (KEY=VALUE).
 func runSCCDir(t *testing.T, dir string, env []string, args ...string) (string, error) {
@@ -257,7 +262,7 @@ func writeSccConfig(t *testing.T, content string) string {
 
 func TestConfigProjectLoaded(t *testing.T) {
 	dir := writeSccConfig(t, "--format csv\n--no-cocomo\n")
-	out, err := runSCCDir(t, dir, nil)
+	out, err := runSCCDir(t, dir, noGlobalConfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -278,7 +283,7 @@ func TestConfigNoWalkUp(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(sub, "x.go"), []byte("package x\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	out, err := runSCCDir(t, sub, nil)
+	out, err := runSCCDir(t, sub, noGlobalConfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -289,7 +294,7 @@ func TestConfigNoWalkUp(t *testing.T) {
 
 func TestConfigPrecedenceCLIWins(t *testing.T) {
 	dir := writeSccConfig(t, "--format csv\n")
-	out, err := runSCCDir(t, dir, nil, "--format", "json")
+	out, err := runSCCDir(t, dir, noGlobalConfig, "--format", "json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -309,7 +314,7 @@ func TestConfigNeverWritesFile(t *testing.T) {
 	}
 	for _, content := range cases {
 		dir := writeSccConfig(t, content)
-		_, err := runSCCDir(t, dir, nil)
+		_, err := runSCCDir(t, dir, noGlobalConfig)
 		if err != nil {
 			t.Fatalf("scc errored for config %q: %v", content, err)
 		}
@@ -322,7 +327,7 @@ func TestConfigNeverWritesFile(t *testing.T) {
 func TestConfigPresentCLICanWrite(t *testing.T) {
 	dir := writeSccConfig(t, "--no-cocomo\n")
 	target := filepath.Join(dir, "good.csv")
-	_, err := runSCCDir(t, dir, nil, "-f", "csv", "-o", target)
+	_, err := runSCCDir(t, dir, noGlobalConfig, "-f", "csv", "-o", target)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -343,7 +348,7 @@ func TestConfigControlFlagWithWriteFlag(t *testing.T) {
 		t.Fatal(err)
 	}
 	target := filepath.Join(dir, "out.csv")
-	_, err := runSCCDir(t, dir, nil, "--config", cfg, "-f", "csv", "-o", target)
+	_, err := runSCCDir(t, dir, noGlobalConfig, "--config", cfg, "-f", "csv", "-o", target)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -358,7 +363,7 @@ func TestConfigControlFlagWithWriteFlag(t *testing.T) {
 // paths (here --by-file would be read as a file path).
 func TestConfigDashDashDoesNotDisableCLIFlags(t *testing.T) {
 	dir := writeSccConfig(t, "--\n")
-	out, err := runSCCDir(t, dir, nil, "--by-file")
+	out, err := runSCCDir(t, dir, noGlobalConfig, "--by-file")
 	if err != nil {
 		t.Fatalf("scc errored: %v\n%s", err, out)
 	}
@@ -377,7 +382,7 @@ func TestConfigExplicitEmptyWriteFlagNoFalseWarn(t *testing.T) {
 
 	// CLI explicitly sets --output= (empty -> stdout): the flag WAS set on the
 	// command line, so no warning should fire.
-	out, err := runSCCDir(t, dir, nil, "--output=")
+	out, err := runSCCDir(t, dir, noGlobalConfig, "--output=")
 	if err != nil {
 		t.Fatalf("scc errored: %v\n%s", err, out)
 	}
@@ -386,7 +391,7 @@ func TestConfigExplicitEmptyWriteFlagNoFalseWarn(t *testing.T) {
 	}
 
 	// Control: config-only write (no CLI override) should still warn.
-	out, err = runSCCDir(t, dir, nil)
+	out, err = runSCCDir(t, dir, noGlobalConfig)
 	if err != nil {
 		t.Fatalf("scc errored: %v\n%s", err, out)
 	}
@@ -429,7 +434,7 @@ func TestConfigNoConfigComposition(t *testing.T) {
 	if err := os.WriteFile(global, []byte("--format csv\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	out, err := runSCCDir(t, dir, nil, "--config", global, "--no-config")
+	out, err := runSCCDir(t, dir, noGlobalConfig, "--config", global, "--no-config")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -456,7 +461,7 @@ func TestConfigInsideFileIsInert(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, ".scc"), []byte("--config "+chained+"\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	out, err := runSCCDir(t, dir, nil)
+	out, err := runSCCDir(t, dir, noGlobalConfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -467,7 +472,7 @@ func TestConfigInsideFileIsInert(t *testing.T) {
 
 func TestConfigUnreadableExplicitErrors(t *testing.T) {
 	dir := t.TempDir()
-	out, err := runSCCDir(t, dir, nil, "--config", filepath.Join(dir, "does-not-exist.scc"))
+	out, err := runSCCDir(t, dir, noGlobalConfig, "--config", filepath.Join(dir, "does-not-exist.scc"))
 	if err == nil {
 		t.Fatalf("scc should exit non-zero for an unreadable --config, output:\n%s", out)
 	}
@@ -481,14 +486,14 @@ func TestConfigCoupledMinFlags(t *testing.T) {
 	// the CLI-only write parse must not re-fire the coupled min/gen closures.
 	dir := writeSccConfig(t, "--min\n")
 	// --no-min on the CLI wins (last); the run should still succeed and not crash.
-	if _, err := runSCCDir(t, dir, nil, "--no-min"); err != nil {
+	if _, err := runSCCDir(t, dir, noGlobalConfig, "--no-min"); err != nil {
 		t.Fatalf("coupled min flags run failed: %v", err)
 	}
 }
 
 func TestConfigUnknownFlagAttribution(t *testing.T) {
 	dir := writeSccConfig(t, "--not-a-real-flag\n")
-	out, err := runSCCDir(t, dir, nil)
+	out, err := runSCCDir(t, dir, noGlobalConfig)
 	if err == nil {
 		t.Fatalf("unknown flag in config should exit non-zero, output:\n%s", out)
 	}
@@ -501,7 +506,7 @@ func TestConfigCompletionUnaffected(t *testing.T) {
 	// scc completion --shell bash in a dir containing ./.scc must still emit
 	// completions (config prepend must not shift args[1]).
 	dir := writeSccConfig(t, "--format csv\n")
-	out, err := runSCCDir(t, dir, nil, "completion", "--shell", "bash")
+	out, err := runSCCDir(t, dir, noGlobalConfig, "completion", "--shell", "bash")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -525,7 +530,7 @@ func TestConfigInsideAtFileHonored(t *testing.T) {
 	if err := os.WriteFile(atFile, []byte("--config "+global+"\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	out, err := runSCCDir(t, dir, nil, "@"+atFile)
+	out, err := runSCCDir(t, dir, noGlobalConfig, "@"+atFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -542,7 +547,7 @@ func TestConfigInsideAtFileHonored(t *testing.T) {
 // only the separate `completion --shell` script-generation path.)
 func TestConfigCompleteDynamicUnaffected(t *testing.T) {
 	dir := writeSccConfig(t, "--format csv\n")
-	out, err := runSCCDir(t, dir, nil, "__complete", "--for")
+	out, err := runSCCDir(t, dir, noGlobalConfig, "__complete", "--for")
 	if err != nil {
 		t.Fatalf("__complete errored with ./.scc present: %v\n%s", err, out)
 	}
@@ -575,7 +580,7 @@ func TestConfigSliceUnion(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	out, err := runSCCDir(t, dir, nil, "--exclude-dir", "dist", "-f", "csv", "--by-file")
+	out, err := runSCCDir(t, dir, noGlobalConfig, "--exclude-dir", "dist", "-f", "csv", "--by-file")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -604,7 +609,7 @@ func TestAtFileMultiTokenAndComments(t *testing.T) {
 	if err := os.WriteFile(atFile, []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
-	out, err := runSCCDir(t, dir, nil, "@"+atFile)
+	out, err := runSCCDir(t, dir, noGlobalConfig, "@"+atFile)
 	if err != nil {
 		t.Fatalf("@file errored: %v\n%s", err, out)
 	}
@@ -629,7 +634,7 @@ func TestAtFileQuotedSpacePath(t *testing.T) {
 	if err := os.WriteFile(atFile, []byte("'my file.go'\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	out, err := runSCCDir(t, dir, nil, "@"+atFile)
+	out, err := runSCCDir(t, dir, noGlobalConfig, "@"+atFile)
 	if err != nil {
 		t.Fatalf("@file errored: %v\n%s", err, out)
 	}
@@ -648,7 +653,7 @@ func TestNoConfigFastPathWritesFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	target := filepath.Join(dir, "out.csv")
-	if _, err := runSCCDir(t, dir, nil, "-f", "csv", "-o", target); err != nil {
+	if _, err := runSCCDir(t, dir, noGlobalConfig, "-f", "csv", "-o", target); err != nil {
 		t.Fatal(err)
 	}
 	if info, statErr := os.Stat(target); statErr != nil || info.Size() == 0 {
