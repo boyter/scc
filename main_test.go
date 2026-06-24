@@ -31,6 +31,10 @@ func TestMain(m *testing.M) {
 func runSCC(args ...string) (string, error) {
 	args = slices.Insert(args, 0, sccTestFlag)
 	cmd := exec.Command(sccBinPath, args...)
+	// Force SCC_CONFIG_PATH empty (treated as unset) so a global config in the
+	// developer's environment cannot pollute these runs - an unreadable one would
+	// otherwise make scc exit non-zero and fail every test here.
+	cmd.Env = append(os.Environ(), SccConfigEnv+"=")
 	res, err := cmd.CombinedOutput()
 	return string(res), err
 }

@@ -427,6 +427,102 @@ else
     echo -e "${GREEN}PASSED json2 no percent test"
 fi
 
+# Config dotfile + @file integration tests (spec/01-config-dotfile). SCC_CONFIG_PATH is forced empty so a developer's global config cannot pollute these runs.
+SCC_BIN="$(pwd)/scc"
+export SCC_CONFIG_PATH=
+
+# @file with a multi-token line ("-f csv") only works with the new shared tokenizer
+tmp=$(mktemp -d)
+echo 'package main' > "$tmp/main.go"
+printf -- '# count this dir as csv\n-f csv\nmain.go\n' > "$tmp/flags.txt"
+if (cd "$tmp" && "$SCC_BIN" @flags.txt) | grep -q "Language,Lines,Code"; then
+    echo -e "${GREEN}PASSED @file multi-token + comment test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED @file should tokenize multi-token lines and strip comments"
+    echo -e "=======================================================${NC}"
+    rm -rf "$tmp"
+    exit
+fi
+rm -rf "$tmp"
+
+# exclude-dir footgun fix: a CLI --exclude-dir must union with the built-in .git/.hg/.svn defaults, not replace them
+tmp=$(mktemp -d)
+mkdir -p "$tmp/.git" "$tmp/vendor" "$tmp/keep"
+echo 'package a' > "$tmp/.git/x.go"
+echo 'package b' > "$tmp/vendor/y.go"
+echo 'package c' > "$tmp/keep/z.go"
+out=$("$SCC_BIN" --exclude-dir vendor -f csv --by-file "$tmp")
+if echo "$out" | grep -q "z.go" && ! echo "$out" | grep -q "x.go" && ! echo "$out" | grep -q "y.go"; then
+    echo -e "${GREEN}PASSED exclude-dir preserves built-in defaults test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED --exclude-dir must union with the built-in .git/.hg/.svn defaults, not replace them"
+    echo -e "${out}"
+    echo -e "=======================================================${NC}"
+    rm -rf "$tmp"
+    exit
+fi
+rm -rf "$tmp"
+
+# project .scc discovery + CLI precedence (global < project < CLI)
+tmp=$(mktemp -d)
+echo 'package main' > "$tmp/main.go"
+printf -- '--format csv\n' > "$tmp/.scc"
+if (cd "$tmp" && "$SCC_BIN") | grep -q "Language,Lines,Code"; then
+    echo -e "${GREEN}PASSED project .scc discovery test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED project ./.scc should be auto-discovered and applied"
+    echo -e "=======================================================${NC}"
+    rm -rf "$tmp"
+    exit
+fi
+if (cd "$tmp" && "$SCC_BIN" --format json) | grep -q '\[{'; then
+    echo -e "${GREEN}PASSED CLI overrides config precedence test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED a CLI flag must override the same flag from a project .scc"
+    echo -e "=======================================================${NC}"
+    rm -rf "$tmp"
+    exit
+fi
+rm -rf "$tmp"
+
+# security: a config file must never write to disk; clustered -do (-d + -o) is the headline case a naive scan misses
+tmp=$(mktemp -d)
+echo 'package main' > "$tmp/main.go"
+printf -- '-do evil.csv\n' > "$tmp/.scc"
+(cd "$tmp" && "$SCC_BIN" > /dev/null)
+if [ -f "$tmp/evil.csv" ]; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED a config file must NOT be able to write a file (clustered -do leaked through)"
+    echo -e "=======================================================${NC}"
+    rm -rf "$tmp"
+    exit
+else
+    echo -e "${GREEN}PASSED config cannot write a file test"
+fi
+rm -rf "$tmp"
+
+# the flip side: a genuine CLI -o must still write even when config is present
+tmp=$(mktemp -d)
+echo 'package main' > "$tmp/main.go"
+printf -- '--no-cocomo\n' > "$tmp/.scc"
+(cd "$tmp" && "$SCC_BIN" -f csv -o good.csv > /dev/null)
+if [ -s "$tmp/good.csv" ]; then
+    echo -e "${GREEN}PASSED genuine CLI -o writes with config present test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED a genuine CLI -o must still write a file when a project .scc is present"
+    echo -e "=======================================================${NC}"
+    rm -rf "$tmp"
+    exit
+fi
+rm -rf "$tmp"
+
+unset SCC_CONFIG_PATH
+
 echo -e  "${NC}Checking compile targets..."
 
 echo "   darwin..."

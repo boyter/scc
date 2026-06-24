@@ -25,6 +25,7 @@ Licensed under MIT licence.
 - [Background](#background)
 - [Pitch](#pitch)
 - [Usage](#usage)
+- [Configuration Files](#configuration-files)
 - [Complexity Estimates](#complexity-estimates)
 - [Unique Lines of Code (ULOC)](#unique-lines-of-code-uloc)
 - [COCOMO](#cocomo)
@@ -437,9 +438,82 @@ https://paste.c-net.org/Example
 
 ### Ignore Files
 
-`scc` mostly supports .ignore files inside directories that it scans. This is similar to how ripgrep, ag and tokei work. .ignore files are 100% the same as .gitignore files with the same syntax, and as such `scc` will ignore files and directories listed in them. You can add .ignore files to ignore things like vendored dependency checked in files and such. The idea is allowing you to add a file or folder to git and have ignored in the count.
+`scc` supports .ignore files inside directories that it scans. This is similar to how ripgrep, ag and tokei work. 
+.ignore files are 100% the same as .gitignore files with the same syntax, and as such `scc` will ignore files and 
+directories listed in them. You can add .ignore files to ignore things like vendored dependency checked in files and 
+such. The idea is allowing you to add a file or folder to git and have ignored in the count.
 
-It also supports its own ignore file `.sccignore` if you want `scc` to ignore things while having ripgrep, ag, tokei and others support them.
+It also supports its own ignore file `.sccignore` if you want `scc` to ignore things while having ripgrep, ag, tokei 
+and others support them.
+
+### Configuration Files
+
+`scc` can read default flags from a configuration file to avoid creating shell aliases. 
+The format is an *opts-list* in the style of ripgrep and bat: the file is simply a list of the same command-line flags 
+you would otherwise type, and anything valid on the command line is valid in the file, with the exception
+of output flags.
+
+Format rules:
+
+- One flag per line is the recommended style, but multiple whitespace-separated tokens per line are allowed (`--exclude-dir vendor`).
+- Lines use the normal `--` prefix, e.g. `--no-cocomo`.
+- `#` begins a comment. Whole-line and inline trailing comments are stripped.
+- Blank lines are ignored.
+- Tokenization is quote-aware, so both `--exclude-dir vendor` and `--count-as 'jsp:html'` work. Quotes (single or double) are the only grouping mechanism; to include a literal quote, switch quote style (`--count-as "a'b"`).
+- Backslash is an ordinary literal, not an escape character, so a Windows path such as `--exclude-dir C:\build\out` survives verbatim.
+- A line whose first token does not start with `-` (a bare positional such as `src/`) is skipped with a warning, so a config file cannot inject extra count targets.
+
+Example `.scc`:
+
+```
+# count the way I like it
+--no-cocomo
+--exclude-dir vendor,node_modules
+--format wide          # default to the wider table
+```
+
+#### Sources and discovery
+
+There are two configuration tiers:
+
+- **Global** — there is no fixed default location and no per-run home-directory stat. The global source is consulted only when set explicitly via the `SCC_CONFIG_PATH` environment variable or the `--config <path>` flag. `--config` which overrides `SCC_CONFIG_PATH`.
+- **Project** — a file named `.scc` in the current working directory (`./.scc`), found with a single stat and **no walk-up**. `cd project && scc` picks up `project/.scc`; running `scc` from a subdirectory does **not** pick up an ancestor's `.scc`. Path arguments do not move the anchor — `scc ./project` still reads `./.scc`, not `./project/.scc`.
+
+To read the repository root's `.scc` from a subdirectory, pass `-r` / `--find-root`, which walks back from the current directory to the git/hg root. It is off by default and affects config discovery only - it changes which `.scc` is read, not which directory is counted. Outside a repository it degrades to `./.scc`.
+
+#### Precedence
+
+Lowest to highest, later wins: **global config < project config < command line**. Scalar and boolean flags follow last-wins, so the command line always overrides config.
+
+Slice flags (`--exclude-dir`, `--exclude-file`, `--exclude-ext`, `--include-ext`, `--not-match`) **union** instead of overriding:
+
+```
+config: --exclude-dir vendor
+CLI:    --exclude-dir dist
+result: vendor, dist
+```
+
+The three slice flags that ship with built-in defaults — `--exclude-dir` (`.git`, `.hg`, `.svn`), `--exclude-file` (the lockfile set) and `--generated-markers` — keep those defaults as a non-removable safety net: a config or CLI value is *added* to the defaults rather than replacing them, so putting `vendor` in `.scc` never stops `scc` skipping `.git`.
+
+#### Config can never write a file
+
+A configuration file can change how `scc` counts and formats, including selecting a stdout format such as `--format json`, but it can **never** cause `scc` to write a file. The file-output flags — `--output` / `-o`, `--report` and `--format-multi` — are honoured only from the command line; the same flags supplied by config are ignored (output goes to stdout, the default). This is because a project `.scc` is auto-discovered, so a cloned repository could otherwise silently overwrite one of your files. Only the command line can make `scc` write to disk.
+
+#### Control flags
+
+| Flag | Effect |
+|------|--------|
+| `--no-config` | Disable auto-discovery: skip the `SCC_CONFIG_PATH` global and the project `.scc`. |
+| `--config <path>` | Load this file as the global source. Always honoured, even with `--no-config`; overrides `SCC_CONFIG_PATH`. |
+| `-r` / `--find-root` | Discover the project `.scc` by walking up to the repository root instead of using `./.scc`. No-op under `--no-config`. |
+
+`--config test.scc --no-config` loads exactly `test.scc` and nothing else — a clean isolated-config mode. A `--config` or `--no-config` written *inside* a config file is inert (a config file cannot chain-load another config file).
+
+#### The `@file` argument bundle
+
+`scc @flags.txt` expands the contents of `flags.txt` as if its lines had been typed on the command line. It uses the same opts-list tokenizer as config files (comments, quotes, backslash-literal), but unlike config files it **keeps positional paths** and **may write files** — an `@file` is an explicit, user-supplied argument bundle equivalent to typing the flags, so it is trusted like the command line (including a `--config` inside it being honoured). `@file` expansion fires only when `@file` is the sole argument.
+
+Note that because config discovery now runs on the post-`@file` arguments, `scc @flags.txt` in a directory containing `./.scc` loads **both** — the `@file` tokens sit above the config in precedence. To get the old "exactly these args, nothing else" behaviour, add `--no-config`.
 
 ### Interesting Use Cases
 

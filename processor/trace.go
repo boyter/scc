@@ -94,3 +94,21 @@ func printTraceF(msg string, args ...any) {
 func printError(msg string) {
 	doPrint(os.Stderr, levelError, msg, nil)
 }
+
+// PrintError is an exported wrapper around printError so package main (config
+// discovery, etc.) can emit ungated stderr errors using the same formatting.
+func PrintError(msg string) {
+	printError(msg)
+}
+
+// PrintTrace is an exported wrapper around printTrace so package main can flush
+// buffered config discovery messages once Trace has been set.
+func PrintTrace(msg string) {
+	printTrace(msg)
+}
+
+// PrintDebug is an exported wrapper around printDebug so package main can flush
+// buffered config discovery messages once Debug has been set.
+func PrintDebug(msg string) {
+	printDebug(msg)
+}
