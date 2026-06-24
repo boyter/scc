@@ -646,6 +646,140 @@ func TestAtFileQuotedSpacePath(t *testing.T) {
 	}
 }
 
+// TestConfigFindRootWalkUp locks the headline -r/--find-root feature end-to-end
+// (§3.2): run from a subdirectory of a repo, -r must walk up to the repository
+// root (detected via a .git dir) and load the root .scc, where the default
+// ./.scc discovery finds nothing. TestConfigNoWalkUp already proves the default
+// does NOT walk; this proves -r does, and that the clustered short form (-rv)
+// is declustered and honored.
+func TestConfigFindRootWalkUp(t *testing.T) {
+	root := t.TempDir()
+	if err := os.Mkdir(filepath.Join(root, ".git"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, ".scc"), []byte("--format csv\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	sub := filepath.Join(root, "sub")
+	if err := os.Mkdir(sub, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(sub, "x.go"), []byte("package x\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Control: without -r, no walk-up, the root .scc is not seen (tabular).
+	out, err := runSCCDir(t, sub, noGlobalConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(out, "Language,Lines,Code") {
+		t.Errorf("default discovery must not walk up to the repo-root .scc, output:\n%s", out)
+	}
+
+	// -r walks up to the repo root and loads its .scc (csv).
+	out, err = runSCCDir(t, sub, noGlobalConfig, "-r")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "Language,Lines,Code") {
+		t.Errorf("-r should walk up to the repo-root .scc, output:\n%s", out)
+	}
+
+	// Clustered short form must be declustered and honored identically.
+	out, err = runSCCDir(t, sub, noGlobalConfig, "-rv")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "Language,Lines,Code") {
+		t.Errorf("clustered -rv should enable find-root, output:\n%s", out)
+	}
+}
+
+// TestConfigFindRootOutsideRepoFallback locks the §3.2 graceful-degradation
+// guarantee: when the CWD is not inside any repo, FindRepositoryRoot returns the
+// supplied directory unchanged, so -r resolves to ./.scc - identical to default
+// discovery, never an error. -r must therefore always be safe to leave on.
+func TestConfigFindRootOutsideRepoFallback(t *testing.T) {
+	dir := writeSccConfig(t, "--format csv\n") // ./.scc, no .git anywhere above
+	out, err := runSCCDir(t, dir, noGlobalConfig, "-r")
+	if err != nil {
+		t.Fatalf("-r outside a repo should not error, got: %v\n%s", err, out)
+	}
+	if !strings.Contains(out, "Language,Lines,Code") {
+		t.Errorf("-r outside a repo should fall back to ./.scc, output:\n%s", out)
+	}
+}
+
+// TestConfigEnvVarUnreadableErrors covers the SCC_CONFIG_PATH arm of the §8
+// "explicit source the user asked for" rule: a set-but-unreadable global must
+// exit non-zero with a clear error. TestConfigUnreadableExplicitErrors only
+// covers the --config arm; the env-var resolution is a separate branch.
+func TestConfigEnvVarUnreadableErrors(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	missing := filepath.Join(dir, "does-not-exist.scc")
+	out, err := runSCCDir(t, dir, []string{SccConfigEnv + "=" + missing})
+	if err == nil {
+		t.Fatalf("an unreadable SCC_CONFIG_PATH should exit non-zero, output:\n%s", out)
+	}
+	if !strings.Contains(out, "could not read config") {
+		t.Errorf("expected a clear error for an unreadable SCC_CONFIG_PATH, output:\n%s", out)
+	}
+}
+
+// TestConfigNoConfigDisablesEnvGlobal proves --no-config skips a *set*
+// SCC_CONFIG_PATH global (§4). TestConfigNoConfigComposition only exercises
+// --config (which is honored even under --no-config); the env-var global is the
+// arm that --no-config actually disables.
+func TestConfigNoConfigDisablesEnvGlobal(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	global := filepath.Join(dir, "global.scc")
+	if err := os.WriteFile(global, []byte("--format csv\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Sanity: the env global applies when --no-config is absent.
+	out, err := runSCCDir(t, dir, []string{SccConfigEnv + "=" + global})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "Language,Lines,Code") {
+		t.Fatalf("env global should apply without --no-config, output:\n%s", out)
+	}
+
+	// --no-config must disable the env global (back to tabular default).
+	out, err = runSCCDir(t, dir, []string{SccConfigEnv + "=" + global}, "--no-config")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(out, "Language,Lines,Code") {
+		t.Errorf("--no-config should disable the SCC_CONFIG_PATH global, output:\n%s", out)
+	}
+}
+
+// TestConfigPresentCLIFormatMultiWrites is the --format-multi counterpart of
+// TestConfigPresentCLICanWrite: with config present (so the two-mode write split
+// engages), a genuine-CLI --format-multi must still write its file. The §5
+// capability model blocks config from writing, not the CLI; resolveWriteFlags
+// must therefore source --format-multi from the genuine CLI too, not just -o.
+func TestConfigPresentCLIFormatMultiWrites(t *testing.T) {
+	dir := writeSccConfig(t, "--no-cocomo\n")
+	target := filepath.Join(dir, "multi.csv")
+	_, err := runSCCDir(t, dir, noGlobalConfig, "--format-multi", "csv:"+target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info, statErr := os.Stat(target); statErr != nil || info.Size() == 0 {
+		t.Errorf("genuine CLI --format-multi should write the file even with config present")
+	}
+}
+
 func TestNoConfigFastPathWritesFile(t *testing.T) {
 	// No config present: -o on the CLI writes exactly as today (fast path).
 	dir := t.TempDir()
