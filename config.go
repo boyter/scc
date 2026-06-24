@@ -145,8 +145,6 @@ func tokenizeConfigLine(line string) []string {
 // cobra runs. Reading os.Args alone is what makes --config/--no-config inside a
 // config file inert.
 func preScanConfig(args []string) (noConfig bool, findRoot bool, explicitPath string) {
-	defer func() { _ = recover() }()
-
 	for i := 0; i < len(args); i++ {
 		a := args[i]
 		switch {
