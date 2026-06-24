@@ -409,3 +409,150 @@ func TestRegressionMcpSkipsConfigDiscovery(t *testing.T) {
 		t.Errorf("--mcp must short-circuit before config discovery; config was read, output:\n%s", out)
 	}
 }
+
+// TestRegressionVersionFlagWithConfig guards cobra's built-in meta flags through
+// the new arg pipeline. main() no longer hands the genuine argv to cobra; it
+// builds a merged list and passes it via rootCmd.SetArgs(merged[1:]). A bug in
+// that wiring (e.g. an off-by-one slice, or config tokens shifting the version
+// flag) could break --version even though it is not a real scc flag. The output
+// must be byte-identical with and without a project .scc present, and a .scc
+// must never leak a config error onto the version path.
+func TestRegressionVersionFlagWithConfig(t *testing.T) {
+	bare := t.TempDir()
+	noCfg, err := runSCCDir(t, bare, noGlobalConfig, "--version")
+	if err != nil {
+		t.Fatalf("scc --version should exit 0 with no config: %v\n%s", err, noCfg)
+	}
+	if !strings.Contains(noCfg, "scc version") {
+		t.Fatalf("--version output missing version banner, output:\n%s", noCfg)
+	}
+
+	dir := writeSccConfig(t, "--format csv\n--no-cocomo\n")
+	withCfg, err := runSCCDir(t, dir, noGlobalConfig, "--version")
+	if err != nil {
+		t.Fatalf("scc --version should exit 0 with a project .scc present: %v\n%s", err, withCfg)
+	}
+	if withCfg != noCfg {
+		t.Errorf("--version output changed when a project .scc was present\nno config:\n%s\nwith config:\n%s", noCfg, withCfg)
+	}
+}
+
+// TestRegressionSccDirectoryDoesNotBreakRun guards the no-panics / robustness
+// policy against a real-world surprise the feature introduces: a path named
+// ".scc" that is a *directory* (another tool's data dir, an accidental mkdir).
+// Project discovery does os.Stat("./.scc"), which succeeds for a directory, then
+// os.ReadFile fails with "is a directory". That is the non-explicit project arm,
+// so it must degrade to a stderr warning and let the run finish (exit 0 with
+// real output) - never abort, panic, or swallow the scan.
+func TestRegressionSccDirectoryDoesNotBreakRun(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(filepath.Join(dir, ".scc"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	out, err := runSCCDir(t, dir, noGlobalConfig, "-f", "csv", "--by-file")
+	if err != nil {
+		t.Fatalf("a .scc *directory* must not make scc exit non-zero: %v\n%s", err, out)
+	}
+	if !strings.Contains(out, "main.go") {
+		t.Errorf("scc should still scan and emit output when ./.scc is a directory, output:\n%s", out)
+	}
+}
+
+// TestRegressionConfigGlobalProjectPrecedence locks the middle rung of the
+// precedence ladder (global < project) for a scalar flag. The existing suite
+// proves CLI beats config and that each source loads, but not that the project
+// .scc overrides the SCC_CONFIG_PATH global when the two disagree - the ordering
+// that falls out of prepending global tokens ahead of project tokens. Asserted
+// in both directions so a swapped prepend order cannot pass.
+func TestRegressionConfigGlobalProjectPrecedence(t *testing.T) {
+	check := func(globalContent, projectContent string, wantCSV bool) {
+		t.Helper()
+		dir := t.TempDir()
+		if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0644); err != nil {
+			t.Fatal(err)
+		}
+		global := filepath.Join(dir, "global.scc")
+		if err := os.WriteFile(global, []byte(globalContent), 0644); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, ".scc"), []byte(projectContent), 0644); err != nil {
+			t.Fatal(err)
+		}
+		out, err := runSCCDir(t, dir, []string{SccConfigEnv + "=" + global})
+		if err != nil {
+			t.Fatal(err)
+		}
+		isCSV := strings.Contains(out, "Language,Lines,Code")
+		if isCSV != wantCSV {
+			t.Errorf("global=%q project=%q: wantCSV=%v gotCSV=%v, output:\n%s", globalContent, projectContent, wantCSV, isCSV, out)
+		}
+	}
+	// project (json) overrides global (csv) -> not CSV
+	check("--format csv\n", "--format json\n", false)
+	// project (csv) overrides global (json) -> CSV
+	check("--format json\n", "--format csv\n", true)
+}
+
+// TestRegressionConfigGlobalProjectSliceUnion extends the §7 union semantics to
+// the global+project pair. TestConfigSliceUnion covers project ∪ CLI ∪ defaults;
+// this proves a slice flag set in the SCC_CONFIG_PATH global unions with the same
+// flag set in the project .scc (rather than one source replacing the other),
+// which is the natural pflag append behaviour that the empty-default mechanism
+// must preserve across both config sources.
+func TestRegressionConfigGlobalProjectSliceUnion(t *testing.T) {
+	dir := t.TempDir()
+	for _, d := range []string{"ga", "pb", "keep"} {
+		if err := os.Mkdir(filepath.Join(dir, d), 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, d, "f.go"), []byte("package x\n"), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	global := filepath.Join(dir, "global.scc")
+	if err := os.WriteFile(global, []byte("--exclude-dir ga\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, ".scc"), []byte("--exclude-dir pb\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	out, err := runSCCDir(t, dir, []string{SccConfigEnv + "=" + global}, "-f", "csv", "--by-file")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "keep/f.go") {
+		t.Errorf("keep/f.go should be counted, output:\n%s", out)
+	}
+	// Both the global-excluded (ga) and project-excluded (pb) dirs must be gone:
+	// a union, not one source clobbering the other. Key on the path column so the
+	// shared basename (f.go) doesn't mask a leak.
+	if strings.Contains(out, "ga/f.go") || strings.Contains(out, "pb/f.go") {
+		t.Errorf("global+project --exclude-dir should union (ga and pb both excluded), output:\n%s", out)
+	}
+}
+
+// TestRegressionConfigFormatMultiIgnoredForStdout hardens the §5.3 guarantee
+// that --format-multi is ignored *entirely* when it comes from config, not just
+// blocked from writing files. TestConfigNeverWritesFile only proves no file
+// appears; this proves config cannot even change the on-screen format via a
+// stdout-only --format-multi. The merged parse binds --format-multi to a discard,
+// so processor.FormatMulti stays empty and output keeps the default tabular form.
+func TestRegressionConfigFormatMultiIgnoredForStdout(t *testing.T) {
+	dir := writeSccConfig(t, "--format-multi json:stdout\n")
+	out, err := runSCCDir(t, dir, noGlobalConfig)
+	if err != nil {
+		t.Fatalf("scc errored: %v\n%s", err, out)
+	}
+	// JSON would start with '[{'; tabular has the box-drawing header rule.
+	if strings.Contains(out, "[{\"Name\"") {
+		t.Errorf("config --format-multi must be ignored; output switched to JSON, output:\n%s", out)
+	}
+	if !strings.Contains(out, "Language") {
+		t.Errorf("expected the default tabular output, got:\n%s", out)
+	}
+}
