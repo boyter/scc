@@ -65,9 +65,28 @@ func parseConfigArgs(content string, allowPositional bool) []string {
 			continue
 		}
 
-		if !allowPositional && !strings.HasPrefix(tokens[0], "-") {
-			_, _ = fmt.Fprintf(os.Stderr, "warning: ignoring config line (not a flag): %s\n", line)
-			continue
+		if !allowPositional {
+			if !strings.HasPrefix(tokens[0], "-") {
+				_, _ = fmt.Fprintf(os.Stderr, "warning: ignoring config line (not a flag): %s\n", line)
+				continue
+			}
+			// '--' is pflag's end-of-flags marker. Config tokens are prepended
+			// ahead of the genuine CLI, so a '--' from a config file would turn
+			// the user's real flags into positional args - disabling them and
+			// undermining the "config cannot inject count targets" guarantee.
+			// Config has no legitimate positionals, so strip the marker.
+			kept := tokens[:0]
+			for _, t := range tokens {
+				if t == "--" {
+					_, _ = fmt.Fprintf(os.Stderr, "warning: ignoring end-of-flags marker '--' in config: %s\n", line)
+					continue
+				}
+				kept = append(kept, t)
+			}
+			tokens = kept
+			if len(tokens) == 0 {
+				continue
+			}
 		}
 
 		args = append(args, tokens...)
@@ -493,19 +512,30 @@ func applySliceDefaults() {
 	processor.GeneratedMarkers = mergeSliceDefault(processor.GeneratedMarkers, defaultGeneratedMarkers)
 }
 
+// cliWriteFlags records which write flags the genuine CLI explicitly set, taken
+// from the CLI-only parse's Changed() bits. Keying off this rather than the
+// resolved value lets warnIfConfigWrote tell "CLI set it" from "CLI left it
+// empty" — an explicit --output= / --report= would look unset by value alone.
+type cliWriteFlags struct {
+	output      bool
+	report      bool
+	formatMulti bool
+}
+
 // warnIfConfigWrote emits an ungated-stderr notice when a write flag was set in
 // the merged parse (i.e. by config, since its discard binding was hit) but the
-// genuine CLI did not set it — telling the user their config line was ignored
-// mergedFlags is the rootCmd flag set whose write flags were bound to discards.
-func warnIfConfigWrote(mergedFlags *pflag.FlagSet) {
-	check := func(name, cliValue string) {
-		if mergedFlags.Changed(name) && cliValue == "" {
+// genuine CLI did not set it — telling the user their config line was ignored.
+// mergedFlags is the rootCmd flag set whose write flags were bound to discards;
+// cliSet is whether each write flag was set on the genuine command line.
+func warnIfConfigWrote(mergedFlags *pflag.FlagSet, cliSet cliWriteFlags) {
+	check := func(name string, setOnCLI bool) {
+		if mergedFlags.Changed(name) && !setOnCLI {
 			_, _ = fmt.Fprintf(os.Stderr, "warning: ignoring --%s from config; file output can only be set on the command line\n", name)
 		}
 	}
-	check("output", processor.FileOutput)
-	check("report", processor.ReportOut)
-	check("format-multi", processor.FormatMulti)
+	check("output", cliSet.output)
+	check("report", cliSet.report)
+	check("format-multi", cliSet.formatMulti)
 }
 
 // resolveWriteFlags is the sole writer of the real processor.FileOutput,
@@ -514,7 +544,7 @@ func warnIfConfigWrote(mergedFlags *pflag.FlagSet) {
 // write-only flag set: the three write flags bind to the real vars, everything
 // else is inert. This makes file output a CLI-only capability - config tokens
 // are structurally incapable of reaching these vars.
-func resolveWriteFlags(genuineCLI []string) {
+func resolveWriteFlags(genuineCLI []string) (set cliWriteFlags) {
 	defer func() { _ = recover() }()
 
 	fs := pflag.NewFlagSet("scc-cli-only", pflag.ContinueOnError)
@@ -534,4 +564,13 @@ func resolveWriteFlags(genuineCLI []string) {
 	registerConfigControlFlags(fs)
 
 	_ = fs.Parse(genuineCLI)
+
+	// Report which write flags the CLI actually set (named return stays zero —
+	// nothing set — if Parse panics and the deferred recover fires).
+	set = cliWriteFlags{
+		output:      fs.Changed("output"),
+		report:      fs.Changed("report"),
+		formatMulti: fs.Changed("format-multi"),
+	}
+	return set
 }

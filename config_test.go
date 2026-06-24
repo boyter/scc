@@ -101,6 +101,24 @@ func TestParseConfigArgs(t *testing.T) {
 			content: "--report-title \"\"\n",
 			want:    []string{"--report-title", ""},
 		},
+		{
+			name:            "end-of-flags marker dropped in config",
+			content:         "--\n--by-file\n",
+			allowPositional: false,
+			want:            []string{"--by-file"},
+		},
+		{
+			name:            "end-of-flags marker dropped mid-line in config",
+			content:         "--exclude-dir vendor --\n",
+			allowPositional: false,
+			want:            []string{"--exclude-dir", "vendor"},
+		},
+		{
+			name:            "end-of-flags marker kept in @file",
+			content:         "--\nsrc/\n",
+			allowPositional: true,
+			want:            []string{"--", "src/"},
+		},
 	}
 
 	for _, tc := range tests {
@@ -331,6 +349,49 @@ func TestConfigControlFlagWithWriteFlag(t *testing.T) {
 	}
 	if info, statErr := os.Stat(target); statErr != nil || info.Size() == 0 {
 		t.Errorf("scc --config x.scc -o out.csv should still write out.csv")
+	}
+}
+
+// TestConfigDashDashDoesNotDisableCLIFlags guards against a '--' end-of-flags
+// marker in a config file. Config tokens are prepended, so an unstripped '--'
+// would terminate flag parsing and turn the genuine CLI's flags into positional
+// paths (here --by-file would be read as a file path).
+func TestConfigDashDashDoesNotDisableCLIFlags(t *testing.T) {
+	dir := writeSccConfig(t, "--\n")
+	out, err := runSCCDir(t, dir, nil, "--by-file")
+	if err != nil {
+		t.Fatalf("scc errored: %v\n%s", err, out)
+	}
+	if strings.Contains(out, "could not be read") {
+		t.Errorf("--by-file was treated as a path; '--' from config leaked through:\n%s", out)
+	}
+}
+
+// TestConfigExplicitEmptyWriteFlagNoFalseWarn checks that an explicit empty
+// write flag on the CLI (--output=) is recognised as "set on the CLI" and does
+// not trigger the "ignoring --output from config" warning, while a config-only
+// write still does warn.
+func TestConfigExplicitEmptyWriteFlagNoFalseWarn(t *testing.T) {
+	dir := writeSccConfig(t, "--output evil.csv\n")
+	const warn = "ignoring --output from config"
+
+	// CLI explicitly sets --output= (empty -> stdout): the flag WAS set on the
+	// command line, so no warning should fire.
+	out, err := runSCCDir(t, dir, nil, "--output=")
+	if err != nil {
+		t.Fatalf("scc errored: %v\n%s", err, out)
+	}
+	if strings.Contains(out, warn) {
+		t.Errorf("explicit --output= on CLI should not warn about config:\n%s", out)
+	}
+
+	// Control: config-only write (no CLI override) should still warn.
+	out, err = runSCCDir(t, dir, nil)
+	if err != nil {
+		t.Fatalf("scc errored: %v\n%s", err, out)
+	}
+	if !strings.Contains(out, warn) {
+		t.Errorf("config-only --output should still warn, got:\n%s", out)
 	}
 }
 

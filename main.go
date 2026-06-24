@@ -168,8 +168,8 @@ func main() {
 			// Source the write vars from the genuine CLI alone (file output is a
 			// CLI-only capability), then warn if config tried to set one.
 			if configPresent {
-				resolveWriteFlags(genuineCLI)
-				warnIfConfigWrote(cmd.PersistentFlags())
+				cliSet := resolveWriteFlags(genuineCLI)
+				warnIfConfigWrote(cmd.PersistentFlags(), cliSet)
 			}
 
 			// Merge the built-in defaults back into the empty-defaulted slice
