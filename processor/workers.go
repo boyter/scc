@@ -239,7 +239,10 @@ func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, cu
 		// If we are in a literal string we want to ignore escapes OR we aren't checking for special ones
 		if ignoreEscape || !is_escaped {
 			if checkForMatchSingle(fileJob.Content[i], index, endPoint, endString, fileJob) {
-				return i, SCode
+				// Skip past the whole end delimiter. For multi byte terminators such
+				// as the C++ raw string )" the trailing byte is itself a quote start,
+				// so leaving the cursor on it would re-open a new string. See #175.
+				return i + len(endString) - 1, SCode
 			}
 		}
 	}
