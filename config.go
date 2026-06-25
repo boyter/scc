@@ -343,6 +343,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.BoolVar(boolVar(&processor.GitIgnore), "no-gitignore", false, "disables .gitignore file logic")
 	flags.BoolVar(boolVar(&processor.GitModuleIgnore), "no-gitmodule", false, "disables .gitmodules file logic")
 	flags.BoolVar(boolVar(&processor.CountIgnore), "count-ignore", false, "set to allow .gitignore and .ignore files to be counted")
+	flags.StringArrayVar(sliceVar(&processor.IgnoreFiles), "ignore-file", nil, "path to an additional gitignore-format ignore file, applied from the scan root; repeat to add more, later files and any in-tree ignore files take precedence")
 	flags.BoolVar(boolVar(&processor.Debug), "debug", false, "enable debug output")
 	// Registered with an empty default; the real default is merged back post-parse.
 	flags.StringSliceVar(sliceVar(&processor.PathDenyList), "exclude-dir", []string{}, "directories to exclude")

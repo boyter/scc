@@ -15,6 +15,8 @@ github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 h1:0CwZNZbxp69SHPd
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
 github.com/boyter/gocodewalker v1.5.2-0.20260227212453-19676720409f h1:B+n/SMEvi0E2ulKmXMBZoOcGhTXmhKHxhIRPs1yrxkQ=
 github.com/boyter/gocodewalker v1.5.2-0.20260227212453-19676720409f/go.mod h1:9k+yM6+fIx61F0xI9ChXEGE5DYoLhggw8AxSOtW+kKo=
+github.com/boyter/gocodewalker v1.5.2-0.20260625065803-f0af63276c49 h1:+na88UGQM6i+ULoYl/Wg7IlLGxSqOBoxszCrSUf6jqg=
+github.com/boyter/gocodewalker v1.5.2-0.20260625065803-f0af63276c49/go.mod h1:9k+yM6+fIx61F0xI9ChXEGE5DYoLhggw8AxSOtW+kKo=
 github.com/boyter/simplecache v0.0.0-20260310220729-445661819a53 h1:7SaPc203yOoH/0V59eIJRorcUBFCEtEX0W6s3h5ybAs=
 github.com/boyter/simplecache v0.0.0-20260310220729-445661819a53/go.mod h1:8yw7v2b4T5LJbZEBhPOqUsqe8h04anlyPhmWnoUtRIs=
 github.com/clipperhouse/uax29/v2 v2.7.0 h1:+gs4oBZ2gPfVrKPthwbMzWZDaAFPGYK72F0NJv2v7Vk=

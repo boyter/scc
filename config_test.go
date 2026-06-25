@@ -199,6 +199,7 @@ func TestRegisterFlagsExhaustive(t *testing.T) {
 	expected := []string{
 		"character", "percent", "uloc", "dryness", "binary", "by-file", "ci",
 		"no-ignore", "no-scc-ignore", "no-gitignore", "no-gitmodule", "count-ignore",
+		"ignore-file",
 		"debug", "exclude-dir", "file-gc-count", "file-list-queue-size",
 		"file-process-job-workers", "file-summary-job-queue-size",
 		"directory-walker-job-workers", "format", "report", "report-skip",

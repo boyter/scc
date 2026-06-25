@@ -107,6 +107,12 @@ var SccIgnore = false
 // CountIgnore should we count ignore files?
 var CountIgnore = false
 
+// IgnoreFiles are paths to additional ignore files supplied via --ignore-file.
+// They are applied as a low priority base layer in the order supplied so a later
+// file can override an earlier one, and any in-tree .gitignore/.ignore/.sccignore
+// discovered while walking overrides all of them.
+var IgnoreFiles = []string{}
+
 // DisableCheckBinary toggles checking for binary files using NUL bytes
 var DisableCheckBinary = false
 
@@ -970,6 +976,7 @@ func Process() {
 	if !SccIgnore {
 		fileWalker.CustomIgnore = []string{".sccignore"}
 	}
+	fileWalker.CustomIgnoreFiles = IgnoreFiles
 
 	var excludePathRegexes []*regexp.Regexp
 	for _, exclude := range Exclude {

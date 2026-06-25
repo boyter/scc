@@ -5,7 +5,6 @@ package gitignore
 import (
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 const File = ".gitignore"
@@ -197,14 +196,10 @@ func (r *repository) Match(path string) Match {
 // path is not located under the base directory of this repository, or is not
 // matched by this repository, nil is returned.
 func (r *repository) Absolute(path string, isdir bool) Match {
-	// does the file share the same directory as this ignore file?
-	if !strings.HasPrefix(path, r.Base()) {
+	_rel, ok := relativeToBase(r.Base(), path)
+	if !ok {
 		return nil
 	}
-
-	// extract the relative path of this file
-	_prefix := len(r.Base()) + 1
-	_rel := string(path[_prefix:])
 	return r.Relative(_rel, isdir)
 } // Absolute()
 
@@ -238,7 +233,8 @@ func (r *repository) Relative(path string, isdir bool) Match {
 	//		  move up the path hierarchy
 	var _last string
 	for {
-		_file := filepath.Join(r._base, _parent, r._file)
+		_file := r._base + string(os.PathSeparator) +
+			filepath.FromSlash(_parent) + string(os.PathSeparator) + r._file
 		_ignore := NewWithCache(_file, r._cache, r._errors)
 		if _ignore != nil {
 			_match := _ignore.Relative(_local, isdir)

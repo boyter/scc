@@ -35,7 +35,7 @@ github.com/ProtonMail/go-crypto/openpgp/x448
 # github.com/agnivade/levenshtein v1.2.2-0.20250519083737-420867539855
 ## explicit; go 1.21
 github.com/agnivade/levenshtein
-# github.com/boyter/gocodewalker v1.5.2-0.20260227212453-19676720409f
+# github.com/boyter/gocodewalker v1.5.2-0.20260625065803-f0af63276c49
 ## explicit; go 1.23.0
 github.com/boyter/gocodewalker
 github.com/boyter/gocodewalker/go-gitignore

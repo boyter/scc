@@ -478,6 +478,7 @@ func walkAndAggregate(path string) ([]*FileJob, []LanguageSummary, Totals, error
 		if !SccIgnore {
 			fileWalker.CustomIgnore = []string{".sccignore"}
 		}
+		fileWalker.CustomIgnoreFiles = IgnoreFiles
 
 		var excludePathRegexes []*regexp.Regexp
 		for _, exclude := range Exclude {
