@@ -34,6 +34,12 @@ These can change scc's output or behaviour for an identical invocation against
 - **Percentage outputs in JSON** (#720) — JSON output now includes percentage
   figures.
 - **Codeberg support** (#866376f) — Codeberg as a supported badge/target.
+- **External ignore files via `--ignore-file`** — supply additional gitignore-format
+  ignore files from outside the scanned tree (repeatable, order-sensitive, anchored
+  at the scan root; any in-tree `.gitignore`/`.ignore`/`.sccignore` takes precedence).
+  Resolves the long-standing request for global/shared ignore support without scc
+  shelling out to git — point it at `~/.config/git/ignore` directly, or set it once
+  in a `.scc` file via `SCC_CONFIG_PATH`. Backed by `CustomIgnoreFiles` in gocodewalker.
 
 ## 🗣 Language support
 
@@ -63,6 +69,15 @@ These can change scc's output or behaviour for an identical invocation against
 - Apply `go fix` suggestions (#712); convert more shell tests to Go tests (#696).
 - Automate file generation and add CI tests (#688, #706); update to latest Go
   and refresh dependencies.
+
+## 🗒 To discuss / follow-up
+
+- **Remaining `git` subprocess shell-out** — `remoteOriginName` in
+  `processor/report.go` still runs `git config --get remote.origin.url` to derive
+  the HTML report title. This is the only place scc shells out to the `git` binary
+  (the rest use the go-git library or `gocodewalker.FindRepositoryRoot`). Decide
+  whether to drop it (fall back to the path basename) or read it via go-git's config
+  instead, so scc has no hard dependency on a `git` binary being installed.
 
 ---
 

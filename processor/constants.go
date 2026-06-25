@@ -1720,6 +1720,36 @@ var languageDatabase = map[string]Language{
 		},
 		Quotes: []Quote{
 			{
+				Start:        "R\"(",
+				End:          ")\"",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "u8R\"(",
+				End:          ")\"",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "uR\"(",
+				End:          ")\"",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "UR\"(",
+				End:          ")\"",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "LR\"(",
+				End:          ")\"",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
 				Start:        "\"",
 				End:          "\"",
 				IgnoreEscape: false,
@@ -1775,6 +1805,36 @@ var languageDatabase = map[string]Language{
 			},
 		},
 		Quotes: []Quote{
+			{
+				Start:        "R\"(",
+				End:          ")\"",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "u8R\"(",
+				End:          ")\"",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "uR\"(",
+				End:          ")\"",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "UR\"(",
+				End:          ")\"",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "LR\"(",
+				End:          ")\"",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
 			{
 				Start:        "\"",
 				End:          "\"",
@@ -10680,6 +10740,114 @@ var languageDatabase = map[string]Language{
 			},
 		},
 		Quotes: []Quote{
+			{
+				Start:        "r\"",
+				End:          "\"",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "r#\"",
+				End:          "\"#",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "r##\"",
+				End:          "\"##",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "r###\"",
+				End:          "\"###",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "r####\"",
+				End:          "\"####",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "r#####\"",
+				End:          "\"#####",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "r######\"",
+				End:          "\"######",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "r#######\"",
+				End:          "\"#######",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "r########\"",
+				End:          "\"########",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "br\"",
+				End:          "\"",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "br#\"",
+				End:          "\"#",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "br##\"",
+				End:          "\"##",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "br###\"",
+				End:          "\"###",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "br####\"",
+				End:          "\"####",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "br#####\"",
+				End:          "\"#####",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "br######\"",
+				End:          "\"######",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "br#######\"",
+				End:          "\"#######",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "br########\"",
+				End:          "\"########",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
 			{
 				Start:        "\"",
 				End:          "\"",

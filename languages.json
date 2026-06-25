@@ -1042,6 +1042,31 @@
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "R\"("
+      },
+      {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "u8R\"("
+      },
+      {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "uR\"("
+      },
+      {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "UR\"("
+      },
+      {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "LR\"("
+      },
+      {
         "end": "\"",
         "start": "\""
       }
@@ -1082,6 +1107,31 @@
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
     "quotes": [
+      {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "R\"("
+      },
+      {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "u8R\"("
+      },
+      {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "uR\"("
+      },
+      {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "UR\"("
+      },
+      {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "LR\"("
+      },
       {
         "end": "\"",
         "start": "\""
@@ -6458,6 +6508,96 @@
     "multi_line": [["/*", "*/"]],
     "nestedmultiline": true,
     "quotes": [
+      {
+        "ignoreEscape": true,
+        "end": "\"",
+        "start": "r\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"#",
+        "start": "r#\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"##",
+        "start": "r##\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"###",
+        "start": "r###\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"####",
+        "start": "r####\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"#####",
+        "start": "r#####\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"######",
+        "start": "r######\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"#######",
+        "start": "r#######\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"########",
+        "start": "r########\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"",
+        "start": "br\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"#",
+        "start": "br#\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"##",
+        "start": "br##\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"###",
+        "start": "br###\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"####",
+        "start": "br####\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"#####",
+        "start": "br#####\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"######",
+        "start": "br######\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"#######",
+        "start": "br#######\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"########",
+        "start": "br########\""
+      },
       {
         "end": "\"",
         "start": "\""
