@@ -223,7 +223,7 @@ func TestRegressionShorthandsPreserved(t *testing.T) {
 	t.Parallel()
 	fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
 	var out, report, multi string
-	registerFlags(fs, &flagBindings{output: &out, report: &report, formatMulti: &multi})
+	registerFlags(fs, &flagBindings{output: &out, report: &report, formatMulti: &multi, inert: true})
 	registerConfigControlFlags(fs)
 
 	want := map[string]string{
@@ -279,7 +279,7 @@ func TestRegressionScalarDefaultsPreserved(t *testing.T) {
 	t.Parallel()
 	fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
 	var out, report, multi string
-	registerFlags(fs, &flagBindings{output: &out, report: &report, formatMulti: &multi})
+	registerFlags(fs, &flagBindings{output: &out, report: &report, formatMulti: &multi, inert: true})
 
 	wantDef := map[string]string{
 		"format":              "tabular",
@@ -319,7 +319,7 @@ func TestRegressionScalarDefaultsPreserved(t *testing.T) {
 func processorDefaultReportName() string {
 	fs := pflag.NewFlagSet("probe", pflag.ContinueOnError)
 	var out, report, multi string
-	registerFlags(fs, &flagBindings{output: &out, report: &report, formatMulti: &multi})
+	registerFlags(fs, &flagBindings{output: &out, report: &report, formatMulti: &multi, inert: true})
 	return fs.Lookup("report").NoOptDefVal
 }
 
