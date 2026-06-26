@@ -2,6 +2,8 @@
 
 ![SCC illustration](./scc.jpg)
 
+> scc powers [searchcode.com](https://searchcode.com) — structured code intelligence over any repo, built for AI agents.
+
 A tool similar to cloc, sloccount and tokei. For counting the lines of code, blank lines, comment lines, and physical lines of source code in many programming languages.
 
 Goal is to be the fastest code counter possible, but also perform COCOMO calculation like sloccount, LOCOMO estimation for LLM-based development costs, estimate code complexity similar to cyclomatic complexity calculators and produce unique lines of code or DRYness metrics. In short one tool to rule them all.
