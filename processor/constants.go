@@ -14840,8 +14840,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "」」",
-				End:          "「「",
+				Start:        "「「",
+				End:          "」」",
 				IgnoreEscape: false,
 				DocString:    false,
 			},

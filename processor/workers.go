@@ -362,10 +362,13 @@ func codeState(
 				}
 
 			case TComplexity:
-				if index == 0 || isWhitespace(fileJob.Content[index-1]) {
+				if index == 0 || !isIdentifierContinue(fileJob.Content[index-1]) {
 					fileJob.Complexity++
 					fileJob.bumpComplexityLine()
 				}
+				// Skip past the matched token so a shorter token overlapping it
+				// (e.g. 為是 inside 恆為是) is not also counted. See #466.
+				i += offsetJump - 1
 
 			case TComplexityPostfix:
 				countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
@@ -473,10 +476,13 @@ func blankState(
 		if fileJob.ContentByteType != nil {
 			fileJob.ContentByteType[index] = ByteTypeCode
 		}
-		if index == 0 || isWhitespace(fileJob.Content[index-1]) {
+		if index == 0 || !isIdentifierContinue(fileJob.Content[index-1]) {
 			fileJob.Complexity++
 			fileJob.bumpComplexityLine()
 		}
+		// Skip past the matched token so a shorter token overlapping it
+		// (e.g. 為是 inside 恆為是) is not also counted. See #466.
+		index += offsetJump - 1
 
 	case TComplexityPostfix:
 		currentState = SCode
