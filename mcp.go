@@ -79,6 +79,33 @@ Use by_file with sort=complexity to find the most complex files in a project.`),
 
 	mcpServer.AddTool(analyzeTool, mcpAnalyzeHandler)
 
+	hotspotsTool := mcp.NewTool("hotspots",
+		mcp.WithDescription(`Rank the files in a git repository by "hotspot" score: complexity × change-frequency over recent history. Hotspots are the files most likely to need refactoring or the most attention during review — high complexity that also changes often.
+
+Walks the repo's git log (most recent commits first) and returns, per surviving file:
+- file: path relative to the repo root
+- language: detected language
+- complexity: estimated cyclomatic complexity at HEAD
+- commits: number of commits touching the file within the window
+- linesChanged: total added + removed lines across the window
+- authors: distinct authors (folded via .mailmap)
+- codeChurn / commentChurn: added lines classified as code vs comment
+- score: 0–100, normalised complexity × commits (higher = hotter)
+
+Also returns the history window walked (depth, commit count, date range). Requires path to be inside a git repository.`),
+		mcp.WithString("path",
+			mcp.Description("Directory inside the git repository to analyze. Defaults to current directory."),
+		),
+		mcp.WithNumber("depth",
+			mcp.Description("Maximum number of recent commits to walk. Defaults to 1000. Set to 0 for unlimited (slower on large repos)."),
+		),
+		mcp.WithNumber("limit",
+			mcp.Description("Maximum number of files to return, highest-scoring first. Defaults to 50. Set to -1 for unlimited."),
+		),
+	)
+
+	mcpServer.AddTool(hotspotsTool, mcpHotspotsHandler)
+
 	errLogger := log.New(os.Stderr, "scc-mcp: ", log.LstdFlags)
 	if err := server.ServeStdio(mcpServer, server.WithErrorLogger(errLogger)); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "scc-mcp: server error: %v\n", err)
@@ -349,6 +376,63 @@ func mcpAnalyzeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 	}
 
 	return mcp.NewToolResultText(string(jsonBytes)), nil
+}
+
+func mcpHotspotsHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := request.GetArguments()
+
+	path := "."
+	if p, ok := args["path"].(string); ok && p != "" {
+		path = p
+	}
+
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("invalid path: %v", err)), nil
+	}
+
+	if _, err := os.Stat(absPath); err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("path cannot be accessed: %s: %v", absPath, err)), nil
+	}
+
+	// Serialize access to processor globals so concurrent MCP
+	// requests don't race on shared state.
+	mcpMu.Lock()
+	defer mcpMu.Unlock()
+
+	// HistoryDepth is normally set by a cobra flag default which the MCP path
+	// bypasses, so set it explicitly. Default mirrors the CLI's 1000.
+	processor.HistoryDepth = 1000
+	if d, ok := args["depth"].(float64); ok {
+		if d < 0 {
+			d = 0
+		}
+		processor.HistoryDepth = int(d)
+	}
+
+	fileLimit := 50 // default cap so responses stay bounded for the model
+	if l, ok := args["limit"].(float64); ok {
+		if l < 0 {
+			fileLimit = 0 // -1 (or any negative) means unlimited
+		} else {
+			fileLimit = int(l)
+		}
+	}
+
+	// Build the language database (ExtensionToLanguage etc.) and enable lazy
+	// per-language feature loading. Process() does this before the hotspots
+	// report on the cobra path; the analyze handler gets it via ProcessResult.
+	// Without ProcessConstants the HEAD tree can't be classified, so every
+	// file is dropped and the report comes back empty.
+	processor.ProcessConstants()
+	processor.ConfigureLazy(true)
+
+	out, err := processor.HotspotsJSONReport(absPath, fileLimit)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("hotspots analysis failed: %v", err)), nil
+	}
+
+	return mcp.NewToolResultText(out), nil
 }
 
 func jsonMarshal(v any) ([]byte, error) {

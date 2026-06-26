@@ -155,6 +155,56 @@ func TestHotspotsJSONShape(t *testing.T) {
 	}
 }
 
+func TestHotspotsJSONReportLimit(t *testing.T) {
+	saveDepth := HistoryDepth
+	HistoryDepth = 100
+	t.Cleanup(func() { HistoryDepth = saveDepth })
+
+	// Three files with differing churn so the report has >1 scored row.
+	dir := makeFixtureRepo(t, []map[string]string{
+		{
+			"a.go": "package a\nfunc A() {}\n",
+			"b.go": "package b\nfunc B() {}\n",
+			"c.go": "package c\nfunc C() {}\n",
+		},
+		{"a.go": "package a\nfunc A() { if true {} }\n"},
+		{"b.go": "package b\nfunc B() { if true {} }\n"},
+	})
+
+	// Unlimited returns every scored file; this is the baseline count.
+	full, err := HotspotsJSONReport(dir, 0)
+	if err != nil {
+		t.Fatalf("HotspotsJSONReport(unlimited): %v", err)
+	}
+	var fullDoc hotspotsJSONDoc
+	if err := jsoniter.Unmarshal([]byte(full), &fullDoc); err != nil {
+		t.Fatalf("json parse: %v, body:\n%s", err, full)
+	}
+	if fullDoc.Report != "hotspots" {
+		t.Errorf("report = %q, want hotspots", fullDoc.Report)
+	}
+	if len(fullDoc.Files) < 2 {
+		t.Fatalf("expected at least 2 scored files, got %d", len(fullDoc.Files))
+	}
+
+	// A limit of 1 must cap the file list while leaving the highest-scoring
+	// file (sorted first) at the front, matching the uncapped ordering.
+	limited, err := HotspotsJSONReport(dir, 1)
+	if err != nil {
+		t.Fatalf("HotspotsJSONReport(limit=1): %v", err)
+	}
+	var limitedDoc hotspotsJSONDoc
+	if err := jsoniter.Unmarshal([]byte(limited), &limitedDoc); err != nil {
+		t.Fatalf("json parse: %v, body:\n%s", err, limited)
+	}
+	if len(limitedDoc.Files) != 1 {
+		t.Fatalf("limit=1 should return 1 file, got %d", len(limitedDoc.Files))
+	}
+	if limitedDoc.Files[0].File != fullDoc.Files[0].File {
+		t.Errorf("limited top file = %q, want %q", limitedDoc.Files[0].File, fullDoc.Files[0].File)
+	}
+}
+
 func TestRenderHotspotsRejectsUnsupportedFormat(t *testing.T) {
 	saveFormat := Format
 	Format = "xml"

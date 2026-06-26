@@ -1581,7 +1581,7 @@ Add to your `claude_desktop_config.json`:
 
 #### Exposed Tools
 
-The MCP server exposes one tool:
+The MCP server exposes two tools:
 
 **`analyze`** - Count lines of code, comments, blanks and estimate complexity for a project directory or file.
 
@@ -1598,6 +1598,16 @@ The MCP server exposes one tool:
 | `locomo_preset` | string | no | LOCOMO model preset: `large`, `medium`, `small`, `local`. Default: `medium`. |
 
 Results are returned as JSON with per-language breakdown (files, lines, code, comments, blanks, complexity, bytes), totals, and COCOMO cost/schedule estimates. When `locomo` is enabled, LOCOMO estimates (token counts, cost, generation time, review hours) are also included.
+
+**`hotspots`** - Rank the files in a git repository by hotspot score (complexity × change-frequency over recent history), surfacing the files most likely to need refactoring or close review.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `path` | string | no | Directory inside the git repository to analyze. Defaults to current directory. |
+| `depth` | number | no | Maximum number of recent commits to walk. Default: `1000`. Set to `0` for unlimited. |
+| `limit` | number | no | Maximum number of files to return, highest-scoring first. Default: `50`. Set to `-1` for unlimited. |
+
+Results are returned as JSON with the history window walked (depth, commit count, date range) and a per-file list (file, language, complexity, commits, lines changed, authors, code/comment churn, and a normalised 0–100 score). Requires `path` to be inside a git repository.
 
 ### Adding/Modifying Languages
 

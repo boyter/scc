@@ -395,6 +395,17 @@ func ConfigureLazy(lazy bool) {
 // Needs to be called at least once in order for anything to actually happen
 func ProcessConstants() {
 	startTime := makeTimestampNano()
+
+	// Reset the reverse-lookup maps so ProcessConstants is idempotent. The
+	// ExtensionToLanguage entries are built with append, so without clearing
+	// first a repeated call (the long-lived MCP server invokes ProcessConstants
+	// once per tool call) would accumulate duplicate languages for every
+	// extension. scc was historically a one-shot CLI where this ran exactly
+	// once, so it never surfaced until server mode.
+	clear(ExtensionToLanguage)
+	clear(FilenameToLanguage)
+	clear(ShebangLookup)
+
 	for name, value := range languageDatabase {
 		for _, ext := range value.Extensions {
 			ExtensionToLanguage[ext] = append(ExtensionToLanguage[ext], name)
