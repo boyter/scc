@@ -194,7 +194,7 @@ func TestRegisterFlagsExhaustive(t *testing.T) {
 	t.Parallel()
 	fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
 	var out, report, multi string
-	registerFlags(fs, &flagBindings{output: &out, report: &report, formatMulti: &multi})
+	registerFlags(fs, &flagBindings{output: &out, report: &report, formatMulti: &multi, inert: true})
 
 	expected := []string{
 		"character", "percent", "uloc", "dryness", "binary", "by-file", "ci",
@@ -227,7 +227,7 @@ func TestRegisterFlagsSliceDefValue(t *testing.T) {
 	t.Parallel()
 	fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
 	var out, report, multi string
-	registerFlags(fs, &flagBindings{output: &out, report: &report, formatMulti: &multi})
+	registerFlags(fs, &flagBindings{output: &out, report: &report, formatMulti: &multi, inert: true})
 
 	cases := map[string]string{
 		"exclude-dir":       "[.git,.hg,.svn]",
