@@ -234,7 +234,14 @@ func runHistory(repoPath string, observer CommitObserver) (HistoryWindow, error)
 		}
 		return nil
 	})
-	if walkErr != nil && !errors.Is(walkErr, errStopIter) {
+	// A shallow clone (e.g. CI's default `git checkout --depth 1`) stores a
+	// parent hash for its oldest commit but not the parent object itself.
+	// go-git's commit walker resolves each commit's parents as it advances, so
+	// it surfaces that absent object as ErrObjectNotFound — exactly the same
+	// "no more history to walk" situation as the root commit reaching zero
+	// parents, just reached via a missing-object error instead of a count.
+	// Treat it as end-of-history and keep what we walked, rather than aborting.
+	if walkErr != nil && !errors.Is(walkErr, errStopIter) && !errors.Is(walkErr, plumbing.ErrObjectNotFound) {
 		return HistoryWindow{}, fmt.Errorf("collect commits: %w", walkErr)
 	}
 
@@ -480,10 +487,20 @@ func commitChanges(ctx context.Context, commit *object.Commit, ignore *historyIg
 	var fromTree *object.Tree
 	if commit.NumParents() > 0 {
 		parent, err := commit.Parent(0)
+		// A shallow-clone boundary commit carries a parent hash whose object is
+		// absent. Treat the missing parent as no parent (leave fromTree nil, so
+		// the commit diffs against the empty tree) instead of failing — the
+		// same end-of-history handling as commits with zero parents.
+		if errors.Is(err, plumbing.ErrObjectNotFound) {
+			return nil, nil
+		}
 		if err != nil {
 			return nil, err
 		}
 		fromTree, err = parent.Tree()
+		if errors.Is(err, plumbing.ErrObjectNotFound) {
+			return nil, nil
+		}
 		if err != nil {
 			return nil, err
 		}
