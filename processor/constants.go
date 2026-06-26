@@ -1665,6 +1665,12 @@ var languageDatabase = map[string]Language{
 				IgnoreEscape: false,
 				DocString:    false,
 			},
+			{
+				Start:        "'",
+				End:          "'",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
 		},
 		NestedMultiLine: false,
 		Keywords:        []string{},
@@ -4866,6 +4872,12 @@ var languageDatabase = map[string]Language{
 				IgnoreEscape: true,
 				DocString:    false,
 			},
+			{
+				Start:        "'",
+				End:          "'",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
 		},
 		NestedMultiLine: false,
 		Keywords:        []string{},
@@ -6118,6 +6130,12 @@ var languageDatabase = map[string]Language{
 			{
 				Start:        "\"",
 				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+			{
+				Start:        "'",
+				End:          "'",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
