@@ -37,21 +37,40 @@ type Quote struct {
 	DocString    bool   `json:"docString"`    // To enable docstring check for Python where "If the triple quote string starts following a newline with only white-space characters in front and ends followed by only a newline or white-space characters it is a comment" https://github.com/boyter/scc/issues/62
 }
 
+// Heuristic is a regex pattern used to disambiguate shared file extensions (for
+// example .h between C / C++ / Objective-C) along with a cheap set of necessary
+// string literals. The expensive regex is only run when one of Literals is
+// present in the content, which is a fast reject for the overwhelmingly common
+// case where the file is not the language being guessed. See guessByHeuristics.
+type Heuristic struct {
+	// Pattern is the regex evaluated against the file content.
+	Pattern string `json:"pattern"`
+	// Literals is the set of substrings of which at least one must be present
+	// (case sensitive) for Pattern to have any chance of matching. When empty
+	// the regex is always run, so a pattern is never silently disabled.
+	Literals []string `json:"literals"`
+	// Anchored, when true, requires each literal to sit at the start of a line
+	// preceded only by spaces or tabs. This mirrors the (?m)^[ \t]* prefix used
+	// by the keyword patterns and avoids false positives such as the substring
+	// "entry" satisfying a check for the "try" keyword.
+	Anchored bool `json:"anchored"`
+}
+
 // Language is a struct which contains the values for each language stored in languages.json
 type Language struct {
-	LineComment                     []string   `json:"line_comment"`
-	ComplexityChecks                []string   `json:"complexitychecks"`
-	ComplexityChecksPostfix         []string   `json:"complexitychecks_postfix"`
-	ComplexityChecksPostfixExcludes []string   `json:"complexitychecks_postfix_excludes"`
-	Extensions                      []string   `json:"extensions"`
-	MultiLine                       [][]string `json:"multi_line"`
-	Quotes                          []Quote    `json:"quotes"`
-	Keywords                        []string   `json:"keywords"`
-	Heuristics                      []string   `json:"heuristics"`
-	FileNames                       []string   `json:"filenames"`
-	SheBangs                        []string   `json:"shebangs"`
-	ExtensionFile                   bool       `json:"extensionFile"`
-	NestedMultiLine                 bool       `json:"nestedmultiline"`
+	LineComment                     []string    `json:"line_comment"`
+	ComplexityChecks                []string    `json:"complexitychecks"`
+	ComplexityChecksPostfix         []string    `json:"complexitychecks_postfix"`
+	ComplexityChecksPostfixExcludes []string    `json:"complexitychecks_postfix_excludes"`
+	Extensions                      []string    `json:"extensions"`
+	MultiLine                       [][]string  `json:"multi_line"`
+	Quotes                          []Quote     `json:"quotes"`
+	Keywords                        []string    `json:"keywords"`
+	Heuristics                      []Heuristic `json:"heuristics"`
+	FileNames                       []string    `json:"filenames"`
+	SheBangs                        []string    `json:"shebangs"`
+	ExtensionFile                   bool        `json:"extensionFile"`
+	NestedMultiLine                 bool        `json:"nestedmultiline"`
 }
 
 // LanguageFeature is a struct which represents the conversion from Language into what is used for matching
@@ -72,8 +91,16 @@ type LanguageFeature struct {
 	ProcessMask           byte
 	Keywords              []string
 	KeywordBytes          [][]byte
-	Heuristics            []*regexp.Regexp
+	Heuristics            []CompiledHeuristic
 	Quotes                []Quote
+}
+
+// CompiledHeuristic is the runtime form of a Heuristic with its regex compiled
+// and its literals pre-converted to bytes for matching.
+type CompiledHeuristic struct {
+	Re       *regexp.Regexp
+	Literals [][]byte
+	Anchored bool
 }
 
 // FileJobCallback is an interface that FileJobs can implement to get a per line callback with the line type

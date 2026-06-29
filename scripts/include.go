@@ -59,8 +59,8 @@ func loadLanguages() (map[string]processor.Language, error) {
 			// broken pattern fails the build rather than at runtime
 			for name, lang := range data {
 				for _, h := range lang.Heuristics {
-					if _, err := regexp.Compile(h); err != nil {
-						return nil, fmt.Errorf("invalid heuristic regex %q for language '%s' in file '%s': %v", h, name, f.Name(), err)
+					if _, err := regexp.Compile(h.Pattern); err != nil {
+						return nil, fmt.Errorf("invalid heuristic regex %q for language '%s' in file '%s': %v", h.Pattern, name, f.Name(), err)
 					}
 				}
 			}

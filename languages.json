@@ -1099,14 +1099,46 @@
     ],
     "extensions": ["h", "hh", "hpp", "hxx", "h++", "inl", "ipp", "ixx", "tpp"],
     "heuristics": [
-      "(?m)^\\s*#\\s*include <(cstdint|string|vector|map|list|array|bitset|queue|stack|forward_list|unordered_map|unordered_set|(i|o|io)stream)>",
-      "(?m)^\\s*template\\s*<",
-      "(?m)^[ \\t]*(try|constexpr)",
-      "(?m)^[ \\t]*catch\\s*\\(",
-      "(?m)^[ \\t]*(class|(using[ \\t]+)?namespace)\\s+\\w+",
-      "(?m)^[ \\t]*(private|public|protected):$",
-      "__has_cpp_attribute|__cplusplus >",
-      "std::\\w+"
+      {
+        "pattern": "(?m)^\\s*#\\s*include <(cstdint|string|vector|map|list|array|bitset|queue|stack|forward_list|unordered_map|unordered_set|(i|o|io)stream)>",
+        "literals": ["<cstdint>", "<string>", "<vector>", "<map>", "<list>", "<array>", "<bitset>", "<queue>", "<stack>", "<forward_list>", "<unordered_map>", "<unordered_set>", "<istream>", "<ostream>", "<iostream>"],
+        "anchored": false
+      },
+      {
+        "pattern": "(?m)^\\s*template\\s*<",
+        "literals": ["template"],
+        "anchored": false
+      },
+      {
+        "pattern": "(?m)^[ \\t]*(try|constexpr)",
+        "literals": ["try", "constexpr"],
+        "anchored": true
+      },
+      {
+        "pattern": "(?m)^[ \\t]*catch\\s*\\(",
+        "literals": ["catch"],
+        "anchored": true
+      },
+      {
+        "pattern": "(?m)^[ \\t]*(class|(using[ \\t]+)?namespace)\\s+\\w+",
+        "literals": ["class", "namespace", "using"],
+        "anchored": true
+      },
+      {
+        "pattern": "(?m)^[ \\t]*(private|public|protected):$",
+        "literals": ["private", "public", "protected"],
+        "anchored": true
+      },
+      {
+        "pattern": "__has_cpp_attribute|__cplusplus >",
+        "literals": ["__has_cpp_attribute", "__cplusplus"],
+        "anchored": false
+      },
+      {
+        "pattern": "std::\\w+",
+        "literals": ["std::"],
+        "anchored": false
+      }
     ],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
@@ -5196,7 +5228,11 @@
     ],
     "extensions": ["m", "h"],
     "heuristics": [
-      "(?m)^\\s*(@(interface|class|protocol|property|end|synchronised|selector|implementation)\\b|#import\\s+.+\\.h[\">])"
+      {
+        "pattern": "(?m)^\\s*(@(interface|class|protocol|property|end|synchronised|selector|implementation)\\b|#import\\s+.+\\.h[\">])",
+        "literals": ["@interface", "@class", "@protocol", "@property", "@end", "@synchronised", "@selector", "@implementation", "#import"],
+        "anchored": false
+      }
     ],
     "keywords": [
       "#include",

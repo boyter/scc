@@ -60,9 +60,17 @@ var languageDatabase = map[string]Language{
 			{{quote .}},
 			{{- end}}
 		},
-		Heuristics: []string{
+		Heuristics: []Heuristic{
 			{{- range $value.Heuristics}}
-			{{quote .}},
+			{
+				Pattern: {{quote .Pattern}},
+				Literals: []string{
+					{{- range .Literals}}
+					{{quote .}},
+					{{- end}}
+				},
+				Anchored: {{.Anchored}},
+			},
 			{{- end}}
 		},
 		FileNames: []string{
