@@ -144,6 +144,51 @@ type languageGuess struct {
 	Count int
 }
 
+// heuristicCanMatch reports whether content contains at least one of the
+// heuristic's necessary literals, meaning the regex is worth running. Each
+// literal is a substring that must be present for the pattern to match, so a
+// negative result here means the regex cannot match and can be safely skipped.
+// A heuristic with no literals is always run so a pattern is never silently
+// disabled.
+func heuristicCanMatch(h CompiledHeuristic, content []byte) bool {
+	if len(h.Literals) == 0 {
+		return true
+	}
+	for _, lit := range h.Literals {
+		if h.Anchored {
+			if anchoredContains(content, lit) {
+				return true
+			}
+		} else if bytes.Contains(content, lit) {
+			return true
+		}
+	}
+	return false
+}
+
+// anchoredContains reports whether lit appears in content at the start of a line
+// preceded only by spaces or tabs, mirroring a (?m)^[ \t]* regex prefix. This is
+// far cheaper than running the regex and avoids substring false positives such
+// as "entry" satisfying a check for the "try" keyword.
+func anchoredContains(content, lit []byte) bool {
+	offset := 0
+	for {
+		i := bytes.Index(content[offset:], lit)
+		if i < 0 {
+			return false
+		}
+		pos := offset + i
+		j := pos
+		for j > 0 && (content[j-1] == ' ' || content[j-1] == '\t') {
+			j--
+		}
+		if j == 0 || content[j-1] == '\n' {
+			return true
+		}
+		offset = pos + 1
+	}
+}
+
 func guessByHeuristics(filename string, possibleLanguages []string, toCheck []byte) (string, bool) {
 	guesses := make([]languageGuess, 0, len(possibleLanguages))
 	hasHeuristics := false
@@ -159,8 +204,13 @@ func guessByHeuristics(filename string, possibleLanguages []string, toCheck []by
 		hasHeuristics = true
 
 		count := 0
-		for _, re := range langFeatures.Heuristics {
-			if re.Match(toCheck) {
+		for _, h := range langFeatures.Heuristics {
+			// Cheap necessary-literal pre-check so the expensive regex only runs
+			// on the rare files that could actually match it.
+			if !heuristicCanMatch(h, toCheck) {
+				continue
+			}
+			if h.Re.Match(toCheck) {
 				count++
 			}
 		}
