@@ -106,6 +106,34 @@ Also returns the history window walked (depth, commit count, date range). Requir
 
 	mcpServer.AddTool(hotspotsTool, mcpHotspotsHandler)
 
+	couplingTool := mcp.NewTool("coupling",
+		mcp.WithDescription(`Given a file in a git repository, return the other files that historically change together with it — its "blast radius". Use this before editing a file to discover what else you will likely need to read or change.
+
+Walks the repo's git log and, for the target file, returns each coupled file with:
+- file: path relative to the repo root
+- shared: number of commits that changed BOTH the target and this file
+- partnerCommits: this file's own commit count in the window
+- couple: P(this file changes | you changed the target), 0–100 — the blast-radius probability
+- reverse: P(target changes | this file changed), 0–100 — a large gap from couple marks a hub-style (asymmetric) link rather than a true peer coupling
+
+Partners are ranked by couple (highest first). Also returns the target's own commit count and the history window walked. Requires path to be inside a git repository.`),
+		mcp.WithString("file",
+			mcp.Description("Target file path (relative to the repo, as it appears at HEAD) to compute the blast radius for. Required."),
+			mcp.Required(),
+		),
+		mcp.WithString("path",
+			mcp.Description("Directory inside the git repository to analyze. Defaults to current directory."),
+		),
+		mcp.WithNumber("depth",
+			mcp.Description("Maximum number of recent commits to walk. Defaults to 1000. Set to 0 for unlimited (slower on large repos)."),
+		),
+		mcp.WithNumber("limit",
+			mcp.Description("Maximum number of coupled files to return, strongest first. Defaults to 50. Set to -1 for unlimited."),
+		),
+	)
+
+	mcpServer.AddTool(couplingTool, mcpCouplingHandler)
+
 	errLogger := log.New(os.Stderr, "scc-mcp: ", log.LstdFlags)
 	if err := server.ServeStdio(mcpServer, server.WithErrorLogger(errLogger)); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "scc-mcp: server error: %v\n", err)
@@ -430,6 +458,61 @@ func mcpHotspotsHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.
 	out, err := processor.HotspotsJSONReport(absPath, fileLimit)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("hotspots analysis failed: %v", err)), nil
+	}
+
+	return mcp.NewToolResultText(out), nil
+}
+
+func mcpCouplingHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := request.GetArguments()
+
+	target, _ := args["file"].(string)
+	if target == "" {
+		return mcp.NewToolResultError("the 'file' argument is required: the target file to compute coupling for"), nil
+	}
+
+	path := "."
+	if p, ok := args["path"].(string); ok && p != "" {
+		path = p
+	}
+
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("invalid path: %v", err)), nil
+	}
+
+	if _, err := os.Stat(absPath); err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("path cannot be accessed: %s: %v", absPath, err)), nil
+	}
+
+	// Serialize access to processor globals so concurrent MCP requests don't
+	// race on shared state.
+	mcpMu.Lock()
+	defer mcpMu.Unlock()
+
+	processor.HistoryDepth = 1000
+	if d, ok := args["depth"].(float64); ok {
+		if d < 0 {
+			d = 0
+		}
+		processor.HistoryDepth = int(d)
+	}
+
+	fileLimit := 50
+	if l, ok := args["limit"].(float64); ok {
+		if l < 0 {
+			fileLimit = 0
+		} else {
+			fileLimit = int(l)
+		}
+	}
+
+	processor.ProcessConstants()
+	processor.ConfigureLazy(true)
+
+	out, err := processor.CouplingForJSONReport(absPath, target, fileLimit)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("coupling analysis failed: %v", err)), nil
 	}
 
 	return mcp.NewToolResultText(out), nil

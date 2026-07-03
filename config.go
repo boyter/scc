@@ -453,6 +453,8 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.Float64Var(floatVar(&processor.LocomoTPS), "locomo-tps", 0, "LOCOMO output tokens per second (overrides preset)")
 	flags.Float64Var(floatVar(&processor.LocomoCyclesOverride), "locomo-cycles", 0, "override estimated LLM iteration cycles (default: calculated from complexity)")
 	flags.BoolVar(boolVar(&processor.Hotspots), "hotspots", false, "render the hotspots report (files ranked by complexity × change frequency over recent git history)")
+	flags.BoolVar(boolVar(&processor.Coupling), "coupling", false, "render the change-coupling report (file pairs that change together over recent git history)")
+	flags.StringVar(strVar(&processor.CouplingFor), "coupling-for", "", "blast-radius view: given a file path, show what tends to change with it over recent git history")
 	flags.BoolVar(boolVar(&processor.ByAuthor), "by-author", false, "render the author rollup report (bus factor and last-toucher attribution over recent git history)")
 	flags.IntVar(intVar(&processor.HistoryDepth), "depth", 1000, "commit window size for git history reports; 0 means entire history (large repos may be slow)")
 	flags.BoolVar(boolVar(&processor.Timeline), "timeline", false, "render an over-time view of recent git history; with --by-author runs the author timeline, alone runs the languages timeline")
