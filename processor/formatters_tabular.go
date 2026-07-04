@@ -36,6 +36,12 @@ var tabularShortPercentLanguageFormatBodyNoComplexity = "Percentage %21.1f%% %10
 var tabularWideFormatHead = "%-33s %9s %9s %8s %9s %8s %10s %16s\n"
 var tabularWideFormatBody = "%-33s %9d %9d %8d %9d %8d %10d %16.2f\n"
 var tabularWideFormatFile = "%s %9d %8d %9d %8d %10d %16.2f\n"
+
+// Cognitive variants add a right-aligned "Cognitive" column after Complexity.
+// Selected only when processor.Cognitive is set so the default layout is untouched.
+var tabularWideFormatHeadCognitive = "%-33s %9s %9s %8s %9s %8s %10s %10s %16s\n"
+var tabularWideFormatBodyCognitive = "%-33s %9d %9d %8d %9d %8d %10d %10d %16.2f\n"
+var tabularWideFormatFileCognitive = "%s %9d %8d %9d %8d %10d %10d %16.2f\n"
 var tabularWideFormatFileMaxMean = "MaxLine / MeanLine %24d %9d\n"
 var wideFormatFileTruncate = 42
 var tabularWideUlocLanguageFormatBody = "(ULOC) %46d\n"
@@ -47,14 +53,18 @@ func fileSummarizeLong(input chan *FileJob) string {
 	str := &strings.Builder{}
 
 	str.WriteString(getTabularWideBreak())
-	_, _ = fmt.Fprintf(str, tabularWideFormatHead, "Language", "Files", "Lines", "Blanks", "Comments", "Code", "Complexity", "Complexity/Lines")
+	if Cognitive {
+		_, _ = fmt.Fprintf(str, tabularWideFormatHeadCognitive, "Language", "Files", "Lines", "Blanks", "Comments", "Code", "Complexity", "Cognitive", "Complexity/Lines")
+	} else {
+		_, _ = fmt.Fprintf(str, tabularWideFormatHead, "Language", "Files", "Lines", "Blanks", "Comments", "Code", "Complexity", "Complexity/Lines")
+	}
 
 	if !Files {
 		str.WriteString(getTabularWideBreak())
 	}
 
 	langs := map[string]LanguageSummary{}
-	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumBytes int64 = 0, 0, 0, 0, 0, 0, 0
+	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumCognitive, sumBytes int64 = 0, 0, 0, 0, 0, 0, 0, 0
 
 	for res := range input {
 		sumFiles++
@@ -63,6 +73,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 		sumComment += res.Comment
 		sumBlank += res.Blank
 		sumComplexity += res.Complexity
+		sumCognitive += res.Cognitive
 		sumBytes += res.Bytes
 
 		var weightedComplexity float64
@@ -84,6 +95,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 				Comment:    res.Comment,
 				Blank:      res.Blank,
 				Complexity: res.Complexity,
+				Cognitive:  res.Cognitive,
 				Count:      1,
 				Files:      files,
 				LineLength: res.LineLength,
@@ -100,6 +112,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 				Comment:    tmp.Comment + res.Comment,
 				Blank:      tmp.Blank + res.Blank,
 				Complexity: tmp.Complexity + res.Complexity,
+				Cognitive:  tmp.Cognitive + res.Cognitive,
 				Count:      tmp.Count + 1,
 				Files:      files,
 				LineLength: lineLength,
@@ -130,7 +143,11 @@ func fileSummarizeLong(input chan *FileJob) string {
 			summaryWeightedComplexity = (float64(summary.Complexity) / float64(summary.Code)) * 100
 		}
 
-		_, _ = fmt.Fprintf(str, tabularWideFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summaryWeightedComplexity)
+		if Cognitive {
+			_, _ = fmt.Fprintf(str, tabularWideFormatBodyCognitive, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summary.Cognitive, summaryWeightedComplexity)
+		} else {
+			_, _ = fmt.Fprintf(str, tabularWideFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summaryWeightedComplexity)
+		}
 
 		if Percent {
 			_, _ = fmt.Fprintf(str,
@@ -169,7 +186,11 @@ func fileSummarizeLong(input chan *FileJob) string {
 				tmp := unicodeAwareTrim(res.Location, wideFormatFileTruncate)
 				tmp = unicodeAwareRightPad(tmp, 43)
 
-				_, _ = fmt.Fprintf(str, tabularWideFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.WeightedComplexity)
+				if Cognitive {
+					_, _ = fmt.Fprintf(str, tabularWideFormatFileCognitive, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.Cognitive, res.WeightedComplexity)
+				} else {
+					_, _ = fmt.Fprintf(str, tabularWideFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.WeightedComplexity)
+				}
 			}
 		}
 	}
@@ -182,7 +203,11 @@ func fileSummarizeLong(input chan *FileJob) string {
 	}
 
 	str.WriteString(getTabularWideBreak())
-	_, _ = fmt.Fprintf(str, tabularWideFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, totalWeightedComplexity)
+	if Cognitive {
+		_, _ = fmt.Fprintf(str, tabularWideFormatBodyCognitive, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumCognitive, totalWeightedComplexity)
+	} else {
+		_, _ = fmt.Fprintf(str, tabularWideFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, totalWeightedComplexity)
+	}
 	str.WriteString(getTabularWideBreak())
 
 	if UlocMode {
@@ -253,7 +278,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 	}
 
 	lang := map[string]LanguageSummary{}
-	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumBytes int64 = 0, 0, 0, 0, 0, 0, 0
+	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumCognitive, sumBytes int64 = 0, 0, 0, 0, 0, 0, 0, 0
 
 	p := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
 
@@ -264,6 +289,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 		sumComment += res.Comment
 		sumBlank += res.Blank
 		sumComplexity += res.Complexity
+		sumCognitive += res.Cognitive
 		sumBytes += res.Bytes
 
 		_, ok := lang[res.Language]
@@ -279,6 +305,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 				Comment:    res.Comment,
 				Blank:      res.Blank,
 				Complexity: res.Complexity,
+				Cognitive:  res.Cognitive,
 				Count:      1,
 				Files:      files,
 				LineLength: res.LineLength,
@@ -295,6 +322,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 				Comment:    tmp.Comment + res.Comment,
 				Blank:      tmp.Blank + res.Blank,
 				Complexity: tmp.Complexity + res.Complexity,
+				Cognitive:  tmp.Cognitive + res.Cognitive,
 				Count:      tmp.Count + 1,
 				Files:      files,
 				LineLength: lineLength,
@@ -320,7 +348,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 		trimmedName = trimNameShort(summary, trimmedName)
 
 		if !Complexity {
-			_, _ = p.Fprintf(str, tabularShortFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity)
+			_, _ = p.Fprintf(str, tabularShortFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, activeComplexity(summary.Complexity, summary.Cognitive))
 		} else {
 			_, _ = p.Fprintf(str, tabularShortFormatBodyNoComplexity, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code)
 		}
@@ -334,7 +362,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 					float64(summary.Blank)/float64(sumBlank)*100,
 					float64(summary.Comment)/float64(sumComment)*100,
 					float64(summary.Code)/float64(sumCode)*100,
-					float64(summary.Complexity)/float64(sumComplexity)*100,
+					float64(activeComplexity(summary.Complexity, summary.Cognitive))/float64(activeComplexity(sumComplexity, sumCognitive))*100,
 				)
 			} else {
 				_, _ = p.Fprintf(str,
@@ -369,7 +397,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 				if !Complexity {
 					tmp = unicodeAwareRightPad(tmp, 27)
-					_, _ = p.Fprintf(str, tabularShortFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity)
+					_, _ = p.Fprintf(str, tabularShortFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, activeComplexity(res.Complexity, res.Cognitive))
 				} else {
 					tmp = unicodeAwareRightPad(tmp, 34)
 					_, _ = p.Fprintf(str, tabularShortFormatFileNoComplexity, tmp, res.Lines, res.Blank, res.Comment, res.Code)
@@ -398,7 +426,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 
 	str.WriteString(getTabularShortBreak())
 	if !Complexity {
-		_, _ = p.Fprintf(str, tabularShortFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity)
+		_, _ = p.Fprintf(str, tabularShortFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, activeComplexity(sumComplexity, sumCognitive))
 	} else {
 		_, _ = p.Fprintf(str, tabularShortFormatBodyNoComplexity, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode)
 	}

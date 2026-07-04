@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/boyter/scc/v3/processor"
 	"github.com/spf13/pflag"
 )
 
@@ -197,7 +198,7 @@ func TestRegisterFlagsExhaustive(t *testing.T) {
 	registerFlags(fs, &flagBindings{output: &out, report: &report, formatMulti: &multi, inert: true})
 
 	expected := []string{
-		"character", "percent", "uloc", "dryness", "binary", "by-file", "ci",
+		"character", "percent", "uloc", "dryness", "cognitive", "binary", "by-file", "ci",
 		"no-ignore", "no-scc-ignore", "no-gitignore", "no-gitmodule", "count-ignore",
 		"ignore-file",
 		"debug", "exclude-dir", "file-gc-count", "file-list-queue-size",
@@ -242,6 +243,50 @@ func TestRegisterFlagsSliceDefValue(t *testing.T) {
 		if f.DefValue != want {
 			t.Errorf("--%s DefValue = %q, want %q", name, f.DefValue, want)
 		}
+	}
+}
+
+// TestCognitiveFlagParses asserts that parsing --cognitive on the real flag set
+// toggles the processor.Cognitive global.
+func TestCognitiveFlagParses(t *testing.T) {
+	prev := processor.Cognitive
+	defer func() { processor.Cognitive = prev }()
+	processor.Cognitive = false
+
+	fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+	var out, report, multi string
+	registerFlags(fs, &flagBindings{output: &out, report: &report, formatMulti: &multi})
+
+	if err := fs.Parse([]string{"--cognitive"}); err != nil {
+		t.Fatalf("parse --cognitive: %v", err)
+	}
+	if !processor.Cognitive {
+		t.Error("parsing --cognitive did not set processor.Cognitive")
+	}
+}
+
+// TestCognitiveFlagConfigRoundTrip writes a .sccconfig containing --cognitive,
+// parses it back through the same config-arg reader and flag set that scc uses
+// at startup, and asserts the flag survives the round-trip. Mirrors how a bool
+// flag reaches the real global from a project config file.
+func TestCognitiveFlagConfigRoundTrip(t *testing.T) {
+	prev := processor.Cognitive
+	defer func() { processor.Cognitive = prev }()
+	processor.Cognitive = false
+
+	args := parseConfigArgs("--cognitive\n", false)
+	if !slices.Equal(args, []string{"--cognitive"}) {
+		t.Fatalf("config parse produced %q, want [--cognitive]", args)
+	}
+
+	fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+	var out, report, multi string
+	registerFlags(fs, &flagBindings{output: &out, report: &report, formatMulti: &multi})
+	if err := fs.Parse(args); err != nil {
+		t.Fatalf("parse config args: %v", err)
+	}
+	if !processor.Cognitive {
+		t.Error("--cognitive from config did not set processor.Cognitive")
 	}
 }
 

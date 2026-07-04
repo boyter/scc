@@ -335,6 +335,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.BoolVarP(boolVar(&processor.Percent), "percent", "p", false, "include percentage values in output")
 	flags.BoolVarP(boolVar(&processor.UlocMode), "uloc", "u", false, "calculate the number of unique lines of code (ULOC) for the project")
 	flags.BoolVarP(boolVar(&processor.Dryness), "dryness", "a", false, "calculate the DRYness of the project (implies --uloc)")
+	flags.BoolVar(boolVar(&processor.Cognitive), "cognitive", false, "calculate cognitive (nesting-weighted) complexity")
 	flags.BoolVar(boolVar(&processor.DisableCheckBinary), "binary", false, "disable binary file detection")
 	flags.BoolVar(boolVar(&processor.Files), "by-file", false, "display output for every file")
 	flags.BoolVar(boolVar(&processor.Ci), "ci", false, "enable CI output settings where stdout is ASCII")

@@ -68,6 +68,9 @@ var IgnoreGenerated = false
 // Complexity toggles complexity calculation
 var Complexity = false
 
+// Cognitive toggles cognitive (nesting-weighted) complexity calculation
+var Cognitive = false
+
 // More enables wider output with more information in formatter
 var More = false
 
@@ -831,6 +834,15 @@ func processFlags() {
 	// If complexity was disabled via --no-complexity, force it back on.
 	if Locomo && Complexity {
 		Complexity = false
+	}
+
+	// Cognitive complexity is derived from the complexity tokens, so it needs
+	// complexity counting enabled. Complexity is a disable switch, so force it
+	// off (i.e. enable counting) even when --no-complexity was passed; cognitive
+	// wins. Warn only when the user explicitly asked for both.
+	if Cognitive && Complexity {
+		Complexity = false
+		printWarn("--no-complexity ignored because --cognitive requires complexity counting")
 	}
 
 	printDebugF("Average Wage: %d", AverageWage)

@@ -16,6 +16,23 @@ var tabularShortBreakCi = "-----------------------------------------------------
 var tabularWideBreak = "─────────────────────────────────────────────────────────────────────────────────────────────────────────────\n"
 var tabularWideBreakCi = "-------------------------------------------------------------------------------------------------------------\n"
 
+// Wider break variants matching the extra Cognitive column (11 chars wider).
+var tabularWideBreakCognitive = strings.Repeat("─", 120) + "\n"
+var tabularWideBreakCiCognitive = strings.Repeat("-", 120) + "\n"
+
+// activeComplexity returns the complexity magnitude to display and sort by: the
+// nesting-weighted Cognitive value when --cognitive is active, otherwise the
+// cyclomatic Complexity. The default tabular "Complexity" column and the
+// "complexity" sort key both follow the active metric, so --cognitive overrides
+// them in place without changing the header. Machine formats (JSON/CSV/SQL/MCP)
+// keep both fields distinct and do not use this.
+func activeComplexity(complexity, cognitive int64) int64 {
+	if Cognitive {
+		return cognitive
+	}
+	return complexity
+}
+
 func sortSummaryFiles(summary *LanguageSummary) {
 	switch SortBy {
 	case "name", "names", "language", "languages", "lang", "langs":
@@ -40,7 +57,11 @@ func sortSummaryFiles(summary *LanguageSummary) {
 		})
 	case "complexity", "complexitys", "comp":
 		slices.SortFunc(summary.Files, func(a, b *FileJob) int {
-			return cmp.Compare(b.Complexity, a.Complexity)
+			return cmp.Compare(activeComplexity(b.Complexity, b.Cognitive), activeComplexity(a.Complexity, a.Cognitive))
+		})
+	case "cognitive", "cognitives", "cog":
+		slices.SortFunc(summary.Files, func(a, b *FileJob) int {
+			return cmp.Compare(b.Cognitive, a.Cognitive)
 		})
 	default:
 		slices.SortFunc(summary.Files, func(a, b *FileJob) int {
@@ -67,7 +88,14 @@ func getTabularWideBreak() string {
 	}
 
 	if Ci {
+		if Cognitive {
+			return tabularWideBreakCiCognitive
+		}
 		return tabularWideBreakCi
+	}
+
+	if Cognitive {
+		return tabularWideBreakCognitive
 	}
 
 	return tabularWideBreak
@@ -196,6 +224,7 @@ func aggregateLanguageSummary(input chan *FileJob) []LanguageSummary {
 				Comment:    res.Comment,
 				Blank:      res.Blank,
 				Complexity: res.Complexity,
+				Cognitive:  res.Cognitive,
 				Count:      1,
 				Files:      files,
 				Bytes:      res.Bytes,
@@ -215,6 +244,7 @@ func aggregateLanguageSummary(input chan *FileJob) []LanguageSummary {
 				Comment:    tmp.Comment + res.Comment,
 				Blank:      tmp.Blank + res.Blank,
 				Complexity: tmp.Complexity + res.Complexity,
+				Cognitive:  tmp.Cognitive + res.Cognitive,
 				Count:      tmp.Count + 1,
 				Files:      files,
 				Bytes:      res.Bytes + tmp.Bytes,
@@ -272,7 +302,14 @@ func sortLanguageSummary(language []LanguageSummary) []LanguageSummary {
 		})
 	case "complexity", "complexitys":
 		slices.SortFunc(language, func(a, b LanguageSummary) int {
-			if order := cmp.Compare(b.Complexity, a.Complexity); order != 0 {
+			if order := cmp.Compare(activeComplexity(b.Complexity, b.Cognitive), activeComplexity(a.Complexity, a.Cognitive)); order != 0 {
+				return order
+			}
+			return strings.Compare(a.Name, b.Name)
+		})
+	case "cognitive", "cognitives", "cog":
+		slices.SortFunc(language, func(a, b LanguageSummary) int {
+			if order := cmp.Compare(b.Cognitive, a.Cognitive); order != 0 {
 				return order
 			}
 			return strings.Compare(a.Name, b.Name)

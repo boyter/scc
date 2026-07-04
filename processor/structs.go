@@ -124,7 +124,9 @@ type FileJob struct {
 	Comment              int64
 	Blank                int64
 	Complexity           int64
+	Cognitive            int64   `json:",omitempty"` // nesting-weighted complexity; populated only when Cognitive is enabled
 	ComplexityLine       []int64 `json:"-"`
+	CognitiveLine        []int64 `json:"-"` // per-line cognitive weight; populated only when TrackComplexityLines and Cognitive are both enabled
 	WeightedComplexity   float64
 	Hash                 hash.Hash
 	Callback             FileJobCallback `json:"-"`
@@ -137,6 +139,7 @@ type FileJob struct {
 	ClassifyContent      bool   `json:"-"` // When true, CountStats populates ContentByteType
 	ContentByteType      []byte `json:"-"` // Per-byte classification, allocated by CountStats when ClassifyContent is true
 	TrackComplexityLines bool   `json:"-"` // When true, CountStats populates ComplexityLine
+	cognitiveNesting     int    // transient per-line nesting level used during CountStats when Cognitive is enabled
 }
 
 // FilterContentByType returns a copy of Content with bytes not matching any of
@@ -173,6 +176,7 @@ type LanguageSummary struct {
 	Comment            int64
 	Blank              int64
 	Complexity         int64
+	Cognitive          int64 `json:",omitempty"` // populated/emitted only when Cognitive is enabled
 	Count              int64
 	WeightedComplexity float64
 	Files              []*FileJob
