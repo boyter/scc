@@ -261,7 +261,7 @@ features listed below may be missing from your installation.
 ```text
 $ scc -h
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 3.8.0 (beta)
+Version 4.0.0 (beta)
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
@@ -295,6 +295,10 @@ Examples:
     scc --report
     scc --report=out.html --report-title "myrepo" --report-skip cocomo
 
+  Use a project config file (./.sccconfig) or a global one (precedence: global < project < CLI):
+    export SCC_CONFIG_PATH=~/.sccconfig
+    scc --config team.sccconfig
+
 Flags:
       --avg-wage int                        average wage value used for basic COCOMO calculation (default 56286)
       --binary                              disable binary file detection
@@ -304,6 +308,8 @@ Flags:
   -m, --character                           calculate max and mean characters per line
       --ci                                  enable CI output settings where stdout is ASCII
       --cocomo-project-type string          change COCOMO model type [organic, semi-detached, embedded, "custom,1,1,1,1"] (default "organic")
+      --cognitive                           calculate cognitive (nesting-weighted) complexity
+      --config string                       load this file as the global config source; overrides SCC_CONFIG_PATH, honored even with --no-config
       --cost-comparison                     show both COCOMO and LOCOMO estimates side by side
       --count-as string                     count extension as language [e.g. jsp:htm,chead:"C Header" maps extension jsp to html and chead to C Header]
       --count-as-pattern stringArray        count files matching a path pattern as a new named category backed by a base language [repeatable; pattern is glob by default, prefix with re: for regex; e.g. *_spec.rb:"Ruby Spec":Ruby or re:\.test\.js$:"JavaScript Tests":JavaScript]
@@ -321,6 +327,7 @@ Flags:
       --file-list-queue-size int            the size of the queue of files found and ready to be read into memory (default 8)
       --file-process-job-workers int        number of goroutine workers that process files collecting stats (default 8)
       --file-summary-job-queue-size int     the size of the queue used to hold processed file statistics before formatting (default 8)
+      --find-root-config                    discover the project .sccconfig by walking up to the repository root instead of using ./.sccconfig
   -f, --format string                       set output format [tabular, wide, json, json2, csv, csv-stream, cloc-yaml, html, html-table, sql, sql-insert, openmetrics] (default "tabular")
       --format-multi string                 have multiple format output overriding --format [e.g. tabular:stdout,csv:file.csv,json:file.json]
       --gen                                 identify generated files
@@ -347,6 +354,7 @@ Flags:
       --min-gen-line-length int             number of bytes per average line for file to be considered minified or generated (default 255)
       --no-cocomo                           remove COCOMO calculation output
   -c, --no-complexity                       skip calculation of code complexity
+      --no-config                           disable auto-discovery of the SCC_CONFIG_PATH global and the project ./.sccconfig config
   -d, --no-duplicates                       remove duplicate files from stats and output
       --no-fold-authors                     disable the name+email-domain identity folding fallback for git author reports (mailmap still applied)
       --no-gen                              ignore generated files in output (implies --gen)
