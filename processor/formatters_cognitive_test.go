@@ -179,6 +179,42 @@ func TestToJSONCognitive(t *testing.T) {
 	}
 }
 
+// TestToJSONCognitiveZeroStillEmitted is the regression guard for the omitempty
+// bug: while --cognitive is active, a branch-free file (Cognitive == 0) must
+// still carry the field at both language and file level, so consumers see the
+// key on every row rather than it vanishing exactly when the value is 0.
+func TestToJSONCognitiveZeroStillEmitted(t *testing.T) {
+	Cognitive = true
+	Files = true
+	defer func() { Cognitive = false; Files = false }()
+
+	inputChan := make(chan *FileJob, 2)
+	inputChan <- &FileJob{
+		Language: "Markdown", Filename: "r.md", Location: "r.md",
+		Lines: 10, Code: 10, Complexity: 0, Cognitive: 0,
+	}
+	close(inputChan)
+
+	res := toJSON(inputChan)
+
+	// Present at language level even though the value is 0.
+	if !strings.Contains(res, `"Cognitive":0`) {
+		t.Errorf("expected zero-valued Cognitive to still be emitted while enabled:\n%s", res)
+	}
+	// And it round-trips (including the per-file entry).
+	var langs []LanguageSummary
+	json := jsoniter.ConfigCompatibleWithStandardLibrary
+	if err := json.Unmarshal([]byte(res), &langs); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if len(langs) != 1 || len(langs[0].Files) != 1 {
+		t.Fatalf("unexpected shape: %+v", langs)
+	}
+	if langs[0].Cognitive != 0 {
+		t.Errorf("language Cognitive should round-trip to 0, got %d", langs[0].Cognitive)
+	}
+}
+
 func TestToJSONCognitiveDisabledParity(t *testing.T) {
 	if Cognitive {
 		t.Fatalf("Cognitive should default to false")

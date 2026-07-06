@@ -606,23 +606,23 @@ func CountStats(fileJob *FileJob) {
 
 	bomSkip := checkBomSkip(fileJob)
 
-	// We want to track cognitive complexity nesting. Cognitive complexity
-	// means we assign higher complexity to nested swtich conditions, so
+	//We want to track cognitive complexity nesting. Cognitive complexity
+	//means we assign higher complexity to nested branch conditions, so
 	//
-	// if something:
-	//     if otherthing:
+	//if something:
+	//    if otherthing:
 	//
-	// would be assigned a higher complexity than
+	//would be assigned a higher complexity than
 	//
-	// if something:
-	// if otherthing:
+	//if something:
+	//if otherthing:
 	//
-	// because the nested if requires more mental overhead. To do this we need to track
-	// how nested each condition is when we hit it. We do this by counting the number of
-	// whitespace characters are in front of the condition.
-	// This is an appoximation, true for languages like Python, and probably true for anything
-	// else. However, the benefit of this approach is that it's almost free from a CPU point of view
-	// and the increase in spotting complex code, is genuinely useful.
+	//because the nested if requires more mental overhead. To do this we need to track
+	//how nested each condition is when we hit it. We do this by counting the number of
+	//whitespace characters are in front of the condition.
+	//This is an appoximation, true for languages like Python, and probably true for anything
+	//else. However, the benefit of this approach is that it's almost free from a CPU point of view
+	//and the increase in spotting complex code, is genuinely useful.
 	var indentStack []int
 	lineStart := bomSkip
 	needIndent := true

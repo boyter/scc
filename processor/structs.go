@@ -8,7 +8,14 @@ import (
 	"regexp"
 	"slices"
 	"sync"
+
+	jsoniter "github.com/json-iterator/go"
 )
+
+// cognitiveJSON is the marshaler used by the FileJob / LanguageSummary
+// MarshalJSON hooks. Matched to the one formatters_json.go uses so nested
+// marshaling produces byte-identical output.
+var cognitiveJSON = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // Used by trie structure to store the types
 const (
@@ -124,7 +131,7 @@ type FileJob struct {
 	Comment              int64
 	Blank                int64
 	Complexity           int64
-	Cognitive            int64   `json:",omitempty"` // nesting-weighted complexity; populated only when Cognitive is enabled
+	Cognitive            int64   // nesting-weighted complexity; JSON emission is gated on the Cognitive global via MarshalJSON
 	ComplexityLine       []int64 `json:"-"`
 	CognitiveLine        []int64 `json:"-"` // per-line cognitive weight; populated only when TrackComplexityLines and Cognitive are both enabled
 	WeightedComplexity   float64
@@ -140,6 +147,27 @@ type FileJob struct {
 	ContentByteType      []byte `json:"-"` // Per-byte classification, allocated by CountStats when ClassifyContent is true
 	TrackComplexityLines bool   `json:"-"` // When true, CountStats populates ComplexityLine
 	cognitiveNesting     int    // transient per-line nesting level used during CountStats when Cognitive is enabled
+}
+
+// MarshalJSON emits FileJob with the Cognitive field present (even when 0) while
+// the Cognitive global is on, and omitted entirely when it is off. A static
+// `omitempty` tag cannot express this because it would also drop a legitimately
+// zero cognitive value on a branch-free file while the metric is active. The
+// unexported alias type carries the same field tags but none of the methods, so
+// marshaling it does not recurse.
+func (fileJob *FileJob) MarshalJSON() ([]byte, error) {
+	type alias FileJob
+	if Cognitive {
+		return cognitiveJSON.Marshal((*alias)(fileJob))
+	}
+	// Shadow the promoted Cognitive with a zero-valued omitempty field of the
+	// same JSON name: the shallower field wins the name, then omitempty drops
+	// it, so the key is absent. (A json:"-" shadow would be removed before
+	// conflict resolution, letting the embedded field resurface.)
+	return cognitiveJSON.Marshal(struct {
+		*alias
+		Cognitive int64 `json:"Cognitive,omitempty"`
+	}{alias: (*alias)(fileJob)})
 }
 
 // FilterContentByType returns a copy of Content with bytes not matching any of
@@ -176,7 +204,7 @@ type LanguageSummary struct {
 	Comment            int64
 	Blank              int64
 	Complexity         int64
-	Cognitive          int64 `json:",omitempty"` // populated/emitted only when Cognitive is enabled
+	Cognitive          int64 // nesting-weighted complexity; JSON emission is gated on the Cognitive global via MarshalJSON
 	Count              int64
 	WeightedComplexity float64
 	Files              []*FileJob
@@ -189,6 +217,20 @@ type LanguageSummary struct {
 	ComplexityPercent  *float64 `json:",omitempty"`
 	BytePercent        *float64 `json:",omitempty"`
 	FilePercent        *float64 `json:",omitempty"`
+}
+
+// MarshalJSON gates the language-level Cognitive field on the Cognitive global,
+// mirroring FileJob.MarshalJSON: present (even at 0) when the metric is on,
+// omitted when off. See FileJob.MarshalJSON for the rationale.
+func (l LanguageSummary) MarshalJSON() ([]byte, error) {
+	type alias LanguageSummary
+	if Cognitive {
+		return cognitiveJSON.Marshal(alias(l))
+	}
+	return cognitiveJSON.Marshal(struct {
+		alias
+		Cognitive int64 `json:"Cognitive,omitempty"`
+	}{alias: alias(l)})
 }
 
 // OpenClose is used to hold an open/close pair for matching such as multi line comments
