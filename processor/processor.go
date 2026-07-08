@@ -19,7 +19,7 @@ import (
 )
 
 // Version indicates the version of the application
-var Version = "3.8.0 (beta)"
+var Version = "4.0.0 (beta)"
 
 // Flags set via the CLI which control how the output is displayed
 
@@ -68,6 +68,9 @@ var IgnoreGenerated = false
 // Complexity toggles complexity calculation
 var Complexity = false
 
+// Cognitive toggles cognitive (nesting-weighted) complexity calculation
+var Cognitive = false
+
 // More enables wider output with more information in formatter
 var More = false
 
@@ -106,6 +109,12 @@ var SccIgnore = false
 
 // CountIgnore should we count ignore files?
 var CountIgnore = false
+
+// IgnoreFiles are paths to additional ignore files supplied via --ignore-file.
+// They are applied as a low priority base layer in the order supplied so a later
+// file can override an earlier one, and any in-tree .gitignore/.ignore/.sccignore
+// discovered while walking overrides all of them.
+var IgnoreFiles = []string{}
 
 // DisableCheckBinary toggles checking for binary files using NUL bytes
 var DisableCheckBinary = false
@@ -376,6 +385,13 @@ func ConfigureGc() {
 	gcPercent = debug.SetGCPercent(gcPercent)
 }
 
+// EnableGc restores the garbage collector to the percentage captured by ConfigureGc.
+func EnableGc() {
+	if gcPercent != -1 {
+		debug.SetGCPercent(gcPercent)
+	}
+}
+
 // ConfigureLazy is a simple setter used to turn on lazy loading used only by command line
 func ConfigureLazy(lazy bool) {
 	isLazy = lazy
@@ -385,6 +401,17 @@ func ConfigureLazy(lazy bool) {
 // Needs to be called at least once in order for anything to actually happen
 func ProcessConstants() {
 	startTime := makeTimestampNano()
+
+	// Reset the reverse-lookup maps so ProcessConstants is idempotent. The
+	// ExtensionToLanguage entries are built with append, so without clearing
+	// first a repeated call (the long-lived MCP server invokes ProcessConstants
+	// once per tool call) would accumulate duplicate languages for every
+	// extension. scc was historically a one-shot CLI where this ran exactly
+	// once, so it never surfaced until server mode.
+	clear(ExtensionToLanguage)
+	clear(FilenameToLanguage)
+	clear(ShebangLookup)
+
 	for name, value := range languageDatabase {
 		for _, ext := range value.Extensions {
 			ExtensionToLanguage[ext] = append(ExtensionToLanguage[ext], name)
@@ -717,6 +744,26 @@ func processLanguageFeature(name string, value Language) {
 		keywordBytes = append(keywordBytes, []byte(v))
 	}
 
+	// Compile any regex heuristics used to disambiguate shared extensions such
+	// as .h between C / C++ / Objective-C. The patterns are validated at
+	// generation time (scripts/include.go) so MustCompile is safe here, but we
+	// guard with Compile anyway to honour the no-panics policy. Each pattern's
+	// necessary literals are pre-converted to bytes so guessByHeuristics can
+	// cheaply skip running the regex when none of them appear in the content.
+	heuristics := make([]CompiledHeuristic, 0, len(value.Heuristics))
+	for _, v := range value.Heuristics {
+		re, err := regexp.Compile(v.Pattern)
+		if err != nil {
+			printWarnF("failed to compile heuristic %q for language %s: %v", v.Pattern, name, err)
+			continue
+		}
+		literals := make([][]byte, 0, len(v.Literals))
+		for _, l := range v.Literals {
+			literals = append(literals, []byte(l))
+		}
+		heuristics = append(heuristics, CompiledHeuristic{Re: re, Literals: literals, Anchored: v.Anchored})
+	}
+
 	LanguageFeaturesMutex.Lock()
 	LanguageFeatures[name] = LanguageFeature{
 		Complexity:            complexityTrie,
@@ -735,6 +782,7 @@ func processLanguageFeature(name string, value Language) {
 		ProcessMask:           processMask,
 		Keywords:              value.Keywords,
 		KeywordBytes:          keywordBytes,
+		Heuristics:            heuristics,
 		Quotes:                value.Quotes,
 	}
 	LanguageFeaturesMutex.Unlock()
@@ -789,6 +837,15 @@ func processFlags() {
 	// If complexity was disabled via --no-complexity, force it back on.
 	if Locomo && Complexity {
 		Complexity = false
+	}
+
+	// Cognitive complexity is derived from the complexity tokens, so it needs
+	// complexity counting enabled. Complexity is a disable switch, so force it
+	// off (i.e. enable counting) even when --no-complexity was passed; cognitive
+	// wins. Warn only when the user explicitly asked for both.
+	if Cognitive && Complexity {
+		Complexity = false
+		printWarn("--no-complexity ignored because --cognitive requires complexity counting")
 	}
 
 	printDebugF("Average Wage: %d", AverageWage)
@@ -968,6 +1025,7 @@ func Process() {
 	if !SccIgnore {
 		fileWalker.CustomIgnore = []string{".sccignore"}
 	}
+	fileWalker.CustomIgnoreFiles = IgnoreFiles
 
 	var excludePathRegexes []*regexp.Regexp
 	for _, exclude := range Exclude {

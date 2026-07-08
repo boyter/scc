@@ -1012,6 +1012,10 @@
       {
         "end": "\"",
         "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
       }
     ],
     "shebangs": ["dotnet"]
@@ -1042,6 +1046,31 @@
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "R\"("
+      },
+      {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "u8R\"("
+      },
+      {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "uR\"("
+      },
+      {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "UR\"("
+      },
+      {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "LR\"("
+      },
+      {
         "end": "\"",
         "start": "\""
       }
@@ -1068,10 +1097,77 @@
       "!= ",
       "== "
     ],
-    "extensions": ["hh", "hpp", "hxx", "h++", "inl", "ipp", "ixx", "tpp"],
+    "extensions": ["h", "hh", "hpp", "hxx", "h++", "inl", "ipp", "ixx", "tpp"],
+    "heuristics": [
+      {
+        "pattern": "(?m)^\\s*#\\s*include <(cstdint|string|vector|map|list|array|bitset|queue|stack|forward_list|unordered_map|unordered_set|(i|o|io)stream)>",
+        "literals": ["<cstdint>", "<string>", "<vector>", "<map>", "<list>", "<array>", "<bitset>", "<queue>", "<stack>", "<forward_list>", "<unordered_map>", "<unordered_set>", "<istream>", "<ostream>", "<iostream>"],
+        "anchored": false
+      },
+      {
+        "pattern": "(?m)^\\s*template\\s*<",
+        "literals": ["template"],
+        "anchored": false
+      },
+      {
+        "pattern": "(?m)^[ \\t]*(try|constexpr)",
+        "literals": ["try", "constexpr"],
+        "anchored": true
+      },
+      {
+        "pattern": "(?m)^[ \\t]*catch\\s*\\(",
+        "literals": ["catch"],
+        "anchored": true
+      },
+      {
+        "pattern": "(?m)^[ \\t]*(class|(using[ \\t]+)?namespace)\\s+\\w+",
+        "literals": ["class", "namespace", "using"],
+        "anchored": true
+      },
+      {
+        "pattern": "(?m)^[ \\t]*(private|public|protected):$",
+        "literals": ["private", "public", "protected"],
+        "anchored": true
+      },
+      {
+        "pattern": "__has_cpp_attribute|__cplusplus >",
+        "literals": ["__has_cpp_attribute", "__cplusplus"],
+        "anchored": false
+      },
+      {
+        "pattern": "std::\\w+",
+        "literals": ["std::"],
+        "anchored": false
+      }
+    ],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
     "quotes": [
+      {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "R\"("
+      },
+      {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "u8R\"("
+      },
+      {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "uR\"("
+      },
+      {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "UR\"("
+      },
+      {
+        "ignoreEscape": true,
+        "end": ")\"",
+        "start": "LR\"("
+      },
       {
         "end": "\"",
         "start": "\""
@@ -2128,53 +2224,6 @@
       }
     ]
   },
-  "Phoenix LiveView": {
-    "complexitychecks": [
-      "case ",
-      "cond ",
-      "if ",
-      "for ",
-      "with ",
-      "try ",
-      "catch ",
-      "rescue ",
-      "else ",
-      "and ",
-      "or ",
-      "not ",
-      "|| ",
-      "&& ",
-      "!= ",
-      "== ",
-      "|> ",
-      "<% ",
-      "<. "
-    ],
-    "extensions": ["heex", "leex"],
-    "line_comment": [
-      "#",
-      "<!--"
-    ],
-    "multi_line": [["<!--", "-->"]],
-    "quotes": [
-      {
-        "end": "\\\"\\\"\\\"",
-        "start": "\\\"\\\"\\\""
-      },
-      {
-        "end": "\\\"",
-        "start": "\\\""
-      },
-      {
-        "end": "'''",
-        "start": "'''"
-      },
-      {
-        "end": "'",
-        "start": "'"
-      }
-    ]
-  },
   "Elm": {
     "complexitychecks": [
       "for ",
@@ -2907,6 +2956,10 @@
         "end": "`",
         "ignoreEscape": true,
         "start": "`"
+      },
+      {
+        "end": "'",
+        "start": "'"
       }
     ]
   },
@@ -3156,11 +3209,12 @@
       "== ",
       "|| ",
       "&& ",
-      "|> "
+      "|> ",
+      "<. "
     ],
-    "extensions": ["heex"],
+    "extensions": ["heex", "leex"],
     "line_comment": [],
-    "multi_line": [["<%!--", "--%>"]],
+    "multi_line": [["<!--", "-->"], ["<%!--", "--%>"]],
     "quotes": [
       {
         "end": "\"",
@@ -3672,6 +3726,10 @@
       {
         "end": "\"",
         "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
       }
     ]
   },
@@ -5168,7 +5226,14 @@
       "!= ",
       "== "
     ],
-    "extensions": ["m"],
+    "extensions": ["m", "h"],
+    "heuristics": [
+      {
+        "pattern": "(?m)^\\s*(@(interface|class|protocol|property|end|synchronised|selector|implementation)\\b|#import\\s+.+\\.h[\">])",
+        "literals": ["@interface", "@class", "@protocol", "@property", "@end", "@synchronised", "@selector", "@implementation", "#import"],
+        "anchored": false
+      }
+    ],
     "keywords": [
       "#include",
       "printf",
@@ -6491,6 +6556,96 @@
     "multi_line": [["/*", "*/"]],
     "nestedmultiline": true,
     "quotes": [
+      {
+        "ignoreEscape": true,
+        "end": "\"",
+        "start": "r\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"#",
+        "start": "r#\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"##",
+        "start": "r##\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"###",
+        "start": "r###\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"####",
+        "start": "r####\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"#####",
+        "start": "r#####\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"######",
+        "start": "r######\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"#######",
+        "start": "r#######\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"########",
+        "start": "r########\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"",
+        "start": "br\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"#",
+        "start": "br#\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"##",
+        "start": "br##\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"###",
+        "start": "br###\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"####",
+        "start": "br####\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"#####",
+        "start": "br#####\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"######",
+        "start": "br######\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"#######",
+        "start": "br#######\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"########",
+        "start": "br########\""
+      },
       {
         "end": "\"",
         "start": "\""
@@ -8903,8 +9058,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "「「",
-        "start": "」」"
+        "end": "」」",
+        "start": "「「"
       }
     ]
   }

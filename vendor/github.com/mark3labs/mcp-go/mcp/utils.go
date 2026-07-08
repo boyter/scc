@@ -100,6 +100,16 @@ func AsEmbeddedResource(content any) (*EmbeddedResource, bool) {
 	return asType[EmbeddedResource](content)
 }
 
+// AsToolUseContent attempts to cast the given interface to ToolUseContent
+func AsToolUseContent(content any) (*ToolUseContent, bool) {
+	return asType[ToolUseContent](content)
+}
+
+// AsToolResultContent attempts to cast the given interface to ToolResultContent
+func AsToolResultContent(content any) (*ToolResultContent, bool) {
+	return asType[ToolResultContent](content)
+}
+
 // AsTextResourceContents attempts to cast the given interface to TextResourceContents
 func AsTextResourceContents(content any) (*TextResourceContents, bool) {
 	return asType[TextResourceContents](content)
@@ -167,7 +177,7 @@ func NewProgressNotification(
 ) ProgressNotification {
 	notification := ProgressNotification{
 		Notification: Notification{
-			Method: "notifications/progress",
+			Method: string(MethodNotificationProgress),
 		},
 		Params: struct {
 			ProgressToken ProgressToken `json:"progressToken"`
@@ -197,7 +207,7 @@ func NewLoggingMessageNotification(
 ) LoggingMessageNotification {
 	return LoggingMessageNotification{
 		Notification: Notification{
-			Method: "notifications/message",
+			Method: string(MethodNotificationMessage),
 		},
 		Params: struct {
 			Level  LoggingLevel `json:"level"`
@@ -264,6 +274,26 @@ func NewEmbeddedResource(resource ResourceContents) EmbeddedResource {
 	return EmbeddedResource{
 		Type:     ContentTypeResource,
 		Resource: resource,
+	}
+}
+
+// NewToolUseContent creates a new ToolUseContent with the given id, tool name, and input arguments.
+func NewToolUseContent(id, name string, input any) ToolUseContent {
+	return ToolUseContent{
+		Type:  ContentTypeToolUse,
+		ID:    id,
+		Name:  name,
+		Input: input,
+	}
+}
+
+// NewToolResultContent creates a new ToolResultContent with the given tool use ID, content, and error flag.
+func NewToolResultContent(toolUseID string, content []Content, isError bool) ToolResultContent {
+	return ToolResultContent{
+		Type:      ContentTypeToolResult,
+		ToolUseID: toolUseID,
+		Content:   content,
+		IsError:   isError,
 	}
 }
 
@@ -581,6 +611,9 @@ func ExtractMap(data map[string]any, key string) map[string]any {
 	return nil
 }
 
+// ParseContent parses a generic map into a strongly-typed Content value.
+// It extracts annotations and _meta fields from the map and sets them on
+// the returned content type.
 func ParseContent(contentMap map[string]any) (Content, error) {
 	contentType := ExtractString(contentMap, "type")
 
@@ -589,11 +622,17 @@ func ParseContent(contentMap map[string]any) (Content, error) {
 		annotations = ParseAnnotations(annotationsMap)
 	}
 
+	var meta *Meta
+	if metaMap := ExtractMap(contentMap, "_meta"); metaMap != nil {
+		meta = NewMetaFromMap(metaMap)
+	}
+
 	switch contentType {
 	case ContentTypeText:
 		text := ExtractString(contentMap, "text")
 		c := NewTextContent(text)
 		c.Annotations = annotations
+		c.Meta = meta
 		return c, nil
 
 	case ContentTypeImage:
@@ -604,6 +643,7 @@ func ParseContent(contentMap map[string]any) (Content, error) {
 		}
 		c := NewImageContent(data, mimeType)
 		c.Annotations = annotations
+		c.Meta = meta
 		return c, nil
 
 	case ContentTypeAudio:
@@ -614,6 +654,7 @@ func ParseContent(contentMap map[string]any) (Content, error) {
 		}
 		c := NewAudioContent(data, mimeType)
 		c.Annotations = annotations
+		c.Meta = meta
 		return c, nil
 
 	case ContentTypeLink:
@@ -625,6 +666,12 @@ func ParseContent(contentMap map[string]any) (Content, error) {
 			return nil, fmt.Errorf("resource_link uri or name is missing")
 		}
 		c := NewResourceLink(uri, name, description, mimeType)
+		c.Title = ExtractString(contentMap, "title")
+		if value, ok := contentMap["size"]; ok && value != nil {
+			if size, err := cast.ToInt64E(value); err == nil && size >= 0 {
+				c.Size = &size
+			}
+		}
 		c.Annotations = annotations
 		return c, nil
 
@@ -641,6 +688,47 @@ func ParseContent(contentMap map[string]any) (Content, error) {
 
 		c := NewEmbeddedResource(resourceContents)
 		c.Annotations = annotations
+		c.Meta = meta
+		return c, nil
+
+	case ContentTypeToolUse:
+		id := ExtractString(contentMap, "id")
+		if id == "" {
+			return nil, fmt.Errorf("tool_use id is missing")
+		}
+		name := ExtractString(contentMap, "name")
+		if name == "" {
+			return nil, fmt.Errorf("tool_use name is missing")
+		}
+		input := contentMap["input"]
+		c := NewToolUseContent(id, name, input)
+		c.Annotations = annotations
+		c.Meta = meta
+		return c, nil
+
+	case ContentTypeToolResult:
+		toolUseID := ExtractString(contentMap, "toolUseId")
+		if toolUseID == "" {
+			return nil, fmt.Errorf("tool_result toolUseId is missing")
+		}
+		isError, _ := contentMap["isError"].(bool)
+		var contentItems []Content
+		if rawContent, ok := contentMap["content"].([]any); ok {
+			for i, item := range rawContent {
+				itemMap, ok := item.(map[string]any)
+				if !ok {
+					return nil, fmt.Errorf("tool_result content[%d]: expected object, got %T", i, item)
+				}
+				parsed, err := ParseContent(itemMap)
+				if err != nil {
+					return nil, fmt.Errorf("parsing tool result content[%d]: %w", i, err)
+				}
+				contentItems = append(contentItems, parsed)
+			}
+		}
+		c := NewToolResultContent(toolUseID, contentItems, isError)
+		c.Annotations = annotations
+		c.Meta = meta
 		return c, nil
 	}
 
@@ -996,4 +1084,192 @@ func GetTextFromContent(content any) string {
 	default:
 		return fmt.Sprintf("%v", content)
 	}
+}
+
+// jsonToTask convert json content to GetTaskResult structure
+func jsonToTask(jsonContent map[string]any, result *GetTaskResult) {
+	taskId, ok := jsonContent["taskId"]
+	if ok {
+		if taskIdStr, ok := taskId.(string); ok {
+			result.TaskId = taskIdStr
+		}
+	}
+
+	taskStatus, ok := jsonContent["status"]
+	if ok {
+		if taskStatusStr, ok := taskStatus.(string); ok {
+			result.Status = TaskStatus(taskStatusStr)
+		}
+	}
+
+	taskStatusMessage, ok := jsonContent["statusMessage"]
+	if ok {
+		if taskStatusMessageStr, ok := taskStatusMessage.(string); ok {
+			result.StatusMessage = taskStatusMessageStr
+		}
+	}
+
+	createdAt, ok := jsonContent["createdAt"]
+	if ok {
+		if createdAtStr, ok := createdAt.(string); ok {
+			result.CreatedAt = createdAtStr
+		}
+	}
+
+	lastUpdatedAt, ok := jsonContent["lastUpdatedAt"]
+	if ok {
+		if lastUpdatedAtStr, ok := lastUpdatedAt.(string); ok {
+			result.LastUpdatedAt = lastUpdatedAtStr
+		}
+	}
+
+	ttl, ok := jsonContent["ttl"]
+	if ok {
+		if ttlFloat, ok := ttl.(float64); ok {
+			ttlInt64 := int64(ttlFloat)
+			result.TTL = &ttlInt64
+		}
+	}
+
+	pollInterval, ok := jsonContent["pollInterval"]
+	if ok {
+		if pollIntervalFloat64, ok := pollInterval.(float64); ok {
+			pollIntervalInt := int64(pollIntervalFloat64)
+			result.PollInterval = &pollIntervalInt
+		}
+	}
+}
+
+// ParseCancelTaskResult parses a JSON message and converts it to a CancelTaskResult.
+func ParseCancelTaskResult(rawMessage *json.RawMessage) (*CancelTaskResult, error) {
+	if rawMessage == nil {
+		return nil, fmt.Errorf("response is nil")
+	}
+
+	var jsonContent map[string]any
+	if err := json.Unmarshal(*rawMessage, &jsonContent); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	convertResult := GetTaskResult{}
+	jsonToTask(jsonContent, &convertResult)
+	cancelResult := CancelTaskResult(convertResult)
+
+	meta, ok := jsonContent["_meta"]
+	if ok {
+		if metaMap, ok := meta.(map[string]any); ok {
+			cancelResult.Meta = NewMetaFromMap(metaMap)
+		}
+	}
+
+	return &cancelResult, nil
+}
+
+// ParseListTasksResult parses a JSON message and converts it to a ListTasksResult.
+func ParseListTasksResult(rawMessage *json.RawMessage) (*ListTasksResult, error) {
+	if rawMessage == nil {
+		return nil, fmt.Errorf("response is nil")
+	}
+
+	var jsonContent map[string]any
+	if err := json.Unmarshal(*rawMessage, &jsonContent); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	listTasksResult := ListTasksResult{}
+
+	meta, ok := jsonContent["_meta"]
+	if ok {
+		if metaMap, ok := meta.(map[string]any); ok {
+			listTasksResult.Meta = NewMetaFromMap(metaMap)
+		}
+	}
+
+	tasks, ok := jsonContent["tasks"]
+	if ok {
+		if taskArr, ok := tasks.([]any); ok {
+			for _, task := range taskArr {
+				if taskJsonContent, ok := task.(map[string]any); ok {
+					getTaskResult := GetTaskResult{}
+					jsonToTask(taskJsonContent, &getTaskResult)
+					listTasksResult.Tasks = append(listTasksResult.Tasks, getTaskResult.Task)
+				}
+			}
+		}
+	}
+
+	nextCursor, ok := jsonContent["nextCursor"]
+	if ok {
+		if cursorStr, ok := nextCursor.(string); ok {
+			listTasksResult.NextCursor = Cursor(cursorStr)
+		}
+	}
+
+	return &listTasksResult, nil
+}
+
+// ParseTaskResultResult parses a JSON message and converts it to a TaskResultResult.
+func ParseTaskResultResult(rawMessage *json.RawMessage) (*TaskResultResult, error) {
+	if rawMessage == nil {
+		return nil, fmt.Errorf("response is nil")
+	}
+
+	var jsonContent map[string]any
+	if err := json.Unmarshal(*rawMessage, &jsonContent); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	resultResult := TaskResultResult{}
+	meta, ok := jsonContent["_meta"]
+	if ok {
+		if metaMap, ok := meta.(map[string]any); ok {
+			resultResult.Meta = NewMetaFromMap(metaMap)
+		}
+	}
+
+	result, ok := jsonContent["result"]
+	if ok {
+		if resultMap, ok := result.(map[string]any); ok {
+			if isError, ok := resultMap["isError"].(bool); ok {
+				resultResult.IsError = isError
+			}
+			if contents, ok := resultMap["content"].([]any); ok {
+				for _, content := range contents {
+					if contentMap, ok := content.(map[string]any); ok {
+						parsedContent, err := ParseContent(contentMap)
+						if err != nil {
+							return nil, err
+						}
+						resultResult.Content = append(resultResult.Content, parsedContent)
+					}
+				}
+			}
+		}
+	}
+
+	return &resultResult, nil
+}
+
+// ParseGetTaskResult parses a JSON message and converts it to a GetTaskResult.
+func ParseGetTaskResult(rawMessage *json.RawMessage) (*GetTaskResult, error) {
+	if rawMessage == nil {
+		return nil, fmt.Errorf("response is nil")
+	}
+
+	var jsonContent map[string]any
+	if err := json.Unmarshal(*rawMessage, &jsonContent); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	result := GetTaskResult{}
+	meta, ok := jsonContent["_meta"]
+	if ok {
+		if metaMap, ok := meta.(map[string]any); ok {
+			result.Meta = NewMetaFromMap(metaMap)
+		}
+	}
+
+	jsonToTask(jsonContent, &result)
+
+	return &result, nil
 }

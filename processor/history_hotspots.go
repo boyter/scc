@@ -18,6 +18,20 @@ import (
 // CSV / JSON output is not capped.
 const HotspotsTopN = 20
 
+// HotspotsJSONReport walks the git history at repoPath and returns the
+// hotspots report as a JSON string. It is the programmatic entry point used by
+// the MCP server, which needs the rendered data rather than the stdout/file
+// side effects of runHotspotsReport. A limit > 0 caps the number of files in
+// the output (highest-scoring first); limit <= 0 returns every scored file.
+// HistoryDepth and the mailmap folding behave exactly as on the CLI path.
+func HotspotsJSONReport(repoPath string, limit int) (string, error) {
+	observer := newHotspotsObserver()
+	if _, err := runHistory(repoPath, observer); err != nil {
+		return "", err
+	}
+	return renderHotspotsJSONLimited(observer, limit)
+}
+
 // runHotspotsReport is the dispatch entry point called from Process() when
 // --hotspots is set. Opens the repo at repoPath, walks history, and writes
 // the chosen format to stdout or FileOutput.
@@ -46,6 +60,7 @@ type hotspotsRecord struct {
 	File         string
 	Language     string
 	Complexity   int64
+	Cognitive    int64 // nesting-weighted complexity; drives Score when Cognitive is enabled
 	Commits      int
 	LinesChanged int64
 	Authors      map[authorID]struct{}
@@ -126,9 +141,18 @@ func (o *hotspotsObserver) Finalise(window HistoryWindow, head HeadSnapshot) {
 		}
 		rec.Language = hf.Language
 		rec.Complexity = hf.Complexity
+		rec.Cognitive = hf.Cognitive
 		o.totalRaw++
 
-		score := float64(rec.Complexity) * float64(rec.Commits)
+		// When cognitive complexity is enabled, rank by nesting-weighted
+		// magnitude so deeply-nested churned code outscores flat branch-heavy
+		// code with the same cyclomatic count. Default (flat) weighting is
+		// unchanged.
+		magnitude := rec.Complexity
+		if Cognitive {
+			magnitude = rec.Cognitive
+		}
+		score := float64(magnitude) * float64(rec.Commits)
 		rec.Score = score
 	}
 
@@ -350,6 +374,13 @@ type hotspotsJSONDoc struct {
 }
 
 func renderHotspotsJSON(o *hotspotsObserver) (string, error) {
+	return renderHotspotsJSONLimited(o, 0)
+}
+
+// renderHotspotsJSONLimited renders the JSON document, capping the file list at
+// limit rows (highest-scoring first, matching the sort applied in Finalise). A
+// limit <= 0 includes every scored file, preserving the uncapped CLI behaviour.
+func renderHotspotsJSONLimited(o *hotspotsObserver, limit int) (string, error) {
 	doc := hotspotsJSONDoc{
 		Report: "hotspots",
 		Window: hotspotsJSONWindow{
@@ -363,6 +394,9 @@ func renderHotspotsJSON(o *hotspotsObserver) (string, error) {
 	for _, r := range o.records {
 		if r.Score <= 0 {
 			continue
+		}
+		if limit > 0 && len(doc.Files) >= limit {
+			break
 		}
 		doc.Files = append(doc.Files, hotspotsJSONFile{
 			File:         r.File,

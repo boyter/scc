@@ -196,6 +196,13 @@ func (n *name) Match(path string, isdir bool) bool {
 	_target := path
 	if !n._anchored {
 		_, _target = filepath.Split(path)
+	} else if strings.ContainsRune(_target, '/') {
+		// an anchored name pattern is a single path component anchored to the
+		// base directory, so it can only ever match a single-segment path. A
+		// multi-segment target (e.g. "keep/sub" against "/*/") must not match,
+		// otherwise glob patterns such as "*" would incorrectly span the '/'
+		// separator and ignore nested directories that git keeps.
+		return false
 	}
 
 	// fast-path dispatch avoids expensive fnmatch for simple patterns

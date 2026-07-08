@@ -1,6 +1,6 @@
 {
     "name": "Go",
-    "image": "mcr.microsoft.com/devcontainers/go:1.25",
+    "image": "mcr.microsoft.com/devcontainers/go:1.26",
     "customizations": {
         "codespaces": {
             "openFiles": [

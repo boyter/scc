@@ -1384,6 +1384,53 @@ docstring content
 	}
 }
 
+// Python raw-string docstrings (r"""/r”') should be counted as comments just
+// like plain """/”' docstrings. https://github.com/boyter/scc raw docstrings
+func TestCountStatsPythonRawDocstring(t *testing.T) {
+	ProcessConstants()
+
+	content := `r'''This is a module docstring'''
+
+class C:
+  r'''
+  This is a class docstring
+  '''
+
+  def f():
+    r"""This is a function docstring.
+    simple quotes and double quotes are equivalent
+    """
+    pass
+`
+
+	fileJob := FileJob{Language: "Python"}
+	fileJob.SetContent(content)
+	CountStats(&fileJob)
+
+	if fileJob.Comment != 7 {
+		t.Errorf("Expected 7 comment lines (docstrings) got %d", fileJob.Comment)
+	}
+	if fileJob.Code != 3 {
+		t.Errorf("Expected 3 code lines got %d", fileJob.Code)
+	}
+	if fileJob.Blank != 2 {
+		t.Errorf("Expected 2 blank lines got %d", fileJob.Blank)
+	}
+
+	plain := strings.ReplaceAll(content, "r'''", "'''")
+	plain = strings.ReplaceAll(plain, "r\"\"\"", "\"\"\"")
+
+	plainJob := FileJob{Language: "Python"}
+	plainJob.SetContent(plain)
+	CountStats(&plainJob)
+
+	if plainJob.Comment != fileJob.Comment || plainJob.Code != fileJob.Code || plainJob.Blank != fileJob.Blank {
+		t.Errorf("Raw docstring counts (c=%d code=%d b=%d) differ from plain (c=%d code=%d b=%d)",
+			fileJob.Comment, fileJob.Code, fileJob.Blank,
+			plainJob.Comment, plainJob.Code, plainJob.Blank)
+	}
+}
+
 // FilterContentByType: returns filtered content correctly
 func TestFilterContentByType(t *testing.T) {
 	ProcessConstants()

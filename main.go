@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"runtime"
 	"slices"
 	"strings"
 
@@ -53,27 +52,78 @@ func main() {
 	// pprof.StartCPUProfile(f)
 	// defer pprof.StopCPUProfile()
 
-	// Handle --mcp flag before cobra to avoid interfering with stdio
-	if slices.Contains(os.Args[1:], "--mcp") {
+	// Handle --mcp flag before cobra to avoid interfering with stdio. Match both
+	// the bare boolean form and the explicit --mcp=true form pflag accepts, so the
+	// server starts consistently however the flag is spelled.
+	if slices.ContainsFunc(os.Args[1:], func(a string) bool {
+		return a == "--mcp" || a == "--mcp=true"
+	}) {
 		startMCPServer()
 		return
 	}
 
+	// handle "scc @flags.txt" syntax. The sole-argument trigger is preserved;
+	// only the splitter is swapped for the shared tokenizer, which adds comment
+	// stripping, quote-aware tokenization and drops the old blank-line empty-arg
+	// bug.
 	if len(os.Args) == 2 && strings.HasPrefix(os.Args[1], "@") {
-		// handle "scc @flags.txt" syntax
-		filepath := strings.TrimPrefix(os.Args[1], "@")
-		b, err := os.ReadFile(filepath)
+		filename := strings.TrimPrefix(os.Args[1], "@")
+		b, err := os.ReadFile(filename)
 		if err != nil {
 			fmt.Printf("Error reading flags from a file: %s\n", err)
 			os.Exit(1)
 		}
+		os.Args = append([]string{os.Args[0]}, parseConfigArgs(string(b), true)...)
+	}
 
-		sb := string(b)
-		newArgs := make([]string, 0, strings.Count(sb, "\n")+1)
-		for x := range strings.SplitSeq(sb, "\n") {
-			newArgs = append(newArgs, strings.TrimSpace(x))
+	// What the user actually specified
+	genuineCLI := slices.Clone(os.Args[1:])
+
+	// Cobra's completion machinery must see the genuine argv. The shell invokes
+	// the hidden __complete / __completeNoDesc commands on every TAB, and the
+	// user-facing `completion` command generates the scripts; both key on the
+	// subcommand sitting in args[0]. Prepending discovered config tokens would
+	// shift it and break dynamic completion in any directory containing a ./.sccconfig.
+	// Config never influences completion output anyway, so skip discovery for it.
+	var globalTokens, projectTokens []string
+	if !isCompletionInvocation(os.Args) {
+		noConfig, findRoot, explicitPath := preScanConfig(os.Args)
+		var discoverErr error
+		globalTokens, projectTokens, discoverErr = discoverConfigArgs(noConfig, findRoot, explicitPath)
+		if discoverErr != nil {
+			processor.PrintError(discoverErr.Error())
+			os.Exit(1)
 		}
-		os.Args = append([]string{os.Args[0]}, newArgs...)
+	}
+
+	// Fast path when no config was discovered: the merged list *is* the genuine
+	// CLI, so bind write flags directly to the real vars and parse once, exactly
+	// as scc does today. The discard / CLI-only split engages only when config is
+	// actually present.
+	// Ensures we follow old scc logic without config
+	configPresent := len(globalTokens) != 0 || len(projectTokens) != 0
+
+	// Build the merged argument list N.B. ORDER MATTERS HERE! CLI MUST COME LAST!
+	var merged []string
+	merged = append(merged, os.Args[0])
+	merged = append(merged, globalTokens...)
+	merged = append(merged, projectTokens...)
+	merged = append(merged, genuineCLI...)
+
+	// Write-flag bindings for the merged parse
+	var discardOutput, discardReport, discardFormatMulti string
+	bindings := &flagBindings{
+		output:      &processor.FileOutput,
+		report:      &processor.ReportOut,
+		formatMulti: &processor.FormatMulti,
+	}
+
+	// if we use config, we NEVER allow writing to disk because someone could use that as
+	// an attack vector, so we reset these options to ensure this is not a risk
+	if configPresent {
+		bindings.output = &discardOutput
+		bindings.report = &discardReport
+		bindings.formatMulti = &discardFormatMulti
 	}
 
 	rootCmd := &cobra.Command{
@@ -105,14 +155,21 @@ func main() {
 
   Generate a self-contained HTML infographic report:
     scc --report
-    scc --report=out.html --report-title "myrepo" --report-skip cocomo`,
+    scc --report=out.html --report-title "myrepo" --report-skip cocomo
+
+  Use a project config file (./.sccconfig) or a global one (precedence: global < project < CLI):
+    export SCC_CONFIG_PATH=~/.sccconfig
+    scc --config team.sccconfig`,
 		Version: processor.Version,
 		Run: func(cmd *cobra.Command, args []string) {
 			processor.DirFilePaths = args
 			processor.ConfigureGc()
 			processor.ConfigureLazy(true)
 
-			// Detect if LOCOMO price/tps flags were explicitly set
+			// Detect if LOCOMO price/tps flags were explicitly set. Their default
+			// is 0, which is ambiguous (unset vs. an explicit 0), so the processor
+			// needs the "was it set?" bit to decide between the preset value and the
+			// user override. Only pflag's Changed() knows this, hence here not there.
 			processor.LocomoInputPriceSet = cmd.PersistentFlags().Changed("locomo-input-price")
 			processor.LocomoOutputPriceSet = cmd.PersistentFlags().Changed("locomo-output-price")
 			processor.LocomoTPSSet = cmd.PersistentFlags().Changed("locomo-tps")
@@ -122,527 +179,30 @@ func main() {
 				processor.FoldAuthors = false
 			}
 
+			// Source the write vars from the genuine CLI alone (file output is a
+			// CLI-only capability), then warn if config tried to set one.
+			if configPresent {
+				cliSet := resolveWriteFlags(genuineCLI)
+				warnIfConfigWrote(cmd.PersistentFlags(), cliSet)
+			}
+
+			// Merge the built-in defaults back into the empty-defaulted slice
+			// flags, then flush any buffered config trace/debug.
+			applySliceDefaults()
+			flushConfigTrace()
+
 			processor.Process()
 		},
 	}
 
 	flags := rootCmd.PersistentFlags()
-
-	flags.BoolVarP(
-		&processor.MaxMean,
-		"character",
-		"m",
-		false,
-		"calculate max and mean characters per line",
-	)
-	flags.BoolVarP(
-		&processor.Percent,
-		"percent",
-		"p",
-		false,
-		"include percentage values in output",
-	)
-	flags.BoolVarP(
-		&processor.UlocMode,
-		"uloc",
-		"u",
-		false,
-		"calculate the number of unique lines of code (ULOC) for the project",
-	)
-	flags.BoolVarP(
-		&processor.Dryness,
-		"dryness",
-		"a",
-		false,
-		"calculate the DRYness of the project (implies --uloc)",
-	)
-	flags.BoolVar(
-		&processor.DisableCheckBinary,
-		"binary",
-		false,
-		"disable binary file detection",
-	)
-	flags.BoolVar(
-		&processor.Files,
-		"by-file",
-		false,
-		"display output for every file",
-	)
-	flags.BoolVar(
-		&processor.Ci,
-		"ci",
-		false,
-		"enable CI output settings where stdout is ASCII",
-	)
-	flags.BoolVar(
-		&processor.Ignore,
-		"no-ignore",
-		false,
-		"disables .ignore file logic",
-	)
-	flags.BoolVar(
-		&processor.SccIgnore,
-		"no-scc-ignore",
-		false,
-		"disables .sccignore file logic",
-	)
-	flags.BoolVar(
-		&processor.GitIgnore,
-		"no-gitignore",
-		false,
-		"disables .gitignore file logic",
-	)
-	flags.BoolVar(
-		&processor.GitModuleIgnore,
-		"no-gitmodule",
-		false,
-		"disables .gitmodules file logic",
-	)
-	flags.BoolVar(
-		&processor.CountIgnore,
-		"count-ignore",
-		false,
-		"set to allow .gitignore and .ignore files to be counted",
-	)
-	flags.BoolVar(
-		&processor.Debug,
-		"debug",
-		false,
-		"enable debug output",
-	)
-	flags.StringSliceVar(
-		&processor.PathDenyList,
-		"exclude-dir",
-		[]string{".git", ".hg", ".svn"},
-		"directories to exclude",
-	)
-	flags.IntVar(
-		&processor.GcFileCount,
-		"file-gc-count",
-		10000,
-		"number of files to parse before turning the GC on",
-	)
-	flags.IntVar(
-		&processor.FileListQueueSize,
-		"file-list-queue-size",
-		runtime.NumCPU(),
-		"the size of the queue of files found and ready to be read into memory",
-	)
-	flags.IntVar(
-		&processor.FileProcessJobWorkers,
-		"file-process-job-workers",
-		runtime.NumCPU(),
-		"number of goroutine workers that process files collecting stats",
-	)
-	flags.IntVar(
-		&processor.FileSummaryJobQueueSize,
-		"file-summary-job-queue-size",
-		runtime.NumCPU(),
-		"the size of the queue used to hold processed file statistics before formatting",
-	)
-	flags.IntVar(
-		&processor.DirectoryWalkerJobWorkers,
-		"directory-walker-job-workers",
-		8,
-		"controls the maximum number of workers which will walk the directory tree",
-	)
-	flags.StringVarP(
-		&processor.Format,
-		"format",
-		"f",
-		"tabular",
-		"set output format [tabular, wide, json, json2, csv, csv-stream, cloc-yaml, html, html-table, sql, sql-insert, openmetrics]",
-	)
-	flags.StringVar(
-		&processor.ReportOut,
-		"report",
-		"",
-		"write a self-contained HTML report; bare flag writes scc-report.html and prompts before overwriting, --report=path/out.html overwrites silently",
-	)
-	// NoOptDefVal makes a bare `--report` work (no `=value`). runReport
-	// compares ReportOut to processor.DefaultReportName to tell "bare
-	// flag" apart from an explicit path, so the two must stay in sync.
-	flags.Lookup("report").NoOptDefVal = processor.DefaultReportName
-	flags.StringVar(
-		&processor.ReportSkip,
-		"report-skip",
-		"",
-		"comma-separated sections to omit (cocomo,locomo,hotspots,authors,timeline,files,uloc,linelength,card)",
-	)
-	flags.StringVar(
-		&processor.ReportTitle,
-		"report-title",
-		"",
-		"override the repo name shown in the report banner",
-	)
-	flags.StringSliceVarP(
-		&processor.AllowListExtensions,
-		"include-ext",
-		"i",
-		[]string{},
-		"limit to file extensions [comma separated list: e.g. go,java,js]",
-	)
-	flags.StringSliceVarP(
-		&processor.ExcludeListExtensions,
-		"exclude-ext",
-		"x",
-		[]string{},
-		"ignore file extensions (overrides include-ext) [comma separated list: e.g. go,java,js]",
-	)
-	flags.StringSliceVarP(
-		&processor.ExcludeFilename,
-		"exclude-file",
-		"n",
-		[]string{"package-lock.json", "Cargo.lock", "yarn.lock", "pubspec.lock", "Podfile.lock", "pnpm-lock.yaml"},
-		"ignore files with matching names",
-	)
-	flags.BoolVarP(
-		&processor.Languages,
-		"languages",
-		"l",
-		false,
-		"print supported languages and extensions",
-	)
-	flags.Int64Var(
-		&processor.AverageWage,
-		"avg-wage",
-		56286,
-		"average wage value used for basic COCOMO calculation",
-	)
-	flags.Float64Var(
-		&processor.Overhead,
-		"overhead",
-		2.4,
-		"set the overhead multiplier for corporate overhead (facilities, equipment, accounting, etc.)",
-	)
-	flags.Float64Var(
-		&processor.EAF,
-		"eaf",
-		1.0,
-		"the effort adjustment factor derived from the cost drivers (1.0 if rated nominal)",
-	)
-	flags.BoolVar(
-		&processor.SLOCCountFormat,
-		"sloccount-format",
-		false,
-		"print a more SLOCCount like COCOMO calculation",
-	)
-	flags.BoolVar(
-		&processor.Cocomo,
-		"no-cocomo",
-		false,
-		"remove COCOMO calculation output",
-	)
-	flags.StringVar(
-		&processor.CocomoProjectType,
-		"cocomo-project-type",
-		"organic",
-		"change COCOMO model type [organic, semi-detached, embedded, \"custom,1,1,1,1\"]",
-	)
-	flags.BoolVar(
-		&processor.Size,
-		"no-size",
-		false,
-		"remove size calculation output",
-	)
-	flags.BoolVar(
-		&processor.HBorder,
-		"no-hborder",
-		false,
-		"remove horizontal borders between sections",
-	)
-	flags.StringVar(
-		&processor.SizeUnit,
-		"size-unit",
-		"si",
-		"set size unit [si, binary, mixed, xkcd-kb, xkcd-kelly, xkcd-imaginary, xkcd-intel, xkcd-drive, xkcd-bakers]",
-	)
-	flags.BoolVarP(
-		&processor.Complexity,
-		"no-complexity",
-		"c",
-		false,
-		"skip calculation of code complexity",
-	)
-	flags.BoolVarP(
-		&processor.Duplicates,
-		"no-duplicates",
-		"d",
-		false,
-		"remove duplicate files from stats and output",
-	)
-	flags.BoolVarP(
-		&processor.MinifiedGenerated,
-		"min-gen",
-		"z",
-		false,
-		"identify minified or generated files",
-	)
-	flags.BoolVarP(
-		&processor.Minified,
-		"min",
-		"",
-		false,
-		"identify minified files",
-	)
-	flags.BoolVarP(
-		&processor.Generated,
-		"gen",
-		"",
-		false,
-		"identify generated files",
-	)
-	flags.StringSliceVarP(
-		&processor.GeneratedMarkers,
-		"generated-markers",
-		"",
-		[]string{"do not edit", "<auto-generated />"},
-		"string markers in head of generated files",
-	)
-	flags.BoolVar(
-		&processor.IgnoreMinifiedGenerate,
-		"no-min-gen",
-		false,
-		"ignore minified or generated files in output (implies --min-gen)",
-	)
-	flags.BoolVar(
-		&processor.IgnoreMinified,
-		"no-min",
-		false,
-		"ignore minified files in output (implies --min)",
-	)
-	flags.BoolVar(
-		&processor.IgnoreGenerated,
-		"no-gen",
-		false,
-		"ignore generated files in output (implies --gen)",
-	)
-	flags.IntVar(
-		&processor.MinifiedGeneratedLineByteLength,
-		"min-gen-line-length",
-		255,
-		"number of bytes per average line for file to be considered minified or generated",
-	)
-	flags.StringArrayVarP(
-		&processor.Exclude,
-		"not-match",
-		`M`,
-		[]string{},
-		"ignore files and directories matching regular expression",
-	)
-	flags.StringVarP(
-		&processor.FileOutput,
-		"output",
-		"o",
-		"",
-		"output filename (default stdout)",
-	)
-	flags.StringVarP(
-		&processor.SortBy,
-		"sort",
-		"s",
-		"files",
-		"column to sort by [files, name, lines, blanks, code, comments, complexity]",
-	)
-	flags.BoolVarP(
-		&processor.Trace,
-		"trace",
-		"t",
-		false,
-		"enable trace output (not recommended when processing multiple files)",
-	)
-	flags.BoolVarP(
-		&processor.Verbose,
-		"verbose",
-		"v",
-		false,
-		"verbose output",
-	)
-	flags.BoolVarP(
-		&processor.More,
-		"wide",
-		"w",
-		false,
-		"wider output with additional statistics (implies --complexity)",
-	)
-	flags.BoolVar(
-		&processor.NoLarge,
-		"no-large",
-		false,
-		"ignore files over certain byte and line size set by large-line-count and large-byte-count",
-	)
-	flags.BoolVar(
-		&processor.IncludeSymLinks,
-		"include-symlinks",
-		false,
-		"if set will count symlink files",
-	)
-	flags.Int64Var(
-		&processor.LargeLineCount,
-		"large-line-count",
-		40000,
-		"number of lines a file can contain before being removed from output",
-	)
-	flags.Int64Var(
-		&processor.LargeByteCount,
-		"large-byte-count",
-		1000000,
-		"number of bytes a file can contain before being removed from output",
-	)
-	flags.StringVar(
-		&processor.CountAs,
-		"count-as",
-		"",
-		"count extension as language [e.g. jsp:htm,chead:\"C Header\" maps extension jsp to html and chead to C Header]",
-	)
-	flags.StringArrayVar(
-		&processor.CountAsPattern,
-		"count-as-pattern",
-		nil,
-		"count files matching a path pattern as a new named category backed by a base language "+
-			"[repeatable; pattern is glob by default, prefix with re: for regex; "+
-			"e.g. *_spec.rb:\"Ruby Spec\":Ruby or re:\\.test\\.js$:\"JavaScript Tests\":JavaScript]",
-	)
-	flags.StringVar(
-		&processor.FormatMulti,
-		"format-multi",
-		"",
-		"have multiple format output overriding --format [e.g. tabular:stdout,csv:file.csv,json:file.json]",
-	)
-	flags.StringVar(
-		&processor.SQLProject,
-		"sql-project",
-		"",
-		"use supplied name as the project identifier for the current run. Only valid with the --format sql or sql-insert option",
-	)
-	flags.StringVar(
-		&processor.RemapUnknown,
-		"remap-unknown",
-		"",
-		"inspect files of unknown type and remap by checking for a string and remapping the language [e.g. \"-*- C++ -*-\":\"C Header\"]",
-	)
-	flags.StringVar(
-		&processor.RemapAll,
-		"remap-all",
-		"",
-		"inspect every file and remap by checking for a string and remapping the language [e.g. \"-*- C++ -*-\":\"C Header\"]",
-	)
-	flags.StringVar(
-		&processor.CurrencySymbol,
-		"currency-symbol",
-		"$",
-		"set currency symbol",
-	)
-	flags.BoolVar(
-		&processor.Locomo,
-		"locomo",
-		false,
-		"enable LOCOMO (LLM Output COst MOdel) cost estimation",
-	)
-	flags.BoolVar(
-		&processor.CostComparison,
-		"cost-comparison",
-		false,
-		"show both COCOMO and LOCOMO estimates side by side",
-	)
-	flags.StringVar(
-		&processor.LocomoPresetName,
-		"locomo-preset",
-		"medium",
-		"LOCOMO model preset [large, medium, small, local]",
-	)
-	flags.Float64Var(
-		&processor.LocomoReviewMinutesPerLine,
-		"locomo-review",
-		0.01,
-		"human review minutes per line of code for LOCOMO estimate",
-	)
-	flags.StringVar(
-		&processor.LocomoConfig,
-		"locomo-config",
-		"",
-		"LOCOMO power-user config \"tokensPerLine,inputPerLine,complexityWeight,iterations,iterationWeight\"",
-	)
-	flags.Float64Var(
-		&processor.LocomoInputPrice,
-		"locomo-input-price",
-		0,
-		"LOCOMO cost per 1M input tokens in dollars (overrides preset)",
-	)
-	flags.Float64Var(
-		&processor.LocomoOutputPrice,
-		"locomo-output-price",
-		0,
-		"LOCOMO cost per 1M output tokens in dollars (overrides preset)",
-	)
-	flags.Float64Var(
-		&processor.LocomoTPS,
-		"locomo-tps",
-		0,
-		"LOCOMO output tokens per second (overrides preset)",
-	)
-	flags.Float64Var(
-		&processor.LocomoCyclesOverride,
-		"locomo-cycles",
-		0,
-		"override estimated LLM iteration cycles (default: calculated from complexity)",
-	)
-
-	flags.BoolVar(
-		&processor.Hotspots,
-		"hotspots",
-		false,
-		"render the hotspots report (files ranked by complexity × change frequency over recent git history)",
-	)
-	flags.BoolVar(
-		&processor.ByAuthor,
-		"by-author",
-		false,
-		"render the author rollup report (bus factor and last-toucher attribution over recent git history)",
-	)
-	flags.IntVar(
-		&processor.HistoryDepth,
-		"depth",
-		1000,
-		"commit window size for git history reports; 0 means entire history (large repos may be slow)",
-	)
-	flags.BoolVar(
-		&processor.Timeline,
-		"timeline",
-		false,
-		"render an over-time view of recent git history; with --by-author runs the author timeline, alone runs the languages timeline",
-	)
-	flags.IntVar(
-		&processor.HistoryBuckets,
-		"buckets",
-		60,
-		"time-bucket resolution for the git timeline reports (default 60)",
-	)
-	var noFoldAuthors bool
-	flags.BoolVar(
-		&noFoldAuthors,
-		"no-fold-authors",
-		false,
-		"disable the name+email-domain identity folding fallback for git author reports (mailmap still applied)",
-	)
-	flags.BoolVar(
-		&processor.ExpandGlobs,
-		"expand-globs",
-		false,
-		"enable glob expansion on the files or directories",
-	)
-
-	// --mcp is intercepted before cobra runs, but we register it here so it appears in --help
-	var mcpDummy bool
-	flags.BoolVar(
-		&mcpDummy,
-		"mcp",
-		false,
-		"start as an MCP (Model Context Protocol) server over stdio",
-	)
+	registerFlags(flags, bindings)
+	registerConfigControlFlags(flags)
 
 	// If invoked in the format of "scc completion --shell [name of shell]", generate command line completions instead.
-	// With the --shell option, unintentionally triggering shell completions should be highly unlikely.
+	// With the --shell option, unintentionally triggering shell completions should be highly unlikely. This reads the
+	// genuine os.Args (config tokens are handed to cobra via SetArgs below, never prepended into os.Args), so a ./.sccconfig
+	// in the working directory cannot shift args[1] and break completion.
 	args := os.Args
 	if len(args) == 4 && args[1] == "completion" && args[2] == "--shell" {
 		err := printShellCompletion(rootCmd, args[3])
@@ -652,10 +212,18 @@ func main() {
 		return
 	}
 
+	// Hand the merged list to cobra without mutating os.Args.
+	rootCmd.SetArgs(merged[1:])
+
 	if err := rootCmd.Execute(); err != nil {
 		// If a flag does not exist and is not a shorthand, it may be a spelling error. Search for and print possible options.
 		if notExistError, ok := err.(*pflag.NotExistError); ok && len(notExistError.GetSpecifiedName()) > 1 {
-			printFlagSuggestion(flags, notExistError.GetSpecifiedName())
+			name := notExistError.GetSpecifiedName()
+			// Best-effort: attribute the unknown flag to the config file it came.
+			if src := attributeConfigFlag(name); src != "" {
+				_, _ = fmt.Fprintf(os.Stderr, "in %s: unknown flag --%s\n", src, name)
+			}
+			printFlagSuggestion(flags, name)
 		}
 		os.Exit(1)
 	}

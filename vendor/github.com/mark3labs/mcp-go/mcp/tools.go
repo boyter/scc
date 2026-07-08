@@ -5,10 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"reflect"
 	"strconv"
 
-	"github.com/invopop/jsonschema"
+	"github.com/google/jsonschema-go/jsonschema"
 )
 
 var errToolSchemaConflict = errors.New("provide either InputSchema or RawInputSchema, not both")
@@ -578,6 +579,9 @@ type Tool struct {
 	Meta *Meta `json:"_meta,omitempty"`
 	// The name of the tool.
 	Name string `json:"name"`
+	// Title is an optional human-readable, UI-friendly display name for the tool.
+	// If not provided, clients should use Annotations.Title (if set) and fall back to Name.
+	Title string `json:"title,omitempty"`
 	// A human-readable description of the tool.
 	Description string `json:"description,omitempty"`
 	// A JSON Schema object defining the expected parameters for the tool.
@@ -585,7 +589,7 @@ type Tool struct {
 	// Alternative to InputSchema - allows arbitrary JSON Schema to be provided
 	RawInputSchema json.RawMessage `json:"-"` // Hide this from JSON marshaling
 	// A JSON Schema object defining the expected output returned by the tool .
-	OutputSchema ToolOutputSchema `json:"outputSchema,omitempty"`
+	OutputSchema ToolOutputSchema `json:"outputSchema,omitzero"`
 	// Optional JSON Schema defining expected output structure
 	RawOutputSchema json.RawMessage `json:"-"` // Hide this from JSON marshaling
 	// Optional properties describing tool behavior
@@ -611,6 +615,9 @@ func (t Tool) MarshalJSON() ([]byte, error) {
 
 	// Add the name and description
 	m["name"] = t.Name
+	if t.Title != "" {
+		m["title"] = t.Title
+	}
 	if t.Description != "" {
 		m["description"] = t.Description
 	}
@@ -667,17 +674,20 @@ type ToolArgumentsSchema struct {
 	AdditionalProperties any            `json:"additionalProperties,omitempty"`
 }
 
-type ToolInputSchema ToolArgumentsSchema // For retro-compatibility
+// ToolInputSchema remains a named type for retro-compatibility, so its JSON
+// methods explicitly forward to ToolArgumentsSchema.
+type ToolInputSchema ToolArgumentsSchema
+
 type ToolOutputSchema ToolArgumentsSchema
 
 // MarshalJSON implements the json.Marshaler interface for ToolInputSchema.
 func (tis ToolInputSchema) MarshalJSON() ([]byte, error) {
-	return toolArgumentsSchemaMarshalJSON(ToolArgumentsSchema(tis))
+	return ToolArgumentsSchema(tis).MarshalJSON()
 }
 
 // MarshalJSON implements the json.Marshaler interface for ToolOutputSchema.
 func (tis ToolOutputSchema) MarshalJSON() ([]byte, error) {
-	return toolArgumentsSchemaMarshalJSON(ToolArgumentsSchema(tis))
+	return ToolArgumentsSchema(tis).MarshalJSON()
 }
 
 // MarshalJSON implements the json.Marshaler interface for ToolArgumentsSchema.
@@ -687,12 +697,12 @@ func (tis ToolArgumentsSchema) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the json.Unmarshaler interface for ToolInputSchema.
 func (tis *ToolInputSchema) UnmarshalJSON(data []byte) error {
-	return toolArgumentsSchemaUnmarshalJSON(data, (*ToolArgumentsSchema)(tis))
+	return (*ToolArgumentsSchema)(tis).UnmarshalJSON(data)
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface for ToolOutputSchema.
 func (tis *ToolOutputSchema) UnmarshalJSON(data []byte) error {
-	return toolArgumentsSchemaUnmarshalJSON(data, (*ToolArgumentsSchema)(tis))
+	return (*ToolArgumentsSchema)(tis).UnmarshalJSON(data)
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface for ToolArgumentsSchema.
@@ -831,6 +841,14 @@ func WithDescription(description string) ToolOption {
 	}
 }
 
+// WithToolTitle sets the optional human-readable display title for the Tool.
+// Per the MCP spec, clients should prefer Title over Annotations.Title and Name for display.
+func WithToolTitle(title string) ToolOption {
+	return func(t *Tool) {
+		t.Title = title
+	}
+}
+
 // WithDeferLoading sets the defer_loading flag for the tool.
 // This is used to implement dynamic tool loading/searching patterns.
 func WithDeferLoading(deferLoading bool) ToolOption {
@@ -843,24 +861,14 @@ func WithDeferLoading(deferLoading bool) ToolOption {
 // It accepts any Go type, usually a struct, and automatically generates a JSON schema from it.
 func WithInputSchema[T any]() ToolOption {
 	return func(t *Tool) {
-		var zero T
-
-		// Generate schema using invopop/jsonschema library
-		// Configure reflector to generate clean, MCP-compatible schemas
-		reflector := jsonschema.Reflector{
-			DoNotReference:            true, // Removes $defs map, outputs entire structure inline
-			Anonymous:                 true, // Hides auto-generated Schema IDs
-			AllowAdditionalProperties: true, // Removes additionalProperties: false
+		schema, err := jsonschema.For[T](&jsonschema.ForOptions{IgnoreInvalidTypes: true})
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return
 		}
-		schema := reflector.Reflect(zero)
 
-		// Clean up schema for MCP compliance
-		schema.Version = "" // Remove $schema field
-
-		// Convert to raw JSON for MCP
 		mcpSchema, err := json.Marshal(schema)
 		if err != nil {
-			// Skip and maintain backward compatibility
 			return
 		}
 
@@ -904,30 +912,18 @@ func WithRawInputSchema(schema json.RawMessage) ToolOption {
 // It accepts any Go type, usually a struct, and automatically generates a JSON schema from it.
 func WithOutputSchema[T any]() ToolOption {
 	return func(t *Tool) {
-		var zero T
-
-		// Generate schema using invopop/jsonschema library
-		// Configure reflector to generate clean, MCP-compatible schemas
-		reflector := jsonschema.Reflector{
-			DoNotReference:            true, // Removes $defs map, outputs entire structure inline
-			Anonymous:                 true, // Hides auto-generated Schema IDs
-			AllowAdditionalProperties: true, // Removes additionalProperties: false
-		}
-		schema := reflector.Reflect(zero)
-
-		// Clean up schema for MCP compliance
-		schema.Version = "" // Remove $schema field
-
-		// Convert to raw JSON for MCP
-		mcpSchema, err := json.Marshal(schema)
+		schema, err := jsonschema.For[T](&jsonschema.ForOptions{IgnoreInvalidTypes: true})
 		if err != nil {
-			// Skip and maintain backward compatibility
+			fmt.Fprintln(os.Stderr, err)
 			return
 		}
 
-		// Retrieve the schema from raw JSON
+		mcpSchema, err := json.Marshal(schema)
+		if err != nil {
+			return
+		}
+
 		if err := json.Unmarshal(mcpSchema, &t.OutputSchema); err != nil {
-			// Skip and maintain backward compatibility
 			return
 		}
 
@@ -1080,33 +1076,33 @@ func Pattern(pattern string) PropertyOption {
 // Number Property Options
 //
 
-// DefaultNumber sets the default value for a number property.
+// DefaultNumber sets the default value for a number or integer property.
 // This value will be used if the property is not explicitly provided.
-func DefaultNumber(value float64) PropertyOption {
+func DefaultNumber[T int | int64 | float64](value T) PropertyOption {
 	return func(schema map[string]any) {
 		schema["default"] = value
 	}
 }
 
-// Max sets the maximum value for a number property.
+// Max sets the maximum value for a number or integer property.
 // The number value must not exceed this maximum.
-func Max(max float64) PropertyOption {
+func Max[T int | int64 | float64](max T) PropertyOption {
 	return func(schema map[string]any) {
 		schema["maximum"] = max
 	}
 }
 
-// Min sets the minimum value for a number property.
+// Min sets the minimum value for a number or integer property.
 // The number value must not be less than this minimum.
-func Min(min float64) PropertyOption {
+func Min[T int | int64 | float64](min T) PropertyOption {
 	return func(schema map[string]any) {
 		schema["minimum"] = min
 	}
 }
 
-// MultipleOf specifies that a number must be a multiple of the given value.
+// MultipleOf specifies that a number or integer must be a multiple of the given value.
 // The number value must be divisible by this value.
-func MultipleOf(value float64) PropertyOption {
+func MultipleOf[T int | int64 | float64](value T) PropertyOption {
 	return func(schema map[string]any) {
 		schema["multipleOf"] = value
 	}
@@ -1139,6 +1135,28 @@ func DefaultArray[T any](value []T) PropertyOption {
 //
 // Property Type Helpers
 //
+
+// WithInteger adds an integer property to the tool schema.
+// It accepts property options to configure the integer property's behavior and constraints.
+func WithInteger(name string, opts ...PropertyOption) ToolOption {
+	return func(t *Tool) {
+		schema := map[string]any{
+			"type": "integer",
+		}
+
+		for _, opt := range opts {
+			opt(schema)
+		}
+
+		// Remove required from property schema and add to InputSchema.required
+		if required, ok := schema["required"].(bool); ok && required {
+			delete(schema, "required")
+			t.InputSchema.Required = append(t.InputSchema.Required, name)
+		}
+
+		t.InputSchema.Properties[name] = schema
+	}
+}
 
 // WithBoolean adds a boolean property to the tool schema.
 // It accepts property options to configure the boolean property's behavior and constraints.
@@ -1412,6 +1430,35 @@ func WithNumberItems(opts ...PropertyOption) PropertyOption {
 
 		for _, opt := range opts {
 			opt(itemSchema)
+		}
+
+		schema["items"] = itemSchema
+	}
+}
+
+// WithIntegerItems configures an array's items to be of type integer.
+//
+// Supported options: Description(), DefaultNumber(), Min(), Max(), MultipleOf()
+// Note: Options like Required() are not valid for item schemas and will be ignored.
+//
+// Examples:
+//
+//	mcp.WithArray("ids", mcp.WithIntegerItems())
+//	mcp.WithArray("scores", mcp.WithIntegerItems(mcp.Min(0), mcp.Max(100)))
+//
+// Limitations: Only supports simple integer arrays. Use Items() for complex objects.
+func WithIntegerItems(opts ...PropertyOption) PropertyOption {
+	return func(schema map[string]any) {
+		itemSchema := map[string]any{
+			"type": "integer",
+		}
+
+		for _, opt := range opts {
+			opt(itemSchema)
+		}
+
+		if required, ok := itemSchema["required"].(bool); ok && required {
+			delete(itemSchema, "required")
 		}
 
 		schema["items"] = itemSchema

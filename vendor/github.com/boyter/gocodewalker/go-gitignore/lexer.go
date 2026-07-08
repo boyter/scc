@@ -320,6 +320,7 @@ func (l *lexer) eol() ([]rune, Error) {
 		// carriage return - we expect to see a newline next
 		case _CR:
 			_line = append(_line, _next)
+
 			_next, _err = l.read()
 			if _err != nil {
 				return _line, _err

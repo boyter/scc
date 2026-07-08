@@ -375,6 +375,8 @@ func TestCheckFullNameXMake(t *testing.T) {
 }
 
 func TestGuessLanguageCoq(t *testing.T) {
+	ProcessConstants()
+
 	res := DetermineLanguage("", "", []string{"Coq", "SystemVerilog"}, []byte(`Require Hypothesis Inductive`))
 
 	if res != "Coq" {
@@ -383,6 +385,8 @@ func TestGuessLanguageCoq(t *testing.T) {
 }
 
 func TestGuessLanguageSystemVerilog(t *testing.T) {
+	ProcessConstants()
+
 	res := DetermineLanguage("", "", []string{"Coq", "SystemVerilog"}, []byte(`endmodule posedge edge always wire`))
 
 	if res != "SystemVerilog" {
@@ -433,6 +437,95 @@ query count_enroll_cs_in_class`)
 	res := DetermineLanguage("scallop.scl", "", []string{"IEC61131-3", "Scallop"}, content)
 	if res != "Scallop" {
 		t.Error("Expected guessed language to have been Scallop got", res)
+	}
+}
+
+// .h is shared between C / C++ / Objective-C. These exercise the regex
+// heuristic disambiguation added for https://github.com/boyter/scc/issues/574
+
+func TestDetectLanguageHeaderSharedExtension(t *testing.T) {
+	ProcessConstants()
+
+	possible, ext := DetectLanguage("foo.h")
+	if ext != "h" {
+		t.Error("Expected h got", ext)
+	}
+	for _, want := range []string{"C Header", "C++ Header", "Objective C"} {
+		if !slices.Contains(possible, want) {
+			t.Errorf("Expected %s among candidates got %v", want, possible)
+		}
+	}
+}
+
+func TestGuessLanguageHeaderCpp(t *testing.T) {
+	ProcessConstants()
+
+	content := []byte(`#ifndef EXAMPLE_CLASS
+#define EXAMPLE_CLASS
+class ExampleClass {
+    public:
+        ExampleClass();
+    private:
+        int MethodB();
+};
+#endif`)
+
+	res := DetermineLanguage("example.h", "", []string{"C Header", "C++ Header", "Objective C"}, content)
+	if res != "C++ Header" {
+		t.Error("Expected guessed language to have been C++ Header got", res)
+	}
+}
+
+func TestGuessLanguageHeaderObjectiveC(t *testing.T) {
+	ProcessConstants()
+
+	content := []byte(`#import <Foundation/Foundation.h>
+
+@interface MyClass : NSObject
+@property (nonatomic, strong) NSArray *items;
+@end`)
+
+	res := DetermineLanguage("myclass.h", "", []string{"C Header", "C++ Header", "Objective C"}, content)
+	if res != "Objective C" {
+		t.Error("Expected guessed language to have been Objective C got", res)
+	}
+}
+
+func TestGuessLanguageHeaderPlainCFallback(t *testing.T) {
+	ProcessConstants()
+
+	content := []byte(`#ifndef FOO_H
+#define FOO_H
+int add(int a, int b);
+void do_thing(void);
+#endif`)
+
+	res := DetermineLanguage("foo.h", "", []string{"C Header", "C++ Header", "Objective C"}, content)
+	if res != "C Header" {
+		t.Error("Expected guessed language to have been C Header got", res)
+	}
+}
+
+// The result must not depend on the order candidates are supplied in, since
+// ExtensionToLanguage is populated from a map with non-deterministic iteration.
+func TestGuessLanguageHeaderDeterministic(t *testing.T) {
+	ProcessConstants()
+
+	content := []byte(`template <typename T>
+class Foo {
+    std::vector<T> items;
+};`)
+
+	orderings := [][]string{
+		{"C Header", "C++ Header", "Objective C"},
+		{"Objective C", "C++ Header", "C Header"},
+		{"C++ Header", "Objective C", "C Header"},
+	}
+	for _, order := range orderings {
+		res := DetermineLanguage("foo.h", "", order, content)
+		if res != "C++ Header" {
+			t.Errorf("Expected C++ Header for ordering %v got %s", order, res)
+		}
 	}
 }
 

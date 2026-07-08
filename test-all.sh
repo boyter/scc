@@ -323,6 +323,54 @@ else
     exit
 fi
 
+# https://github.com/boyter/scc/issues/627 paired behaviour flags should be order
+# sensitive so the last flag on the command line wins, allowing a flag set in a
+# shell alias to be temporarily overridden by a later flag.
+if ./scc --no-gen --gen ./examples/generated/ --no-scc-ignore | grep -q "(gen)"; then
+    echo -e "${GREEN}PASSED last flag wins --no-gen --gen"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED --gen after --no-gen should win and flag generated files"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc --gen --no-gen ./examples/generated/ --no-scc-ignore | grep -q "\$0"; then
+    echo -e "${GREEN}PASSED last flag wins --gen --no-gen"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED --no-gen after --gen should win and exclude generated files"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc -i js --no-min --min ./examples/minified/ --no-scc-ignore | grep -q "(mi"; then
+    echo -e "${GREEN}PASSED last flag wins --no-min --min"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED --min after --no-min should win and flag minified files"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc -i js --min --no-min ./examples/minified/ --no-scc-ignore | grep -q "\$0"; then
+    echo -e "${GREEN}PASSED last flag wins --min --no-min"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED --no-min after --min should win and exclude minified files"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc --no-min-gen -z ./examples/generated/ --no-scc-ignore | grep -q "(gen)"; then
+    echo -e "${GREEN}PASSED last flag wins --no-min-gen -z"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED -z after --no-min-gen should win and flag generated files"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
 if ./scc --no-large --large-byte-count 0 ./examples/language | grep -q "\$0"; then
     echo -e "${GREEN}PASSED no large byte test"
 else
@@ -340,6 +388,140 @@ else
     echo -e "=======================================================${NC}"
     exit
 fi
+
+# https://github.com/boyter/scc/issues/710 percent flag should add percentage fields to json output
+if ./scc --percent --format json processor | grep -q "CodePercent"; then
+    echo -e "${GREEN}PASSED json percent test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED json output should contain percentage fields with --percent"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+if ./scc --percent --format json2 processor | grep -q "CodePercent"; then
+    echo -e "${GREEN}PASSED json2 percent test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED json2 output should contain percentage fields with --percent"
+    echo -e "=======================================================${NC}"
+    exit
+fi
+
+# backwards compatibility, without --percent the json output should not contain percentage fields
+if ./scc --format json processor | grep -q "CodePercent"; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED json output should not contain percentage fields without --percent"
+    echo -e "=======================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED json no percent test"
+fi
+
+if ./scc --format json2 processor | grep -q "CodePercent"; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED json2 output should not contain percentage fields without --percent"
+    echo -e "=======================================================${NC}"
+    exit
+else
+    echo -e "${GREEN}PASSED json2 no percent test"
+fi
+
+# Config dotfile + @file integration tests (spec/01-config-dotfile). SCC_CONFIG_PATH is forced empty so a developer's global config cannot pollute these runs.
+SCC_BIN="$(pwd)/scc"
+export SCC_CONFIG_PATH=
+
+# @file with a multi-token line ("-f csv") only works with the new shared tokenizer
+tmp=$(mktemp -d)
+echo 'package main' > "$tmp/main.go"
+printf -- '# count this dir as csv\n-f csv\nmain.go\n' > "$tmp/flags.txt"
+if (cd "$tmp" && "$SCC_BIN" @flags.txt) | grep -q "Language,Lines,Code"; then
+    echo -e "${GREEN}PASSED @file multi-token + comment test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED @file should tokenize multi-token lines and strip comments"
+    echo -e "=======================================================${NC}"
+    rm -rf "$tmp"
+    exit
+fi
+rm -rf "$tmp"
+
+# exclude-dir footgun fix: a CLI --exclude-dir must union with the built-in .git/.hg/.svn defaults, not replace them
+tmp=$(mktemp -d)
+mkdir -p "$tmp/.git" "$tmp/vendor" "$tmp/keep"
+echo 'package a' > "$tmp/.git/x.go"
+echo 'package b' > "$tmp/vendor/y.go"
+echo 'package c' > "$tmp/keep/z.go"
+out=$("$SCC_BIN" --exclude-dir vendor -f csv --by-file "$tmp")
+if echo "$out" | grep -q "z.go" && ! echo "$out" | grep -q "x.go" && ! echo "$out" | grep -q "y.go"; then
+    echo -e "${GREEN}PASSED exclude-dir preserves built-in defaults test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED --exclude-dir must union with the built-in .git/.hg/.svn defaults, not replace them"
+    echo -e "${out}"
+    echo -e "=======================================================${NC}"
+    rm -rf "$tmp"
+    exit
+fi
+rm -rf "$tmp"
+
+# project .sccconfig discovery + CLI precedence (global < project < CLI)
+tmp=$(mktemp -d)
+echo 'package main' > "$tmp/main.go"
+printf -- '--format csv\n' > "$tmp/.sccconfig"
+if (cd "$tmp" && "$SCC_BIN") | grep -q "Language,Lines,Code"; then
+    echo -e "${GREEN}PASSED project .sccconfig discovery test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED project ./.sccconfig should be auto-discovered and applied"
+    echo -e "=======================================================${NC}"
+    rm -rf "$tmp"
+    exit
+fi
+if (cd "$tmp" && "$SCC_BIN" --format json) | grep -q '\[{'; then
+    echo -e "${GREEN}PASSED CLI overrides config precedence test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED a CLI flag must override the same flag from a project .scc"
+    echo -e "=======================================================${NC}"
+    rm -rf "$tmp"
+    exit
+fi
+rm -rf "$tmp"
+
+# security: a config file must never write to disk; clustered -do (-d + -o) is the headline case a naive scan misses
+tmp=$(mktemp -d)
+echo 'package main' > "$tmp/main.go"
+printf -- '-do evil.csv\n' > "$tmp/.scc"
+(cd "$tmp" && "$SCC_BIN" > /dev/null)
+if [ -f "$tmp/evil.csv" ]; then
+    echo -e "${RED}======================================================="
+    echo -e "FAILED a config file must NOT be able to write a file (clustered -do leaked through)"
+    echo -e "=======================================================${NC}"
+    rm -rf "$tmp"
+    exit
+else
+    echo -e "${GREEN}PASSED config cannot write a file test"
+fi
+rm -rf "$tmp"
+
+# the flip side: a genuine CLI -o must still write even when config is present
+tmp=$(mktemp -d)
+echo 'package main' > "$tmp/main.go"
+printf -- '--no-cocomo\n' > "$tmp/.scc"
+(cd "$tmp" && "$SCC_BIN" -f csv -o good.csv > /dev/null)
+if [ -s "$tmp/good.csv" ]; then
+    echo -e "${GREEN}PASSED genuine CLI -o writes with config present test"
+else
+    echo -e "${RED}======================================================="
+    echo -e "FAILED a genuine CLI -o must still write a file when a project .scc is present"
+    echo -e "=======================================================${NC}"
+    rm -rf "$tmp"
+    exit
+fi
+rm -rf "$tmp"
+
+unset SCC_CONFIG_PATH
 
 echo -e  "${NC}Checking compile targets..."
 

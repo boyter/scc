@@ -77,6 +77,7 @@ type HeadFile struct {
 	Path       string
 	Language   string
 	Complexity int64
+	Cognitive  int64 // nesting-weighted complexity; zero unless the Cognitive global is on
 }
 
 // HeadSnapshot is the set of files in HEAD, keyed by path.
@@ -201,6 +202,9 @@ func emptySnapshot() HeadSnapshot {
 // (newest first → oldest first), and feeds every commit's first-parent diff
 // to the observer.
 func runHistory(repoPath string, observer CommitObserver) (HistoryWindow, error) {
+	// Turn GC back on because we have no idea how much we are about to process
+	EnableGc()
+
 	repo, err := git.PlainOpenWithOptions(repoPath, &git.PlainOpenOptions{DetectDotGit: true})
 	if err != nil {
 		return HistoryWindow{}, fmt.Errorf("open git repository: %w", err)
@@ -231,7 +235,14 @@ func runHistory(repoPath string, observer CommitObserver) (HistoryWindow, error)
 		}
 		return nil
 	})
-	if walkErr != nil && !errors.Is(walkErr, errStopIter) {
+	// A shallow clone (e.g. CI's default `git checkout --depth 1`) stores a
+	// parent hash for its oldest commit but not the parent object itself.
+	// go-git's commit walker resolves each commit's parents as it advances, so
+	// it surfaces that absent object as ErrObjectNotFound — exactly the same
+	// "no more history to walk" situation as the root commit reaching zero
+	// parents, just reached via a missing-object error instead of a count.
+	// Treat it as end-of-history and keep what we walked, rather than aborting.
+	if walkErr != nil && !errors.Is(walkErr, errStopIter) && !errors.Is(walkErr, plumbing.ErrObjectNotFound) {
 		return HistoryWindow{}, fmt.Errorf("collect commits: %w", walkErr)
 	}
 
@@ -439,6 +450,7 @@ func buildHeadSnapshot(headCommit *object.Commit, ignore *historyIgnore, cache *
 			Path:       f.Name,
 			Language:   res.language,
 			Complexity: res.complexity,
+			Cognitive:  res.cognitive,
 		}
 		return nil
 	})
@@ -477,10 +489,20 @@ func commitChanges(ctx context.Context, commit *object.Commit, ignore *historyIg
 	var fromTree *object.Tree
 	if commit.NumParents() > 0 {
 		parent, err := commit.Parent(0)
+		// A shallow-clone boundary commit carries a parent hash whose object is
+		// absent. Treat the missing parent as no parent (leave fromTree nil, so
+		// the commit diffs against the empty tree) instead of failing — the
+		// same end-of-history handling as commits with zero parents.
+		if errors.Is(err, plumbing.ErrObjectNotFound) {
+			return nil, nil
+		}
 		if err != nil {
 			return nil, err
 		}
 		fromTree, err = parent.Tree()
+		if errors.Is(err, plumbing.ErrObjectNotFound) {
+			return nil, nil
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -668,11 +690,13 @@ func readBlob(tree *object.Tree, entry *object.TreeEntry) ([]byte, error) {
 // blob hash. ok=false means the classifier rejected the blob (binary, no
 // language); the vectors are nil in that case.
 type blobClassifyResult struct {
-	language    string
-	complexity  int64
-	lineTypes   []LineType
-	complexLine []int
-	ok          bool
+	language      string
+	complexity    int64
+	cognitive     int64 // nesting-weighted complexity; zero unless the Cognitive global is on
+	lineTypes     []LineType
+	complexLine   []int
+	cognitiveLine []int // 1-based lines that accrued cognitive weight; nil unless Cognitive is on
+	ok            bool
 }
 
 // blobClassifyCache memoises classifyHistoryBlob output keyed by blob hash so
@@ -701,8 +725,10 @@ func (c *blobClassifyCache) classify(hash plumbing.Hash, path string, blob []byt
 	if ok {
 		res.language = job.Language
 		res.complexity = job.Complexity
+		res.cognitive = job.Cognitive
 		res.lineTypes = lineTypes
 		res.complexLine = complexityLineNumbers(job)
+		res.cognitiveLine = cognitiveLineNumbers(job)
 	}
 	if c != nil {
 		c.entries[hash] = res
@@ -763,6 +789,20 @@ func complexityLineNumbers(job *FileJob) []int {
 	out := make([]int, 0)
 	for i, count := range job.ComplexityLine {
 		if count > 0 {
+			out = append(out, i+1)
+		}
+	}
+	return out
+}
+
+// cognitiveLineNumbers returns the 1-based line numbers in job that accrued
+// cognitive weight. Mirrors complexityLineNumbers for the cognitive per-line
+// array; returns an empty slice when cognitive tracking is off (CognitiveLine
+// nil), so callers get the same shape either way.
+func cognitiveLineNumbers(job *FileJob) []int {
+	out := make([]int, 0)
+	for i, weight := range job.CognitiveLine {
+		if weight > 0 {
 			out = append(out, i+1)
 		}
 	}

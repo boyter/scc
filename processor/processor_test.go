@@ -20,6 +20,23 @@ func TestProcessConstants(t *testing.T) {
 	}
 }
 
+func TestProcessConstantsIdempotent(t *testing.T) {
+	// ExtensionToLanguage is built with append, so a repeated call (the
+	// long-lived MCP server runs ProcessConstants once per tool invocation)
+	// must not accumulate duplicate languages per extension.
+	ProcessConstants()
+	first := len(ExtensionToLanguage["go"])
+	if first == 0 {
+		t.Fatal("expected at least one language for the go extension")
+	}
+
+	ProcessConstants()
+	ProcessConstants()
+	if got := len(ExtensionToLanguage["go"]); got != first {
+		t.Errorf("ExtensionToLanguage[\"go\"] grew across calls: %d then %d", first, got)
+	}
+}
+
 func TestProcessConstantsPathExclude(t *testing.T) {
 	PathDenyList = []string{"testing/"}
 	ProcessConstants()
