@@ -128,7 +128,7 @@ Go to the directory you want to run scc from.
 Run the command below to run the latest release of scc on your current working directory:
 
 ```bash
-docker run --rm -it -v "$PWD:/pwd"  ghcr.io/boyter/scc:master scc /pwd
+docker run --rm -it -v "$PWD:/pwd:ro" --network none ghcr.io/boyter/scc:master scc /pwd
 ```
 
 #### Manual
