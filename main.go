@@ -625,6 +625,12 @@ func main() {
 		false,
 		"disable the name+email-domain identity folding fallback for git author reports (mailmap still applied)",
 	)
+	flags.BoolVar(
+		&processor.ExpandGlobs,
+		"expand-globs",
+		false,
+		"enable glob expansion on the files or directories",
+	)
 
 	// --mcp is intercepted before cobra runs, but we register it here so it appears in --help
 	var mcpDummy bool
