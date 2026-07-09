@@ -495,6 +495,58 @@ func runewidthStringWidthForTest(s string) int {
 	return w
 }
 
+// TestAuthorsDisambiguatesCollidingNames verifies that two distinct
+// identities sharing a display name are each suffixed with a distinguishing
+// marker in both the table and the bus-factor footer, while a unique name is
+// left bare.
+func TestAuthorsDisambiguatesCollidingNames(t *testing.T) {
+	saveDepth, saveFormat := HistoryDepth, Format
+	HistoryDepth, Format = 100, "tabular"
+	t.Cleanup(func() { HistoryDepth, Format = saveDepth, saveFormat })
+
+	// "Ben" commits under two different email domains (kept distinct, no
+	// mailmap merges them); "Cara" is unique. Ben writes more code so he is
+	// the sole bus author, exercising the footer path too.
+	dir := makeAuthoredRepo(t, []authoredCommit{
+		{Files: map[string]string{"a.go": "package a\nfunc A() {}\nfunc B() {}\nfunc C() {}\nfunc D() {}\n"}, Author: "Ben", Email: "ben@work.com"},
+		{Files: map[string]string{"b.go": "package b\nfunc E() {}\n"}, Author: "Ben", Email: "ben@users.noreply.github.com"},
+		{Files: map[string]string{"c.go": "package c\nfunc F() {}\n"}, Author: "Cara", Email: "cara@x.com"},
+	})
+
+	obs := newHistoryAuthorsObserver()
+	if _, err := runHistory(dir, obs); err != nil {
+		t.Fatalf("runHistory: %v", err)
+	}
+
+	// Both Ben identities must carry a domain marker; neither may render bare.
+	var bens int
+	for _, r := range obs.rows {
+		if r.Name != "Ben" {
+			continue
+		}
+		bens++
+		if !strings.Contains(r.Display, "Ben (") {
+			t.Errorf("colliding identity rendered without marker: Display=%q email=%q", r.Display, r.Email)
+		}
+	}
+	if bens != 2 {
+		t.Fatalf("expected 2 distinct Ben identities, got %d", bens)
+	}
+
+	out, err := renderAuthors(obs)
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	// The unique name stays bare (no parenthesised marker appended).
+	if strings.Contains(out, "Cara (") {
+		t.Errorf("unique name was needlessly disambiguated:\n%s", out)
+	}
+	// The footer's bus author is the disambiguated form, not a bare "Ben".
+	if !strings.Contains(out, "Bus factor") || !strings.Contains(out, "Ben (") {
+		t.Errorf("footer missing disambiguated bus author:\n%s", out)
+	}
+}
+
 func TestAuthorsTabularContainsBusFactorFooter(t *testing.T) {
 	saveDepth, saveFormat := HistoryDepth, Format
 	HistoryDepth, Format = 100, "tabular"

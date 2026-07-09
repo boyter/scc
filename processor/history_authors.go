@@ -32,7 +32,13 @@ const (
 // authorRow is one materialised row in the report. Sentinel is true for the
 // "(before window)" pseudo-author whose lines pre-date the walk window.
 type authorRow struct {
-	Name            string
+	Name string
+	// Display is the name as rendered in the tabular report and bus-factor
+	// footer. It equals Name unless two or more in-window identities share
+	// the same Name, in which case each colliding row is suffixed with a
+	// distinguishing marker (see disambiguateNames) so the reader can tell
+	// the identities apart. CSV/JSON emit Name and Email raw and ignore this.
+	Display         string
 	Email           string
 	Code            int64
 	Comment         int64
@@ -247,6 +253,7 @@ func (o *historyAuthorsObserver) Finalise(window HistoryWindow, head HeadSnapsho
 		}
 		return strings.Compare(a.Name, b.Name)
 	})
+	disambiguateNames(rows)
 	o.rows = rows
 
 	cumPercent := 0.0
@@ -258,13 +265,102 @@ func (o *historyAuthorsObserver) Finalise(window HistoryWindow, head HeadSnapsho
 			break
 		}
 		cumPercent += r.InWindowPercent
-		o.busAuthors = append(o.busAuthors, r.Name)
+		o.busAuthors = append(o.busAuthors, r.Display)
 		if cumPercent > 50 {
 			break
 		}
 	}
 	o.busFactor = len(o.busAuthors)
 	o.busCovered = cumPercent
+}
+
+// disambiguateNames sets Display on every row. When two or more in-window
+// identities share the same display Name (e.g. one contributor committing
+// under both a work and a noreply email — kept as distinct identities because
+// no .mailmap merges them), each colliding row is suffixed with a short
+// marker so the reader — and the bus-factor footer, which reuses Display —
+// can tell them apart. Non-colliding names, the "others" roll-up and the
+// sentinel are left bare.
+func disambiguateNames(rows []authorRow) {
+	groups := map[string][]int{}
+	for i := range rows {
+		if rows[i].Sentinel {
+			continue
+		}
+		groups[rows[i].Name] = append(groups[rows[i].Name], i)
+	}
+	for _, idx := range groups {
+		if len(idx) < 2 {
+			continue
+		}
+		markers := disambiguationMarkers(rows, idx)
+		for k, i := range idx {
+			rows[i].Display = rows[i].Name + " (" + markers[k] + ")"
+		}
+	}
+	for i := range rows {
+		if rows[i].Display == "" {
+			rows[i].Display = rows[i].Name
+		}
+	}
+}
+
+// disambiguationMarkers returns one marker per row in idx (all sharing a
+// display Name), picking the shortest candidate form that is distinct across
+// the whole group: registrable domain first (the tidiest, e.g. "github.com"),
+// then the full domain, then the full email. Because two identities with the
+// same name and same email intern to one authorID, a collision group always
+// has distinct emails, so the final form is guaranteed to separate them.
+func disambiguationMarkers(rows []authorRow, idx []int) []string {
+	forms := []func(string) string{
+		registrableDomain,
+		emailDomain,
+		func(email string) string { return email },
+	}
+	for _, form := range forms {
+		out := make([]string, len(idx))
+		seen := map[string]struct{}{}
+		distinct := true
+		for k, i := range idx {
+			m := form(rows[i].Email)
+			if m == "" {
+				distinct = false
+				break
+			}
+			if _, dup := seen[m]; dup {
+				distinct = false
+				break
+			}
+			seen[m] = struct{}{}
+			out[k] = m
+		}
+		if distinct {
+			return out
+		}
+	}
+	// Unreachable in practice (see doc comment); fall back to raw email.
+	out := make([]string, len(idx))
+	for k, i := range idx {
+		out[k] = rows[i].Email
+	}
+	return out
+}
+
+// registrableDomain returns the last two labels of the email's domain
+// (e.g. "users.noreply.github.com" -> "github.com"), a short human-readable
+// marker for the common single-TLD case. It is a display heuristic, not a
+// public-suffix-correct computation — disambiguationMarkers falls back to the
+// full domain when this form fails to separate a collision group.
+func registrableDomain(email string) string {
+	d := emailDomain(email)
+	if d == "" {
+		return ""
+	}
+	parts := strings.Split(d, ".")
+	if len(parts) <= 2 {
+		return d
+	}
+	return strings.Join(parts[len(parts)-2:], ".")
 }
 
 // runAuthorsReport is the dispatch entry point called from Process() when
@@ -344,7 +440,7 @@ func renderAuthorsTabular(o *historyAuthorsObserver) string {
 
 	for i := range limit {
 		r := realRows[i]
-		writeAuthorRow(&sb, p, wide, r.Name, r.Code, r.Comment, r.Complexity,
+		writeAuthorRow(&sb, p, wide, r.Display, r.Code, r.Comment, r.Complexity,
 			fmt.Sprintf("%d", r.Files), r.OwnsPercent, lastSeenString(r))
 	}
 
