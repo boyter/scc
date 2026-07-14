@@ -22,6 +22,7 @@ func TestCalculateCocomo(t *testing.T) {
 }
 
 func TestCalculateSizeSingleByte(t *testing.T) {
+	t.Setenv("LANG", "en_US.UTF-8")
 	var str strings.Builder
 	calculateSize(1, &str)
 
@@ -31,10 +32,12 @@ func TestCalculateSizeSingleByte(t *testing.T) {
 }
 
 func TestCalculateSize(t *testing.T) {
+	t.Setenv("LANG", "en_US.UTF-8")
 	var str strings.Builder
 	calculateSize(1000000, &str)
 
-	if !strings.Contains(str.String(), "Processed 1000000 bytes, 1.000 megabytes (SI)") {
+	// The byte count is locale-grouped like every other number in the output.
+	if !strings.Contains(str.String(), "Processed 1,000,000 bytes, 1.000 megabytes (SI)") {
 		t.Error("expected to match got", str.String())
 	}
 }
