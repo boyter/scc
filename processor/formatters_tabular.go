@@ -33,21 +33,27 @@ var longNameTruncate = 22
 var tabularShortUlocLanguageFormatBodyNoComplexity = "(ULOC) %38d\n"
 var tabularShortPercentLanguageFormatBodyNoComplexity = "Percentage %21.1f%% %10.1f%% %9.1f%% %10.1f%% %9.1f%%\n"
 
-var tabularWideFormatHead = "%-33s %9s %9s %8s %9s %8s %10s %16s\n"
-var tabularWideFormatBody = "%-33s %9d %9d %8d %9d %8d %10d %16.2f\n"
-var tabularWideFormatFile = "%s %9d %8d %9d %8d %10d %16.2f\n"
+// The wide layout is fixed-width and totals 109 columns (120 with the extra
+// Cognitive column) so every row aligns under the ─── break lines. The Language
+// column is deliberately narrow (24) so the numeric columns can hold large,
+// comma-grouped counts (tens of millions) without overflowing on big trees such
+// as the Linux kernel. Any width change here must keep the totals at 109/120 and
+// be mirrored across the file/MaxMean/ULOC/Percentage/DRYness rows below.
+var tabularWideFormatHead = "%-24s %8s %12s %10s %10s %12s %10s %16s\n"
+var tabularWideFormatBody = "%-24s %8d %12d %10d %10d %12d %10d %16.2f\n"
+var tabularWideFormatFile = "%s %12d %10d %10d %12d %10d %16.2f\n"
 
 // Cognitive variants add a right-aligned "Cognitive" column after Complexity.
 // Selected only when processor.Cognitive is set so the default layout is untouched.
-var tabularWideFormatHeadCognitive = "%-33s %9s %9s %8s %9s %8s %10s %10s %16s\n"
-var tabularWideFormatBodyCognitive = "%-33s %9d %9d %8d %9d %8d %10d %10d %16.2f\n"
-var tabularWideFormatFileCognitive = "%s %9d %8d %9d %8d %10d %10d %16.2f\n"
-var tabularWideFormatFileMaxMean = "MaxLine / MeanLine %24d %9d\n"
-var wideFormatFileTruncate = 42
-var tabularWideUlocLanguageFormatBody = "(ULOC) %46d\n"
-var tabularWideUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %25d\n"
-var tabularWideFormatBodyPercent = "Percentage %31.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
-var tabularWideDrynessFormatBody = "DRYness %% %43.2f\n"
+var tabularWideFormatHeadCognitive = "%-24s %8s %12s %10s %10s %12s %10s %10s %16s\n"
+var tabularWideFormatBodyCognitive = "%-24s %8d %12d %10d %10d %12d %10d %10d %16.2f\n"
+var tabularWideFormatFileCognitive = "%s %12d %10d %10d %12d %10d %10d %16.2f\n"
+var tabularWideFormatFileMaxMean = "MaxLine / MeanLine %14d %12d\n"
+var wideFormatFileTruncate = 32
+var tabularWideUlocLanguageFormatBody = "(ULOC) %39d\n"
+var tabularWideUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %18d\n"
+var tabularWideFormatBodyPercent = "Percentage %21.1f%% %11.1f%% %9.1f%% %9.1f%% %11.1f%% %9.1f%%\n"
+var tabularWideDrynessFormatBody = "DRYness %% %36.2f\n"
 
 func fileSummarizeLong(input chan *FileJob) string {
 	str := &strings.Builder{}
@@ -65,6 +71,8 @@ func fileSummarizeLong(input chan *FileJob) string {
 
 	langs := map[string]LanguageSummary{}
 	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumCognitive, sumBytes int64 = 0, 0, 0, 0, 0, 0, 0, 0
+
+	p := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
 
 	for res := range input {
 		sumFiles++
@@ -144,13 +152,13 @@ func fileSummarizeLong(input chan *FileJob) string {
 		}
 
 		if Cognitive {
-			_, _ = fmt.Fprintf(str, tabularWideFormatBodyCognitive, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summary.Cognitive, summaryWeightedComplexity)
+			_, _ = p.Fprintf(str, tabularWideFormatBodyCognitive, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summary.Cognitive, summaryWeightedComplexity)
 		} else {
-			_, _ = fmt.Fprintf(str, tabularWideFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summaryWeightedComplexity)
+			_, _ = p.Fprintf(str, tabularWideFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summaryWeightedComplexity)
 		}
 
 		if Percent {
-			_, _ = fmt.Fprintf(str,
+			_, _ = p.Fprintf(str,
 				tabularWideFormatBodyPercent,
 				float64(len(summary.Files))/float64(sumFiles)*100,
 				float64(summary.Lines)/float64(sumLines)*100,
@@ -168,11 +176,11 @@ func fileSummarizeLong(input chan *FileJob) string {
 		}
 
 		if MaxMean {
-			_, _ = fmt.Fprintf(str, tabularWideFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength))
+			_, _ = p.Fprintf(str, tabularWideFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength))
 		}
 
 		if UlocMode {
-			_, _ = fmt.Fprintf(str, tabularWideUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name]))
+			_, _ = p.Fprintf(str, tabularWideUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name]))
 			if !Files && summary.Name != language[len(language)-1].Name {
 				str.WriteString(tabularWideBreakCi)
 			}
@@ -184,12 +192,12 @@ func fileSummarizeLong(input chan *FileJob) string {
 
 			for _, res := range summary.Files {
 				tmp := unicodeAwareTrim(res.Location, wideFormatFileTruncate)
-				tmp = unicodeAwareRightPad(tmp, 43)
+				tmp = unicodeAwareRightPad(tmp, 33)
 
 				if Cognitive {
-					_, _ = fmt.Fprintf(str, tabularWideFormatFileCognitive, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.Cognitive, res.WeightedComplexity)
+					_, _ = p.Fprintf(str, tabularWideFormatFileCognitive, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.Cognitive, res.WeightedComplexity)
 				} else {
-					_, _ = fmt.Fprintf(str, tabularWideFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.WeightedComplexity)
+					_, _ = p.Fprintf(str, tabularWideFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.WeightedComplexity)
 				}
 			}
 		}
@@ -204,17 +212,17 @@ func fileSummarizeLong(input chan *FileJob) string {
 
 	str.WriteString(getTabularWideBreak())
 	if Cognitive {
-		_, _ = fmt.Fprintf(str, tabularWideFormatBodyCognitive, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumCognitive, totalWeightedComplexity)
+		_, _ = p.Fprintf(str, tabularWideFormatBodyCognitive, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumCognitive, totalWeightedComplexity)
 	} else {
-		_, _ = fmt.Fprintf(str, tabularWideFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, totalWeightedComplexity)
+		_, _ = p.Fprintf(str, tabularWideFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, totalWeightedComplexity)
 	}
 	str.WriteString(getTabularWideBreak())
 
 	if UlocMode {
-		_, _ = fmt.Fprintf(str, tabularWideUlocGlobalFormatBody, len(ulocGlobalCount))
+		_, _ = p.Fprintf(str, tabularWideUlocGlobalFormatBody, len(ulocGlobalCount))
 		if Dryness {
 			dryness := float64(len(ulocGlobalCount)) / float64(sumLines)
-			_, _ = fmt.Fprintf(str, tabularWideDrynessFormatBody, dryness)
+			_, _ = p.Fprintf(str, tabularWideDrynessFormatBody, dryness)
 		}
 		str.WriteString(getTabularWideBreak())
 	}
