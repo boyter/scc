@@ -1329,6 +1329,21 @@ func TestClassifyContentString(t *testing.T) {
 	}
 }
 
+func TestMojoRawTStringsDoNotCountComplexity(t *testing.T) {
+	ProcessConstants()
+
+	for _, prefix := range []string{"rt\"", "tr\"", "rT\"", "tR\""} {
+		content := "value = " + prefix + "for item in items\""
+		fileJob := FileJob{Language: "Mojo"}
+		fileJob.SetContent(content)
+		CountStats(&fileJob)
+
+		if fileJob.Complexity != 0 {
+			t.Errorf("prefix %q counted string contents as complexity: %d", prefix, fileJob.Complexity)
+		}
+	}
+}
+
 // Mixed line: "x := 1 // comment" has code then comment
 func TestClassifyContentMixedLine(t *testing.T) {
 	ProcessConstants()
