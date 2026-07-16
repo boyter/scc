@@ -4883,7 +4883,7 @@
       "== ",
       "!= "
     ],
-    "extensions": ["mojo"],
+    "extensions": ["mojo", "🔥"],
     "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
@@ -4897,8 +4897,23 @@
       },
       {
         "ignoreEscape": true,
+        "end": "'",
+        "start": "r'"
+      },
+      {
+        "ignoreEscape": true,
         "end": "\"",
         "start": "r\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "'",
+        "start": "R'"
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"",
+        "start": "R\""
       },
       {
         "end": "\"",
@@ -4908,6 +4923,21 @@
         "ignoreEscape": true,
         "end": "\"",
         "start": "rt\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"",
+        "start": "tr\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"",
+        "start": "rT\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"",
+        "start": "tR\""
       },
       {
         "docString": true,
@@ -4933,8 +4963,44 @@
       },
       {
         "docString": true,
+        "ignoreEscape": true,
+        "end": "\"\"\"",
+        "start": "R\"\"\""
+      },
+      {
+        "docString": true,
+        "ignoreEscape": true,
+        "end": "'''",
+        "start": "R'''"
+      },
+      {
+        "docString": true,
         "end": "\"\"\"",
         "start": "t\"\"\""
+      },
+      {
+        "docString": true,
+        "ignoreEscape": true,
+        "end": "\"\"\"",
+        "start": "rt\"\"\""
+      },
+      {
+        "docString": true,
+        "ignoreEscape": true,
+        "end": "\"\"\"",
+        "start": "tr\"\"\""
+      },
+      {
+        "docString": true,
+        "ignoreEscape": true,
+        "end": "\"\"\"",
+        "start": "rT\"\"\""
+      },
+      {
+        "docString": true,
+        "ignoreEscape": true,
+        "end": "\"\"\"",
+        "start": "tR\"\"\""
       }
     ]
   },
