@@ -685,12 +685,6 @@ func renderCouplingFor(o *couplingObserver, target string) (string, error) {
 	}
 }
 
-// CouplingThinTarget is the commit count below which a target's ratios are too
-// coarse to trust: with 3 commits, Couple can only ever be 33%, 67% or 100%, so
-// a "100.0%" implies a precision the sample cannot support. The report is still
-// rendered — it is the user's data — but the header says so plainly.
-const CouplingThinTarget = 5
-
 // %-51s %16s %10s
 // 51 + 1 + 16 + 1 + 10 = 79, matching the tabular break rule. The middle column
 // is widened to spell out "Shared Commits" rather than a bare "Shared".
@@ -717,7 +711,6 @@ func renderCouplingForTabular(o *couplingObserver, target string) string {
 	sb.WriteString(historyHeader("Change Coupling", o.window, wide))
 
 	partners := o.partnersFor(target)
-	tc := o.fc[target]
 
 	if _, alive := o.head.Files[target]; !alive {
 		sb.WriteString(fmt.Sprintf("%s is not in HEAD (deleted, ignored, or path typo)\n", target))
@@ -725,13 +718,10 @@ func renderCouplingForTabular(o *couplingObserver, target string) string {
 		return sb.String()
 	}
 
-	// historyHeader already ends with a break; only add another when the
-	// thin-target warning needs closing off, else the two breaks would double up.
-	if tc < CouplingThinTarget {
-		_, _ = fmt.Fprintf(&sb,
-			"only %d commits touched %s — ratios below are coarse and easily coincidental\n", tc, target)
-		sb.WriteString(brk)
-	}
+	// A low target commit count makes the ratios coarse, but the Shared Commits
+	// column already shows that directly, so the tabular view carries no extra
+	// warning sentence. historyHeader already ends with a break, so the table
+	// head follows straight on.
 	headFmt, bodyFmt := tabularCouplingForFormatHead, tabularCouplingForFormatBody
 	nameTrim, nameWidth := 50, 51
 	if wide {
