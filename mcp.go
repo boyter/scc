@@ -116,7 +116,7 @@ Walks the repo's git log and, for the target file, returns each coupled file wit
 - couple: P(this file changes | you changed the target), 0–100 — the blast-radius probability
 - reverse: P(target changes | this file changed), 0–100 — a large gap from couple marks a hub-style (asymmetric) link rather than a true peer coupling
 
-Partners are ranked by couple (highest first). Also returns the target's own commit count and the history window walked. Requires path to be inside a git repository.`),
+Partners are ranked by degree (highest first; base-rate corrected). Also returns the target's own commit count and the history window walked. Requires path to be inside a git repository.`),
 		mcp.WithString("file",
 			mcp.Description("Target file path (relative to the repo, as it appears at HEAD) to compute the blast radius for. Required."),
 			mcp.Required(),
