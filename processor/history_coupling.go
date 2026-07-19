@@ -328,7 +328,7 @@ func (o *couplingObserver) partnersFor(target string) []CouplingPartner {
 
 // CouplingForJSONReport walks history and returns the directional coupling for
 // a single target file as JSON — the MCP entry point. limit > 0 caps the
-// partner list (strongest Couple first); limit <= 0 returns every partner.
+// partner list (ranked by Degree, highest first); limit <= 0 returns every partner.
 //
 // target accepts the same forms as --coupling-for and is validated against HEAD
 // before the walk, so a caller passing a bad path gets an immediate error rather
