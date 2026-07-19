@@ -918,7 +918,7 @@ func Process() {
 
 	// Coupling is a standalone report — it doesn't combine with any other.
 	if Coupling && (Hotspots || ByAuthor || Timeline) {
-		fmt.Println("--coupling is mutually exclusive with --hotspots / --by-author / --timeline; pick one report")
+		fmt.Println("--coupling/--coupling-for is mutually exclusive with --hotspots / --by-author / --timeline; pick one report")
 		os.Exit(1)
 	}
 
