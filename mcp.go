@@ -128,7 +128,7 @@ Partners are ranked by degree (highest first; base-rate corrected). Also returns
 			mcp.Description("Maximum number of recent commits to walk. Defaults to 1000. Set to 0 for unlimited (slower on large repos)."),
 		),
 		mcp.WithNumber("limit",
-			mcp.Description("Maximum number of coupled files to return, strongest first. Defaults to 50. Set to -1 for unlimited."),
+		mcp.Description("Maximum number of coupled files to return, highest-degree first. Defaults to 50. Set to -1 for unlimited."),
 		),
 	)
 
