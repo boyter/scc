@@ -227,15 +227,15 @@ func renderHotspots(o *hotspotsObserver) (string, error) {
 var tabularShortHotspotsFormatHead = "%-27s %8s %7s %8s %8s %7s %8s\n"
 var tabularShortHotspotsFormatBody = "%-27s %8s %7d %8d %8s %7d %8.1f\n"
 
-// Wide variant — 109 columns, adds a 9-char hotspot bar and a +Code% column
+// Wide variant — 109 columns, adds a 16-char hotspot bar and a +Code% column
 // (%-share of *added* lines that were code; removed lines aren't classified).
+// The bar carries the wide layout's extra width so it reads as a real chart;
+// the File column stays modest rather than padding dead space to the rule.
 //
-//	%-27s %8s %7s %8s %8s %7s %8s %7s %11s
-//	27 + 1 + 8 + 1 + 7 + 1 + 8 + 1 + 8 + 1 + 7 + 1 + 8 + 1 + 7 + 1 + 11 = 98
-// Wide: same extra columns (+Code%, Bar) as before, with the File column
-// widened so the row fills the 109-col rule instead of stopping at 99.
-var tabularWideHotspotsFormatHead = "%-37s %8s %7s %8s %8s %7s %8s %7s %-11s\n"
-var tabularWideHotspotsFormatBody = "%-37s %8s %7d %8d %8s %7d %8.1f %6.1f%% %-11s\n"
+//	%-32s %8s %7s %8s %8s %7s %8s %7s %-16s
+//	32 + 1 + 8 + 1 + 7 + 1 + 8 + 1 + 8 + 1 + 7 + 1 + 8 + 1 + 7 + 1 + 16 = 109
+var tabularWideHotspotsFormatHead = "%-32s %8s %7s %8s %8s %7s %8s %7s %-16s\n"
+var tabularWideHotspotsFormatBody = "%-32s %8s %7d %8d %8s %7d %8.1f %6.1f%% %-16s\n"
 
 func renderHotspotsTabular(o *hotspotsObserver) string {
 	wide := More || strings.EqualFold(Format, "wide")
@@ -265,7 +265,7 @@ func renderHotspotsTabular(o *hotspotsObserver) string {
 		shown++
 		fileTrim, fileWidth := 26, 27
 		if wide {
-			fileTrim, fileWidth = 36, 37
+			fileTrim, fileWidth = 31, 32
 		}
 		fileCol := unicodeAwareTrim(r.File, fileTrim)
 		fileCol = unicodeAwareRightPad(fileCol, fileWidth)
@@ -277,7 +277,7 @@ func renderHotspotsTabular(o *hotspotsObserver) string {
 			if totalChurn > 0 {
 				codeShare = float64(r.CodeChurn) / float64(totalChurn) * 100.0
 			}
-			bar := renderBar(r.Score/100.0, 11)
+			bar := renderBar(r.Score/100.0, 16)
 			_, _ = fmt.Fprintf(&sb, tabularWideHotspotsFormatBody,
 				fileCol, langCol, r.Complexity, r.Commits, linesCol,
 				len(r.Authors), r.Score, codeShare, bar)
