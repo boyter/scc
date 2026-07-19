@@ -2,7 +2,84 @@
 
 package processor
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
+
+// hasCandidate reports whether want is among the candidate forms.
+func hasCandidate(got []string, want string) bool {
+	for _, g := range got {
+		if g == want {
+			return true
+		}
+	}
+	return false
+}
+
+// A "./"-prefixed path is what a shell tab-completes to, and it must resolve to
+// the bare git path. This was the original --coupling-for bug: the prefix was
+// passed through and never matched, after a full history walk.
+func TestCouplingTargetCandidatesStripsDotSlash(t *testing.T) {
+	got := couplingTargetCandidates("/repo", "./processor/constants.go")
+	if !hasCandidate(got, "processor/constants.go") {
+		t.Errorf("expected ./ prefix to be stripped, got %v", got)
+	}
+}
+
+func TestCouplingTargetCandidatesBarePathUnchanged(t *testing.T) {
+	got := couplingTargetCandidates("/repo", "processor/constants.go")
+	if !hasCandidate(got, "processor/constants.go") {
+		t.Errorf("expected bare path preserved, got %v", got)
+	}
+}
+
+func TestCouplingTargetCandidatesAbsoluteBecomesRepoRelative(t *testing.T) {
+	got := couplingTargetCandidates("/repo", filepath.FromSlash("/repo/processor/constants.go"))
+	if !hasCandidate(got, "processor/constants.go") {
+		t.Errorf("expected absolute path made repo-relative, got %v", got)
+	}
+}
+
+// A path outside the repository can never be a git path, so it must yield no
+// candidates rather than a "../" form that would be looked up and miss.
+func TestCouplingTargetCandidatesRejectsEscapingPaths(t *testing.T) {
+	if got := couplingTargetCandidates("/repo", filepath.FromSlash("/etc/passwd")); len(got) != 0 {
+		t.Errorf("expected no candidates for a path outside the repo, got %v", got)
+	}
+	if got := couplingTargetCandidates("/repo", "../../../etc/passwd"); len(got) != 0 {
+		t.Errorf("expected no candidates for an escaping relative path, got %v", got)
+	}
+}
+
+// When the typed form and the cwd-relative form agree, only one candidate should
+// survive — the lookup is against HEAD and duplicates just cost tree reads.
+func TestCouplingTargetCandidatesDedupes(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Skip("cannot determine working directory")
+	}
+	got := couplingTargetCandidates(cwd, "./x/y.go")
+	if len(got) != 1 || got[0] != "x/y.go" {
+		t.Errorf("expected exactly one deduped candidate x/y.go, got %v", got)
+	}
+}
+
+// Running scc from inside a subdirectory: `cd processor && scc --coupling-for
+// constants.go` must offer processor/constants.go, since git keys from the root.
+func TestCouplingTargetCandidatesResolvesFromSubdirectory(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Skip("cannot determine working directory")
+	}
+	repoRoot := filepath.Dir(cwd) // tests run in ./processor, so this is the repo root
+	got := couplingTargetCandidates(repoRoot, "constants.go")
+	want := filepath.Base(cwd) + "/constants.go"
+	if !hasCandidate(got, want) {
+		t.Errorf("expected %q among candidates for a subdirectory-relative path, got %v", want, got)
+	}
+}
 
 // headWith builds a HeadSnapshot whose Files map contains every named path, so
 // the Finalise survivor filter keeps them.
@@ -168,9 +245,22 @@ func TestCouplingPartnersDirectional(t *testing.T) {
 		t.Errorf("Couple(peer.c | leaf.c) = %.1f, want ~66.7", got)
 	}
 
-	// Ranked by Couple: hub.h (100) before peer.c (66.7).
-	if partners[0].Path != "hub.h" {
-		t.Errorf("expected hub.h ranked first by Couple, got %s", partners[0].Path)
+	// Degree is base-rate corrected, so the hub scores BELOW the peer even though
+	// its Couple is a perfect 100%:
+	//   hub.h  → 3/(3+5-3) = 60.0%   (present for all of leaf's commits, but it is
+	//                                 present for everyone's commits)
+	//   peer.c → 2/(3+2-2) = 66.7%   (never changes without leaf.c — a real partner)
+	if got := hub.Degree(); got < 59.9 || got > 60.1 {
+		t.Errorf("Degree(hub.h, leaf.c) = %.1f, want ~60.0", got)
+	}
+	if got := peer.Degree(); got < 66.0 || got > 67.0 {
+		t.Errorf("Degree(peer.c, leaf.c) = %.1f, want ~66.7", got)
+	}
+
+	// Ranked by Degree: peer.c before hub.h. Ranking by Couple instead put the hub
+	// first — the base-rate confound this report exists to avoid.
+	if partners[0].Path != "peer.c" {
+		t.Errorf("expected peer.c ranked first by Degree, got %s", partners[0].Path)
 	}
 }
 

@@ -23,9 +23,6 @@ const languagesTimelineSparkCells = 26
 // languagesTimelineWideSparkCells is the sparkline width for --wide (109 cols).
 const languagesTimelineWideSparkCells = 56
 
-// languagesTimelineTopN caps tabular rows. CSV/JSON are uncapped.
-const languagesTimelineTopN = 12
-
 // languagesTimelineRow is the materialised per-language result.
 type languagesTimelineRow struct {
 	Language      string
@@ -245,10 +242,7 @@ func renderLanguagesTimelineTabular(o *historyLanguagesObserver) string {
 	_, _ = fmt.Fprintf(&sb, format, "Language", "Trend", "Code", "Share", "Change")
 	sb.WriteString(brk)
 
-	limit := min(len(o.rows), languagesTimelineTopN)
-
-	for i := range limit {
-		r := o.rows[i]
+	for _, r := range o.rows {
 		langCol := unicodeAwareTrim(r.Language, 19)
 		langCol = unicodeAwareRightPad(langCol, 20)
 		spark := renderLanguagesTrajectorySparkline(r.Trajectory, cells)

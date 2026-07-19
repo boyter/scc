@@ -22,11 +22,15 @@ import (
 const authorsTopN = 15
 
 // authorNameColWidth / authorNameTrim are the trim/pad widths for the
-// "Author" column in the 79-col tabular report. Both wide and short use the
-// same name column.
+// "Author" column. The 79-col report uses the short pair; the 109-col --wide
+// report uses the wide pair so the table fills the wider rule instead of
+// leaving the break line hanging past the content.
 const (
 	authorNameTrim     = 30
 	authorNameColWidth = 31
+
+	authorNameTrimWide     = 60
+	authorNameColWidthWide = 61
 )
 
 // authorRow is one materialised row in the report. Sentinel is true for the
@@ -307,8 +311,10 @@ func renderAuthors(o *historyAuthorsObserver) (string, error) {
 // Short tabular: %-31s %9s %9s %7s %8s %10s = 79.
 var tabularShortAuthorsFormatHead = "%-31s %9s %9s %7s %8s %10s\n"
 
-// Wide tabular: inserts the Comment column. %-31s %9s %9s %9s %7s %8s %10s = 88.
-var tabularWideAuthorsFormatHead = "%-31s %9s %9s %9s %7s %8s %10s\n"
+// Wide tabular: identical columns to the short form, with the Author column
+// stretched to fill the 109-col rule so long names show in full.
+// %-61s %9s %9s %7s %8s %10s = 109.
+var tabularWideAuthorsFormatHead = "%-61s %9s %9s %7s %8s %10s\n"
 
 func renderAuthorsTabular(o *historyAuthorsObserver) string {
 	wide := More || strings.EqualFold(Format, "wide")
@@ -321,7 +327,7 @@ func renderAuthorsTabular(o *historyAuthorsObserver) string {
 
 	if wide {
 		_, _ = fmt.Fprintf(&sb, tabularWideAuthorsFormatHead,
-			"Author", "Code", "Comment", "Cmplx", "Files", "Owns", "Last seen")
+			"Author", "Code", "Cmplx", "Files", "Owns", "Last seen")
 	} else {
 		_, _ = fmt.Fprintf(&sb, tabularShortAuthorsFormatHead,
 			"Author", "Code", "Cmplx", "Files", "Owns", "Last seen")
@@ -397,20 +403,20 @@ func writeAuthorRow(sb *strings.Builder, p *gmessage.Printer, wide bool,
 	name string, code, comment, complexity int64,
 	files string, owns float64, lastSeen string) {
 
-	nameCol := unicodeAwareTrim(name, authorNameTrim)
-	nameCol = unicodeAwareRightPad(nameCol, authorNameColWidth)
+	trim, colWidth := authorNameTrim, authorNameColWidth
+	format := tabularShortAuthorsFormatHead
+	if wide {
+		trim, colWidth = authorNameTrimWide, authorNameColWidthWide
+		format = tabularWideAuthorsFormatHead
+	}
+	nameCol := unicodeAwareTrim(name, trim)
+	nameCol = unicodeAwareRightPad(nameCol, colWidth)
 	codeStr := formatWithCommas(p, code)
 	cmplxStr := formatWithCommas(p, complexity)
 	ownsStr := fmt.Sprintf("%6.1f%%", owns)
 
-	if wide {
-		commentStr := formatWithCommas(p, comment)
-		_, _ = fmt.Fprintf(sb, tabularWideAuthorsFormatHead,
-			nameCol, codeStr, commentStr, cmplxStr, files, ownsStr, lastSeen)
-	} else {
-		_, _ = fmt.Fprintf(sb, tabularShortAuthorsFormatHead,
-			nameCol, codeStr, cmplxStr, files, ownsStr, lastSeen)
-	}
+	_, _ = fmt.Fprintf(sb, format,
+		nameCol, codeStr, cmplxStr, files, ownsStr, lastSeen)
 }
 
 func formatAuthorsFooter(o *historyAuthorsObserver, width int) string {

@@ -4,17 +4,26 @@ package processor
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"os"
+	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 
+	git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	jsoniter "github.com/json-iterator/go"
 )
 
-// CouplingTopN is the cap on rows shown in the tabular coupling report.
-// CSV / JSON output is not capped.
-const CouplingTopN = 20
+// couplingOverviewTopN caps the rows in the tabular all-pairs (--coupling)
+// overview. This is deliberately capped where the other history reports are not:
+// the all-pairs view is a repo-wide glance, and a flat dump of every pair is
+// unreadable. The per-file --coupling-for view and the CSV/JSON output stay
+// uncapped — the full pair set is one --format away.
+const couplingOverviewTopN = 15
 
 // CouplingMinShared is the floor on co-change count for a pair to appear in
 // any output. A pair that changed together only once is almost always a
@@ -210,11 +219,17 @@ func (o *couplingObserver) resolve(path string) string {
 	return path
 }
 
-// CouplingPartner is one file that co-changes with a chosen target file, with
-// the two directional probabilities a "blast radius" answer needs. Couple is
-// the one that answers "if I change the target, how likely am I to touch this
-// too"; Reverse is the opposite direction, which exposes hubs (a header that
-// everything touches has a low Couple from any given file but a high Reverse).
+// CouplingPartner is one file that co-changes with a chosen target file.
+//
+// Couple answers "if I change the target, how likely am I to touch this too".
+// On its own it is confounded by the partner's base rate: a file that changes
+// in most commits scores a near-perfect Couple against ANY target, purely
+// because it is always there. Such a hub shows HIGH Couple and LOW Reverse —
+// e.g. a target touched 3 times, always alongside a file touched 158 times,
+// gives Couple 100% / Reverse 1.9%.
+//
+// Degree is the base-rate-corrected view and is what rows are ranked by; the
+// two directional numbers are kept as supporting detail.
 type CouplingPartner struct {
 	Path          string
 	Shared        int // commits changing BOTH target and this partner
@@ -241,9 +256,32 @@ func (p CouplingPartner) Reverse() float64 {
 	return float64(p.Shared) / float64(p.PartnerCommit) * 100.0
 }
 
-// partnersFor returns every surviving file coupled to target, ranked by Couple
-// (the blast-radius direction) descending. target is matched after rename
-// folding. Returns nil when the target never changed in the window.
+// Degree is the symmetric coupling ratio Shared/(target+partner−Shared) as a
+// 0–100 percentage — the same measure the pairwise --coupling report ranks by,
+// so the two views agree on what "strongly coupled" means.
+//
+// Unlike Couple it is not fooled by a busy partner: a hub present in every one
+// of the target's commits still scores low here, because its own large commit
+// total sits in the denominator.
+func (p CouplingPartner) Degree() float64 {
+	union := p.TargetCommit + p.PartnerCommit - p.Shared
+	if union <= 0 {
+		return 0
+	}
+	return float64(p.Shared) / float64(union) * 100.0
+}
+
+// partnersFor returns every surviving file coupled to target, ranked by Degree
+// descending. Returns nil when the target never changed in the window.
+//
+// Ranking is by Degree, not Couple: Couple alone puts every busy file at 100%
+// (it was present for all of a rarely-touched target's commits by base rate
+// alone), which buries the genuine peer couplings under hubs.
+//
+// target must be a current (HEAD) path: Finalise has already folded every
+// pre-rename name into its final one, so the counts keyed here are complete,
+// but an old path that no longer exists in HEAD will not match. Callers
+// validate against HEAD via resolveCouplingTarget before the walk.
 func (o *couplingObserver) partnersFor(target string) []CouplingPartner {
 	tc := o.fc[target]
 	if tc == 0 {
@@ -273,10 +311,12 @@ func (o *couplingObserver) partnersFor(target string) []CouplingPartner {
 			TargetCommit:  tc,
 		})
 	}
+	// Degree first (base-rate corrected), then raw co-change volume, then path so
+	// the order is deterministic.
 	sort.Slice(out, func(i, j int) bool {
-		ci, cj := out[i].Couple(), out[j].Couple()
-		if ci != cj {
-			return ci > cj
+		di, dj := out[i].Degree(), out[j].Degree()
+		if di != dj {
+			return di > dj
 		}
 		if out[i].Shared != out[j].Shared {
 			return out[i].Shared > out[j].Shared
@@ -289,12 +329,20 @@ func (o *couplingObserver) partnersFor(target string) []CouplingPartner {
 // CouplingForJSONReport walks history and returns the directional coupling for
 // a single target file as JSON — the MCP entry point. limit > 0 caps the
 // partner list (strongest Couple first); limit <= 0 returns every partner.
+//
+// target accepts the same forms as --coupling-for and is validated against HEAD
+// before the walk, so a caller passing a bad path gets an immediate error rather
+// than paying for a full traversal first.
 func CouplingForJSONReport(repoPath, target string, limit int) (string, error) {
+	resolved, err := resolveCouplingTarget(repoPath, target)
+	if err != nil {
+		return "", err
+	}
 	observer := newCouplingObserver()
 	if _, err := runHistory(repoPath, observer); err != nil {
 		return "", err
 	}
-	return renderCouplingForJSONLimited(observer, target, limit)
+	return renderCouplingForJSONLimited(observer, resolved, limit)
 }
 
 // CouplingJSONReport walks the git history at repoPath and returns the coupling
@@ -309,18 +357,151 @@ func CouplingJSONReport(repoPath string, limit int) (string, error) {
 	return renderCouplingJSONLimited(observer, limit)
 }
 
+// couplingSuggestionLimit caps the "did you mean" candidates offered when a
+// --coupling-for path misses.
+const couplingSuggestionLimit = 5
+
+// errStopTreeWalk halts a tree walk once enough suggestions are collected.
+// object.Tree.Files().ForEach surfaces whatever the callback returns, so it is
+// compared back at the call site and discarded.
+var errStopTreeWalk = errors.New("stop tree walk")
+
+// couplingTargetCandidates returns the repo-relative forms to try for a
+// user-supplied --coupling-for path, most likely first. Git keys every path
+// from the repository root with forward slashes and no "./" prefix, so the
+// string a user naturally types ("./processor/x.go", an absolute path, or a
+// path relative to a subdirectory they are standing in) rarely matches as-is.
+func couplingTargetCandidates(repoRoot, target string) []string {
+	var out []string
+	seen := map[string]struct{}{}
+	add := func(p string) {
+		if p == "" {
+			return
+		}
+		p = path.Clean(filepath.ToSlash(p))
+		if p == "." || p == ".." || strings.HasPrefix(p, "../") {
+			return // escapes the repository, or names no file
+		}
+		if _, dup := seen[p]; dup {
+			return
+		}
+		seen[p] = struct{}{}
+		out = append(out, p)
+	}
+
+	if filepath.IsAbs(target) {
+		// Absolute → relative to the repository root.
+		if rel, err := filepath.Rel(repoRoot, target); err == nil {
+			add(rel)
+		}
+		return out
+	}
+
+	// As typed, cleaned. Handles both "processor/x.go" and "./processor/x.go".
+	add(filepath.ToSlash(target))
+
+	// Relative to the working directory, for running scc from a subdirectory:
+	// `cd processor && scc --coupling-for constants.go .` means processor/constants.go.
+	if cwd, err := os.Getwd(); err == nil {
+		if rel, err := filepath.Rel(repoRoot, filepath.Join(cwd, target)); err == nil {
+			add(rel)
+		}
+	}
+	return out
+}
+
+// couplingTargetMiss builds the error for a --coupling-for path that matched
+// nothing in HEAD, offering same-basename files as suggestions. Only ever runs
+// on the failure path, so walking the tree here costs nothing in the happy case.
+func couplingTargetMiss(tree *object.Tree, target string) error {
+	base := path.Base(path.Clean(filepath.ToSlash(target)))
+	var matches []string
+	err := tree.Files().ForEach(func(f *object.File) error {
+		if path.Base(f.Name) != base {
+			return nil
+		}
+		matches = append(matches, f.Name)
+		if len(matches) >= couplingSuggestionLimit {
+			return errStopTreeWalk
+		}
+		return nil
+	})
+	if err != nil && !errors.Is(err, errStopTreeWalk) {
+		return fmt.Errorf("--coupling-for %q is not in HEAD (deleted, ignored, or path typo)", target)
+	}
+	if len(matches) > 0 {
+		return fmt.Errorf("--coupling-for %q is not in HEAD; did you mean:\n  %s",
+			target, strings.Join(matches, "\n  "))
+	}
+	return fmt.Errorf("--coupling-for %q is not in HEAD (deleted, ignored, or path typo)", target)
+}
+
+// resolveCouplingTarget maps a user-supplied --coupling-for path onto the
+// git-style path the history engine keys on, verifying it against HEAD *before*
+// the caller pays for a full history walk. A typo previously cost a complete
+// walk (seconds to minutes) before reporting the miss.
+//
+// A repository with no HEAD (freshly initialised, no commits) is not an error
+// here: the path is normalised and the walk reports the empty window as usual.
+func resolveCouplingTarget(repoPath, target string) (string, error) {
+	fallback := path.Clean(filepath.ToSlash(target))
+
+	repo, err := git.PlainOpenWithOptions(repoPath, &git.PlainOpenOptions{DetectDotGit: true})
+	if err != nil {
+		return "", fmt.Errorf("open git repository: %w", err)
+	}
+	ref, err := repo.Head()
+	if err != nil {
+		if errors.Is(err, plumbing.ErrReferenceNotFound) {
+			return fallback, nil // empty repo — let the walk report the empty window
+		}
+		return "", fmt.Errorf("read HEAD: %w", err)
+	}
+	commit, err := repo.CommitObject(ref.Hash())
+	if err != nil {
+		return "", fmt.Errorf("read HEAD commit: %w", err)
+	}
+	tree, err := commit.Tree()
+	if err != nil {
+		return "", fmt.Errorf("read HEAD tree: %w", err)
+	}
+
+	repoRoot := repoPath
+	if wt, err := repo.Worktree(); err == nil {
+		repoRoot = wt.Filesystem.Root()
+	}
+
+	for _, candidate := range couplingTargetCandidates(repoRoot, target) {
+		if _, err := tree.File(candidate); err == nil {
+			return candidate, nil
+		}
+	}
+	return "", couplingTargetMiss(tree, target)
+}
+
 // runCouplingReport is the dispatch entry point called from Process() when
 // --coupling is set. Walks history and writes the chosen format to stdout or
 // FileOutput.
 func runCouplingReport(repoPath string) error {
+	// Resolve and validate the target before the walk — a bad path should fail
+	// in milliseconds, not after a full history traversal.
+	target := ""
+	if CouplingFor != "" {
+		resolved, err := resolveCouplingTarget(repoPath, CouplingFor)
+		if err != nil {
+			return err
+		}
+		target = resolved
+	}
+
 	observer := newCouplingObserver()
 	if _, err := runHistory(repoPath, observer); err != nil {
 		return err
 	}
 	var out string
 	var err error
-	if CouplingFor != "" {
-		out, err = renderCouplingFor(observer, CouplingFor)
+	if target != "" {
+		out, err = renderCouplingFor(observer, target)
 	} else {
 		out, err = renderCoupling(observer)
 	}
@@ -351,10 +532,19 @@ func renderCoupling(o *couplingObserver) (string, error) {
 	}
 }
 
-// %-23s %-23s %8s %6s %6s %8s
-// 23 + 1 + 23 + 1 + 8 + 1 + 6 + 1 + 6 + 1 + 8 = 79
-var tabularCouplingFormatHead = "%-23s %-23s %8s %6s %6s %8s\n"
-var tabularCouplingFormatBody = "%-23s %-23s %8d %6d %6d %7.1f%%\n"
+// %-27s %-26s %15s %8s
+// 27 + 1 + 26 + 1 + 15 + 1 + 8 = 79
+// Mirrors the --coupling-for view: plain "Shared Commits" / "Coupling" headers,
+// no jargon and no explanatory footer. The per-file A/B commit counts drop from
+// the table (they remain in the CSV / JSON output); dropping them also frees the
+// width the two file paths need.
+var tabularCouplingFormatHead = "%-27s %-26s %15s %8s\n"
+var tabularCouplingFormatBody = "%-27s %-26s %15d %7.1f%%\n"
+
+// Wide tabular: same columns, both file paths widened to fill the 109-col rule.
+// 42+1+41+1+15+1+8 = 109.
+var tabularWideCouplingFormatHead = "%-42s %-41s %15s %8s\n"
+var tabularWideCouplingFormatBody = "%-42s %-41s %15d %7.1f%%\n"
 
 func renderCouplingTabular(o *couplingObserver) string {
 	wide := More || strings.EqualFold(Format, "wide")
@@ -363,31 +553,42 @@ func renderCouplingTabular(o *couplingObserver) string {
 	var sb strings.Builder
 	sb.WriteString(historyHeader("Change Coupling", o.window, wide))
 
-	_, _ = fmt.Fprintf(&sb, tabularCouplingFormatHead,
-		"File A", "File B", "Both", "A", "B", "Degree")
+	headFmt, bodyFmt := tabularCouplingFormatHead, tabularCouplingFormatBody
+	aTrim, aWidth, bTrim, bWidth := 26, 27, 25, 26
+	if wide {
+		headFmt, bodyFmt = tabularWideCouplingFormatHead, tabularWideCouplingFormatBody
+		aTrim, aWidth, bTrim, bWidth = 41, 42, 40, 41
+	}
+
+	_, _ = fmt.Fprintf(&sb, headFmt,
+		"File A", "File B", "Shared Commits", "Coupling")
 	sb.WriteString(brk)
 
-	limit := min(len(o.pairs), CouplingTopN)
-	for i := range limit {
-		p := o.pairs[i]
-		aCol := unicodeAwareRightPad(unicodeAwareTrim(p.A, 22), 23)
-		bCol := unicodeAwareRightPad(unicodeAwareTrim(p.B, 22), 23)
-		_, _ = fmt.Fprintf(&sb, tabularCouplingFormatBody,
-			aCol, bCol, p.Shared, p.CommitsA, p.CommitsB, p.Degree())
+	// The all-pairs view is a repo-wide overview, not a per-file answer: a flat
+	// dump of every pair is unreadable, so the tabular form shows only the
+	// strongest couplings. The full set is always available via --format csv/json
+	// (e.g. to build a coupling graph). --coupling-for is the per-file drill-down.
+	limit := min(len(o.pairs), couplingOverviewTopN)
+	for _, p := range o.pairs[:limit] {
+		aCol := unicodeAwareRightPad(unicodeAwareTrim(p.A, aTrim), aWidth)
+		bCol := unicodeAwareRightPad(unicodeAwareTrim(p.B, bTrim), bWidth)
+		_, _ = fmt.Fprintf(&sb, bodyFmt,
+			aCol, bCol, p.Shared, p.Degree())
 	}
 
 	sb.WriteString(brk)
 	if limit > 0 {
-		footer := fmt.Sprintf("   Both = commits changing both · A/B = each file's commits · Degree = Both/(A+B−Both)")
+		var footer string
+		if len(o.pairs) > limit {
+			footer = fmt.Sprintf("top %d of %d pairs · sharing ≥%d commits", limit, len(o.pairs), CouplingMinShared)
+		} else {
+			footer = fmt.Sprintf("%d pairs · sharing ≥%d commits", len(o.pairs), CouplingMinShared)
+		}
 		sb.WriteString(footer)
-		sb.WriteByte('\n')
-		footer2 := fmt.Sprintf("   pairs sharing ≥%d commits · %d of %d shown · commits touching >%d files excluded",
-			CouplingMinShared, limit, o.totalPairs, o.maxFilesPerCommit)
-		sb.WriteString(footer2)
 		sb.WriteByte('\n')
 		sb.WriteString(brk)
 	} else {
-		footer := "   no file pairs met the coupling threshold"
+		footer := "no file pairs met the coupling threshold"
 		sb.WriteString(footer)
 		sb.WriteByte('\n')
 		sb.WriteString(brk)
@@ -484,47 +685,74 @@ func renderCouplingFor(o *couplingObserver, target string) (string, error) {
 	}
 }
 
-// %-50s %7s %9s %9s
-// 50 + 1 + 7 + 1 + 9 + 1 + 9 = 78
-var tabularCouplingForFormatHead = "%-50s %7s %9s %9s\n"
-var tabularCouplingForFormatBody = "%-50s %7d %8.1f%% %8.1f%%\n"
+// CouplingThinTarget is the commit count below which a target's ratios are too
+// coarse to trust: with 3 commits, Couple can only ever be 33%, 67% or 100%, so
+// a "100.0%" implies a precision the sample cannot support. The report is still
+// rendered — it is the user's data — but the header says so plainly.
+const CouplingThinTarget = 5
+
+// %-51s %16s %10s
+// 51 + 1 + 16 + 1 + 10 = 79, matching the tabular break rule. The middle column
+// is widened to spell out "Shared Commits" rather than a bare "Shared".
+// The human view keeps three columns: the related file, how many commits
+// touched both, and the symmetric coupling score it is ranked by. The
+// directional Couple / Reverse ratios stay in the CSV and JSON output for tools
+// that want them — on screen they were the source of the base-rate confusion.
+var tabularCouplingForFormatHead = "%-51s %16s %10s\n"
+var tabularCouplingForFormatBody = "%-51s %16d %9.1f%%\n"
+
+// Wide tabular: same columns, Related File widened to fill the 109-col rule.
+// 81 + 1 + 16 + 1 + 10 = 109.
+var tabularWideCouplingForFormatHead = "%-81s %16s %10s\n"
+var tabularWideCouplingForFormatBody = "%-81s %16d %9.1f%%\n"
 
 func renderCouplingForTabular(o *couplingObserver, target string) string {
 	wide := More || strings.EqualFold(Format, "wide")
 	brk := tabularBreakFor(wide)
 
 	var sb strings.Builder
-	// Reuse the standard window header, then a second line naming the target.
+	// The columns speak for themselves, so no descriptive sentence sits between
+	// the banner and the table. The target file name is carried by the thin-target
+	// warning when it matters, and always by the CSV / JSON output.
 	sb.WriteString(historyHeader("Change Coupling", o.window, wide))
 
 	partners := o.partnersFor(target)
 	tc := o.fc[target]
 
 	if _, alive := o.head.Files[target]; !alive {
-		sb.WriteString(fmt.Sprintf("   %s is not in HEAD (deleted, ignored, or path typo)\n", target))
+		sb.WriteString(fmt.Sprintf("%s is not in HEAD (deleted, ignored, or path typo)\n", target))
 		sb.WriteString(brk)
 		return sb.String()
 	}
 
-	_, _ = fmt.Fprintf(&sb, "   if you change %s — what tends to change with it (%d commits in window)\n", target, tc)
-	sb.WriteString(brk)
-	_, _ = fmt.Fprintf(&sb, tabularCouplingForFormatHead, "Partner", "Both", "Couple", "Reverse")
+	// historyHeader already ends with a break; only add another when the
+	// thin-target warning needs closing off, else the two breaks would double up.
+	if tc < CouplingThinTarget {
+		_, _ = fmt.Fprintf(&sb,
+			"only %d commits touched %s — ratios below are coarse and easily coincidental\n", tc, target)
+		sb.WriteString(brk)
+	}
+	headFmt, bodyFmt := tabularCouplingForFormatHead, tabularCouplingForFormatBody
+	nameTrim, nameWidth := 50, 51
+	if wide {
+		headFmt, bodyFmt = tabularWideCouplingForFormatHead, tabularWideCouplingForFormatBody
+		nameTrim, nameWidth = 80, 81
+	}
+
+	_, _ = fmt.Fprintf(&sb, headFmt, "Related File", "Shared Commits", "Coupling")
 	sb.WriteString(brk)
 
-	limit := min(len(partners), CouplingTopN)
-	for i := range limit {
-		p := partners[i]
-		nameCol := unicodeAwareRightPad(unicodeAwareTrim(p.Path, 49), 50)
-		_, _ = fmt.Fprintf(&sb, tabularCouplingForFormatBody, nameCol, p.Shared, p.Couple(), p.Reverse())
+	for _, p := range partners {
+		nameCol := unicodeAwareRightPad(unicodeAwareTrim(p.Path, nameTrim), nameWidth)
+		_, _ = fmt.Fprintf(&sb, bodyFmt, nameCol, p.Shared, p.Degree())
 	}
 
 	sb.WriteString(brk)
-	if limit > 0 {
-		sb.WriteString("   Couple = P(partner changes | you changed the target) · Reverse = the opposite\n")
-		_, _ = fmt.Fprintf(&sb, "   %d of %d coupled files shown · pairs sharing ≥%d commits\n",
-			limit, len(partners), CouplingMinShared)
+	if len(partners) > 0 {
+		_, _ = fmt.Fprintf(&sb, "%d coupled files · pairs sharing ≥%d commits\n",
+			len(partners), CouplingMinShared)
 	} else {
-		sb.WriteString("   no file shares enough commits with this target to couple\n")
+		sb.WriteString("no file shares enough commits with this target to couple\n")
 	}
 	sb.WriteString(brk)
 	return sb.String()
@@ -536,7 +764,7 @@ func renderCouplingForCSV(o *couplingObserver, target string) (string, error) {
 	sb.WriteByte('\n')
 
 	w := csv.NewWriter(&sb)
-	_ = w.Write([]string{"Target", "Partner", "Shared", "TargetCommits", "PartnerCommits", "Couple", "Reverse"})
+	_ = w.Write([]string{"Target", "Partner", "Shared", "TargetCommits", "PartnerCommits", "Degree", "Couple", "Reverse"})
 	for _, p := range o.partnersFor(target) {
 		_ = w.Write([]string{
 			target,
@@ -544,6 +772,7 @@ func renderCouplingForCSV(o *couplingObserver, target string) (string, error) {
 			fmt.Sprintf("%d", p.Shared),
 			fmt.Sprintf("%d", p.TargetCommit),
 			fmt.Sprintf("%d", p.PartnerCommit),
+			fmt.Sprintf("%.1f", p.Degree()),
 			fmt.Sprintf("%.1f", p.Couple()),
 			fmt.Sprintf("%.1f", p.Reverse()),
 		})
@@ -559,6 +788,7 @@ type couplingForJSONPartner struct {
 	File           string  `json:"file"`
 	Shared         int     `json:"shared"`
 	PartnerCommits int     `json:"partnerCommits"`
+	Degree         float64 `json:"degree"`
 	Couple         float64 `json:"couple"`
 	Reverse        float64 `json:"reverse"`
 }
@@ -596,6 +826,7 @@ func renderCouplingForJSONLimited(o *couplingObserver, target string, limit int)
 			File:           p.Path,
 			Shared:         p.Shared,
 			PartnerCommits: p.PartnerCommit,
+			Degree:         round1(p.Degree()),
 			Couple:         round1(p.Couple()),
 			Reverse:        round1(p.Reverse()),
 		})
