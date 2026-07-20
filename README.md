@@ -376,7 +376,7 @@ Flags:
       --remap-all string                    inspect every file and remap by checking for a string and remapping the language [e.g. "-*- C++ -*-":"C Header"]
       --remap-unknown string                inspect files of unknown type and remap by checking for a string and remapping the language [e.g. "-*- C++ -*-":"C Header"]
       --report string[="scc-report.html"]   write a self-contained HTML report; bare flag writes scc-report.html and prompts before overwriting, --report=path/out.html overwrites silently
-      --report-skip string                  comma-separated sections to omit (cocomo,locomo,hotspots,authors,timeline,files,uloc,linelength,card)
+      --report-skip string                  comma-separated sections to omit (cocomo,locomo,hotspots,coupling,authors,timeline,files,uloc,linelength,card)
       --report-title string                 override the repo name shown in the report banner
       --size-unit string                    set size unit [si, binary, mixed, xkcd-kb, xkcd-kelly, xkcd-imaginary, xkcd-intel, xkcd-drive, xkcd-bakers] (default "si")
       --sloccount-format                    print a more SLOCCount like COCOMO calculation
@@ -999,7 +999,7 @@ Totals reconcile with a plain `scc` against the current HEAD tree. CSV/JSON incl
 
 ### HTML Report
 
-`scc --report` writes a self-contained, infographic-style HTML page summarising the codebase: overview metrics, language breakdown, line-length histogram, hotspots, author rollup, language and author timelines, COCOMO / LOCOMO cost estimates, and a per-file table. The page bundles its own CSS and inline SVG — no external network requests, no JavaScript runtime dependencies — so it can be opened locally, committed to a repo, attached to a release, or hosted as a static artifact.
+`scc --report` writes a self-contained, infographic-style HTML page summarising the codebase: overview metrics, language breakdown, line-length histogram, hotspots, change coupling, author rollup, language and author timelines, COCOMO / LOCOMO cost estimates, and a per-file table. The page bundles its own CSS and inline SVG — no external network requests, no JavaScript runtime dependencies — so it can be opened locally, committed to a repo, attached to a release, or hosted as a static artifact.
 
 ```text
 $ scc --report                       # writes scc-report.html (prompts before overwriting)
@@ -1014,7 +1014,7 @@ A bare `--report` is non-destructive: if `scc-report.html` already exists in the
 | `--report-title NAME` | Override the repo name shown in the report banner. Defaults to the `origin` remote name or the directory basename. |
 | `--report-skip LIST` | Comma-separated sections to omit: `cocomo`, `locomo`, `hotspots`, `authors`, `timeline`, `files`, `uloc`, `linelength`, `card`. |
 
-The git-history sections (hotspots, authors, timelines) only render when the directory is a git repository; outside a repo they're omitted gracefully. The report embeds an OpenGraph share card as a `data:` URL so links unfurl on most social platforms — pass `--report-skip card` to drop it.
+The git-history sections (hotspots, coupling, authors, timelines) only render when the directory is a git repository; outside a repo they're omitted gracefully. The report embeds an OpenGraph share card as a `data:` URL so links unfurl on most social platforms — pass `--report-skip card` to drop it.
 
 ### Large File Detection
 

@@ -366,10 +366,33 @@
   </section>
   {{- end }}
 
-  {{- /* ============================= 05 AUTHORS ============================= */}}
+  {{- /* ============================= 05 COUPLING ============================= */}}
+  {{- if .Coupling }}
+  <section>
+    <h2><span class="num">05</span> Change coupling <span class="count">· top {{ sliceLen (firstN 12 .Coupling.Pairs) }} of {{ .Coupling.TotalPairs }}</span></h2>
+    <p class="lede">File pairs that change together in the same commits. High coupling = an implicit dependency git enforces but the code doesn't; editing one usually means editing the other.</p>
+    <table>
+      <thead>
+        <tr><th>File A</th><th>File B</th><th class="num">Shared</th><th class="num">Coupling</th></tr>
+      </thead>
+      <tbody>
+      {{- range firstN 12 .Coupling.Pairs }}
+        <tr>
+          <td class="mono">{{ .FileA }}</td>
+          <td class="mono">{{ .FileB }}</td>
+          <td class="num">{{ commaInt .Shared }}</td>
+          <td class="num">{{ printf "%.1f%%" .Degree }}</td>
+        </tr>
+      {{- end }}
+      </tbody>
+    </table>
+  </section>
+  {{- end }}
+
+  {{- /* ============================= 06 AUTHORS ============================= */}}
   {{- if .Authors }}
   <section>
-    <h2><span class="num">05</span> Authors <span class="count">· {{ sliceLen .Authors.Rows }} contributors</span></h2>
+    <h2><span class="num">06</span> Authors <span class="count">· {{ sliceLen .Authors.Rows }} contributors</span></h2>
     <p class="lede">
       Ownership measured by line-level git blame across the analysis window.
       <span class="tag warn">Bus factor: {{ .Authors.BusFactor }}</span>
@@ -402,10 +425,10 @@
   </section>
   {{- end }}
 
-  {{- /* ============================= 06 TIMELINE ============================= */}}
+  {{- /* ============================= 07 TIMELINE ============================= */}}
   {{- if or .LanguageTimeline .AuthorTimeline }}
   <section>
-    <h2><span class="num">06</span> Timeline{{ if .LanguageTimeline }} <span class="count">· {{ .LanguageTimeline.Buckets }} buckets</span>{{ end }}</h2>
+    <h2><span class="num">07</span> Timeline{{ if .LanguageTimeline }} <span class="count">· {{ .LanguageTimeline.Buckets }} buckets</span>{{ end }}</h2>
     <p class="lede">Code lines by language over the analysed history window. Sparkline trajectory per language and per author.</p>
 
     {{- if .LanguageTimeline }}
@@ -446,10 +469,10 @@
   </section>
   {{- end }}
 
-  {{- /* ============================= 07 COST ============================= */}}
+  {{- /* ============================= 08 COST ============================= */}}
   {{- if or .Cocomo .Locomo }}
   <section>
-    <h2><span class="num">07</span> Cost estimate</h2>
+    <h2><span class="num">08</span> Cost estimate</h2>
     <p class="lede">Two ways to value the codebase: human-build effort (COCOMO, Boehm 1981){{ if .Locomo }} and machine-rebuild effort (LOCOMO, LLM regeneration model){{ end }}.</p>
 
     {{- if .Cocomo }}
@@ -472,10 +495,10 @@
   </section>
   {{- end }}
 
-  {{- /* ============================= 08 NOTABLE FILES ============================= */}}
+  {{- /* ============================= 09 NOTABLE FILES ============================= */}}
   {{- if .Files }}
   <section>
-    <h2><span class="num">08</span> Notable files</h2>
+    <h2><span class="num">09</span> Notable files</h2>
     <p class="lede">Per-file detail for the full tree ({{ sliceLen .Files }} files). Sorted by lines descending; first ten shown, expand to see the rest.</p>
     {{- $sorted := filesSorted .Files }}
     <table>
@@ -512,7 +535,7 @@
   {{- if not .GitAvailable }}
   <section>
     <h2><span class="num">~~</span> Git history</h2>
-    <p class="lede" style="color: var(--fg-dim);">Not a git repository. Hotspots, authors, and timeline require git history.</p>
+    <p class="lede" style="color: var(--fg-dim);">Not a git repository. Hotspots, coupling, authors, and timeline require git history.</p>
   </section>
   {{- end }}
 

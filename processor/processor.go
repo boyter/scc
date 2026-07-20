@@ -347,6 +347,12 @@ var Coupling = false
 // when that file changes.
 var CouplingFor = ""
 
+// CouplingWeighted ranks coupling by degree × the pair's (smaller) file
+// complexity instead of raw co-change, so pairs of genuinely complex files
+// outrank generated/data-file churn. Implies Coupling. Honours the Cognitive
+// global for its complexity source, matching --hotspots.
+var CouplingWeighted = false
+
 // ByAuthor toggles the author-rollup git-history report
 var ByAuthor = false
 
@@ -929,8 +935,9 @@ func Process() {
 		os.Exit(1)
 	}
 
-	// --coupling-for implies the coupling report for a specific file.
-	if CouplingFor != "" {
+	// --coupling-for implies the coupling report for a specific file, and
+	// --coupling-weighted is a modifier that implies the report too.
+	if CouplingFor != "" || CouplingWeighted {
 		Coupling = true
 	}
 

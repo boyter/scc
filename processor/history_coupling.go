@@ -49,6 +49,57 @@ type CouplingCount struct {
 	Shared   int    // commits in which BOTH changed
 	CommitsA int    // commits in which A changed (window total)
 	CommitsB int    // commits in which B changed (window total)
+
+	// HEAD complexity of each file (cyclomatic, or cognitive when the Cognitive
+	// global is on), populated at Finalise. Only consumed by the weighted
+	// ranking; zero for data/generated files that carry no complexity signal.
+	ComplexityA int64
+	ComplexityB int64
+}
+
+// WeightedScore ranks a pair by co-change volume × the pair's smaller file
+// complexity — the same shape --hotspots uses (complexity × commits), applied
+// to a pair. Two effects fall out of it:
+//
+//   - min-complexity means a pair only scores when BOTH files are complex, so a
+//     complex file coupled to a zero-complexity data/generated file (JSON, HTML,
+//     Markdown) drops away — the churn-noise the raw view surfaces at the top.
+//   - Shared (raw volume), not Degree, is the co-change term. Degree rewards a
+//     thin 2-shared-commit pair that always moved together with a coincidental
+//     100%; multiplied by high test-file complexity that buries the real work.
+//     Volume keeps the heavyweight couplings on top and matches --hotspots.
+func (c CouplingCount) WeightedScore() float64 {
+	return float64(c.Shared) * float64(min(c.ComplexityA, c.ComplexityB))
+}
+
+// lessCouplingRaw is the deterministic raw ordering: strongest absolute
+// co-change first, then degree, then path. Shared by the raw sort and used as
+// the tiebreak under weighted ranking.
+func lessCouplingRaw(a, b CouplingCount) bool {
+	if a.Shared != b.Shared {
+		return a.Shared > b.Shared
+	}
+	if da, db := a.Degree(), b.Degree(); da != db {
+		return da > db
+	}
+	if a.A != b.A {
+		return a.A < b.A
+	}
+	return a.B < b.B
+}
+
+// headComplexity returns a file's HEAD complexity used for weighting: cognitive
+// when the Cognitive global is on (matching --hotspots), cyclomatic otherwise.
+// A path absent from HEAD contributes zero, so it can never lift a pair's score.
+func headComplexity(head HeadSnapshot, path string) int64 {
+	hf, ok := head.Files[path]
+	if !ok {
+		return 0
+	}
+	if Cognitive {
+		return hf.Cognitive
+	}
+	return hf.Complexity
 }
 
 // Degree is the symmetric coupling ratio shared/(a+b−shared) as a 0–100
@@ -179,28 +230,33 @@ func (o *couplingObserver) Finalise(window HistoryWindow, head HeadSnapshot) {
 		}
 		pairs = append(pairs, CouplingCount{
 			A: k.a, B: k.b, Shared: shared,
-			CommitsA: fileCommits[k.a],
-			CommitsB: fileCommits[k.b],
+			CommitsA:    fileCommits[k.a],
+			CommitsB:    fileCommits[k.b],
+			ComplexityA: headComplexity(head, k.a),
+			ComplexityB: headComplexity(head, k.b),
 		})
 	}
 
-	// Strongest absolute co-change first, then strongest degree, then path so the
-	// order is deterministic. Volume first surfaces the heavyweight couplings;
-	// the Degree column lets the reader tell genuine coupling from two busy files
-	// that merely co-change by chance.
-	sort.Slice(pairs, func(i, j int) bool {
-		if pairs[i].Shared != pairs[j].Shared {
-			return pairs[i].Shared > pairs[j].Shared
-		}
-		di, dj := pairs[i].Degree(), pairs[j].Degree()
-		if di != dj {
-			return di > dj
-		}
-		if pairs[i].A != pairs[j].A {
-			return pairs[i].A < pairs[j].A
-		}
-		return pairs[i].B < pairs[j].B
-	})
+	if CouplingWeighted {
+		// Weighted: co-change volume × min-complexity first, so pairs of complex
+		// files outrank high-churn data/generated pairs. Ties fall back to the raw
+		// ordering (shared, degree, path) for determinism.
+		sort.Slice(pairs, func(i, j int) bool {
+			wi, wj := pairs[i].WeightedScore(), pairs[j].WeightedScore()
+			if wi != wj {
+				return wi > wj
+			}
+			return lessCouplingRaw(pairs[i], pairs[j])
+		})
+	} else {
+		// Strongest absolute co-change first, then strongest degree, then path so
+		// the order is deterministic. Volume first surfaces the heavyweight
+		// couplings; the Degree column lets the reader tell genuine coupling from
+		// two busy files that merely co-change by chance.
+		sort.Slice(pairs, func(i, j int) bool {
+			return lessCouplingRaw(pairs[i], pairs[j])
+		})
+	}
 
 	o.pairs = pairs
 	o.totalPairs = len(pairs)
@@ -235,6 +291,18 @@ type CouplingPartner struct {
 	Shared        int // commits changing BOTH target and this partner
 	PartnerCommit int // partner's window commit total
 	TargetCommit  int // target's window commit total
+
+	// HEAD complexity of the partner and the target, populated by partnersFor.
+	// Only consumed by the weighted ranking.
+	PartnerComplexity int64
+	TargetComplexity  int64
+}
+
+// WeightedScore mirrors the pairwise weighting for the blast-radius view:
+// co-change volume × the smaller of the target's and partner's complexity, so a
+// file's complex, frequently-co-changing neighbours outrank the trivial ones.
+func (p CouplingPartner) WeightedScore() float64 {
+	return float64(p.Shared) * float64(min(p.TargetComplexity, p.PartnerComplexity))
 }
 
 // Couple is P(partner changes | target changed) = Shared / TargetCommit, the
@@ -305,15 +373,24 @@ func (o *couplingObserver) partnersFor(target string) []CouplingPartner {
 			continue
 		}
 		out = append(out, CouplingPartner{
-			Path:          partner,
-			Shared:        shared,
-			PartnerCommit: o.fc[partner],
-			TargetCommit:  tc,
+			Path:              partner,
+			Shared:            shared,
+			PartnerCommit:     o.fc[partner],
+			TargetCommit:      tc,
+			PartnerComplexity: headComplexity(o.head, partner),
+			TargetComplexity:  headComplexity(o.head, target),
 		})
 	}
 	// Degree first (base-rate corrected), then raw co-change volume, then path so
-	// the order is deterministic.
+	// the order is deterministic. Under weighted ranking, volume × min-complexity
+	// leads and the raw ordering is the tiebreak.
 	sort.Slice(out, func(i, j int) bool {
+		if CouplingWeighted {
+			wi, wj := out[i].WeightedScore(), out[j].WeightedScore()
+			if wi != wj {
+				return wi > wj
+			}
+		}
 		di, dj := out[i].Degree(), out[j].Degree()
 		if di != dj {
 			return di > dj
@@ -547,11 +624,13 @@ func renderCoupling(o *couplingObserver) (string, error) {
 // width the two file paths need.
 var tabularCouplingFormatHead = "%-27s %-26s %15s %8s\n"
 var tabularCouplingFormatBody = "%-27s %-26s %15d %7.1f%%\n"
+var tabularCouplingWeightedBody = "%-27s %-26s %15d %8.1f\n"
 
 // Wide tabular: same columns, both file paths widened to fill the 109-col rule.
 // 42+1+41+1+15+1+8 = 109.
 var tabularWideCouplingFormatHead = "%-42s %-41s %15s %8s\n"
 var tabularWideCouplingFormatBody = "%-42s %-41s %15d %7.1f%%\n"
+var tabularWideCouplingWeightedBody = "%-42s %-41s %15d %8.1f\n"
 
 func renderCouplingTabular(o *couplingObserver) string {
 	wide := More || strings.EqualFold(Format, "wide")
@@ -560,15 +639,36 @@ func renderCouplingTabular(o *couplingObserver) string {
 	var sb strings.Builder
 	sb.WriteString(historyHeader("Change Coupling", o.window, wide))
 
-	headFmt, bodyFmt := tabularCouplingFormatHead, tabularCouplingFormatBody
+	// Weighted mode ranks by degree × complexity and reports a normalised 0–100
+	// Score in place of the raw Coupling %; the top (max-scoring) pair sits first
+	// after the weighted sort, so it is the normalisation denominator.
+	weighted := CouplingWeighted
+	lastLabel := "Coupling"
+	var maxScore float64
+	if weighted {
+		lastLabel = "Score"
+		if len(o.pairs) > 0 {
+			maxScore = o.pairs[0].WeightedScore()
+		}
+	}
+
+	headFmt := tabularCouplingFormatHead
+	bodyFmt := tabularCouplingFormatBody
 	aTrim, aWidth, bTrim, bWidth := 26, 27, 25, 26
 	if wide {
-		headFmt, bodyFmt = tabularWideCouplingFormatHead, tabularWideCouplingFormatBody
+		headFmt = tabularWideCouplingFormatHead
+		bodyFmt = tabularWideCouplingFormatBody
 		aTrim, aWidth, bTrim, bWidth = 41, 42, 40, 41
+	}
+	if weighted {
+		bodyFmt = tabularCouplingWeightedBody
+		if wide {
+			bodyFmt = tabularWideCouplingWeightedBody
+		}
 	}
 
 	_, _ = fmt.Fprintf(&sb, headFmt,
-		"File A", "File B", "Shared Commits", "Coupling")
+		"File A", "File B", "Shared Commits", lastLabel)
 	sb.WriteString(brk)
 
 	// The all-pairs view is a repo-wide overview, not a per-file answer: a flat
@@ -579,17 +679,28 @@ func renderCouplingTabular(o *couplingObserver) string {
 	for _, p := range o.pairs[:limit] {
 		aCol := unicodeAwareRightPad(unicodeAwareTrim(p.A, aTrim), aWidth)
 		bCol := unicodeAwareRightPad(unicodeAwareTrim(p.B, bTrim), bWidth)
-		_, _ = fmt.Fprintf(&sb, bodyFmt,
-			aCol, bCol, p.Shared, p.Degree())
+		if weighted {
+			score := 0.0
+			if maxScore > 0 {
+				score = p.WeightedScore() / maxScore * 100.0
+			}
+			_, _ = fmt.Fprintf(&sb, bodyFmt, aCol, bCol, p.Shared, score)
+		} else {
+			_, _ = fmt.Fprintf(&sb, bodyFmt, aCol, bCol, p.Shared, p.Degree())
+		}
 	}
 
 	sb.WriteString(brk)
 	if limit > 0 {
 		var footer string
+		suffix := ""
+		if weighted {
+			suffix = " · weighted by complexity"
+		}
 		if len(o.pairs) > limit {
-			footer = fmt.Sprintf("top %d of %d pairs · sharing ≥%d commits", limit, len(o.pairs), CouplingMinShared)
+			footer = fmt.Sprintf("top %d of %d pairs · sharing ≥%d commits%s", limit, len(o.pairs), CouplingMinShared, suffix)
 		} else {
-			footer = fmt.Sprintf("%d pairs · sharing ≥%d commits", len(o.pairs), CouplingMinShared)
+			footer = fmt.Sprintf("%d pairs · sharing ≥%d commits%s", len(o.pairs), CouplingMinShared, suffix)
 		}
 		sb.WriteString(footer)
 		sb.WriteByte('\n')
@@ -701,11 +812,13 @@ func renderCouplingFor(o *couplingObserver, target string) (string, error) {
 // that want them — on screen they were the source of the base-rate confusion.
 var tabularCouplingForFormatHead = "%-51s %16s %10s\n"
 var tabularCouplingForFormatBody = "%-51s %16d %9.1f%%\n"
+var tabularCouplingForWeightedBody = "%-51s %16d %10.1f\n"
 
 // Wide tabular: same columns, Related File widened to fill the 109-col rule.
 // 81 + 1 + 16 + 1 + 10 = 109.
 var tabularWideCouplingForFormatHead = "%-81s %16s %10s\n"
 var tabularWideCouplingForFormatBody = "%-81s %16d %9.1f%%\n"
+var tabularWideCouplingForWeightedBody = "%-81s %16d %10.1f\n"
 
 func renderCouplingForTabular(o *couplingObserver, target string) string {
 	wide := More || strings.EqualFold(Format, "wide")
@@ -729,25 +842,56 @@ func renderCouplingForTabular(o *couplingObserver, target string) string {
 	// column already shows that directly, so the tabular view carries no extra
 	// warning sentence. historyHeader already ends with a break, so the table
 	// head follows straight on.
+	// Weighted mode reports a normalised 0–100 Score (degree × min-complexity)
+	// in place of the raw Coupling %; partnersFor has already ranked it first, so
+	// the leading partner is the normalisation denominator.
+	weighted := CouplingWeighted
+	lastLabel := "Coupling"
+	var maxScore float64
+	if weighted {
+		lastLabel = "Score"
+		if len(partners) > 0 {
+			maxScore = partners[0].WeightedScore()
+		}
+	}
+
 	headFmt, bodyFmt := tabularCouplingForFormatHead, tabularCouplingForFormatBody
 	nameTrim, nameWidth := 50, 51
 	if wide {
 		headFmt, bodyFmt = tabularWideCouplingForFormatHead, tabularWideCouplingForFormatBody
 		nameTrim, nameWidth = 80, 81
 	}
+	if weighted {
+		bodyFmt = tabularCouplingForWeightedBody
+		if wide {
+			bodyFmt = tabularWideCouplingForWeightedBody
+		}
+	}
 
-	_, _ = fmt.Fprintf(&sb, headFmt, "Related File", "Shared Commits", "Coupling")
+	_, _ = fmt.Fprintf(&sb, headFmt, "Related File", "Shared Commits", lastLabel)
 	sb.WriteString(brk)
 
 	for _, p := range partners {
 		nameCol := unicodeAwareRightPad(unicodeAwareTrim(p.Path, nameTrim), nameWidth)
-		_, _ = fmt.Fprintf(&sb, bodyFmt, nameCol, p.Shared, p.Degree())
+		if weighted {
+			score := 0.0
+			if maxScore > 0 {
+				score = p.WeightedScore() / maxScore * 100.0
+			}
+			_, _ = fmt.Fprintf(&sb, bodyFmt, nameCol, p.Shared, score)
+		} else {
+			_, _ = fmt.Fprintf(&sb, bodyFmt, nameCol, p.Shared, p.Degree())
+		}
 	}
 
 	sb.WriteString(brk)
 	if len(partners) > 0 {
-		_, _ = fmt.Fprintf(&sb, "%d coupled files · pairs sharing ≥%d commits\n",
-			len(partners), CouplingMinShared)
+		suffix := ""
+		if weighted {
+			suffix = " · weighted by complexity"
+		}
+		_, _ = fmt.Fprintf(&sb, "%d coupled files · pairs sharing ≥%d commits%s\n",
+			len(partners), CouplingMinShared, suffix)
 	} else {
 		sb.WriteString("no file shares enough commits with this target to couple\n")
 	}

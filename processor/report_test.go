@@ -525,7 +525,7 @@ func TestReportImplicitlyEnablesULOCAndLineLength(t *testing.T) {
 // spec 05 enumerates as recognised so a future code change can't silently
 // add or drop one without updating the spec.
 func TestReportSkipRecognisedListMatchesSpec(t *testing.T) {
-	want := []string{"cocomo", "locomo", "hotspots", "authors", "timeline", "files", "uloc", "linelength", "card"}
+	want := []string{"cocomo", "locomo", "hotspots", "coupling", "authors", "timeline", "files", "uloc", "linelength", "card"}
 	if len(reportSkipRecognised) != len(want) {
 		t.Errorf("reportSkipRecognised size = %d, want %d", len(reportSkipRecognised), len(want))
 	}
@@ -765,6 +765,15 @@ func goldenReportFixture() ReportData {
 				{File: "internal/server.go", Language: "Go", Complexity: 240, Commits: 64, LinesChanged: 1200, Authors: 4, Score: 92.5},
 				{File: "internal/cache.go", Language: "Go", Complexity: 120, Commits: 28, LinesChanged: 420, Authors: 2, Score: 41.2},
 				{File: "web/app.js", Language: "JavaScript", Complexity: 60, Commits: 14, LinesChanged: 180, Authors: 2, Score: 17.8},
+			},
+		},
+		Coupling: &CouplingResult{
+			Available:  true,
+			TotalPairs: 3,
+			Pairs: []CouplingPairRow{
+				{FileA: "internal/cache.go", FileB: "internal/server.go", Shared: 22, Degree: 34.4},
+				{FileA: "internal/server.go", FileB: "web/app.js", Shared: 9, Degree: 13.0},
+				{FileA: "README.md", FileB: "internal/server.go", Shared: 6, Degree: 8.1},
 			},
 		},
 		Authors: &AuthorsResult{

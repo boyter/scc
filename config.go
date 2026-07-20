@@ -362,7 +362,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	// ReportOut to processor.DefaultReportName to tell "bare flag" apart from an
 	// explicit path, so the two must stay in sync.
 	flags.Lookup("report").NoOptDefVal = processor.DefaultReportName
-	flags.StringVar(strVar(&processor.ReportSkip), "report-skip", "", "comma-separated sections to omit (cocomo,locomo,hotspots,authors,timeline,files,uloc,linelength,card)")
+	flags.StringVar(strVar(&processor.ReportSkip), "report-skip", "", "comma-separated sections to omit (cocomo,locomo,hotspots,coupling,authors,timeline,files,uloc,linelength,card)")
 	flags.StringVar(strVar(&processor.ReportTitle), "report-title", "", "override the repo name shown in the report banner")
 	flags.StringSliceVarP(sliceVar(&processor.AllowListExtensions), "include-ext", "i", []string{}, "limit to file extensions [comma separated list: e.g. go,java,js]")
 	flags.StringSliceVarP(sliceVar(&processor.ExcludeListExtensions), "exclude-ext", "x", []string{}, "ignore file extensions (overrides include-ext) [comma separated list: e.g. go,java,js]")
@@ -456,6 +456,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.BoolVar(boolVar(&processor.Hotspots), "hotspots", false, "render the hotspots report (files ranked by complexity × change frequency over recent git history)")
 	flags.BoolVar(boolVar(&processor.Coupling), "coupling", false, "render the change-coupling report (file pairs that change together over recent git history)")
 	flags.StringVar(strVar(&processor.CouplingFor), "coupling-for", "", "blast-radius view: given a file path, show what tends to change with it over recent git history")
+	flags.BoolVar(boolVar(&processor.CouplingWeighted), "coupling-weighted", false, "weight coupling by file complexity so pairs of complex files rank above generated/data-file churn (implies --coupling)")
 	flags.BoolVar(boolVar(&processor.ByAuthor), "by-author", false, "render the author rollup report (bus factor and last-toucher attribution over recent git history)")
 	flags.IntVar(intVar(&processor.HistoryDepth), "depth", 1000, "commit window size for git history reports; 0 means entire history (large repos may be slow)")
 	flags.BoolVar(boolVar(&processor.Timeline), "timeline", false, "render an over-time view of recent git history; with --by-author runs the author timeline, alone runs the languages timeline")

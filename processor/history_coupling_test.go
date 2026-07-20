@@ -295,6 +295,76 @@ func TestCouplingDropsFilesAbsentFromHead(t *testing.T) {
 	}
 }
 
+// headWithComplexity builds a HeadSnapshot whose files carry the given HEAD
+// cyclomatic complexity, for exercising the complexity-weighted ranking.
+func headWithComplexity(cx map[string]int64) HeadSnapshot {
+	h := HeadSnapshot{Files: map[string]HeadFile{}}
+	for p, c := range cx {
+		h.Files[p] = HeadFile{Path: p, Complexity: c}
+	}
+	return h
+}
+
+// Weighted ranking must demote a high-churn pair that includes a
+// zero-complexity (data/generated) file below a lower-churn pair of two complex
+// files — the whole point of --coupling-weighted.
+func TestCouplingWeightedDemotesDataFilePairs(t *testing.T) {
+	prev := CouplingWeighted
+	CouplingWeighted = true
+	defer func() { CouplingWeighted = prev }()
+
+	o := newCouplingObserver()
+	// data.json + gen.go co-change often (5), but data.json has zero complexity.
+	for i := 0; i < 5; i++ {
+		o.Observe(CommitInfo{}, commit("data.json", "gen.go"))
+	}
+	// logic_a.go + logic_b.go co-change less (3), but both are complex.
+	for i := 0; i < 3; i++ {
+		o.Observe(CommitInfo{}, commit("logic_a.go", "logic_b.go"))
+	}
+	o.Finalise(HistoryWindow{}, headWithComplexity(map[string]int64{
+		"data.json": 0, "gen.go": 120,
+		"logic_a.go": 100, "logic_b.go": 100,
+	}))
+
+	if len(o.pairs) != 2 {
+		t.Fatalf("expected 2 pairs, got %d: %+v", len(o.pairs), o.pairs)
+	}
+	top := o.pairs[0]
+	if top.A != "logic_a.go" || top.B != "logic_b.go" {
+		t.Errorf("weighted top pair = (%s, %s), want the two complex files first", top.A, top.B)
+	}
+	// The data-file pair's min-complexity is zero, so its weighted score is zero.
+	dataPair, ok := findPair(o.pairs, "data.json", "gen.go")
+	if !ok {
+		t.Fatal("data.json/gen.go pair missing")
+	}
+	if dataPair.WeightedScore() != 0 {
+		t.Errorf("data-file pair weighted score = %.1f, want 0", dataPair.WeightedScore())
+	}
+}
+
+// With weighting off (the default), ranking is pure co-change volume — the
+// zero-complexity pair with more shared commits leads.
+func TestCouplingUnweightedRanksByVolume(t *testing.T) {
+	o := newCouplingObserver()
+	for i := 0; i < 5; i++ {
+		o.Observe(CommitInfo{}, commit("data.json", "gen.go"))
+	}
+	for i := 0; i < 3; i++ {
+		o.Observe(CommitInfo{}, commit("logic_a.go", "logic_b.go"))
+	}
+	o.Finalise(HistoryWindow{}, headWithComplexity(map[string]int64{
+		"data.json": 0, "gen.go": 120,
+		"logic_a.go": 100, "logic_b.go": 100,
+	}))
+
+	top := o.pairs[0]
+	if top.A != "data.json" || top.B != "gen.go" {
+		t.Errorf("unweighted top pair = (%s, %s), want the higher-volume data pair first", top.A, top.B)
+	}
+}
+
 // resolveCouplingTarget's error must be context-neutral: it names the path, not
 // any CLI flag, so an MCP client (which passed a `file` argument and has never
 // seen the flag) gets a message that reads correctly. The CLI re-attaches the

@@ -66,7 +66,7 @@ func parseReportSkipTo(raw string, warnW io.Writer) {
 			continue
 		}
 		if !reportSkipRecognised[name] {
-			_, _ = fmt.Fprintf(warnW, "warning: --report-skip: unknown section %q (recognised: cocomo, locomo, hotspots, authors, timeline, files, uloc, linelength, card)\n", name)
+			_, _ = fmt.Fprintf(warnW, "warning: --report-skip: unknown section %q (recognised: cocomo, locomo, hotspots, coupling, authors, timeline, files, uloc, linelength, card)\n", name)
 		}
 		ReportSkipNames[name] = true
 	}
@@ -332,6 +332,11 @@ var reportFuncs = template.FuncMap{
 				return s[:n]
 			}
 			return s
+		case []CouplingPairRow:
+			if len(s) > n {
+				return s[:n]
+			}
+			return s
 		case []AuthorRow:
 			if len(s) > n {
 				return s[:n]
@@ -365,6 +370,8 @@ var reportFuncs = template.FuncMap{
 		case []LanguageSummary:
 			return len(s)
 		case []HotspotRow:
+			return len(s)
+		case []CouplingPairRow:
 			return len(s)
 		case []AuthorRow:
 			return len(s)

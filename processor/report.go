@@ -51,6 +51,7 @@ var reportSkipRecognised = map[string]bool{
 	"cocomo":     true,
 	"locomo":     true,
 	"hotspots":   true,
+	"coupling":   true,
 	"authors":    true,
 	"timeline":   true,
 	"files":      true,
@@ -146,6 +147,25 @@ type HotspotRow struct {
 	Score        float64
 }
 
+// CouplingResult mirrors the all-pairs change-coupling data. Pairs is already
+// sorted strongest-first (raw co-change volume — the report never uses the
+// complexity-weighted ranking).
+type CouplingResult struct {
+	Window     HistoryWindow
+	Pairs      []CouplingPairRow
+	TotalPairs int
+	Available  bool
+}
+
+// CouplingPairRow is one file pair. Public so report consumers don't depend on
+// the private CouplingCount type.
+type CouplingPairRow struct {
+	FileA  string
+	FileB  string
+	Shared int
+	Degree float64
+}
+
 // AuthorsResult mirrors the data the authors tabular formatter consumes. The
 // Sentinel pseudo-row (`(before window)`) is included in Rows; consumers
 // filter or call it out separately.
@@ -233,6 +253,7 @@ type ReportData struct {
 	ULOC             *ULOCResult
 	LineLength       *LineLengthResult
 	Hotspots         *HotspotsResult
+	Coupling         *CouplingResult
 	Authors          *AuthorsResult
 	LanguageTimeline *LangTimelineResult
 	AuthorTimeline   *AuthorTimelineResult
@@ -255,16 +276,18 @@ type ReportData struct {
 // invocation; we snapshot and restore via defer so panics, errors, or
 // in-process re-entrancy don't leak state into a later scc call.
 type reportFlagState struct {
-	UlocMode bool
-	MaxMean  bool
-	Files    bool
+	UlocMode         bool
+	MaxMean          bool
+	Files            bool
+	CouplingWeighted bool
 }
 
 func saveReportFlags() reportFlagState {
 	return reportFlagState{
-		UlocMode: UlocMode,
-		MaxMean:  MaxMean,
-		Files:    Files,
+		UlocMode:         UlocMode,
+		MaxMean:          MaxMean,
+		Files:            Files,
+		CouplingWeighted: CouplingWeighted,
 	}
 }
 
@@ -272,6 +295,7 @@ func (s reportFlagState) restore() {
 	UlocMode = s.UlocMode
 	MaxMean = s.MaxMean
 	Files = s.Files
+	CouplingWeighted = s.CouplingWeighted
 }
 
 // CollectReportData orchestrates the full scc analysis surface for one
@@ -331,6 +355,10 @@ func CollectReportData(path string) (ReportData, error) {
 		data.LineLength = bucketLineLengths(files)
 	}
 
+	// The report always shows raw co-change coupling, never the opt-in
+	// complexity-weighted ranking. saved.restore() puts the flag back on exit.
+	CouplingWeighted = false
+
 	if gitAvailable {
 		if !ReportSkipped("hotspots") {
 			obs := newHotspotsObserver()
@@ -338,6 +366,14 @@ func CollectReportData(path string) (ReportData, error) {
 				data.Hotspots = hotspotsResultFromObserver(obs, window)
 			} else {
 				printWarnF("report: hotspots observer failed: %s", err)
+			}
+		}
+		if !ReportSkipped("coupling") {
+			obs := newCouplingObserver()
+			if window, err := runHistory(path, obs); err == nil {
+				data.Coupling = couplingResultFromObserver(obs, window)
+			} else {
+				printWarnF("report: coupling observer failed: %s", err)
 			}
 		}
 		if !ReportSkipped("authors") {
@@ -726,6 +762,24 @@ func hotspotsResultFromObserver(o *hotspotsObserver, window HistoryWindow) *Hots
 			CodeChurn:    r.CodeChurn,
 			CommentChurn: r.CommentChurn,
 			Score:        r.Score,
+		})
+	}
+	return res
+}
+
+func couplingResultFromObserver(o *couplingObserver, window HistoryWindow) *CouplingResult {
+	res := &CouplingResult{
+		Window:     window,
+		TotalPairs: o.totalPairs,
+		Available:  true,
+	}
+	res.Pairs = make([]CouplingPairRow, 0, len(o.pairs))
+	for _, p := range o.pairs {
+		res.Pairs = append(res.Pairs, CouplingPairRow{
+			FileA:  p.A,
+			FileB:  p.B,
+			Shared: p.Shared,
+			Degree: p.Degree(),
 		})
 	}
 	return res
