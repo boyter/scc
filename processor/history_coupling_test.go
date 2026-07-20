@@ -5,6 +5,7 @@ package processor
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -291,5 +292,58 @@ func TestCouplingDropsFilesAbsentFromHead(t *testing.T) {
 
 	if len(o.pairs) != 0 {
 		t.Errorf("pair referencing a deleted file should be dropped, got %+v", o.pairs)
+	}
+}
+
+// resolveCouplingTarget's error must be context-neutral: it names the path, not
+// any CLI flag, so an MCP client (which passed a `file` argument and has never
+// seen the flag) gets a message that reads correctly. The CLI re-attaches the
+// flag name at its own call site.
+func TestResolveCouplingTargetMissIsFlagNeutral(t *testing.T) {
+	repo := makeFixtureRepo(t, []map[string]string{
+		{"processor/workers.go": "package processor\n// v0\n", "main.go": "package main\n// v0\n"},
+	})
+
+	_, err := resolveCouplingTarget(repo, "processor/wokers.go")
+	if err == nil {
+		t.Fatal("expected an error for a path not in HEAD, got nil")
+	}
+	msg := err.Error()
+	if !strings.Contains(msg, "not in HEAD") {
+		t.Errorf("error = %q, want it to mention the target is not in HEAD", msg)
+	}
+	if strings.Contains(msg, "--") {
+		t.Errorf("error = %q, want no CLI flag names in the neutral core error", msg)
+	}
+	// A basename typo (wokers vs workers) changes the basename, so the
+	// same-basename suggestion heuristic does not fire — no suggestion here.
+	if strings.Contains(msg, "did you mean") {
+		t.Errorf("error = %q, did not expect a suggestion for a basename typo", msg)
+	}
+}
+
+// Suggestions are built inside resolveCouplingTarget, so they reach every caller
+// — CLI and MCP alike. A same-basename file in another directory triggers the
+// "did you mean" hint; this asserts it is present in the returned error itself
+// (not only in CLI-side rendering).
+func TestResolveCouplingTargetSuggestsSameBasename(t *testing.T) {
+	repo := makeFixtureRepo(t, []map[string]string{
+		{"processor/workers.go": "package processor\n// v0\n", "main.go": "package main\n// v0\n"},
+	})
+
+	// Right basename, wrong directory — the heuristic matches on basename.
+	_, err := resolveCouplingTarget(repo, "workers.go")
+	if err == nil {
+		t.Fatal("expected an error for a path not in HEAD, got nil")
+	}
+	msg := err.Error()
+	if !strings.Contains(msg, "did you mean") {
+		t.Fatalf("error = %q, want a did-you-mean suggestion", msg)
+	}
+	if !strings.Contains(msg, "processor/workers.go") {
+		t.Errorf("error = %q, want it to suggest processor/workers.go", msg)
+	}
+	if strings.Contains(msg, "--") {
+		t.Errorf("error = %q, want no CLI flag names in the neutral core error", msg)
 	}
 }

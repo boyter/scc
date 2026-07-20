@@ -410,9 +410,13 @@ func couplingTargetCandidates(repoRoot, target string) []string {
 	return out
 }
 
-// couplingTargetMiss builds the error for a --coupling-for path that matched
-// nothing in HEAD, offering same-basename files as suggestions. Only ever runs
-// on the failure path, so walking the tree here costs nothing in the happy case.
+// couplingTargetMiss builds the error for a target path that matched nothing in
+// HEAD, offering same-basename files as suggestions. The message is context
+// neutral — it names the path, not any CLI flag — so it reads correctly whether
+// surfaced through the CLI (which re-wraps it with the flag name at its call
+// site) or an MCP client (which passed a `file` argument and has never seen the
+// flag). Only ever runs on the failure path, so walking the tree here costs
+// nothing in the happy case.
 func couplingTargetMiss(tree *object.Tree, target string) error {
 	base := path.Base(path.Clean(filepath.ToSlash(target)))
 	var matches []string
@@ -427,13 +431,13 @@ func couplingTargetMiss(tree *object.Tree, target string) error {
 		return nil
 	})
 	if err != nil && !errors.Is(err, errStopTreeWalk) {
-		return fmt.Errorf("--coupling-for %q is not in HEAD (deleted, ignored, or path typo)", target)
+		return fmt.Errorf("target %q is not in HEAD (deleted, ignored, or path typo)", target)
 	}
 	if len(matches) > 0 {
-		return fmt.Errorf("--coupling-for %q is not in HEAD; did you mean:\n  %s",
+		return fmt.Errorf("target %q is not in HEAD; did you mean:\n  %s",
 			target, strings.Join(matches, "\n  "))
 	}
-	return fmt.Errorf("--coupling-for %q is not in HEAD (deleted, ignored, or path typo)", target)
+	return fmt.Errorf("target %q is not in HEAD (deleted, ignored, or path typo)", target)
 }
 
 // resolveCouplingTarget maps a user-supplied --coupling-for path onto the
@@ -489,7 +493,10 @@ func runCouplingReport(repoPath string) error {
 	if CouplingFor != "" {
 		resolved, err := resolveCouplingTarget(repoPath, CouplingFor)
 		if err != nil {
-			return err
+			// resolveCouplingTarget's errors are context-neutral (they name the
+			// path, not the flag). On the CLI we know the invocation came from
+			// --coupling-for, so re-attach the flag name for the user.
+			return fmt.Errorf("--coupling-for: %w", err)
 		}
 		target = resolved
 	}
