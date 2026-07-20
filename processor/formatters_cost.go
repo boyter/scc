@@ -3,7 +3,6 @@
 package processor
 
 import (
-	"fmt"
 	"math"
 	"os"
 	"strings"
@@ -134,6 +133,8 @@ func calculateLocomo(sumCode, sumComplexity int64, str *strings.Builder) {
 
 func calculateSize(sumBytes int64, str *strings.Builder) {
 
+	p := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
+
 	var size float64
 
 	switch strings.ToLower(SizeUnit) {
@@ -151,7 +152,7 @@ func calculateSize(sumBytes int64, str *strings.Builder) {
 		size = float64(sumBytes) / (1012 * 1012)
 	case "xkcd-imaginary":
 		str.WriteString("used in quantum computing\n")
-		_, _ = fmt.Fprintf(str, "Processed %d bytes, %s megabytes (%s)\n", sumBytes, `¯\_(ツ)_/¯`, strings.ToUpper(SizeUnit))
+		_, _ = p.Fprintf(str, "Processed %d bytes, %s megabytes (%s)\n", sumBytes, `¯\_(ツ)_/¯`, strings.ToUpper(SizeUnit))
 	case "xkcd-intel":
 		str.WriteString("calculated on pentium F.P.U.\n")
 		size = float64(sumBytes) / (1023.937528 * 1023.937528)
@@ -173,7 +174,7 @@ func calculateSize(sumBytes int64, str *strings.Builder) {
 	}
 
 	if !strings.EqualFold(SizeUnit, "xkcd-imaginary") {
-		_, _ = fmt.Fprintf(str, "Processed %d bytes, %.3f megabytes (%s)\n", sumBytes, size, strings.ToUpper(SizeUnit))
+		_, _ = p.Fprintf(str, "Processed %d bytes, %.3f megabytes (%s)\n", sumBytes, size, strings.ToUpper(SizeUnit))
 	}
 }
 

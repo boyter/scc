@@ -19,6 +19,24 @@ func TestDetectLanguage(t *testing.T) {
 	AllowListExtensions = []string{}
 }
 
+func TestDetectLanguageMojoExtensions(t *testing.T) {
+	ProcessConstants()
+
+	tests := map[string]string{
+		"example.mojo": "mojo",
+		"example.🔥":    "🔥",
+	}
+	for filename, wantExtension := range tests {
+		possible, extension := DetectLanguage(filename)
+		if extension != wantExtension {
+			t.Errorf("DetectLanguage(%q) extension = %q, want %q", filename, extension, wantExtension)
+		}
+		if !slices.Contains(possible, "Mojo") {
+			t.Errorf("DetectLanguage(%q) languages = %v, want Mojo", filename, possible)
+		}
+	}
+}
+
 func TestDetectSheBangEmpty(t *testing.T) {
 	ProcessConstants()
 

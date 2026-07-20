@@ -128,7 +128,7 @@ Go to the directory you want to run scc from.
 Run the command below to run the latest release of scc on your current working directory:
 
 ```bash
-docker run --rm -it -v "$PWD:/pwd"  ghcr.io/boyter/scc:master scc /pwd
+docker run --rm -it -v "$PWD:/pwd:ro" --network none ghcr.io/boyter/scc:master scc /pwd
 ```
 
 #### Manual
@@ -261,7 +261,7 @@ features listed below may be missing from your installation.
 ```text
 $ scc -h
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 3.8.0 (beta)
+Version 4.0.0 (beta)
 Ben Boyter <ben@boyter.org> + Contributors
 
 Usage:
@@ -295,6 +295,10 @@ Examples:
     scc --report
     scc --report=out.html --report-title "myrepo" --report-skip cocomo
 
+  Use a project config file (./.sccconfig) or a global one (precedence: global < project < CLI):
+    export SCC_CONFIG_PATH=~/.sccconfig
+    scc --config team.sccconfig
+
 Flags:
       --avg-wage int                        average wage value used for basic COCOMO calculation (default 56286)
       --binary                              disable binary file detection
@@ -304,6 +308,8 @@ Flags:
   -m, --character                           calculate max and mean characters per line
       --ci                                  enable CI output settings where stdout is ASCII
       --cocomo-project-type string          change COCOMO model type [organic, semi-detached, embedded, "custom,1,1,1,1"] (default "organic")
+      --cognitive                           calculate cognitive (nesting-weighted) complexity
+      --config string                       load this file as the global config source; overrides SCC_CONFIG_PATH, honored even with --no-config
       --cost-comparison                     show both COCOMO and LOCOMO estimates side by side
       --count-as string                     count extension as language [e.g. jsp:htm,chead:"C Header" maps extension jsp to html and chead to C Header]
       --count-as-pattern stringArray        count files matching a path pattern as a new named category backed by a base language [repeatable; pattern is glob by default, prefix with re: for regex; e.g. *_spec.rb:"Ruby Spec":Ruby or re:\.test\.js$:"JavaScript Tests":JavaScript]
@@ -321,6 +327,7 @@ Flags:
       --file-list-queue-size int            the size of the queue of files found and ready to be read into memory (default 8)
       --file-process-job-workers int        number of goroutine workers that process files collecting stats (default 8)
       --file-summary-job-queue-size int     the size of the queue used to hold processed file statistics before formatting (default 8)
+      --find-root-config                    discover the project .sccconfig by walking up to the repository root instead of using ./.sccconfig
   -f, --format string                       set output format [tabular, wide, json, json2, csv, csv-stream, cloc-yaml, html, html-table, sql, sql-insert, openmetrics] (default "tabular")
       --format-multi string                 have multiple format output overriding --format [e.g. tabular:stdout,csv:file.csv,json:file.json]
       --gen                                 identify generated files
@@ -347,6 +354,7 @@ Flags:
       --min-gen-line-length int             number of bytes per average line for file to be considered minified or generated (default 255)
       --no-cocomo                           remove COCOMO calculation output
   -c, --no-complexity                       skip calculation of code complexity
+      --no-config                           disable auto-discovery of the SCC_CONFIG_PATH global and the project ./.sccconfig config
   -d, --no-duplicates                       remove duplicate files from stats and output
       --no-fold-authors                     disable the name+email-domain identity folding fallback for git author reports (mailmap still applied)
       --no-gen                              ignore generated files in output (implies --gen)
@@ -463,16 +471,16 @@ everything supplied with `--ignore-file`.
 
 If you want to apply your global git excludes file, point `--ignore-file` at it directly (for example 
 `--ignore-file ~/.config/git/ignore`). `scc` deliberately does not shell out to `git` to discover it for you, but you 
-can make it automatic by putting the flag in a `.scc` configuration file and pointing the `SCC_CONFIG_PATH` environment 
+can make it automatic by putting the flag in a `.sccconfig` configuration file and pointing the `SCC_CONFIG_PATH` environment 
 variable at it, so every run picks it up without typing:
 
 ```
-# ~/.config/scc/global.scc
+# ~/.config/scc/global.sccconfig
 --ignore-file /home/me/.config/git/ignore
 ```
 
 ```
-export SCC_CONFIG_PATH=~/.config/scc/global.scc
+export SCC_CONFIG_PATH=~/.config/scc/global.sccconfig
 scc   # now applies your global ignore on every run
 ```
 
@@ -493,7 +501,7 @@ Format rules:
 - Backslash is an ordinary literal, not an escape character, so a Windows path such as `--exclude-dir C:\build\out` survives verbatim.
 - A line whose first token does not start with `-` (a bare positional such as `src/`) is skipped with a warning, so a config file cannot inject extra count targets.
 
-Example `.scc`:
+Example `.sccconfig`:
 
 ```
 # count the way I like it
@@ -507,9 +515,9 @@ Example `.scc`:
 There are two configuration tiers:
 
 - **Global** — there is no fixed default location and no per-run home-directory stat. The global source is consulted only when set explicitly via the `SCC_CONFIG_PATH` environment variable or the `--config <path>` flag. `--config` which overrides `SCC_CONFIG_PATH`.
-- **Project** — a file named `.scc` in the current working directory (`./.scc`), found with a single stat and **no walk-up**. `cd project && scc` picks up `project/.scc`; running `scc` from a subdirectory does **not** pick up an ancestor's `.scc`. Path arguments do not move the anchor — `scc ./project` still reads `./.scc`, not `./project/.scc`.
+- **Project** — a file named `.sccconfig` in the current working directory (`./.sccconfig`), found with a single stat and **no walk-up**. `cd project && scc` picks up `project/.sccconfig`; running `scc` from a subdirectory does **not** pick up an ancestor's `.sccconfig`. Path arguments do not move the anchor — `scc ./project` still reads `./.sccconfig`, not `./project/.sccconfig`.
 
-To read the repository root's `.scc` from a subdirectory, pass `--find-root-config`, which walks back from the current directory to the git/hg root. It is off by default and affects config discovery only - it changes which `.scc` is read, not which directory is counted. Outside a repository it degrades to `./.scc`.
+To read the repository root's `.sccconfig` from a subdirectory, pass `--find-root-config`, which walks back from the current directory to the git/hg root. It is off by default and affects config discovery only - it changes which `.sccconfig` is read, not which directory is counted. Outside a repository it degrades to `./.sccconfig`.
 
 #### Precedence
 
@@ -523,27 +531,27 @@ CLI:    --exclude-dir dist
 result: vendor, dist
 ```
 
-The three slice flags that ship with built-in defaults — `--exclude-dir` (`.git`, `.hg`, `.svn`), `--exclude-file` (the lockfile set) and `--generated-markers` — keep those defaults as a non-removable safety net: a config or CLI value is *added* to the defaults rather than replacing them, so putting `vendor` in `.scc` never stops `scc` skipping `.git`.
+The three slice flags that ship with built-in defaults — `--exclude-dir` (`.git`, `.hg`, `.svn`), `--exclude-file` (the lockfile set) and `--generated-markers` — keep those defaults as a non-removable safety net: a config or CLI value is *added* to the defaults rather than replacing them, so putting `vendor` in `.sccconfig` never stops `scc` skipping `.git`.
 
 #### Config can never write a file
 
-A configuration file can change how `scc` counts and formats, including selecting a stdout format such as `--format json`, but it can **never** cause `scc` to write a file. The file-output flags — `--output` / `-o`, `--report` and `--format-multi` — are honoured only from the command line; the same flags supplied by config are ignored (output goes to stdout, the default). This is because a project `.scc` is auto-discovered, so a cloned repository could otherwise silently overwrite one of your files. Only the command line can make `scc` write to disk.
+A configuration file can change how `scc` counts and formats, including selecting a stdout format such as `--format json`, but it can **never** cause `scc` to write a file. The file-output flags — `--output` / `-o`, `--report` and `--format-multi` — are honoured only from the command line; the same flags supplied by config are ignored (output goes to stdout, the default). This is because a project `.sccconfig` is auto-discovered, so a cloned repository could otherwise silently overwrite one of your files. Only the command line can make `scc` write to disk.
 
 #### Control flags
 
 | Flag | Effect |
 |------|--------|
-| `--no-config` | Disable auto-discovery: skip the `SCC_CONFIG_PATH` global and the project `.scc`. |
+| `--no-config` | Disable auto-discovery: skip the `SCC_CONFIG_PATH` global and the project `.sccconfig`. |
 | `--config <path>` | Load this file as the global source. Always honoured, even with `--no-config`; overrides `SCC_CONFIG_PATH`. |
-| `--find-root-config` | Discover the project `.scc` by walking up to the repository root instead of using `./.scc`. No-op under `--no-config`. |
+| `--find-root-config` | Discover the project `.sccconfig` by walking up to the repository root instead of using `./.sccconfig`. No-op under `--no-config`. |
 
-`--config test.scc --no-config` loads exactly `test.scc` and nothing else — a clean isolated-config mode. A `--config` or `--no-config` written *inside* a config file is inert (a config file cannot chain-load another config file).
+`--config test.sccconfig --no-config` loads exactly `test.sccconfig` and nothing else — a clean isolated-config mode. A `--config` or `--no-config` written *inside* a config file is inert (a config file cannot chain-load another config file).
 
 #### The `@file` argument bundle
 
 `scc @flags.txt` expands the contents of `flags.txt` as if its lines had been typed on the command line. It uses the same opts-list tokenizer as config files (comments, quotes, backslash-literal), but unlike config files it **keeps positional paths** and **may write files** — an `@file` is an explicit, user-supplied argument bundle equivalent to typing the flags, so it is trusted like the command line (including a `--config` inside it being honoured). `@file` expansion fires only when `@file` is the sole argument.
 
-Note that because config discovery now runs on the post-`@file` arguments, `scc @flags.txt` in a directory containing `./.scc` loads **both** — the `@file` tokens sit above the config in precedence. To get the old "exactly these args, nothing else" behaviour, add `--no-config`.
+Note that because config discovery now runs on the post-`@file` arguments, `scc @flags.txt` in a directory containing `./.sccconfig` loads **both** — the `@file` tokens sit above the config in precedence. To get the old "exactly these args, nothing else" behaviour, add `--no-config`.
 
 ### Interesting Use Cases
 

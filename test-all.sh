@@ -465,15 +465,15 @@ else
 fi
 rm -rf "$tmp"
 
-# project .scc discovery + CLI precedence (global < project < CLI)
+# project .sccconfig discovery + CLI precedence (global < project < CLI)
 tmp=$(mktemp -d)
 echo 'package main' > "$tmp/main.go"
-printf -- '--format csv\n' > "$tmp/.scc"
+printf -- '--format csv\n' > "$tmp/.sccconfig"
 if (cd "$tmp" && "$SCC_BIN") | grep -q "Language,Lines,Code"; then
-    echo -e "${GREEN}PASSED project .scc discovery test"
+    echo -e "${GREEN}PASSED project .sccconfig discovery test"
 else
     echo -e "${RED}======================================================="
-    echo -e "FAILED project ./.scc should be auto-discovered and applied"
+    echo -e "FAILED project ./.sccconfig should be auto-discovered and applied"
     echo -e "=======================================================${NC}"
     rm -rf "$tmp"
     exit

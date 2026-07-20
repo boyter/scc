@@ -77,6 +77,7 @@ type HeadFile struct {
 	Path       string
 	Language   string
 	Complexity int64
+	Cognitive  int64 // nesting-weighted complexity; zero unless the Cognitive global is on
 }
 
 // HeadSnapshot is the set of files in HEAD, keyed by path.
@@ -449,6 +450,7 @@ func buildHeadSnapshot(headCommit *object.Commit, ignore *historyIgnore, cache *
 			Path:       f.Name,
 			Language:   res.language,
 			Complexity: res.complexity,
+			Cognitive:  res.cognitive,
 		}
 		return nil
 	})
@@ -688,11 +690,13 @@ func readBlob(tree *object.Tree, entry *object.TreeEntry) ([]byte, error) {
 // blob hash. ok=false means the classifier rejected the blob (binary, no
 // language); the vectors are nil in that case.
 type blobClassifyResult struct {
-	language    string
-	complexity  int64
-	lineTypes   []LineType
-	complexLine []int
-	ok          bool
+	language      string
+	complexity    int64
+	cognitive     int64 // nesting-weighted complexity; zero unless the Cognitive global is on
+	lineTypes     []LineType
+	complexLine   []int
+	cognitiveLine []int // 1-based lines that accrued cognitive weight; nil unless Cognitive is on
+	ok            bool
 }
 
 // blobClassifyCache memoises classifyHistoryBlob output keyed by blob hash so
@@ -721,8 +725,10 @@ func (c *blobClassifyCache) classify(hash plumbing.Hash, path string, blob []byt
 	if ok {
 		res.language = job.Language
 		res.complexity = job.Complexity
+		res.cognitive = job.Cognitive
 		res.lineTypes = lineTypes
 		res.complexLine = complexityLineNumbers(job)
+		res.cognitiveLine = cognitiveLineNumbers(job)
 	}
 	if c != nil {
 		c.entries[hash] = res
@@ -783,6 +789,20 @@ func complexityLineNumbers(job *FileJob) []int {
 	out := make([]int, 0)
 	for i, count := range job.ComplexityLine {
 		if count > 0 {
+			out = append(out, i+1)
+		}
+	}
+	return out
+}
+
+// cognitiveLineNumbers returns the 1-based line numbers in job that accrued
+// cognitive weight. Mirrors complexityLineNumbers for the cognitive per-line
+// array; returns an empty slice when cognitive tracking is off (CognitiveLine
+// nil), so callers get the same shape either way.
+func cognitiveLineNumbers(job *FileJob) []int {
+	out := make([]int, 0)
+	for i, weight := range job.CognitiveLine {
+		if weight > 0 {
 			out = append(out, i+1)
 		}
 	}

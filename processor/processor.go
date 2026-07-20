@@ -68,6 +68,9 @@ var IgnoreGenerated = false
 // Complexity toggles complexity calculation
 var Complexity = false
 
+// Cognitive toggles cognitive (nesting-weighted) complexity calculation
+var Cognitive = false
+
 // More enables wider output with more information in formatter
 var More = false
 
@@ -750,15 +753,21 @@ func processLanguageFeature(name string, value Language) {
 	// Compile any regex heuristics used to disambiguate shared extensions such
 	// as .h between C / C++ / Objective-C. The patterns are validated at
 	// generation time (scripts/include.go) so MustCompile is safe here, but we
-	// guard with Compile anyway to honour the no-panics policy.
-	heuristics := make([]*regexp.Regexp, 0, len(value.Heuristics))
+	// guard with Compile anyway to honour the no-panics policy. Each pattern's
+	// necessary literals are pre-converted to bytes so guessByHeuristics can
+	// cheaply skip running the regex when none of them appear in the content.
+	heuristics := make([]CompiledHeuristic, 0, len(value.Heuristics))
 	for _, v := range value.Heuristics {
-		re, err := regexp.Compile(v)
+		re, err := regexp.Compile(v.Pattern)
 		if err != nil {
-			printWarnF("failed to compile heuristic %q for language %s: %v", v, name, err)
+			printWarnF("failed to compile heuristic %q for language %s: %v", v.Pattern, name, err)
 			continue
 		}
-		heuristics = append(heuristics, re)
+		literals := make([][]byte, 0, len(v.Literals))
+		for _, l := range v.Literals {
+			literals = append(literals, []byte(l))
+		}
+		heuristics = append(heuristics, CompiledHeuristic{Re: re, Literals: literals, Anchored: v.Anchored})
 	}
 
 	LanguageFeaturesMutex.Lock()
@@ -834,6 +843,15 @@ func processFlags() {
 	// If complexity was disabled via --no-complexity, force it back on.
 	if Locomo && Complexity {
 		Complexity = false
+	}
+
+	// Cognitive complexity is derived from the complexity tokens, so it needs
+	// complexity counting enabled. Complexity is a disable switch, so force it
+	// off (i.e. enable counting) even when --no-complexity was passed; cognitive
+	// wins. Warn only when the user explicitly asked for both.
+	if Cognitive && Complexity {
+		Complexity = false
+		printWarn("--no-complexity ignored because --cognitive requires complexity counting")
 	}
 
 	printDebugF("Average Wage: %d", AverageWage)

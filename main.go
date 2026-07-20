@@ -83,7 +83,7 @@ func main() {
 	// the hidden __complete / __completeNoDesc commands on every TAB, and the
 	// user-facing `completion` command generates the scripts; both key on the
 	// subcommand sitting in args[0]. Prepending discovered config tokens would
-	// shift it and break dynamic completion in any directory containing a ./.scc.
+	// shift it and break dynamic completion in any directory containing a ./.sccconfig.
 	// Config never influences completion output anyway, so skip discovery for it.
 	var globalTokens, projectTokens []string
 	if !isCompletionInvocation(os.Args) {
@@ -157,9 +157,9 @@ func main() {
     scc --report
     scc --report=out.html --report-title "myrepo" --report-skip cocomo
 
-  Use a project config file (./.scc) or a global one (precedence: global < project < CLI):
-    export SCC_CONFIG_PATH=~/.scc
-    scc --config team.scc`,
+  Use a project config file (./.sccconfig) or a global one (precedence: global < project < CLI):
+    export SCC_CONFIG_PATH=~/.sccconfig
+    scc --config team.sccconfig`,
 		Version: processor.Version,
 		Run: func(cmd *cobra.Command, args []string) {
 			processor.DirFilePaths = args
@@ -201,7 +201,7 @@ func main() {
 
 	// If invoked in the format of "scc completion --shell [name of shell]", generate command line completions instead.
 	// With the --shell option, unintentionally triggering shell completions should be highly unlikely. This reads the
-	// genuine os.Args (config tokens are handed to cobra via SetArgs below, never prepended into os.Args), so a ./.scc
+	// genuine os.Args (config tokens are handed to cobra via SetArgs below, never prepended into os.Args), so a ./.sccconfig
 	// in the working directory cannot shift args[1] and break completion.
 	args := os.Args
 	if len(args) == 4 && args[1] == "completion" && args[2] == "--shell" {

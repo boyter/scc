@@ -8,7 +8,14 @@ import (
 	"regexp"
 	"slices"
 	"sync"
+
+	jsoniter "github.com/json-iterator/go"
 )
+
+// cognitiveJSON is the marshaler used by the FileJob / LanguageSummary
+// MarshalJSON hooks. Matched to the one formatters_json.go uses so nested
+// marshaling produces byte-identical output.
+var cognitiveJSON = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // Used by trie structure to store the types
 const (
@@ -37,21 +44,40 @@ type Quote struct {
 	DocString    bool   `json:"docString"`    // To enable docstring check for Python where "If the triple quote string starts following a newline with only white-space characters in front and ends followed by only a newline or white-space characters it is a comment" https://github.com/boyter/scc/issues/62
 }
 
+// Heuristic is a regex pattern used to disambiguate shared file extensions (for
+// example .h between C / C++ / Objective-C) along with a cheap set of necessary
+// string literals. The expensive regex is only run when one of Literals is
+// present in the content, which is a fast reject for the overwhelmingly common
+// case where the file is not the language being guessed. See guessByHeuristics.
+type Heuristic struct {
+	// Pattern is the regex evaluated against the file content.
+	Pattern string `json:"pattern"`
+	// Literals is the set of substrings of which at least one must be present
+	// (case sensitive) for Pattern to have any chance of matching. When empty
+	// the regex is always run, so a pattern is never silently disabled.
+	Literals []string `json:"literals"`
+	// Anchored, when true, requires each literal to sit at the start of a line
+	// preceded only by spaces or tabs. This mirrors the (?m)^[ \t]* prefix used
+	// by the keyword patterns and avoids false positives such as the substring
+	// "entry" satisfying a check for the "try" keyword.
+	Anchored bool `json:"anchored"`
+}
+
 // Language is a struct which contains the values for each language stored in languages.json
 type Language struct {
-	LineComment                     []string   `json:"line_comment"`
-	ComplexityChecks                []string   `json:"complexitychecks"`
-	ComplexityChecksPostfix         []string   `json:"complexitychecks_postfix"`
-	ComplexityChecksPostfixExcludes []string   `json:"complexitychecks_postfix_excludes"`
-	Extensions                      []string   `json:"extensions"`
-	MultiLine                       [][]string `json:"multi_line"`
-	Quotes                          []Quote    `json:"quotes"`
-	Keywords                        []string   `json:"keywords"`
-	Heuristics                      []string   `json:"heuristics"`
-	FileNames                       []string   `json:"filenames"`
-	SheBangs                        []string   `json:"shebangs"`
-	ExtensionFile                   bool       `json:"extensionFile"`
-	NestedMultiLine                 bool       `json:"nestedmultiline"`
+	LineComment                     []string    `json:"line_comment"`
+	ComplexityChecks                []string    `json:"complexitychecks"`
+	ComplexityChecksPostfix         []string    `json:"complexitychecks_postfix"`
+	ComplexityChecksPostfixExcludes []string    `json:"complexitychecks_postfix_excludes"`
+	Extensions                      []string    `json:"extensions"`
+	MultiLine                       [][]string  `json:"multi_line"`
+	Quotes                          []Quote     `json:"quotes"`
+	Keywords                        []string    `json:"keywords"`
+	Heuristics                      []Heuristic `json:"heuristics"`
+	FileNames                       []string    `json:"filenames"`
+	SheBangs                        []string    `json:"shebangs"`
+	ExtensionFile                   bool        `json:"extensionFile"`
+	NestedMultiLine                 bool        `json:"nestedmultiline"`
 }
 
 // LanguageFeature is a struct which represents the conversion from Language into what is used for matching
@@ -72,8 +98,16 @@ type LanguageFeature struct {
 	ProcessMask           byte
 	Keywords              []string
 	KeywordBytes          [][]byte
-	Heuristics            []*regexp.Regexp
+	Heuristics            []CompiledHeuristic
 	Quotes                []Quote
+}
+
+// CompiledHeuristic is the runtime form of a Heuristic with its regex compiled
+// and its literals pre-converted to bytes for matching.
+type CompiledHeuristic struct {
+	Re       *regexp.Regexp
+	Literals [][]byte
+	Anchored bool
 }
 
 // FileJobCallback is an interface that FileJobs can implement to get a per line callback with the line type
@@ -97,7 +131,9 @@ type FileJob struct {
 	Comment              int64
 	Blank                int64
 	Complexity           int64
+	Cognitive            int64   // nesting-weighted complexity; JSON emission is gated on the Cognitive global via MarshalJSON
 	ComplexityLine       []int64 `json:"-"`
+	CognitiveLine        []int64 `json:"-"` // per-line cognitive weight; populated only when TrackComplexityLines and Cognitive are both enabled
 	WeightedComplexity   float64
 	Hash                 hash.Hash
 	Callback             FileJobCallback `json:"-"`
@@ -110,6 +146,28 @@ type FileJob struct {
 	ClassifyContent      bool   `json:"-"` // When true, CountStats populates ContentByteType
 	ContentByteType      []byte `json:"-"` // Per-byte classification, allocated by CountStats when ClassifyContent is true
 	TrackComplexityLines bool   `json:"-"` // When true, CountStats populates ComplexityLine
+	cognitiveNesting     int    // transient per-line nesting level used during CountStats when Cognitive is enabled
+}
+
+// MarshalJSON emits FileJob with the Cognitive field present (even when 0) while
+// the Cognitive global is on, and omitted entirely when it is off. A static
+// `omitempty` tag cannot express this because it would also drop a legitimately
+// zero cognitive value on a branch-free file while the metric is active. The
+// unexported alias type carries the same field tags but none of the methods, so
+// marshaling it does not recurse.
+func (fileJob *FileJob) MarshalJSON() ([]byte, error) {
+	type alias FileJob
+	if Cognitive {
+		return cognitiveJSON.Marshal((*alias)(fileJob))
+	}
+	// Shadow the promoted Cognitive with a zero-valued omitempty field of the
+	// same JSON name: the shallower field wins the name, then omitempty drops
+	// it, so the key is absent. (A json:"-" shadow would be removed before
+	// conflict resolution, letting the embedded field resurface.)
+	return cognitiveJSON.Marshal(struct {
+		*alias
+		Cognitive int64 `json:"Cognitive,omitempty"`
+	}{alias: (*alias)(fileJob)})
 }
 
 // FilterContentByType returns a copy of Content with bytes not matching any of
@@ -146,6 +204,7 @@ type LanguageSummary struct {
 	Comment            int64
 	Blank              int64
 	Complexity         int64
+	Cognitive          int64 // nesting-weighted complexity; JSON emission is gated on the Cognitive global via MarshalJSON
 	Count              int64
 	WeightedComplexity float64
 	Files              []*FileJob
@@ -158,6 +217,20 @@ type LanguageSummary struct {
 	ComplexityPercent  *float64 `json:",omitempty"`
 	BytePercent        *float64 `json:",omitempty"`
 	FilePercent        *float64 `json:",omitempty"`
+}
+
+// MarshalJSON gates the language-level Cognitive field on the Cognitive global,
+// mirroring FileJob.MarshalJSON: present (even at 0) when the metric is on,
+// omitted when off. See FileJob.MarshalJSON for the rationale.
+func (l LanguageSummary) MarshalJSON() ([]byte, error) {
+	type alias LanguageSummary
+	if Cognitive {
+		return cognitiveJSON.Marshal(alias(l))
+	}
+	return cognitiveJSON.Marshal(struct {
+		alias
+		Cognitive int64 `json:"Cognitive,omitempty"`
+	}{alias: alias(l)})
 }
 
 // OpenClose is used to hold an open/close pair for matching such as multi line comments

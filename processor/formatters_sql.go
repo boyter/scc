@@ -27,12 +27,21 @@ func toSqlInsert(input chan *FileJob) string {
 
 		dir, _ := filepath.Split(res.Location)
 
-		_, _ = fmt.Fprintf(str, "\ninsert into t values('%s', '%s', '%s', '%s', '%s', %d, %d, %d, %d, %d, %d);",
-			escapeSQLString(projectName),
-			escapeSQLString(res.Language),
-			escapeSQLString(res.Location),
-			escapeSQLString(dir),
-			escapeSQLString(res.Filename), res.Bytes, res.Blank, res.Comment, res.Code, res.Complexity, res.Uloc)
+		if Cognitive {
+			_, _ = fmt.Fprintf(str, "\ninsert into t values('%s', '%s', '%s', '%s', '%s', %d, %d, %d, %d, %d, %d, %d);",
+				escapeSQLString(projectName),
+				escapeSQLString(res.Language),
+				escapeSQLString(res.Location),
+				escapeSQLString(dir),
+				escapeSQLString(res.Filename), res.Bytes, res.Blank, res.Comment, res.Code, res.Complexity, res.Uloc, res.Cognitive)
+		} else {
+			_, _ = fmt.Fprintf(str, "\ninsert into t values('%s', '%s', '%s', '%s', '%s', %d, %d, %d, %d, %d, %d);",
+				escapeSQLString(projectName),
+				escapeSQLString(res.Language),
+				escapeSQLString(res.Location),
+				escapeSQLString(dir),
+				escapeSQLString(res.Filename), res.Bytes, res.Blank, res.Comment, res.Code, res.Complexity, res.Uloc)
+		}
 
 		// every 1000 files commit and start a new transaction to avoid overloading
 		if count == 1000 {
@@ -119,7 +128,12 @@ create table t        (
              nComment      integer,
              nCode         integer,
              nComplexity   integer,
-             nUloc         integer    
+             nUloc         integer    `)
+	if Cognitive {
+		str.WriteString(`,
+             nCognitive    integer    `)
+	}
+	str.WriteString(`
 );`)
 
 	str.WriteString(toSqlInsert(input))

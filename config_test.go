@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/boyter/scc/v3/processor"
 	"github.com/spf13/pflag"
 )
 
@@ -151,8 +152,8 @@ func TestPreScanConfig(t *testing.T) {
 		{name: "no -r shorthand", args: []string{"scc", "-r"}},
 		{name: "-r no longer clusters into find-root", args: []string{"scc", "-rv"}},
 		{name: "non-r cluster", args: []string{"scc", "-vd"}},
-		{name: "config space form", args: []string{"scc", "--config", "team.scc"}, wantPath: "team.scc"},
-		{name: "config equals form", args: []string{"scc", "--config=team.scc"}, wantPath: "team.scc"},
+		{name: "config space form", args: []string{"scc", "--config", "team.sccconfig"}, wantPath: "team.sccconfig"},
+		{name: "config equals form", args: []string{"scc", "--config=team.sccconfig"}, wantPath: "team.sccconfig"},
 		{name: "config as final token (typo)", args: []string{"scc", "--config"}},
 		{name: "all three", args: []string{"scc", "--no-config", "--find-root-config", "--config=x"}, wantNoConfig: true, wantFindRoot: true, wantPath: "x"},
 	}
@@ -197,7 +198,7 @@ func TestRegisterFlagsExhaustive(t *testing.T) {
 	registerFlags(fs, &flagBindings{output: &out, report: &report, formatMulti: &multi, inert: true})
 
 	expected := []string{
-		"character", "percent", "uloc", "dryness", "binary", "by-file", "ci",
+		"character", "percent", "uloc", "dryness", "cognitive", "binary", "by-file", "ci",
 		"no-ignore", "no-scc-ignore", "no-gitignore", "no-gitmodule", "count-ignore",
 		"ignore-file",
 		"debug", "exclude-dir", "file-gc-count", "file-list-queue-size",
@@ -245,11 +246,55 @@ func TestRegisterFlagsSliceDefValue(t *testing.T) {
 	}
 }
 
-// writeSccConfig creates a temp dir with a .scc file and returns the dir.
+// TestCognitiveFlagParses asserts that parsing --cognitive on the real flag set
+// toggles the processor.Cognitive global.
+func TestCognitiveFlagParses(t *testing.T) {
+	prev := processor.Cognitive
+	defer func() { processor.Cognitive = prev }()
+	processor.Cognitive = false
+
+	fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+	var out, report, multi string
+	registerFlags(fs, &flagBindings{output: &out, report: &report, formatMulti: &multi})
+
+	if err := fs.Parse([]string{"--cognitive"}); err != nil {
+		t.Fatalf("parse --cognitive: %v", err)
+	}
+	if !processor.Cognitive {
+		t.Error("parsing --cognitive did not set processor.Cognitive")
+	}
+}
+
+// TestCognitiveFlagConfigRoundTrip writes a .sccconfig containing --cognitive,
+// parses it back through the same config-arg reader and flag set that scc uses
+// at startup, and asserts the flag survives the round-trip. Mirrors how a bool
+// flag reaches the real global from a project config file.
+func TestCognitiveFlagConfigRoundTrip(t *testing.T) {
+	prev := processor.Cognitive
+	defer func() { processor.Cognitive = prev }()
+	processor.Cognitive = false
+
+	args := parseConfigArgs("--cognitive\n", false)
+	if !slices.Equal(args, []string{"--cognitive"}) {
+		t.Fatalf("config parse produced %q, want [--cognitive]", args)
+	}
+
+	fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+	var out, report, multi string
+	registerFlags(fs, &flagBindings{output: &out, report: &report, formatMulti: &multi})
+	if err := fs.Parse(args); err != nil {
+		t.Fatalf("parse config args: %v", err)
+	}
+	if !processor.Cognitive {
+		t.Error("--cognitive from config did not set processor.Cognitive")
+	}
+}
+
+// writeSccConfig creates a temp dir with a .sccconfig file and returns the dir.
 func writeSccConfig(t *testing.T, content string) string {
 	t.Helper()
 	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, ".scc"), []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, ".sccconfig"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
 	// a source file so output is meaningful
@@ -266,10 +311,10 @@ func TestConfigProjectLoaded(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !strings.Contains(out, "Language,Lines,Code") {
-		t.Errorf("project .scc --format csv not applied, output:\n%s", out)
+		t.Errorf("project .sccconfig --format csv not applied, output:\n%s", out)
 	}
 	if strings.Contains(out, "Estimated Cost to Develop") {
-		t.Errorf("project .scc --no-cocomo not applied, output:\n%s", out)
+		t.Errorf("project .sccconfig --no-cocomo not applied, output:\n%s", out)
 	}
 }
 
@@ -336,10 +381,10 @@ func TestConfigPresentCLICanWrite(t *testing.T) {
 }
 
 func TestConfigControlFlagWithWriteFlag(t *testing.T) {
-	// scc --config x.scc -o out.csv: the CLI-only parse must accept --config so
+	// scc --config x.sccconfig -o out.csv: the CLI-only parse must accept --config so
 	// -o still writes.
 	dir := t.TempDir()
-	cfg := filepath.Join(dir, "team.scc")
+	cfg := filepath.Join(dir, "team.sccconfig")
 	if err := os.WriteFile(cfg, []byte("--no-cocomo\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -352,7 +397,7 @@ func TestConfigControlFlagWithWriteFlag(t *testing.T) {
 		t.Fatal(err)
 	}
 	if info, statErr := os.Stat(target); statErr != nil || info.Size() == 0 {
-		t.Errorf("scc --config x.scc -o out.csv should still write out.csv")
+		t.Errorf("scc --config x.sccconfig -o out.csv should still write out.csv")
 	}
 }
 
@@ -404,7 +449,7 @@ func TestConfigEnvVarGlobal(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	global := filepath.Join(dir, "global.scc")
+	global := filepath.Join(dir, "global.sccconfig")
 	if err := os.WriteFile(global, []byte("--format csv\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -427,9 +472,9 @@ func TestConfigEnvVarGlobal(t *testing.T) {
 }
 
 func TestConfigNoConfigComposition(t *testing.T) {
-	// --config x.scc --no-config loads exactly x.scc and skips the project .scc.
-	dir := writeSccConfig(t, "--by-file\n") // project .scc would set --by-file
-	global := filepath.Join(dir, "iso.scc")
+	// --config x.sccconfig --no-config loads exactly x.sccconfig and skips the project .sccconfig.
+	dir := writeSccConfig(t, "--by-file\n") // project .sccconfig would set --by-file
+	global := filepath.Join(dir, "iso.sccconfig")
 	if err := os.WriteFile(global, []byte("--format csv\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -440,24 +485,24 @@ func TestConfigNoConfigComposition(t *testing.T) {
 	if !strings.Contains(out, "Language,Lines,Code") {
 		t.Errorf("--config should still load with --no-config, output:\n%s", out)
 	}
-	// --by-file from the project .scc must NOT apply under --no-config: the
+	// --by-file from the project .sccconfig must NOT apply under --no-config: the
 	// per-file CSV header carries a Location column, the summary one does not.
 	if strings.Contains(out, "Location") {
-		t.Errorf("--no-config should skip the project .scc, output:\n%s", out)
+		t.Errorf("--no-config should skip the project .sccconfig, output:\n%s", out)
 	}
 }
 
 func TestConfigInsideFileIsInert(t *testing.T) {
-	// A --config written inside a project .scc must not chain-load another file.
+	// A --config written inside a project .sccconfig must not chain-load another file.
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	chained := filepath.Join(dir, "chained.scc")
+	chained := filepath.Join(dir, "chained.sccconfig")
 	if err := os.WriteFile(chained, []byte("--format csv\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, ".scc"), []byte("--config "+chained+"\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, ".sccconfig"), []byte("--config "+chained+"\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	out, err := runSCCDir(t, dir, noGlobalConfig)
@@ -465,13 +510,13 @@ func TestConfigInsideFileIsInert(t *testing.T) {
 		t.Fatal(err)
 	}
 	if strings.Contains(out, "Language,Lines,Code") {
-		t.Errorf("--config inside a .scc must be inert (no chain-load), output:\n%s", out)
+		t.Errorf("--config inside a .sccconfig must be inert (no chain-load), output:\n%s", out)
 	}
 }
 
 func TestConfigUnreadableExplicitErrors(t *testing.T) {
 	dir := t.TempDir()
-	out, err := runSCCDir(t, dir, noGlobalConfig, "--config", filepath.Join(dir, "does-not-exist.scc"))
+	out, err := runSCCDir(t, dir, noGlobalConfig, "--config", filepath.Join(dir, "does-not-exist.sccconfig"))
 	if err == nil {
 		t.Fatalf("scc should exit non-zero for an unreadable --config, output:\n%s", out)
 	}
@@ -502,7 +547,7 @@ func TestConfigUnknownFlagAttribution(t *testing.T) {
 }
 
 func TestConfigCompletionUnaffected(t *testing.T) {
-	// scc completion --shell bash in a dir containing ./.scc must still emit
+	// scc completion --shell bash in a dir containing ./.sccconfig must still emit
 	// completions (config prepend must not shift args[1]).
 	dir := writeSccConfig(t, "--format csv\n")
 	out, err := runSCCDir(t, dir, noGlobalConfig, "completion", "--shell", "bash")
@@ -510,7 +555,7 @@ func TestConfigCompletionUnaffected(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !strings.Contains(out, "bash completion") && !strings.Contains(out, "complete -") {
-		t.Errorf("completion should still work with ./.scc present, output:\n%s", out[:min(len(out), 200)])
+		t.Errorf("completion should still work with ./.sccconfig present, output:\n%s", out[:min(len(out), 200)])
 	}
 }
 
@@ -521,7 +566,7 @@ func TestConfigInsideAtFileHonored(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	global := filepath.Join(dir, "from-atfile.scc")
+	global := filepath.Join(dir, "from-atfile.sccconfig")
 	if err := os.WriteFile(global, []byte("--format csv\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -542,16 +587,16 @@ func TestConfigInsideAtFileHonored(t *testing.T) {
 // hidden __complete command (the one a shell calls on every TAB). Config tokens
 // are prepended ahead of the genuine argv, so without the completion bypass the
 // __complete subcommand is shifted out of args[0] and dynamic completion breaks
-// in any directory containing a ./.scc. (TestConfigCompletionUnaffected covers
+// in any directory containing a ./.sccconfig. (TestConfigCompletionUnaffected covers
 // only the separate `completion --shell` script-generation path.)
 func TestConfigCompleteDynamicUnaffected(t *testing.T) {
 	dir := writeSccConfig(t, "--format csv\n")
 	out, err := runSCCDir(t, dir, noGlobalConfig, "__complete", "--for")
 	if err != nil {
-		t.Fatalf("__complete errored with ./.scc present: %v\n%s", err, out)
+		t.Fatalf("__complete errored with ./.sccconfig present: %v\n%s", err, out)
 	}
 	if !strings.Contains(out, "--format") {
-		t.Errorf("dynamic completion broken with ./.scc present, output:\n%s", out)
+		t.Errorf("dynamic completion broken with ./.sccconfig present, output:\n%s", out)
 	}
 	// A leaked config token would surface as an unknown-flag / read error.
 	if strings.Contains(out, "unknown flag") || strings.Contains(out, "could not be read") {
@@ -575,7 +620,7 @@ func TestConfigSliceUnion(t *testing.T) {
 		}
 	}
 	// config excludes vendor; CLI excludes dist; .git is a built-in default.
-	if err := os.WriteFile(filepath.Join(dir, ".scc"), []byte("--exclude-dir vendor\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, ".sccconfig"), []byte("--exclude-dir vendor\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -648,14 +693,14 @@ func TestAtFileQuotedSpacePath(t *testing.T) {
 // TestConfigFindRootWalkUp locks the headline --find-root-config feature
 // end-to-end (§3.2): run from a subdirectory of a repo, --find-root-config must
 // walk up to the repository root (detected via a .git dir) and load the root
-// .scc, where the default ./.scc discovery finds nothing. TestConfigNoWalkUp
+// .sccconfig, where the default ./.sccconfig discovery finds nothing. TestConfigNoWalkUp
 // already proves the default does NOT walk; this proves --find-root-config does.
 func TestConfigFindRootWalkUp(t *testing.T) {
 	root := t.TempDir()
 	if err := os.Mkdir(filepath.Join(root, ".git"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(root, ".scc"), []byte("--format csv\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, ".sccconfig"), []byte("--format csv\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	sub := filepath.Join(root, "sub")
@@ -666,38 +711,38 @@ func TestConfigFindRootWalkUp(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Control: without --find-root-config, no walk-up, the root .scc is not seen (tabular).
+	// Control: without --find-root-config, no walk-up, the root .sccconfig is not seen (tabular).
 	out, err := runSCCDir(t, sub, noGlobalConfig)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if strings.Contains(out, "Language,Lines,Code") {
-		t.Errorf("default discovery must not walk up to the repo-root .scc, output:\n%s", out)
+		t.Errorf("default discovery must not walk up to the repo-root .sccconfig, output:\n%s", out)
 	}
 
-	// --find-root-config walks up to the repo root and loads its .scc (csv).
+	// --find-root-config walks up to the repo root and loads its .sccconfig (csv).
 	out, err = runSCCDir(t, sub, noGlobalConfig, "--find-root-config")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(out, "Language,Lines,Code") {
-		t.Errorf("--find-root-config should walk up to the repo-root .scc, output:\n%s", out)
+		t.Errorf("--find-root-config should walk up to the repo-root .sccconfig, output:\n%s", out)
 	}
 }
 
 // TestConfigFindRootOutsideRepoFallback locks the §3.2 graceful-degradation
 // guarantee: when the CWD is not inside any repo, FindRepositoryRoot returns the
-// supplied directory unchanged, so --find-root-config resolves to ./.scc -
+// supplied directory unchanged, so --find-root-config resolves to ./.sccconfig -
 // identical to default discovery, never an error. --find-root-config must
 // therefore always be safe to leave on.
 func TestConfigFindRootOutsideRepoFallback(t *testing.T) {
-	dir := writeSccConfig(t, "--format csv\n") // ./.scc, no .git anywhere above
+	dir := writeSccConfig(t, "--format csv\n") // ./.sccconfig, no .git anywhere above
 	out, err := runSCCDir(t, dir, noGlobalConfig, "--find-root-config")
 	if err != nil {
 		t.Fatalf("--find-root-config outside a repo should not error, got: %v\n%s", err, out)
 	}
 	if !strings.Contains(out, "Language,Lines,Code") {
-		t.Errorf("--find-root-config outside a repo should fall back to ./.scc, output:\n%s", out)
+		t.Errorf("--find-root-config outside a repo should fall back to ./.sccconfig, output:\n%s", out)
 	}
 }
 
@@ -710,7 +755,7 @@ func TestConfigEnvVarUnreadableErrors(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	missing := filepath.Join(dir, "does-not-exist.scc")
+	missing := filepath.Join(dir, "does-not-exist.sccconfig")
 	out, err := runSCCDir(t, dir, []string{SccConfigEnv + "=" + missing})
 	if err == nil {
 		t.Fatalf("an unreadable SCC_CONFIG_PATH should exit non-zero, output:\n%s", out)
@@ -729,7 +774,7 @@ func TestConfigNoConfigDisablesEnvGlobal(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	global := filepath.Join(dir, "global.scc")
+	global := filepath.Join(dir, "global.sccconfig")
 	if err := os.WriteFile(global, []byte("--format csv\n"), 0644); err != nil {
 		t.Fatal(err)
 	}

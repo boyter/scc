@@ -40,6 +40,7 @@ Returns per-language summary with:
 - comment: lines of comments
 - blank: blank lines
 - complexity: estimated cyclomatic complexity
+- cognitive: nesting-weighted cognitive complexity (only when cognitive=true; 0 otherwise)
 - bytes: total size in bytes
 
 Also returns COCOMO cost/schedule estimates and optionally LOCOMO (LLM cost) estimates.
@@ -68,6 +69,9 @@ Use by_file with sort=complexity to find the most complex files in a project.`),
 		),
 		mcp.WithBoolean("no_min_gen",
 			mcp.Description("Exclude minified or generated files."),
+		),
+		mcp.WithBoolean("cognitive",
+			mcp.Description("Compute nesting-weighted cognitive complexity in addition to cyclomatic complexity. Adds a 'cognitive' field to per-language, per-file and totals results. Off by default; when off the field is 0."),
 		),
 		mcp.WithBoolean("locomo",
 			mcp.Description("Include LOCOMO (LLM Output COst MOdel) cost estimation in results."),
@@ -167,6 +171,7 @@ type mcpLanguageResult struct {
 	Comment    int64           `json:"comment"`
 	Blank      int64           `json:"blank"`
 	Complexity int64           `json:"complexity"`
+	Cognitive  int64           `json:"cognitive"`
 	Bytes      int64           `json:"bytes"`
 	FileList   []mcpFileResult `json:"fileList,omitempty"`
 }
@@ -180,6 +185,7 @@ type mcpFileResult struct {
 	Comment    int64  `json:"comment"`
 	Blank      int64  `json:"blank"`
 	Complexity int64  `json:"complexity"`
+	Cognitive  int64  `json:"cognitive"`
 	Bytes      int64  `json:"bytes"`
 }
 
@@ -190,6 +196,7 @@ type mcpTotals struct {
 	Comment    int64 `json:"comment"`
 	Blank      int64 `json:"blank"`
 	Complexity int64 `json:"complexity"`
+	Cognitive  int64 `json:"cognitive"`
 	Bytes      int64 `json:"bytes"`
 }
 
@@ -294,6 +301,12 @@ func mcpAnalyzeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 		processor.IgnoreMinifiedGenerate = false
 	}
 
+	if cognitive, ok := args["cognitive"].(bool); ok && cognitive {
+		processor.Cognitive = true
+	} else {
+		processor.Cognitive = false
+	}
+
 	if locomo, ok := args["locomo"].(bool); ok && locomo {
 		processor.Locomo = true
 	} else {
@@ -327,6 +340,7 @@ func mcpAnalyzeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 			Comment:    l.Comment,
 			Blank:      l.Blank,
 			Complexity: l.Complexity,
+			Cognitive:  l.Cognitive,
 			Bytes:      l.Bytes,
 		}
 
@@ -350,6 +364,7 @@ func mcpAnalyzeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 					Comment:    f.Comment,
 					Blank:      f.Blank,
 					Complexity: f.Complexity,
+					Cognitive:  f.Cognitive,
 					Bytes:      f.Bytes,
 				})
 			}
@@ -363,6 +378,7 @@ func mcpAnalyzeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 		totals.Comment += l.Comment
 		totals.Blank += l.Blank
 		totals.Complexity += l.Complexity
+		totals.Cognitive += l.Cognitive
 		totals.Bytes += l.Bytes
 	}
 

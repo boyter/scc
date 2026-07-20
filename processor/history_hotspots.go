@@ -56,6 +56,7 @@ type hotspotsRecord struct {
 	File         string
 	Language     string
 	Complexity   int64
+	Cognitive    int64 // nesting-weighted complexity; drives Score when Cognitive is enabled
 	Commits      int
 	LinesChanged int64
 	Authors      map[authorID]struct{}
@@ -136,9 +137,18 @@ func (o *hotspotsObserver) Finalise(window HistoryWindow, head HeadSnapshot) {
 		}
 		rec.Language = hf.Language
 		rec.Complexity = hf.Complexity
+		rec.Cognitive = hf.Cognitive
 		o.totalRaw++
 
-		score := float64(rec.Complexity) * float64(rec.Commits)
+		// When cognitive complexity is enabled, rank by nesting-weighted
+		// magnitude so deeply-nested churned code outscores flat branch-heavy
+		// code with the same cyclomatic count. Default (flat) weighting is
+		// unchanged.
+		magnitude := rec.Complexity
+		if Cognitive {
+			magnitude = rec.Cognitive
+		}
+		score := float64(magnitude) * float64(rec.Commits)
 		rec.Score = score
 	}
 

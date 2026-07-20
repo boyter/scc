@@ -206,11 +206,11 @@ func discoverConfigArgs(noConfig, findRoot bool, explicitPath string) (globalTok
 		globalTokens = tokens
 	}
 
-	// Project source: ./.scc by default unless --find-root-config set
+	// Project source: ./.sccconfig by default unless --find-root-config set
 	if !noConfig {
-		projectPath := "./.scc"
+		projectPath := "./.sccconfig"
 		if findRoot {
-			projectPath = filepath.Join(gocodewalker.FindRepositoryRoot("."), ".scc")
+			projectPath = filepath.Join(gocodewalker.FindRepositoryRoot("."), ".sccconfig")
 		}
 
 		if _, statErr := os.Stat(projectPath); statErr == nil {
@@ -335,6 +335,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.BoolVarP(boolVar(&processor.Percent), "percent", "p", false, "include percentage values in output")
 	flags.BoolVarP(boolVar(&processor.UlocMode), "uloc", "u", false, "calculate the number of unique lines of code (ULOC) for the project")
 	flags.BoolVarP(boolVar(&processor.Dryness), "dryness", "a", false, "calculate the DRYness of the project (implies --uloc)")
+	flags.BoolVar(boolVar(&processor.Cognitive), "cognitive", false, "calculate cognitive (nesting-weighted) complexity")
 	flags.BoolVar(boolVar(&processor.DisableCheckBinary), "binary", false, "disable binary file detection")
 	flags.BoolVar(boolVar(&processor.Files), "by-file", false, "display output for every file")
 	flags.BoolVar(boolVar(&processor.Ci), "ci", false, "enable CI output settings where stdout is ASCII")
@@ -482,8 +483,8 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 // relocates the scan directory, matching cs.
 func registerConfigControlFlags(flags *pflag.FlagSet) {
 	flags.String("config", "", "load this file as the global config source; overrides SCC_CONFIG_PATH, honored even with --no-config")
-	flags.Bool("no-config", false, "disable auto-discovery of the SCC_CONFIG_PATH global and the project ./.scc config")
-	flags.Bool("find-root-config", false, "discover the project .scc by walking up to the repository root instead of using ./.scc")
+	flags.Bool("no-config", false, "disable auto-discovery of the SCC_CONFIG_PATH global and the project ./.sccconfig config")
+	flags.Bool("find-root-config", false, "discover the project .sccconfig by walking up to the repository root instead of using ./.sccconfig")
 }
 
 // mergeSliceDefault implements the slice-default preservation. If set is

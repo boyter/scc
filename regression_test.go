@@ -109,9 +109,9 @@ func TestRegressionGeneratedMarkersPreservesDefaults(t *testing.T) {
 }
 
 // TestRegressionConfigWithPositionalDir guards the merged argument ordering: a
-// positional path must still be scanned when a project .scc is present. Config
+// positional path must still be scanned when a project .sccconfig is present. Config
 // tokens are prepended and the genuine CLI (including the path) comes last, so
-// cobra must still receive the path as a positional. The .scc sets --by-file, so
+// cobra must still receive the path as a positional. The .sccconfig sets --by-file, so
 // the per-file row for the scanned path proves both that config applied and that
 // the positional argument survived the prepend.
 func TestRegressionConfigWithPositionalDir(t *testing.T) {
@@ -122,7 +122,7 @@ func TestRegressionConfigWithPositionalDir(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "code", "a.go"), []byte("package a\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, ".scc"), []byte("--by-file\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, ".sccconfig"), []byte("--by-file\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -133,7 +133,7 @@ func TestRegressionConfigWithPositionalDir(t *testing.T) {
 	// a.go only appears in --by-file output, so its presence proves both the
 	// config (--by-file) applied and the positional 'code' dir was scanned.
 	if !strings.Contains(out, "a.go") {
-		t.Errorf("positional 'code' dir should be scanned with a project .scc present, output:\n%s", out)
+		t.Errorf("positional 'code' dir should be scanned with a project .sccconfig present, output:\n%s", out)
 	}
 }
 
@@ -189,7 +189,7 @@ func TestRegressionHelpShowsSliceDefaults(t *testing.T) {
 }
 
 // TestRegressionCommentOnlyConfigAllowsWrite documents an edge of the security
-// model: a .scc that contributes zero tokens (only comments/blanks) must not
+// model: a .sccconfig that contributes zero tokens (only comments/blanks) must not
 // engage the write-blocking config path. With nothing injected there is nothing
 // to defend against, so the no-config fast path runs and a CLI -o still writes.
 func TestRegressionCommentOnlyConfigAllowsWrite(t *testing.T) {
@@ -197,7 +197,7 @@ func TestRegressionCommentOnlyConfigAllowsWrite(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, ".scc"), []byte("# just a comment\n\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, ".sccconfig"), []byte("# just a comment\n\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -206,7 +206,7 @@ func TestRegressionCommentOnlyConfigAllowsWrite(t *testing.T) {
 		t.Fatal(err)
 	}
 	if info, statErr := os.Stat(target); statErr != nil || info.Size() == 0 {
-		t.Errorf("a comment-only .scc should not block a genuine CLI -o write")
+		t.Errorf("a comment-only .sccconfig should not block a genuine CLI -o write")
 	}
 }
 
@@ -325,7 +325,7 @@ func processorDefaultReportName() string {
 
 // TestRegressionGenuineReportWritesWithConfig fills the spec-04 checklist gap:
 // "Genuine CLI ... --report ... -> do write" is only exercised for -o and
-// --format-multi. With a project .scc present the two-mode write split engages
+// --format-multi. With a project .sccconfig present the two-mode write split engages
 // (write flags bound to discards in the merged parse, resolved from the genuine
 // CLI alone), so this proves the --report arm of resolveWriteFlags still sources
 // the real ReportOut from the command line. --report=path overwrites silently,
@@ -349,10 +349,10 @@ func TestRegressionGenuineReportWritesWithConfig(t *testing.T) {
 
 // TestRegressionAtFileWritesWithProjectConfigPresent locks the spec-§6 @file ⨉
 // config interaction. Running `scc @file` rewrites os.Args before discovery, so
-// a ./.scc in the directory is still discovered and layered beneath the @file
+// a ./.sccconfig in the directory is still discovered and layered beneath the @file
 // tokens - and because the genuine-CLI slice is captured AFTER @file expansion,
 // the @file is allowed to write even though config is present (config is not).
-// Here the project .scc supplies --format csv (proving config layered into the
+// Here the project .sccconfig supplies --format csv (proving config layered into the
 // merged parse) while the @file supplies -o target (proving @file kept its write
 // capability): a single CSV-content assertion on the written file proves both.
 func TestRegressionAtFileWritesWithProjectConfigPresent(t *testing.T) {
@@ -369,14 +369,14 @@ func TestRegressionAtFileWritesWithProjectConfigPresent(t *testing.T) {
 	}
 	info, statErr := os.Stat(target)
 	if statErr != nil || info.Size() == 0 {
-		t.Fatalf("@file -o should write even with a project .scc present, stdout:\n%s", out)
+		t.Fatalf("@file -o should write even with a project .sccconfig present, stdout:\n%s", out)
 	}
 	body, err := os.ReadFile(target)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(string(body), "Language,Lines,Code") {
-		t.Errorf("project .scc --format csv should have layered into the @file run, file contents:\n%s", body)
+		t.Errorf("project .sccconfig --format csv should have layered into the @file run, file contents:\n%s", body)
 	}
 }
 
@@ -393,7 +393,7 @@ func TestRegressionMcpSkipsConfigDiscovery(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	missing := filepath.Join(t.TempDir(), "does-not-exist.scc")
+	missing := filepath.Join(t.TempDir(), "does-not-exist.sccconfig")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -416,7 +416,7 @@ func TestRegressionMcpSkipsConfigDiscovery(t *testing.T) {
 // builds a merged list and passes it via rootCmd.SetArgs(merged[1:]). A bug in
 // that wiring (e.g. an off-by-one slice, or config tokens shifting the version
 // flag) could break --version even though it is not a real scc flag. The output
-// must be byte-identical with and without a project .scc present, and a .scc
+// must be byte-identical with and without a project .sccconfig present, and a .sccconfig
 // must never leak a config error onto the version path.
 func TestRegressionVersionFlagWithConfig(t *testing.T) {
 	bare := t.TempDir()
@@ -431,17 +431,17 @@ func TestRegressionVersionFlagWithConfig(t *testing.T) {
 	dir := writeSccConfig(t, "--format csv\n--no-cocomo\n")
 	withCfg, err := runSCCDir(t, dir, noGlobalConfig, "--version")
 	if err != nil {
-		t.Fatalf("scc --version should exit 0 with a project .scc present: %v\n%s", err, withCfg)
+		t.Fatalf("scc --version should exit 0 with a project .sccconfig present: %v\n%s", err, withCfg)
 	}
 	if withCfg != noCfg {
-		t.Errorf("--version output changed when a project .scc was present\nno config:\n%s\nwith config:\n%s", noCfg, withCfg)
+		t.Errorf("--version output changed when a project .sccconfig was present\nno config:\n%s\nwith config:\n%s", noCfg, withCfg)
 	}
 }
 
 // TestRegressionSccDirectoryDoesNotBreakRun guards the no-panics / robustness
 // policy against a real-world surprise the feature introduces: a path named
-// ".scc" that is a *directory* (another tool's data dir, an accidental mkdir).
-// Project discovery does os.Stat("./.scc"), which succeeds for a directory, then
+// ".sccconfig" that is a *directory* (another tool's data dir, an accidental mkdir).
+// Project discovery does os.Stat("./.sccconfig"), which succeeds for a directory, then
 // os.ReadFile fails with "is a directory". That is the non-explicit project arm,
 // so it must degrade to a stderr warning and let the run finish (exit 0 with
 // real output) - never abort, panic, or swallow the scan.
@@ -450,23 +450,23 @@ func TestRegressionSccDirectoryDoesNotBreakRun(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.Mkdir(filepath.Join(dir, ".scc"), 0755); err != nil {
+	if err := os.Mkdir(filepath.Join(dir, ".sccconfig"), 0755); err != nil {
 		t.Fatal(err)
 	}
 
 	out, err := runSCCDir(t, dir, noGlobalConfig, "-f", "csv", "--by-file")
 	if err != nil {
-		t.Fatalf("a .scc *directory* must not make scc exit non-zero: %v\n%s", err, out)
+		t.Fatalf("a .sccconfig *directory* must not make scc exit non-zero: %v\n%s", err, out)
 	}
 	if !strings.Contains(out, "main.go") {
-		t.Errorf("scc should still scan and emit output when ./.scc is a directory, output:\n%s", out)
+		t.Errorf("scc should still scan and emit output when ./.sccconfig is a directory, output:\n%s", out)
 	}
 }
 
 // TestRegressionConfigGlobalProjectPrecedence locks the middle rung of the
 // precedence ladder (global < project) for a scalar flag. The existing suite
 // proves CLI beats config and that each source loads, but not that the project
-// .scc overrides the SCC_CONFIG_PATH global when the two disagree - the ordering
+// .sccconfig overrides the SCC_CONFIG_PATH global when the two disagree - the ordering
 // that falls out of prepending global tokens ahead of project tokens. Asserted
 // in both directions so a swapped prepend order cannot pass.
 func TestRegressionConfigGlobalProjectPrecedence(t *testing.T) {
@@ -476,11 +476,11 @@ func TestRegressionConfigGlobalProjectPrecedence(t *testing.T) {
 		if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0644); err != nil {
 			t.Fatal(err)
 		}
-		global := filepath.Join(dir, "global.scc")
+		global := filepath.Join(dir, "global.sccconfig")
 		if err := os.WriteFile(global, []byte(globalContent), 0644); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(dir, ".scc"), []byte(projectContent), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, ".sccconfig"), []byte(projectContent), 0644); err != nil {
 			t.Fatal(err)
 		}
 		out, err := runSCCDir(t, dir, []string{SccConfigEnv + "=" + global})
@@ -501,7 +501,7 @@ func TestRegressionConfigGlobalProjectPrecedence(t *testing.T) {
 // TestRegressionConfigGlobalProjectSliceUnion extends the §7 union semantics to
 // the global+project pair. TestConfigSliceUnion covers project ∪ CLI ∪ defaults;
 // this proves a slice flag set in the SCC_CONFIG_PATH global unions with the same
-// flag set in the project .scc (rather than one source replacing the other),
+// flag set in the project .sccconfig (rather than one source replacing the other),
 // which is the natural pflag append behaviour that the empty-default mechanism
 // must preserve across both config sources.
 func TestRegressionConfigGlobalProjectSliceUnion(t *testing.T) {
@@ -514,11 +514,11 @@ func TestRegressionConfigGlobalProjectSliceUnion(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	global := filepath.Join(dir, "global.scc")
+	global := filepath.Join(dir, "global.sccconfig")
 	if err := os.WriteFile(global, []byte("--exclude-dir ga\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, ".scc"), []byte("--exclude-dir pb\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, ".sccconfig"), []byte("--exclude-dir pb\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -563,7 +563,7 @@ func TestRegressionConfigFormatMultiIgnoredForStdout(t *testing.T) {
 // error; nothing proves a coupled min/gen flag (-z/--min/--gen, registered as
 // BoolFuncs whose closures mutate processor state during parse) actually reaches
 // Process when it comes from config. These are the flags spec-04 repeatedly
-// flags as fragile under the two-mode write split. With a project .scc present
+// flags as fragile under the two-mode write split. With a project .sccconfig present
 // the split engages: the merged parse fires the -z closure (real binding), then
 // resolveWriteFlags re-parses the genuine CLI with the closures made inert so it
 // cannot undo that. A long single line trips the minified heuristic, so the file
@@ -579,7 +579,7 @@ func TestRegressionConfigMinFlagClassifies(t *testing.T) {
 	// Everything needed is in the config; the genuine CLI is empty, so the
 	// effect is purely config-sourced. -f csv keeps the "(min)" suffix off the
 	// truncating tabular language column.
-	if err := os.WriteFile(filepath.Join(dir, ".scc"), []byte("-z\n-i js\n--no-scc-ignore\n-f csv\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, ".sccconfig"), []byte("-z\n-i js\n--no-scc-ignore\n-f csv\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -594,11 +594,11 @@ func TestRegressionConfigMinFlagClassifies(t *testing.T) {
 
 // TestRegressionConfigCannotStartMcpServer guards a security invariant that
 // parallels the "config can never write a file" tests: a --mcp inside a project
-// .scc must NOT hijack stdio and start an MCP server. The interception reads
+// .sccconfig must NOT hijack stdio and start an MCP server. The interception reads
 // os.Args ONLY (before config is discovered), so config's --mcp lands in the
 // merged parse as the inert dummy flag registerFlags registers and the normal
 // scan runs instead. This pins that ordering so a future refactor that moves the
-// --mcp detection after the config merge - letting a checked-out .scc silently
+// --mcp detection after the config merge - letting a checked-out .sccconfig silently
 // turn a scan into a server - is caught. Empty stdin means even the bad case
 // EOFs rather than hanging; the context deadline is a backstop.
 func TestRegressionConfigCannotStartMcpServer(t *testing.T) {
@@ -606,7 +606,7 @@ func TestRegressionConfigCannotStartMcpServer(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, ".scc"), []byte("--mcp\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, ".sccconfig"), []byte("--mcp\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
