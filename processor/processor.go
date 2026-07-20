@@ -338,6 +338,15 @@ var LargeByteCount int64 = 1000000
 // Hotspots toggles the hotspots git-history report
 var Hotspots = false
 
+// Coupling toggles the change-coupling git-history report (file pairs that
+// change together)
+var Coupling = false
+
+// CouplingFor, when non-empty, switches the coupling report to the
+// file-oriented "blast radius" view for the given path: what tends to change
+// when that file changes.
+var CouplingFor = ""
+
 // ByAuthor toggles the author-rollup git-history report
 var ByAuthor = false
 
@@ -920,7 +929,18 @@ func Process() {
 		os.Exit(1)
 	}
 
-	if Hotspots || ByAuthor || Timeline {
+	// --coupling-for implies the coupling report for a specific file.
+	if CouplingFor != "" {
+		Coupling = true
+	}
+
+	// Coupling is a standalone report — it doesn't combine with any other.
+	if Coupling && (Hotspots || ByAuthor || Timeline) {
+		fmt.Println("--coupling/--coupling-for is mutually exclusive with --hotspots / --by-author / --timeline; pick one report")
+		os.Exit(1)
+	}
+
+	if Hotspots || Coupling || ByAuthor || Timeline {
 		if err := validateHistoryFlags(os.Stderr); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -929,6 +949,14 @@ func Process() {
 
 	if Hotspots {
 		if err := runHotspotsReport(DirFilePaths[0]); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		return
+	}
+
+	if Coupling {
+		if err := runCouplingReport(DirFilePaths[0]); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}

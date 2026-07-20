@@ -14,10 +14,6 @@ import (
 	gmessage "golang.org/x/text/message"
 )
 
-// HotspotsTopN is the cap on rows shown in the tabular hotspots report.
-// CSV / JSON output is not capped.
-const HotspotsTopN = 20
-
 // HotspotsJSONReport walks the git history at repoPath and returns the
 // hotspots report as a JSON string. It is the programmatic entry point used by
 // the MCP server, which needs the rendered data rather than the stdout/file
@@ -241,13 +237,15 @@ func renderHotspots(o *hotspotsObserver) (string, error) {
 var tabularShortHotspotsFormatHead = "%-27s %8s %7s %8s %8s %7s %8s\n"
 var tabularShortHotspotsFormatBody = "%-27s %8s %7d %8d %8s %7d %8.1f\n"
 
-// Wide variant — 109 columns, adds a 9-char hotspot bar and a +Code% column
+// Wide variant — 109 columns, adds a 16-char hotspot bar and a +Code% column
 // (%-share of *added* lines that were code; removed lines aren't classified).
+// The bar carries the wide layout's extra width so it reads as a real chart;
+// the File column stays modest rather than padding dead space to the rule.
 //
-//	%-27s %8s %7s %8s %8s %7s %8s %7s %11s
-//	27 + 1 + 8 + 1 + 7 + 1 + 8 + 1 + 8 + 1 + 7 + 1 + 8 + 1 + 7 + 1 + 11 = 98
-var tabularWideHotspotsFormatHead = "%-27s %8s %7s %8s %8s %7s %8s %7s %-11s\n"
-var tabularWideHotspotsFormatBody = "%-27s %8s %7d %8d %8s %7d %8.1f %6.1f%% %-11s\n"
+//	%-32s %8s %7s %8s %8s %7s %8s %7s %-16s
+//	32 + 1 + 8 + 1 + 7 + 1 + 8 + 1 + 8 + 1 + 7 + 1 + 8 + 1 + 7 + 1 + 16 = 109
+var tabularWideHotspotsFormatHead = "%-32s %8s %7s %8s %8s %7s %8s %7s %-16s\n"
+var tabularWideHotspotsFormatBody = "%-32s %8s %7d %8d %8s %7d %8.1f %6.1f%% %-16s\n"
 
 func renderHotspotsTabular(o *hotspotsObserver) string {
 	wide := More || strings.EqualFold(Format, "wide")
@@ -266,12 +264,21 @@ func renderHotspotsTabular(o *hotspotsObserver) string {
 	}
 	sb.WriteString(brk)
 
-	limit := min(len(o.records), HotspotsTopN)
-
-	for i := range limit {
-		r := o.records[i]
-		fileCol := unicodeAwareTrim(r.File, 26)
-		fileCol = unicodeAwareRightPad(fileCol, 27)
+	shown := 0
+	for _, r := range o.records {
+		// Score 0 means no complexity signal — not a hotspot. The CSV and JSON
+		// renderers skip these too, so the tabular view matches rather than
+		// trailing the list with zero-score noise.
+		if r.Score <= 0 {
+			continue
+		}
+		shown++
+		fileTrim, fileWidth := 26, 27
+		if wide {
+			fileTrim, fileWidth = 31, 32
+		}
+		fileCol := unicodeAwareTrim(r.File, fileTrim)
+		fileCol = unicodeAwareRightPad(fileCol, fileWidth)
 		langCol := trimLanguageShort(r.Language, 8)
 		linesCol := formatWithCommas(printer, r.LinesChanged)
 		if wide {
@@ -280,7 +287,7 @@ func renderHotspotsTabular(o *hotspotsObserver) string {
 			if totalChurn > 0 {
 				codeShare = float64(r.CodeChurn) / float64(totalChurn) * 100.0
 			}
-			bar := renderBar(r.Score/100.0, 11)
+			bar := renderBar(r.Score/100.0, 16)
 			_, _ = fmt.Fprintf(&sb, tabularWideHotspotsFormatBody,
 				fileCol, langCol, r.Complexity, r.Commits, linesCol,
 				len(r.Authors), r.Score, codeShare, bar)
@@ -292,9 +299,8 @@ func renderHotspotsTabular(o *hotspotsObserver) string {
 	}
 
 	sb.WriteString(brk)
-	if limit > 0 {
-		footer := fmt.Sprintf("   complexity × change-frequency, normalised · %d of %d files shown",
-			limit, o.totalRaw)
+	if shown > 0 {
+		footer := fmt.Sprintf("complexity × change-frequency, normalised · %d files", shown)
 		sb.WriteString(footer)
 		sb.WriteByte('\n')
 		sb.WriteString(brk)
