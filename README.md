@@ -314,6 +314,8 @@ Flags:
       --count-as string                     count extension as language [e.g. jsp:htm,chead:"C Header" maps extension jsp to html and chead to C Header]
       --count-as-pattern stringArray        count files matching a path pattern as a new named category backed by a base language [repeatable; pattern is glob by default, prefix with re: for regex; e.g. *_spec.rb:"Ruby Spec":Ruby or re:\.test\.js$:"JavaScript Tests":JavaScript]
       --count-ignore                        set to allow .gitignore and .ignore files to be counted
+      --coupling                            render the change-coupling report (file pairs that change together over recent git history)
+      --coupling-for string                 blast-radius view: given a file path, show what tends to change with it over recent git history
       --currency-symbol string              set currency symbol (default "$")
       --debug                               enable debug output
       --depth int                           commit window size for git history reports; 0 means entire history (large repos may be slow) (default 1000)
@@ -835,7 +837,7 @@ LOCOMO is a rough estimator with known limitations:
 
 ### Git Insight Reports
 
-In addition to counting the working tree, `scc` can run four git-aware reports over recent commit history. Each is selected by a flag and rendered as `tabular` (default), `csv`, or `json` via `--format`. All four are derived from one in-process walk of the repository - there is no `exec("git")`, so the `git` binary does not need to be on `PATH`.
+In addition to counting the working tree, `scc` can run five git-aware reports over recent commit history. Each is selected by a flag and rendered as `tabular` (default), `csv`, or `json` via `--format`. All are derived from one in-process walk of the repository - there is no `exec("git")`, so the `git` binary does not need to be on `PATH`.
 
 > **Note:** these reports are **slower** than a normal `scc` run. They walk the repository history (one diff per commit using pure-Go Myers diff via [go-git](https://github.com/go-git/go-git)) instead of just counting the current working tree. Runtime scales with `--depth` (the commit window size, default `1000`; `0` means entire history). On large repositories with deep history, expect runtimes measured in seconds to minutes rather than the millisecond-scale you get from a plain `scc` run. Use `--depth` to bound the window.
 
@@ -844,6 +846,7 @@ When no report flag is set, `scc` behaves exactly as today, these flags are stri
 | Flag | Report | Answers |
 |---|---|---|
 | `--hotspots` | Hotspots | Which files are defect-prone - high complexity × high churn. |
+| `--coupling` / `--coupling-for FILE` | Change coupling | Which files change together - hidden dependencies and blast radius. |
 | `--by-author` | Author rollup | Bus factor - who last-touched the surviving code. |
 | `--by-author --timeline` | Author timeline | How each author's activity rises and falls over time. |
 | `--timeline` | Languages over time | How the language mix shifts - rewrites, migrations. |
@@ -857,7 +860,7 @@ Shared flags for these reports:
 | `-w, --wide` | - | 109-column variant of any report (extra columns where applicable). |
 | `--no-fold-authors` | off | Disable the name + email-domain identity folding fallback applied after `.mailmap`. |
 
-`--hotspots` is mutually exclusive with `--by-author` / `--timeline`; combining them is an error. With `--by-author` set, `--timeline` switches from the author rollup to the author timeline. Alone, `--timeline` renders the languages timeline.
+Each report is standalone: `--hotspots`, `--coupling` (or `--coupling-for`), and `--by-author` / `--timeline` are mutually exclusive, and combining them is an error. `--coupling-for FILE` implies `--coupling`. With `--by-author` set, `--timeline` switches from the author rollup to the author timeline. Alone, `--timeline` renders the languages timeline.
 
 #### Hotspots - `--hotspots`
 
@@ -880,6 +883,46 @@ main.go                           Go     180       44    2,510       8     48.2
 ```
 
 Tabular output shows the top files (≈20). `--wide` adds a hotspot bar and an added-lines code-vs-comment split (`+Code%`). `--format csv|json` emits every file with a positive score along with the full per-file detail and window metadata.
+
+#### Change coupling - `--coupling` / `--coupling-for`
+
+Which files tend to change together in the same commit I.E. *temporal* coupling.
+Surfaces the "if you edit A you probably need to edit B" relationships. `Shared Commits` is how
+many commits touched both files; `Coupling` is the share of commits touching *either* file that
+touched *both*, so 100% means they never move apart. Pairs are ranked strongest first,
+and only pairs sharing at least 2 commits are reported.
+
+```text
+$ scc --coupling
+───────────────────────────────────────────────────────────────────────────────
+Change Coupling · last 1000 commits · 2019-07-24 → 2026-07-20
+───────────────────────────────────────────────────────────────────────────────
+File A                      File B                      Shared Commits Coupling
+───────────────────────────────────────────────────────────────────────────────
+languages.json              processor/constants.go                 196    67.6%
+LANGUAGES.md                languages.json                         166    61.3%
+LANGUAGES.md                processor/constants.go                 152    58.2%
+main.go                     processor/processor.go                  65    33.9%
+───────────────────────────────────────────────────────────────────────────────
+top 15 of 492 pairs · sharing ≥2 commits
+───────────────────────────────────────────────────────────────────────────────
+```
+
+`--coupling-for FILE` narrows to a single file's and what history says tends to move with it.
+
+```text
+$ scc --coupling-for processor/workers.go
+───────────────────────────────────────────────────────────────────────────────
+Change Coupling · last 1000 commits · 2019-07-24 → 2026-07-20
+───────────────────────────────────────────────────────────────────────────────
+Related File                                          Shared Commits   Coupling
+───────────────────────────────────────────────────────────────────────────────
+processor/structs.go                                              27      25.2%
+processor/workers_test.go                                         17      17.7%
+processor/processor.go                                            34      15.7%
+main.go                                                           23      13.7%
+───────────────────────────────────────────────────────────────────────────────
+```
 
 #### Author rollup - `--by-author`
 
@@ -1591,7 +1634,7 @@ Add to your `claude_desktop_config.json`:
 
 #### Exposed Tools
 
-The MCP server exposes two tools:
+The MCP server exposes three tools:
 
 **`analyze`** - Count lines of code, comments, blanks and estimate complexity for a project directory or file.
 
@@ -1618,6 +1661,17 @@ Results are returned as JSON with per-language breakdown (files, lines, code, co
 | `limit` | number | no | Maximum number of files to return, highest-scoring first. Default: `50`. Set to `-1` for unlimited. |
 
 Results are returned as JSON with the history window walked (depth, commit count, date range) and a per-file list (file, language, complexity, commits, lines changed, authors, code/comment churn, and a normalised 0–100 score). Requires `path` to be inside a git repository.
+
+**`coupling`** - Report change coupling from a git repository's history: files that historically change together. Has two modes, selected by whether `file` is set. With `file`, returns that file's blast radius - the other files that change together with it. Without `file`, returns the repo-wide all-pairs overview.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `path` | string | no | Directory inside the git repository to analyze. Defaults to current directory. |
+| `file` | string | no | Target file (as it appears at HEAD). Set it for the per-file blast-radius view; omit it for the repo-wide all-pairs report. |
+| `depth` | number | no | Maximum number of recent commits to walk. Default: `1000`. Set to `0` for unlimited. |
+| `limit` | number | no | Maximum rows to return, strongest first - coupled files in per-file mode, file pairs in all-pairs mode. Default: `50`. Set to `-1` for unlimited. |
+
+Results are returned as JSON with the history window walked. With `file`, each partner carries its shared-commit count and the directional probabilities `couple` (given you changed the target, how often the partner follows) and `reverse` (the other direction). Without `file`, each pair carries its shared-commit count and symmetric coupling degree. Requires `path` to be inside a git repository.
 
 ### Adding/Modifying Languages
 
