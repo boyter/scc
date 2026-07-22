@@ -461,6 +461,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.IntVar(intVar(&processor.HistoryDepth), "depth", 1000, "commit window size for git history reports; 0 means entire history (large repos may be slow)")
 	flags.BoolVar(boolVar(&processor.Timeline), "timeline", false, "render an over-time view of recent git history; with --by-author runs the author timeline, alone runs the languages timeline")
 	flags.IntVar(intVar(&processor.HistoryBuckets), "buckets", 60, "time-bucket resolution for the git timeline reports (default 60)")
+	flags.BoolVar(boolVar(&processor.ExpandGlobs), "expand-globs", false, "enable glob expansion on the files or directories")
 	// --no-fold-authors is read back via cmd.PersistentFlags().GetBool in Run, so
 	// its bound var is irrelevant; a throwaway sink is enough in both modes.
 	flags.BoolVar(new(bool), "no-fold-authors", false, "disable the name+email-domain identity folding fallback for git author reports (mailmap still applied)")

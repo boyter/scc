@@ -369,6 +369,9 @@ var HistoryBuckets = 60
 // after the mailmap. Toggled off via --no-fold-authors.
 var FoldAuthors = true
 
+// ExpandGlobs enables glob expansion on the values of [DirFilePaths].
+var ExpandGlobs = false
+
 // DirFilePaths is not set via flags but by arguments following the flags for file or directory to process
 var DirFilePaths = []string{}
 
@@ -920,6 +923,9 @@ func Process() {
 			fmt.Fprintf(os.Stderr, "warning: --report overrides --format=%s\n", Format)
 		}
 		parseReportSkip(ReportSkip)
+		if ExpandGlobs {
+			fmt.Fprintf(os.Stderr, "--report takes one positional argument; globs are not expanded")
+		}
 		if len(DirFilePaths) > 1 {
 			fmt.Fprintf(os.Stderr, "warning: --report only analyses the first positional path (%s); other paths ignored\n", DirFilePaths[0])
 		}
@@ -997,8 +1003,22 @@ func Process() {
 	filePaths := []string{}
 	dirPaths := []string{}
 
+	allPaths := []string{}
+	if ExpandGlobs {
+		for _, pattern := range DirFilePaths {
+			matches, err := filepath.Glob(pattern)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "`%s` is an invalid pattern; skipping\n", pattern)
+			} else {
+				allPaths = append(allPaths, matches...)
+			}
+		}
+	} else {
+		allPaths = DirFilePaths
+	}
+
 	// Check if the paths or files added exist and exit if not
-	for _, f := range DirFilePaths {
+	for _, f := range allPaths {
 		fpath := filepath.Clean(f)
 
 		s, err := os.Stat(fpath)
