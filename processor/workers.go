@@ -538,6 +538,14 @@ func verifyIgnoreEscape(langFeatures LanguageFeature, fileJob *FileJob, index in
 			if isMatch {
 				ignoreEscape = true
 				index = index + len(langFeatures.Quotes[i].Start)
+
+				// Clamp to the last byte when the start token ends the file, such as a
+				// Python file whose final bytes are """ with no trailing newline. Left
+				// unbounded the caller lands on len(Content) and blankState writes past
+				// the end of ContentByteType, and the final line is never counted.
+				if index >= len(fileJob.Content) {
+					index = len(fileJob.Content) - 1
+				}
 			}
 		}
 	}
