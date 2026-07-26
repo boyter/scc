@@ -966,6 +966,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"Vim Script",
 		"Web Services Description Language",
 		"WebGPU Enhanced Shading Language",
+		"WebGPU Shading Language",
 		"wenyan",
 		"Wren",
 		"XHTML",
