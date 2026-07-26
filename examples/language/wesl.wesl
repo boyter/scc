@@ -10,6 +10,7 @@ fn main(@builtin(position) pos: vec4f) -> @location(0) vec4f {
 
   /*
   this is also a comment
+    /* a nested comment */
   */
   @if(noise)  // conditions at runtime or build time
   sdf += snoise2(uv * 8.0 + u.time) * 0.15;

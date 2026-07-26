@@ -8530,9 +8530,13 @@
       "if ",
       "if(",
       "switch ",
+      "switch(",
       "while ",
       "while(",
+      "loop ",
+      "loop{",
       "else ",
+      "else{",
       "@if(",
       "@elif(",
       "|| ",
@@ -8542,7 +8546,8 @@
     ],
     "extensions": ["wesl"],
     "line_comment": ["//"],
-    "multi_line": [["/*", "*/"]]
+    "multi_line": [["/*", "*/"]],
+    "nestedmultiline": true
   },
   "WebGPU Shading Language": {
     "complexitychecks": [
@@ -8551,9 +8556,13 @@
       "if ",
       "if(",
       "switch ",
+      "switch(",
       "while ",
       "while(",
+      "loop ",
+      "loop{",
       "else ",
+      "else{",
       "|| ",
       "&& ",
       "!= ",
@@ -8561,7 +8570,8 @@
     ],
     "extensions": ["wgsl"],
     "line_comment": ["//"],
-    "multi_line": [["/*", "*/"]]
+    "multi_line": [["/*", "*/"]],
+    "nestedmultiline": true
   },
   "Windows Resource-Definition Script": {
     "extensions": ["rc"],
