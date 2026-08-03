@@ -13,7 +13,6 @@ Also it has a very short name which is easy to type `scc`.
 If you don't like sloc cloc and code feel free to use the name `Succinct Code Counter`.
 
 [![Go](https://github.com/boyter/scc/actions/workflows/go.yml/badge.svg)](https://github.com/boyter/scc/actions/workflows/go.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/boyter/scc)](https://goreportcard.com/report/github.com/boyter/scc)
 [![Coverage Status](https://coveralls.io/repos/github/boyter/scc/badge.svg?branch=master)](https://coveralls.io/github/boyter/scc?branch=master)
 [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/)](https://github.com/boyter/scc/)
 ![Scc count downloads](https://img.shields.io/github/downloads/boyter/scc/total?label=downloads%20%28GH%29)
@@ -263,6 +262,7 @@ $ scc -h
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
 Version 4.0.0 (beta)
 Ben Boyter <ben@boyter.org> + Contributors
+https://github.com/boyter/scc
 
 Usage:
   scc [flags] [files or directories]
@@ -299,10 +299,14 @@ Examples:
     export SCC_CONFIG_PATH=~/.sccconfig
     scc --config team.sccconfig
 
+  Tune the COCOMO cost estimate, or turn it off (see https://en.wikipedia.org/wiki/COCOMO):
+    scc --avg-wage 75000 --cocomo-project-type semi-detached
+    scc --no-cocomo
+
 Flags:
       --avg-wage int                        average wage value used for basic COCOMO calculation (default 56286)
       --binary                              disable binary file detection
-      --buckets int                         time-bucket resolution for the git timeline reports (default 60) (default 60)
+      --buckets int                         time-bucket resolution for the git timeline reports (default 60)
       --by-author                           render the author rollup report (bus factor and last-toucher attribution over recent git history)
       --by-file                             display output for every file
   -m, --character                           calculate max and mean characters per line
@@ -316,6 +320,7 @@ Flags:
       --count-ignore                        set to allow .gitignore and .ignore files to be counted
       --coupling                            render the change-coupling report (file pairs that change together over recent git history)
       --coupling-for string                 blast-radius view: given a file path, show what tends to change with it over recent git history
+      --coupling-weighted                   weight coupling by file complexity so pairs of complex files rank above generated/data-file churn (implies --coupling)
       --currency-symbol string              set currency symbol (default "$")
       --debug                               enable debug output
       --depth int                           commit window size for git history reports; 0 means entire history (large repos may be slow) (default 1000)
