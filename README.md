@@ -1421,7 +1421,7 @@ Summary
 
 #### Sourcegraph <https://github.com/SINTEF/sourcegraph.git>
 
-Sourcegraph has gone dark since I last ran these benchmarks hence using a clone taken before this occured.
+Sourcegraph has gone dark since I last ran these benchmarks hence using a clone taken before this occurred.
 The reason for this is to track what appears to be a performance regression in tokei.
 
 ```shell
@@ -1452,7 +1452,7 @@ If you enable duplicate detection expect performance to fall by about 20% in `sc
 
 Performance is tracked for some releases and presented below.
 
-[![scc perfromance on Linux kernel](./performance-over-time.png)]
+[![scc performance on Linux kernel](./performance-over-time.png)]
 The decrease in performance from the 3.3.0 release was due to accurate .gitignore, .ignore and .gitmodule support.
 Current work is focussed on resolving this.
 
