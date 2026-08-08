@@ -2381,7 +2381,22 @@
     "extensions": ["fs", "fsi", "fsx", "fsscript"],
     "line_comment": ["//"],
     "multi_line": [["(*", "*)"]],
-    "quotes": []
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "\"",
+        "ignoreEscape": true,
+        "start": "@\""
+      },
+      {
+        "end": "\"\"\"",
+        "ignoreEscape": true,
+        "start": "\"\"\""
+      }
+    ]
   },
   "F*": {
     "complexitychecks": [

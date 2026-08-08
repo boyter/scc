@@ -3970,7 +3970,26 @@ var languageDatabase = map[string]Language{
 				"*)",
 			},
 		},
-		Quotes:          []Quote{},
+		Quotes: []Quote{
+			{
+				Start:        "\"",
+				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+			{
+				Start:        "@\"",
+				End:          "\"",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "\"\"\"",
+				End:          "\"\"\"",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+		},
 		NestedMultiLine: false,
 		Keywords:        []string{},
 		Heuristics:      []Heuristic{},
