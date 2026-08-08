@@ -25,6 +25,13 @@
     "multi_line": [],
     "quotes": []
   },
+  "AL": {
+    "complexitychecks": ["if ", "if(", "IF ", "IF(", "case ", "CASE ", "while ", "WHILE ", "for ", "FOR ", "foreach ", "FOREACH ", "until ", "UNTIL ", "else ", "ELSE ", "and ", "AND ", "or ", "OR ", "xor ", "XOR ", "not ", "NOT "],
+    "extensions": ["al"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [{"end": "'", "start": "'"}]
+  },
   "Apex": {
     "complexitychecks": [
       "for ",
