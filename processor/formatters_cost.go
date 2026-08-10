@@ -144,9 +144,7 @@ func calculateSize(sumBytes int64, str *strings.Builder) {
 		size = float64(sumBytes) / 1_024_000
 	case "xkcd-kb":
 		str.WriteString("1000 bytes during leap years, 1024 otherwise\n")
-		if isLeapYear(time.Now().Year()) {
-			size = float64(sumBytes) / 1_000_000
-		}
+		size = float64(sumBytes) / xkcdKbDivisor(time.Now().Year())
 	case "xkcd-kelly":
 		str.WriteString("compromise between 1000 and 1024 bytes\n")
 		size = float64(sumBytes) / (1012 * 1012)
@@ -188,4 +186,15 @@ func isLeapYear(year int) bool {
 		}
 	}
 	return leapFlag
+}
+
+// xkcdKbDivisor returns the byte divisor the xkcd-kb unit divides total bytes
+// by to obtain megabytes: 1_000_000 (1000-based) during leap years and
+// 1_048_576 (1024-based) otherwise, matching the unit's help text "1000 bytes
+// during leap years, 1024 otherwise". Pure in year for year-independent tests.
+func xkcdKbDivisor(year int) float64 {
+	if isLeapYear(year) {
+		return 1_000_000
+	}
+	return 1_048_576
 }

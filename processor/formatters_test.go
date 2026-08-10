@@ -3,11 +3,13 @@
 package processor
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/mattn/go-runewidth"
 )
@@ -39,6 +41,41 @@ func TestCalculateSize(t *testing.T) {
 	// The byte count is locale-grouped like every other number in the output.
 	if !strings.Contains(str.String(), "Processed 1,000,000 bytes, 1.000 megabytes (SI)") {
 		t.Error("expected to match got", str.String())
+	}
+}
+
+func TestCalculateSizeXkcdKb(t *testing.T) {
+	t.Setenv("LANG", "en_US.UTF-8")
+
+	prevSizeUnit := SizeUnit
+	SizeUnit = "xkcd-kb"
+	t.Cleanup(func() { SizeUnit = prevSizeUnit })
+
+	// The divisor mirrors the case's help text "1000 bytes during leap
+	// years, 1024 otherwise": 1_000_000 (1000-based) in leap years and
+	// 1_048_576 (1024-based) otherwise. Asserting it directly keeps the
+	// expectation year-independent.
+	if got := xkcdKbDivisor(2026); got != float64(1024*1024) {
+		t.Errorf("xkcdKbDivisor(2026) = %v, want %d (non-leap, 1024-based)", got, 1024*1024)
+	}
+	if got := xkcdKbDivisor(2024); got != 1_000_000.0 {
+		t.Errorf("xkcdKbDivisor(2024) = %v, want 1000000 (leap, 1000-based)", got)
+	}
+
+	var str strings.Builder
+	calculateSize(10_000_000, &str)
+
+	// Regression guard: before the fix `size` was left at 0.0 in non-leap
+	// years, so the line read "0.000 megabytes" for any byte count.
+	if strings.Contains(str.String(), "0.000 megabytes") {
+		t.Errorf("expected a non-zero megabyte size for xkcd-kb, got:\n%s", str.String())
+	}
+
+	// The rendered value must equal bytes/divisor for the current year
+	// ("9.537 megabytes" in a non-leap year such as 2026).
+	want := fmt.Sprintf("%.3f megabytes", 10_000_000.0/xkcdKbDivisor(time.Now().Year()))
+	if !strings.Contains(str.String(), want) {
+		t.Errorf("expected output to contain %q, got:\n%s", want, str.String())
 	}
 }
 
