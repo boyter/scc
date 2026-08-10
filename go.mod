@@ -8,7 +8,7 @@ require (
 	github.com/agnivade/levenshtein v1.2.2-0.20250519083737-420867539855
 	github.com/boyter/gocodewalker v1.5.2-0.20260627224246-75bd04cd8742
 	github.com/boyter/simplecache v0.0.0-20260310220729-445661819a53
-	github.com/go-git/go-git/v5 v5.19.1
+	github.com/go-git/go-git/v5 v5.19.2
 	github.com/json-iterator/go v1.1.12
 	github.com/mark3labs/mcp-go v0.55.0
 	github.com/mattn/go-isatty v0.0.22
@@ -18,7 +18,7 @@ require (
 	github.com/spf13/pflag v1.0.10
 	go.yaml.in/yaml/v2 v2.4.4
 	golang.org/x/crypto v0.53.0
-	golang.org/x/text v0.38.0
+	golang.org/x/text v0.39.0
 )
 
 require (
