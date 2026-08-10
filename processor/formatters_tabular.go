@@ -160,12 +160,12 @@ func fileSummarizeLong(input chan *FileJob) string {
 		if Percent {
 			_, _ = p.Fprintf(str,
 				tabularWideFormatBodyPercent,
-				float64(len(summary.Files))/float64(sumFiles)*100,
-				float64(summary.Lines)/float64(sumLines)*100,
-				float64(summary.Blank)/float64(sumBlank)*100,
-				float64(summary.Comment)/float64(sumComment)*100,
-				float64(summary.Code)/float64(sumCode)*100,
-				float64(summary.Complexity)/float64(sumComplexity)*100,
+				pct(int64(len(summary.Files)), sumFiles),
+				pct(summary.Lines, sumLines),
+				pct(summary.Blank, sumBlank),
+				pct(summary.Comment, sumComment),
+				pct(summary.Code, sumCode),
+				pct(summary.Complexity, sumComplexity),
 			)
 
 			if !UlocMode {
@@ -365,21 +365,21 @@ func fileSummarizeShort(input chan *FileJob) string {
 			if !Complexity {
 				_, _ = p.Fprintf(str,
 					tabularShortPercentLanguageFormatBody,
-					float64(len(summary.Files))/float64(sumFiles)*100,
-					float64(summary.Lines)/float64(sumLines)*100,
-					float64(summary.Blank)/float64(sumBlank)*100,
-					float64(summary.Comment)/float64(sumComment)*100,
-					float64(summary.Code)/float64(sumCode)*100,
-					float64(activeComplexity(summary.Complexity, summary.Cognitive))/float64(activeComplexity(sumComplexity, sumCognitive))*100,
+					pct(int64(len(summary.Files)), sumFiles),
+					pct(summary.Lines, sumLines),
+					pct(summary.Blank, sumBlank),
+					pct(summary.Comment, sumComment),
+					pct(summary.Code, sumCode),
+					pct(activeComplexity(summary.Complexity, summary.Cognitive), activeComplexity(sumComplexity, sumCognitive)),
 				)
 			} else {
 				_, _ = p.Fprintf(str,
 					tabularShortPercentLanguageFormatBodyNoComplexity,
-					float64(len(summary.Files))/float64(sumFiles)*100,
-					float64(summary.Lines)/float64(sumLines)*100,
-					float64(summary.Blank)/float64(sumBlank)*100,
-					float64(summary.Comment)/float64(sumComment)*100,
-					float64(summary.Code)/float64(sumCode)*100,
+					pct(int64(len(summary.Files)), sumFiles),
+					pct(summary.Lines, sumLines),
+					pct(summary.Blank, sumBlank),
+					pct(summary.Comment, sumComment),
+					pct(summary.Code, sumCode),
 				)
 			}
 
@@ -466,6 +466,17 @@ func fileSummarizeShort(input chan *FileJob) string {
 		str.WriteString(getTabularShortBreak())
 	}
 	return str.String()
+}
+
+// pct returns value as a percentage of total, guarding the total==0 case so
+// the tabular --percent output never prints NaN% for a category that has no
+// lines (e.g. a project whose files have zero blank/comment/complexity lines).
+// Mirrors the total!=0 guard already used by addLanguagePercentages for JSON.
+func pct(value, total int64) float64 {
+	if total == 0 {
+		return 0
+	}
+	return float64(value) / float64(total) * 100
 }
 
 func maxIn(i []int) int {
