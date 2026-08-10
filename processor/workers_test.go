@@ -2169,3 +2169,51 @@ func BenchmarkUnknownRemapLanguage(b *testing.B) {
 		}
 	})
 }
+
+// F# defines (* *) as multi-line comments but, before this fix, had no string
+// literals in languages.json. A (* inside a regular string therefore opened a
+// phantom block comment that ate the following code lines. With the string
+// literals now declared, the (* inside the string is ignored by the comment
+// scanner and each line is classified correctly.
+func TestCountStatsFSharpStringHidesBlockComment(t *testing.T) {
+	ProcessConstants()
+
+	checks := []struct {
+		name    string
+		content string
+		code    int64
+		comment int64
+	}{
+		{
+			name: "regular string hides block-comment opener",
+			content: "let s = \"(* not a comment\"\n" +
+				"let x = 1\n",
+			code:    2,
+			comment: 0,
+		},
+		{
+			name: "verbatim string hides block-comment opener",
+			content: "let s = @\"(* not a comment\"\n" +
+				"let x = 1\n",
+			code:    2,
+			comment: 0,
+		},
+		{
+			name: "real comment still counted",
+			content: "// real comment\n" +
+				"let x = 1\n",
+			code:    1,
+			comment: 1,
+		},
+	}
+
+	for _, c := range checks {
+		fileJob := FileJob{Language: "F#"}
+		fileJob.SetContent(c.content)
+		CountStats(&fileJob)
+		if fileJob.Code != c.code || fileJob.Comment != c.comment {
+			t.Errorf("%s: Code=%d Comment=%d (want Code=%d Comment=%d)",
+				c.name, fileJob.Code, fileJob.Comment, c.code, c.comment)
+		}
+	}
+}
