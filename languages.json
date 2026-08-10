@@ -5993,7 +5993,12 @@
     "extensions": ["proto"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
-    "quotes": []
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
   },
   "Puppet": {
     "complexitychecks": [
