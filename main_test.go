@@ -835,6 +835,7 @@ func TestLanguageNameTruncate(t *testing.T) {
 func TestSpecificLanguages(t *testing.T) {
 	languages := [...]string{
 		"ABNF",
+		"AL",
 		"Alchemist",
 		"Algol 68",
 		"Alloy",
