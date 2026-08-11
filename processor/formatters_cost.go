@@ -13,6 +13,7 @@ import (
 )
 
 func calculateCocomoSLOCCount(sumCode int64, str *strings.Builder) {
+	c := cocomoCoefficients()
 	estimatedEffort := EstimateEffort(int64(sumCode), EAF)
 	estimatedScheduleMonths := EstimateScheduleMonths(estimatedEffort)
 	estimatedPeopleRequired := 0.0
@@ -25,9 +26,9 @@ func calculateCocomoSLOCCount(sumCode int64, str *strings.Builder) {
 
 	_, _ = p.Fprintf(str, "Total Physical Source Lines of Code (SLOC)                     = %d\n", sumCode)
 	_, _ = p.Fprintf(str, "Development Effort Estimate, Person-Years (Person-Months)      = %.2f (%.2f)\n", estimatedEffort/12, estimatedEffort)
-	_, _ = p.Fprintf(str, " (Basic COCOMO model, Person-Months = %.2f*(KSLOC**%.2f)*%.2f)\n", projectType[CocomoProjectType][0], projectType[CocomoProjectType][1], EAF)
+	_, _ = p.Fprintf(str, " (Basic COCOMO model, Person-Months = %.2f*(KSLOC**%.2f)*%.2f)\n", c[0], c[1], EAF)
 	_, _ = p.Fprintf(str, "Schedule Estimate, Years (Months)                              = %.2f (%.2f)\n", estimatedScheduleMonths/12, estimatedScheduleMonths)
-	_, _ = p.Fprintf(str, " (Basic COCOMO model, Months = %.2f*(person-months**%.2f))\n", projectType[CocomoProjectType][2], projectType[CocomoProjectType][3])
+	_, _ = p.Fprintf(str, " (Basic COCOMO model, Months = %.2f*(person-months**%.2f))\n", c[2], c[3])
 	_, _ = p.Fprintf(str, "Estimated Average Number of Developers (Effort/Schedule)       = %.2f\n", estimatedPeopleRequired)
 	_, _ = p.Fprintf(str, "Total Estimated Cost to Develop                                = %s%.0f\n", CurrencySymbol, estimatedCost)
 	_, _ = p.Fprintf(str, " (average salary = %s%d/year, overhead = %.2f)\n", CurrencySymbol, AverageWage, Overhead)

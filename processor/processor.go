@@ -452,9 +452,15 @@ func ProcessConstants() {
 		setupCountRules()
 	}
 
-	// Configure COCOMO setting
-	_, ok := projectType[strings.ToLower(CocomoProjectType)]
-	if !ok {
+	// Configure COCOMO setting. projectType is keyed by the canonical
+	// lowercase name, so when the selection matches a built-in type we must
+	// normalize CocomoProjectType to that lowercase key — otherwise the
+	// membership check below passes for "Organic" while the real lookups in
+	// EstimateEffort/EstimateScheduleMonths index projectType["Organic"], hit
+	// a nil slice and panic. See `scc --cocomo-project-type Organic`.
+	if _, ok := projectType[strings.ToLower(CocomoProjectType)]; ok {
+		CocomoProjectType = strings.ToLower(CocomoProjectType)
+	} else {
 		// let's see if we can turn it into a custom one
 		spl := strings.Split(CocomoProjectType, ",")
 		val := []float64{}

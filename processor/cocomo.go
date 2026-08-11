@@ -31,13 +31,26 @@ func EstimateCost(effortApplied float64, averageWage int64, overhead float64) fl
 	return effortApplied * float64(averageWage) / 12 * overhead
 }
 
+// cocomoCoefficients returns the four Basic COCOMO coefficients [a, b, c, d]
+// for the configured project type. It guards the projectType lookup so an
+// unknown or malformed project type can never yield a nil/short slice and
+// panic the indexers below — falling back to the organic model instead.
+func cocomoCoefficients() []float64 {
+	if v, ok := projectType[CocomoProjectType]; ok && len(v) >= 4 {
+		return v
+	}
+	return projectType["organic"]
+}
+
 // EstimateEffort calculate the effort applied using generic COCOMO weighted values
 func EstimateEffort(sloc int64, eaf float64) float64 {
-	var effortApplied = projectType[CocomoProjectType][0] * math.Pow(float64(sloc)/1000, projectType[CocomoProjectType][1]) * eaf
+	c := cocomoCoefficients()
+	var effortApplied = c[0] * math.Pow(float64(sloc)/1000, c[1]) * eaf
 	return effortApplied
 }
 
 // EstimateScheduleMonths estimates the effort in months based on the result from EstimateEffort
 func EstimateScheduleMonths(effortApplied float64) float64 {
-	return projectType[CocomoProjectType][2] * math.Pow(effortApplied, projectType[CocomoProjectType][3])
+	c := cocomoCoefficients()
+	return c[2] * math.Pow(effortApplied, c[3])
 }
