@@ -7868,7 +7868,12 @@
     "extensions": ["tf", "tfvars", "tf.json"],
     "line_comment": ["#", "//"],
     "multi_line": [["/*", "*/"]],
-    "quotes": []
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
   },
   "Textile": {
     "complexitychecks": [],
