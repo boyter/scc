@@ -782,30 +782,146 @@ func TestToOpenMetricsMultiple(t *testing.T) {
 
 	var expectedResult = `# TYPE scc_files gauge
 # HELP scc_files Number of sourcecode files.
+scc_files{language="Go"} 2
 # TYPE scc_lines gauge
 # HELP scc_lines Number of lines.
+scc_lines{language="Go"} 2000
 # TYPE scc_code gauge
 # HELP scc_code Number of lines of actual code.
+scc_code{language="Go"} 2000
 # TYPE scc_comments gauge
 # HELP scc_comments Number of comments.
+scc_comments{language="Go"} 2000
 # TYPE scc_blanks gauge
 # HELP scc_blanks Number of blank lines.
+scc_blanks{language="Go"} 2000
 # TYPE scc_complexity gauge
 # HELP scc_complexity Code complexity.
+scc_complexity{language="Go"} 2000
 # TYPE scc_bytes gauge
 # UNIT scc_bytes bytes
 # HELP scc_bytes Size in bytes.
-scc_files{language="Go"} 2
-scc_lines{language="Go"} 2000
-scc_code{language="Go"} 2000
-scc_comments{language="Go"} 2000
-scc_blanks{language="Go"} 2000
-scc_complexity{language="Go"} 2000
 scc_bytes{language="Go"} 2000
+# EOF
 `
 
 	if res != expectedResult {
 		t.Error("Expected OpenMetrics return", res)
+	}
+}
+
+// assertOpenMetricsFamiliesContiguous checks that every sample line of a metric family appears
+// in one unbroken run, which OpenMetrics requires, and that the output ends with the # EOF
+// terminator.
+func assertOpenMetricsFamiliesContiguous(t *testing.T, res string) {
+	t.Helper()
+
+	if !strings.HasSuffix(res, "# EOF\n") {
+		t.Error("Expected output to be terminated by # EOF", res)
+	}
+
+	var order []string
+	seen := map[string]bool{}
+	previous := ""
+
+	for _, line := range strings.Split(res, "\n") {
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		name, _, found := strings.Cut(line, "{")
+		if !found {
+			t.Error("Expected a labelled sample line", line)
+			continue
+		}
+
+		if name != previous {
+			if seen[name] {
+				t.Error("Samples of family are not contiguous: "+name, res)
+			}
+			seen[name] = true
+			order = append(order, name)
+			previous = name
+		}
+	}
+
+	if len(order) == 0 {
+		t.Error("Expected at least one sample", res)
+	}
+}
+
+func TestToOpenMetricsFamiliesContiguous(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	for _, language := range []string{"Go", "Python", "Rust"} {
+		for i := 0; i < 2; i++ {
+			inputChan <- &FileJob{
+				Language:   language,
+				Filename:   fmt.Sprintf("a%d.x", i),
+				Location:   fmt.Sprintf("./a%d.x", i),
+				Bytes:      1000,
+				Lines:      1000,
+				Code:       1000,
+				Comment:    1000,
+				Blank:      1000,
+				Complexity: 1000,
+			}
+		}
+	}
+	close(inputChan)
+
+	Files = false
+	res := toOpenMetrics(inputChan)
+
+	assertOpenMetricsFamiliesContiguous(t, res)
+}
+
+func TestToOpenMetricsFilesFamiliesContiguous(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	for _, language := range []string{"Go", "Python", "Rust"} {
+		for i := 0; i < 2; i++ {
+			inputChan <- &FileJob{
+				Language:   language,
+				Filename:   fmt.Sprintf("a%d.x", i),
+				Location:   fmt.Sprintf("./a%d.x", i),
+				Bytes:      1000,
+				Lines:      1000,
+				Code:       1000,
+				Comment:    1000,
+				Blank:      1000,
+				Complexity: 1000,
+			}
+		}
+	}
+	close(inputChan)
+
+	Files = true
+	res := toOpenMetrics(inputChan)
+	Files = false
+
+	assertOpenMetricsFamiliesContiguous(t, res)
+}
+
+func TestToOpenMetricsFilesEscapesLabelValues(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:   `we"ird`,
+		Filename:   `we"ird.py`,
+		Location:   "./we\"ird\\new\nline.py",
+		Bytes:      1000,
+		Lines:      1000,
+		Code:       1000,
+		Comment:    1000,
+		Blank:      1000,
+		Complexity: 1000,
+	}
+	close(inputChan)
+
+	Files = true
+	res := toOpenMetrics(inputChan)
+	Files = false
+
+	if !strings.Contains(res, `scc_lines{language="we\"ird",file="./we\"ird\\new\nline.py"} 1000`) {
+		t.Error("Expected quote, backslash and newline to be escaped in label values", res)
 	}
 }
 
@@ -1015,26 +1131,27 @@ func TestFileSummarizeOpenMetrics(t *testing.T) {
 
 	var expectedResult = `# TYPE scc_files gauge
 # HELP scc_files Number of sourcecode files.
+scc_files{language="Go"} 1
 # TYPE scc_lines gauge
 # HELP scc_lines Number of lines.
+scc_lines{language="Go"} 1000
 # TYPE scc_code gauge
 # HELP scc_code Number of lines of actual code.
+scc_code{language="Go"} 1000
 # TYPE scc_comments gauge
 # HELP scc_comments Number of comments.
+scc_comments{language="Go"} 1000
 # TYPE scc_blanks gauge
 # HELP scc_blanks Number of blank lines.
+scc_blanks{language="Go"} 1000
 # TYPE scc_complexity gauge
 # HELP scc_complexity Code complexity.
+scc_complexity{language="Go"} 1000
 # TYPE scc_bytes gauge
 # UNIT scc_bytes bytes
 # HELP scc_bytes Size in bytes.
-scc_files{language="Go"} 1
-scc_lines{language="Go"} 1000
-scc_code{language="Go"} 1000
-scc_comments{language="Go"} 1000
-scc_blanks{language="Go"} 1000
-scc_complexity{language="Go"} 1000
 scc_bytes{language="Go"} 1000
+# EOF
 `
 
 	if res != expectedResult {
@@ -1069,22 +1186,22 @@ func TestFileSummarizeOpenMetricsPerFile(t *testing.T) {
 # HELP scc_files Number of sourcecode files.
 # TYPE scc_lines gauge
 # HELP scc_lines Number of lines.
+scc_lines{language="Go",file="C:\\bbbb.go"} 1000
 # TYPE scc_code gauge
 # HELP scc_code Number of lines of actual code.
+scc_code{language="Go",file="C:\\bbbb.go"} 1000
 # TYPE scc_comments gauge
 # HELP scc_comments Number of comments.
+scc_comments{language="Go",file="C:\\bbbb.go"} 1000
 # TYPE scc_blanks gauge
 # HELP scc_blanks Number of blank lines.
+scc_blanks{language="Go",file="C:\\bbbb.go"} 1000
 # TYPE scc_complexity gauge
 # HELP scc_complexity Code complexity.
+scc_complexity{language="Go",file="C:\\bbbb.go"} 1000
 # TYPE scc_bytes gauge
 # UNIT scc_bytes bytes
 # HELP scc_bytes Size in bytes.
-scc_lines{language="Go",file="C:\\bbbb.go"} 1000
-scc_code{language="Go",file="C:\\bbbb.go"} 1000
-scc_comments{language="Go",file="C:\\bbbb.go"} 1000
-scc_blanks{language="Go",file="C:\\bbbb.go"} 1000
-scc_complexity{language="Go",file="C:\\bbbb.go"} 1000
 scc_bytes{language="Go",file="C:\\bbbb.go"} 1000
 # EOF
 `
