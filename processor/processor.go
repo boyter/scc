@@ -1113,7 +1113,12 @@ func Process() {
 	if FileOutput == "" {
 		fmt.Print(result)
 	} else {
-		_ = os.WriteFile(FileOutput, []byte(result), 0644)
+		// A failed write must not report success: follow the --report path
+		// above and exit non-zero with the reason on stderr.
+		if err := os.WriteFile(FileOutput, []byte(result), 0644); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 		fmt.Println("results written to " + FileOutput)
 	}
 }
