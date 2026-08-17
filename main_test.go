@@ -449,6 +449,25 @@ func TestMultipleFormatWriteFile(t *testing.T) {
 	}
 }
 
+// TestMultipleFormatWriteFileColonPath is a regression test for
+// https://github.com/boyter/scc/issues/290 where --format-multi silently
+// discarded any target containing a colon, such as a Windows absolute path
+// like csv:C:\folder\out.csv, because the format:target pair was split on
+// every colon rather than only the first one.
+func TestMultipleFormatWriteFileColonPath(t *testing.T) {
+	tmpDir := t.TempDir()
+	outputCSV := filepath.Join(tmpDir, "C:output.csv")
+
+	_, err := runSCC("--format-multi", "csv:"+outputCSV)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if info, err := os.Stat(outputCSV); err != nil || info.Size() <= 0 {
+		t.Fatalf("csv write to colon containing path failed for %s", outputCSV)
+	}
+}
+
 func TestRecursivelyIgnore(t *testing.T) {
 	tmpDir := t.TempDir()
 	err := os.WriteFile(filepath.Join(tmpDir, ".gitignore"), []byte("ignore-git.txt\n"), 0644)

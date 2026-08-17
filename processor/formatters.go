@@ -148,7 +148,9 @@ func fileSummarizeMulti(input chan *FileJob) string {
 
 	// for each output pump the results into
 	for s := range strings.SplitSeq(FormatMulti, ",") {
-		t := strings.Split(s, ":")
+		// Split on the first colon only, because the target may itself contain
+		// colons, such as a Windows absolute path like C:\folder\out.csv
+		t := strings.SplitN(s, ":", 2)
 		if len(t) == 2 {
 			i := make(chan *FileJob, len(results))
 
