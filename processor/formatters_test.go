@@ -853,6 +853,42 @@ func TestToSQLSingle(t *testing.T) {
 	}
 }
 
+func TestToSQLSingleEscapesProjectName(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:   "Go",
+		Filename:   "bbbb.go",
+		Extension:  "go",
+		Location:   "./",
+		Bytes:      1000,
+		Lines:      1000,
+		Code:       1000,
+		Comment:    1000,
+		Blank:      1000,
+		Complexity: 1000,
+		Binary:     false,
+		Uloc:       99,
+	}
+	close(inputChan)
+
+	SQLProject = "it's mine"
+	defer func() { SQLProject = "" }()
+
+	res := toSql(inputChan)
+
+	if !strings.Contains(res, `insert into metadata values('`) {
+		t.Error("Expected metadata insert", res)
+	}
+
+	if !strings.Contains(res, `, 'it''s mine', `) {
+		t.Error("Expected escaped project name in metadata insert", res)
+	}
+
+	if strings.Contains(res, `'it's mine'`) {
+		t.Error("Expected no unescaped project name", res)
+	}
+}
+
 func TestFileSummarizeWide(t *testing.T) {
 	inputChan := make(chan *FileJob, 1000)
 	inputChan <- &FileJob{

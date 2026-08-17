@@ -58,7 +58,7 @@ func toSqlInsert(input chan *FileJob) string {
 	str.WriteString("\nbegin transaction;")
 	_, _ = fmt.Fprintf(str, "\ninsert into metadata values('%s', '%s', %f, %f, %f, %f);",
 		currentTime.Format("2006-01-02 15:04:05"),
-		projectName,
+		escapeSQLString(projectName),
 		es,
 		cost,
 		schedule,
@@ -71,7 +71,7 @@ func toSqlInsert(input chan *FileJob) string {
 		str.WriteString("\nbegin transaction;")
 		_, _ = fmt.Fprintf(str, "\ninsert into locomo_metadata values('%s', '%s', %f, %f, %f, %f, %f, '%s', %f);",
 			currentTime.Format("2006-01-02 15:04:05"),
-			projectName,
+			escapeSQLString(projectName),
 			result.Cost,
 			result.InputTokens,
 			result.OutputTokens,
