@@ -9,24 +9,91 @@ import (
 	"go.yaml.in/yaml/v2"
 )
 
-var openMetricsMetadata = `# TYPE scc_files gauge
+// openMetricsMetric describes a single OpenMetrics metric family. OpenMetrics requires all
+// samples of a family to be contiguous, so output is generated metric family by metric family
+// rather than language by language.
+type openMetricsMetric struct {
+	name     string
+	metadata string
+	// summary extracts the sample value from a language summary. A nil value means the metric
+	// has no samples in the per-file output.
+	summary func(LanguageSummary) int64
+	file    func(*FileJob) int64
+}
+
+var openMetricsMetrics = []openMetricsMetric{
+	{
+		name: "files",
+		metadata: `# TYPE scc_files gauge
 # HELP scc_files Number of sourcecode files.
-# TYPE scc_lines gauge
+`,
+		summary: func(l LanguageSummary) int64 { return l.Count },
+	},
+	{
+		name: "lines",
+		metadata: `# TYPE scc_lines gauge
 # HELP scc_lines Number of lines.
-# TYPE scc_code gauge
+`,
+		summary: func(l LanguageSummary) int64 { return l.Lines },
+		file:    func(f *FileJob) int64 { return f.Lines },
+	},
+	{
+		name: "code",
+		metadata: `# TYPE scc_code gauge
 # HELP scc_code Number of lines of actual code.
-# TYPE scc_comments gauge
+`,
+		summary: func(l LanguageSummary) int64 { return l.Code },
+		file:    func(f *FileJob) int64 { return f.Code },
+	},
+	{
+		name: "comments",
+		metadata: `# TYPE scc_comments gauge
 # HELP scc_comments Number of comments.
-# TYPE scc_blanks gauge
+`,
+		summary: func(l LanguageSummary) int64 { return l.Comment },
+		file:    func(f *FileJob) int64 { return f.Comment },
+	},
+	{
+		name: "blanks",
+		metadata: `# TYPE scc_blanks gauge
 # HELP scc_blanks Number of blank lines.
-# TYPE scc_complexity gauge
+`,
+		summary: func(l LanguageSummary) int64 { return l.Blank },
+		file:    func(f *FileJob) int64 { return f.Blank },
+	},
+	{
+		name: "complexity",
+		metadata: `# TYPE scc_complexity gauge
 # HELP scc_complexity Code complexity.
-# TYPE scc_bytes gauge
+`,
+		summary: func(l LanguageSummary) int64 { return l.Complexity },
+		file:    func(f *FileJob) int64 { return f.Complexity },
+	},
+	{
+		name: "bytes",
+		metadata: `# TYPE scc_bytes gauge
 # UNIT scc_bytes bytes
 # HELP scc_bytes Size in bytes.
-`
+`,
+		summary: func(l LanguageSummary) int64 { return l.Bytes },
+		file:    func(f *FileJob) int64 { return f.Bytes },
+	},
+}
+
 var openMetricsSummaryRecordFormat = "scc_%s{language=\"%s\"} %d\n"
 var openMetricsFileRecordFormat = "scc_%s{language=\"%s\",file=\"%s\"} %d\n"
+
+var openMetricsLabelEscaper = strings.NewReplacer(
+	`\`, `\\`,
+	`"`, `\"`,
+	"\n", `\n`,
+)
+
+// escapeOpenMetricsLabelValue escapes the characters that are not permitted raw inside an
+// OpenMetrics label value.
+func escapeOpenMetricsLabelValue(value string) string {
+	return openMetricsLabelEscaper.Replace(value)
+}
 
 // LanguageSummary to generate output like cloc
 type languageSummaryCloc struct {
@@ -146,30 +213,36 @@ func toOpenMetricsSummary(input chan *FileJob) string {
 	language = sortLanguageSummary(language)
 
 	sb := &strings.Builder{}
-	sb.WriteString(openMetricsMetadata)
-	for _, result := range language {
-		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "files", result.Name, result.Count)
-		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "lines", result.Name, result.Lines)
-		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "code", result.Name, result.Code)
-		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "comments", result.Name, result.Comment)
-		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "blanks", result.Name, result.Blank)
-		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "complexity", result.Name, result.Complexity)
-		_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, "bytes", result.Name, result.Bytes)
+	for _, metric := range openMetricsMetrics {
+		sb.WriteString(metric.metadata)
+		for _, result := range language {
+			_, _ = fmt.Fprintf(sb, openMetricsSummaryRecordFormat, metric.name,
+				escapeOpenMetricsLabelValue(result.Name), metric.summary(result))
+		}
 	}
+	sb.WriteString("# EOF\n")
 	return sb.String()
 }
 
 func toOpenMetricsFiles(input chan *FileJob) string {
-	sb := &strings.Builder{}
-	sb.WriteString(openMetricsMetadata)
+	// The samples of a metric family must be contiguous, so the whole input is drained before
+	// anything is written.
+	var files []*FileJob
 	for file := range input {
-		var filename = strings.ReplaceAll(file.Location, "\\", "\\\\")
-		_, _ = fmt.Fprintf(sb, openMetricsFileRecordFormat, "lines", file.Language, filename, file.Lines)
-		_, _ = fmt.Fprintf(sb, openMetricsFileRecordFormat, "code", file.Language, filename, file.Code)
-		_, _ = fmt.Fprintf(sb, openMetricsFileRecordFormat, "comments", file.Language, filename, file.Comment)
-		_, _ = fmt.Fprintf(sb, openMetricsFileRecordFormat, "blanks", file.Language, filename, file.Blank)
-		_, _ = fmt.Fprintf(sb, openMetricsFileRecordFormat, "complexity", file.Language, filename, file.Complexity)
-		_, _ = fmt.Fprintf(sb, openMetricsFileRecordFormat, "bytes", file.Language, filename, file.Bytes)
+		files = append(files, file)
+	}
+
+	sb := &strings.Builder{}
+	for _, metric := range openMetricsMetrics {
+		sb.WriteString(metric.metadata)
+		if metric.file == nil {
+			continue
+		}
+		for _, file := range files {
+			_, _ = fmt.Fprintf(sb, openMetricsFileRecordFormat, metric.name,
+				escapeOpenMetricsLabelValue(file.Language),
+				escapeOpenMetricsLabelValue(file.Location), metric.file(file))
+		}
 	}
 	sb.WriteString("# EOF\n")
 	return sb.String()
