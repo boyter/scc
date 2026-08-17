@@ -196,7 +196,10 @@ func fileSummarizeMulti(input chan *FileJob) string {
 			} else {
 				err := os.WriteFile(t[1], []byte(val), 0600)
 				if err != nil {
-					fmt.Printf("%s unable to be written to for format %s: %s", t[1], t[0], err)
+					// A failed write must not report success: match the -o
+					// path and exit non-zero with the reason on stderr.
+					fmt.Fprintf(os.Stderr, "%s unable to be written to for format %s: %s\n", t[1], t[0], err)
+					os.Exit(1)
 				}
 			}
 		}
