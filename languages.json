@@ -4495,7 +4495,7 @@
       "fprintf("
     ],
     "line_comment": ["%"],
-    "multi_line": [["%{", "}%"]],
+    "multi_line": [["%{", "%}"]],
     "quotes": [
       {
         "end": "'",
@@ -6252,7 +6252,7 @@
     ],
     "extensions": ["rkt"],
     "line_comment": [";"],
-    "multi_line": [["|#", "#|"]],
+    "multi_line": [["#|", "|#"]],
     "nestedmultiline": true,
     "quotes": [
       {

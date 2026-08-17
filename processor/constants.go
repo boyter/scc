@@ -7508,7 +7508,7 @@ var languageDatabase = map[string]Language{
 		MultiLine: [][]string{
 			{
 				"%{",
-				"}%",
+				"%}",
 			},
 		},
 		Quotes: []Quote{
@@ -10345,8 +10345,8 @@ var languageDatabase = map[string]Language{
 		ExtensionFile: false,
 		MultiLine: [][]string{
 			{
-				"|#",
 				"#|",
+				"|#",
 			},
 		},
 		Quotes: []Quote{
