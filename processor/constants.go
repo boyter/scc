@@ -7317,8 +7317,8 @@ var languageDatabase = map[string]Language{
 				DocString:    false,
 			},
 			{
-				Start:        "]]",
-				End:          "[[",
+				Start:        "[[",
+				End:          "]]",
 				IgnoreEscape: true,
 				DocString:    false,
 			},
@@ -7403,8 +7403,8 @@ var languageDatabase = map[string]Language{
 				DocString:    false,
 			},
 			{
-				Start:        "]]",
-				End:          "[[",
+				Start:        "[[",
+				End:          "]]",
 				IgnoreEscape: true,
 				DocString:    false,
 			},
@@ -14465,8 +14465,8 @@ var languageDatabase = map[string]Language{
 				DocString:    false,
 			},
 			{
-				Start:        "]]",
-				End:          "[[",
+				Start:        "[[",
+				End:          "]]",
 				IgnoreEscape: true,
 				DocString:    false,
 			},

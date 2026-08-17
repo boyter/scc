@@ -4360,8 +4360,8 @@
         "start": "'"
       },
       {
-        "end": "[[",
-        "start": "]]",
+        "end": "]]",
+        "start": "[[",
         "ignoreEscape": true
       }
     ],
@@ -4410,8 +4410,8 @@
         "start": "`"
       },
       {
-        "end": "[[",
-        "start": "]]",
+        "end": "]]",
+        "start": "[[",
         "ignoreEscape": true
       }
     ],
@@ -8775,8 +8775,8 @@
         "start": "\""
       },
       {
-        "end": "[[",
-        "start": "]]",
+        "end": "]]",
+        "start": "[[",
         "ignoreEscape": true
       }
     ]
