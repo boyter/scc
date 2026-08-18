@@ -318,6 +318,7 @@ Flags:
       --count-as string                     count extension as language [e.g. jsp:htm,chead:"C Header" maps extension jsp to html and chead to C Header]
       --count-as-pattern stringArray        count files matching a path pattern as a new named category backed by a base language [repeatable; pattern is glob by default, prefix with re: for regex; e.g. *_spec.rb:"Ruby Spec":Ruby or re:\.test\.js$:"JavaScript Tests":JavaScript]
       --count-ignore                        set to allow .gitignore and .ignore files to be counted
+      --count-unsupported                   count files with an unrecognised language under an "Unknown" category as plain text
       --coupling                            render the change-coupling report (file pairs that change together over recent git history)
       --coupling-for string                 blast-radius view: given a file path, show what tends to change with it over recent git history
       --coupling-weighted                   weight coupling by file complexity so pairs of complex files rank above generated/data-file churn (implies --coupling)

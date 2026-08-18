@@ -113,74 +113,87 @@ func newFileJob(path, name string, fileInfo os.FileInfo) *FileJob {
 		}
 	}
 
-	if len(language) != 0 {
-		// check if extensions in the allow list, which should limit to just those extensions
-		if len(AllowListExtensions) != 0 {
-			ok := false
-			for _, x := range AllowListExtensions {
-				if x == extension {
-					ok = true
-				}
-			}
+	// If detection found nothing we normally skip the file. With
+	// --count-unsupported we instead count it under the "Unknown" category as
+	// plain text (issue #464). Binary files are still dropped later once a null
+	// byte is seen while counting, so this only surfaces text files scc doesn't
+	// yet recognise.
+	unsupported := false
+	if len(language) == 0 {
+		if !CountUnsupported {
+			printWarnF("skipping file unknown extension: %s", name)
+			return nil
+		}
+		language = []string{UnknownLanguage}
+		unsupported = true
+	}
 
-			if !ok {
-				printWarnF("skipping file as not in allow list: %s", name)
-				return nil
+	// check if extensions in the allow list, which should limit to just those extensions
+	if len(AllowListExtensions) != 0 {
+		ok := false
+		for _, x := range AllowListExtensions {
+			if x == extension {
+				ok = true
 			}
 		}
 
-		// check if we should exclude this type
-		if len(ExcludeListExtensions) != 0 {
-			ok := true
-			for _, x := range ExcludeListExtensions {
-				if x == extension {
-					ok = false
-				}
-			}
+		if !ok {
+			printWarnF("skipping file as not in allow list: %s", name)
+			return nil
+		}
+	}
 
-			if !ok {
-				printWarnF("skipping file as in exclude list: %s", name)
-				return nil
+	// check if we should exclude this type
+	if len(ExcludeListExtensions) != 0 {
+		ok := true
+		for _, x := range ExcludeListExtensions {
+			if x == extension {
+				ok = false
 			}
 		}
 
-		if len(ExcludeFilename) != 0 {
-			ok := true
-			for _, x := range ExcludeFilename {
-				if strings.Contains(name, x) {
-					ok = false
-				}
-			}
+		if !ok {
+			printWarnF("skipping file as in exclude list: %s", name)
+			return nil
+		}
+	}
 
-			if !ok {
-				printWarnF("skipping file as in exclude file list: %s", name)
-				return nil
+	if len(ExcludeFilename) != 0 {
+		ok := true
+		for _, x := range ExcludeFilename {
+			if strings.Contains(name, x) {
+				ok = false
 			}
 		}
 
+		if !ok {
+			printWarnF("skipping file as in exclude file list: %s", name)
+			return nil
+		}
+	}
+
+	// Unknown carries no language features by design so there is nothing to
+	// load; loading it would also miss the language database entirely.
+	if !unsupported {
 		for _, l := range language {
 			LoadLanguageFeature(l)
 		}
-
-		if !CountIgnore {
-			for _, l := range language {
-				if l == "ignore" || l == "gitignore" {
-					return nil
-				}
-			}
-		}
-
-		return &FileJob{
-			Location:          path,
-			Symlocation:       symPath,
-			Filename:          name,
-			Extension:         extension,
-			PossibleLanguages: language,
-			Bytes:             fileInfo.Size(),
-		}
-	} else {
-		printWarnF("skipping file unknown extension: %s", name)
 	}
 
-	return nil
+	if !CountIgnore {
+		for _, l := range language {
+			if l == "ignore" || l == "gitignore" {
+				return nil
+			}
+		}
+	}
+
+	return &FileJob{
+		Location:          path,
+		Symlocation:       symPath,
+		Filename:          name,
+		Extension:         extension,
+		PossibleLanguages: language,
+		Bytes:             fileInfo.Size(),
+	}
 }

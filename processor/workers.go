@@ -29,6 +29,11 @@ const (
 // SheBang is a global constant for indicating a shebang file header
 const SheBang string = "#!"
 
+// UnknownLanguage is the category files are counted under when --count-unsupported
+// is set and scc does not recognise the file's language. It has no language
+// features so such files are counted as plain text (no comments or complexity).
+const UnknownLanguage string = "Unknown"
+
 // LineType what type of line are processing
 type LineType int32
 
