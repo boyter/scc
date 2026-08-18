@@ -136,6 +136,22 @@ create table t        (
 	str.WriteString(`
 );`)
 
+	// toSqlInsert writes into locomo_metadata when --locomo is set, so the table has to
+	// be created here too or the generated script fails with "no such table".
+	if Locomo {
+		str.WriteString(`
+create table locomo_metadata (
+             timestamp text,
+             Project   text,
+             estimated_llm_cost real,
+             estimated_llm_input_tokens real,
+             estimated_llm_output_tokens real,
+             estimated_llm_generation_seconds real,
+             estimated_llm_review_hours real,
+             estimated_llm_preset text,
+             estimated_llm_cycles real);`)
+	}
+
 	str.WriteString(toSqlInsert(input))
 	return str.String()
 }
