@@ -402,6 +402,16 @@ func TestGuessLanguageCoq(t *testing.T) {
 	}
 }
 
+func TestGuessLanguageQtTranslationSource(t *testing.T) {
+	ProcessConstants()
+
+	content := []byte(`<?xml version="1.0" ?><!DOCTYPE TS><TS version="2.1" language="ca">`)
+	res := DetermineLanguage("", "", []string{"Qt Translation Source", "TypeScript"}, content)
+	if res != "Qt Translation Source" {
+		t.Errorf("Expected guessed language to have been Qt Translation Source, got %s", res)
+	}
+}
+
 func TestGuessLanguageSystemVerilog(t *testing.T) {
 	ProcessConstants()
 
