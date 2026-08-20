@@ -5,7 +5,6 @@ package processor
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"os"
 )
 
@@ -39,15 +38,14 @@ func (reader *FileReader) ReadFile(path string, size int) ([]byte, error) {
 		reader.Buffer = &bytes.Buffer{}
 	}
 
-	// Reset contents, but retain the underlying memory that's already been
-	// allocated
+	// Reset contents, but retain the underlying memory that's already been allocated.
 	reader.Buffer.Reset()
+	// Leave room for ReadFrom's final EOF probe to avoid an extra buffer growth.
+	reader.Buffer.Grow(size + bytes.MinRead)
 
-	reader.Buffer.Grow(size)
-
-	_, err = io.Copy(reader.Buffer, fd)
+	_, err = reader.Buffer.ReadFrom(fd)
 	if err != nil {
-		return nil, fmt.Errorf("error reading %s: %v", path, err)
+		return nil, fmt.Errorf("error reading %s: %w", path, err)
 	}
 
 	return reader.Buffer.Bytes(), nil
