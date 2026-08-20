@@ -110,6 +110,10 @@ var SccIgnore = false
 // CountIgnore should we count ignore files?
 var CountIgnore = false
 
+// CountUnsupported when set counts files scc does not recognise under an
+// "Unknown" category, treating them as plain text. See issue #464.
+var CountUnsupported = false
+
 // IgnoreFiles are paths to additional ignore files supplied via --ignore-file.
 // They are applied as a low priority base layer in the order supplied so a later
 // file can override an earlier one, and any in-tree .gitignore/.ignore/.sccignore
