@@ -1698,6 +1698,32 @@ func TestToHTMLTable(t *testing.T) {
 	}
 }
 
+// Language names and file paths are attacker/user controlled, so they have to be
+// escaped or they break out of the cell and produce invalid HTML.
+func TestToHTMLTableEscapesLanguageAndLocation(t *testing.T) {
+	t.Cleanup(func() { Files = false })
+	Files = true
+
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language: `<script>alert("x")</script>`,
+		Filename: "b&b.go",
+		Location: `./a<b>&"c".go`,
+	}
+	close(inputChan)
+	res := toHtmlTable(inputChan)
+
+	if strings.Contains(res, "<script>") {
+		t.Error("expected the language name to be escaped, got", res)
+	}
+	if !strings.Contains(res, `<th>&lt;script&gt;alert(&#34;x&#34;)&lt;/script&gt;</th>`) {
+		t.Error("expected escaped language cell, got", res)
+	}
+	if !strings.Contains(res, `<td>./a&lt;b&gt;&amp;&#34;c&#34;.go</td>`) {
+		t.Error("expected escaped location cell, got", res)
+	}
+}
+
 func TestUnicodeAwareTrimAscii(t *testing.T) {
 	tmp := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.md"
 	res := unicodeAwareTrim(tmp, shortFormatFileTruncate)

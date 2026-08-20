@@ -4,6 +4,7 @@ package processor
 
 import (
 	"fmt"
+	"html"
 	"strings"
 
 	"go.yaml.in/yaml/v2"
@@ -336,7 +337,7 @@ func toHtmlTable(input chan *FileJob) string {
 		<th>%d</th>
 		<th>%d</th>
 		<th>%d</th>
-	</tr>`, r.Name, len(r.Files), r.Lines, r.Blank, r.Comment, r.Code, r.Complexity, r.Bytes, len(ulocLanguageCount[r.Name]))
+	</tr>`, html.EscapeString(r.Name), len(r.Files), r.Lines, r.Blank, r.Comment, r.Code, r.Complexity, r.Bytes, len(ulocLanguageCount[r.Name]))
 
 		if Files {
 			sortSummaryFiles(&r)
@@ -352,7 +353,7 @@ func toHtmlTable(input chan *FileJob) string {
 		<td>%d</td>
 		<td>%d</td>
 		<td>%d</td>
-	</tr>`, res.Location, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.Bytes, res.Uloc)
+	</tr>`, html.EscapeString(res.Location), res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.Bytes, res.Uloc)
 			}
 		}
 
