@@ -1005,6 +1005,41 @@ func TestToSQLSingleEscapesProjectName(t *testing.T) {
 	}
 }
 
+func TestToSQLLocomoCreatesLocomoMetadataTable(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:   "Go",
+		Filename:   "bbbb.go",
+		Extension:  "go",
+		Location:   "./",
+		Bytes:      1000,
+		Lines:      1000,
+		Code:       1000,
+		Comment:    1000,
+		Blank:      1000,
+		Complexity: 1000,
+		Uloc:       99,
+	}
+	close(inputChan)
+
+	Locomo = true
+	defer func() { Locomo = false }()
+
+	res := toSql(inputChan)
+
+	if !strings.Contains(res, `insert into locomo_metadata values(`) {
+		t.Error("Expected locomo_metadata insert", res)
+	}
+
+	if !strings.Contains(res, `create table locomo_metadata`) {
+		t.Error("Expected create table locomo_metadata so the script can be replayed", res)
+	}
+
+	if strings.Index(res, `create table locomo_metadata`) > strings.Index(res, `insert into locomo_metadata`) {
+		t.Error("Expected create table locomo_metadata before its insert", res)
+	}
+}
+
 func TestFileSummarizeWide(t *testing.T) {
 	inputChan := make(chan *FileJob, 1000)
 	inputChan <- &FileJob{
