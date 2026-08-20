@@ -6212,6 +6212,24 @@
       }
     ]
   },
+  "Qt Translation Source": {
+    "extensions": ["ts"],
+    "heuristics": [
+      {
+        "pattern": "<\\?xml",
+        "literals": ["<?xml"],
+        "anchored": false
+      }
+    ],
+    "line_comment": [],
+    "multi_line": [["<!--", "-->"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "R": {
     "complexitychecks": [
       "for ",

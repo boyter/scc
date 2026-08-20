@@ -10269,6 +10269,41 @@ var languageDatabase = map[string]Language{
 		FileNames:       []string{},
 		SheBangs:        []string{},
 	},
+	"Qt Translation Source": {
+		LineComment:      []string{},
+		ComplexityChecks: []string{},
+		Extensions: []string{
+			"ts",
+		},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"<!--",
+				"-->",
+			},
+		},
+		Quotes: []Quote{
+			{
+				Start:        "\"",
+				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+		},
+		NestedMultiLine: false,
+		Keywords:        []string{},
+		Heuristics: []Heuristic{
+			{
+				Pattern: "<\\?xml",
+				Literals: []string{
+					"<?xml",
+				},
+				Anchored: false,
+			},
+		},
+		FileNames: []string{},
+		SheBangs:  []string{},
+	},
 	"R": {
 		LineComment: []string{
 			"#",
