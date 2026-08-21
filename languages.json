@@ -6217,7 +6217,7 @@
     "heuristics": [
       {
         "pattern": "<\\?xml",
-        "literals": ["<?xml"],
+        "literals": ["<?xml", "<!DOCTYPE TS>", "<TS version="],
         "anchored": false
       }
     ],

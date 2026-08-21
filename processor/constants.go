@@ -10297,6 +10297,8 @@ var languageDatabase = map[string]Language{
 				Pattern: "<\\?xml",
 				Literals: []string{
 					"<?xml",
+					"<!DOCTYPE TS>",
+					"<TS version=",
 				},
 				Anchored: false,
 			},

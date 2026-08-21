@@ -953,6 +953,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"Proto",
 		"Python",
 		"Q#",
+		"Qt Translation Source",
 		"R",
 		"Racket",
 		"Rakefile",
