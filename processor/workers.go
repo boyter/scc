@@ -67,6 +67,15 @@ var duplicates = CheckDuplicates{
 	hashes: make(map[int64][][]byte),
 }
 
+// cleanDuplicates resets the duplicate-detection hashes between runs. scc was
+// historically a one-shot CLI where this state died with the process, but the
+// long-lived MCP server calls ProcessResult once per tool call: without the
+// reset, every file in the second call matches a hash recorded by the first and
+// the whole result comes back empty.
+func cleanDuplicates() {
+	duplicates.Clear()
+}
+
 func checkForMatchSingle(currentByte byte, index int, endPoint int, matches []byte, fileJob *FileJob) bool {
 	potentialMatch := true
 	if currentByte == matches[0] {

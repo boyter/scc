@@ -70,7 +70,7 @@ func main() {
 		filename := strings.TrimPrefix(os.Args[1], "@")
 		b, err := os.ReadFile(filename)
 		if err != nil {
-			fmt.Printf("Error reading flags from a file: %s\n", err)
+			fmt.Fprintf(os.Stderr, "Error reading flags from a file: %s\n", err)
 			os.Exit(1)
 		}
 		os.Args = append([]string{os.Args[0]}, parseConfigArgs(string(b), true)...)

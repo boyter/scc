@@ -343,3 +343,39 @@ func TestMcpAnalyzeCognitiveNoLeak(t *testing.T) {
 		t.Fatalf("code total changed across calls: %d then %d", first.Totals.Code, second.Totals.Code)
 	}
 }
+
+// TestMcpAnalyzeNoDuplicatesNoLeak guards the duplicate-detection state leaking
+// between MCP calls. The hashes live in a package-level accumulator that scc,
+// as a one-shot CLI, never needed to reset. In the long-lived server every file
+// of the second call matched a hash recorded by the first, so the second and
+// every later call returned an empty result.
+func TestMcpAnalyzeNoDuplicatesNoLeak(t *testing.T) {
+	dir := writeDuplicateFixture(t)
+
+	first := callAnalyze(t, dir, map[string]any{"no_duplicates": true})
+	second := callAnalyze(t, dir, map[string]any{"no_duplicates": true})
+
+	// The fixture is three copies of one file, so deduplication must leave
+	// exactly one on every call — not one then zero.
+	if first.Totals.Files != 1 {
+		t.Fatalf("expected 1 file after deduplication, got %d", first.Totals.Files)
+	}
+	if second.Totals.Files != first.Totals.Files {
+		t.Fatalf("file count changed across calls: %d then %d", first.Totals.Files, second.Totals.Files)
+	}
+	if second.Totals.Code != first.Totals.Code {
+		t.Fatalf("code total changed across calls: %d then %d", first.Totals.Code, second.Totals.Code)
+	}
+}
+
+// writeDuplicateFixture writes three byte-identical Go files into a temp dir.
+func writeDuplicateFixture(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	for _, name := range []string{"a.go", "b.go", "c.go"} {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(nestedCognitiveSource), 0o644); err != nil {
+			t.Fatalf("failed to write fixture: %v", err)
+		}
+	}
+	return dir
+}

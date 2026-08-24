@@ -256,6 +256,15 @@ func (c *CheckDuplicates) Add(key int64, hash []byte) {
 	}
 }
 
+// Clear drops every recorded hash, taking the mutex itself. Called between runs
+// so a second in-process invocation does not treat the first run's files as
+// duplicates of themselves.
+func (c *CheckDuplicates) Clear() {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	clear(c.hashes)
+}
+
 // Check is a non thread safe check to see if the key exists already need to use mutex inside struct before calling this
 func (c *CheckDuplicates) Check(key int64, hash []byte) bool {
 	hashes, ok := c.hashes[key]

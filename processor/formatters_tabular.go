@@ -221,7 +221,13 @@ func fileSummarizeLong(input chan *FileJob) string {
 	if UlocMode {
 		_, _ = p.Fprintf(str, tabularWideUlocGlobalFormatBody, len(ulocGlobalCount))
 		if Dryness {
-			dryness := float64(len(ulocGlobalCount)) / float64(sumLines)
+			// Guard the divide: a tree of only empty files has zero lines, and an
+			// unguarded float division prints DRYness as ∞. Matches the guard
+			// snapshotULOC already applies to the same calculation.
+			dryness := 0.0
+			if sumLines > 0 {
+				dryness = float64(len(ulocGlobalCount)) / float64(sumLines)
+			}
 			_, _ = p.Fprintf(str, tabularWideDrynessFormatBody, dryness)
 		}
 		str.WriteString(getTabularWideBreak())
@@ -443,7 +449,13 @@ func fileSummarizeShort(input chan *FileJob) string {
 	if UlocMode {
 		_, _ = p.Fprintf(str, tabularShortUlocGlobalFormatBody, len(ulocGlobalCount))
 		if Dryness {
-			dryness := float64(len(ulocGlobalCount)) / float64(sumLines)
+			// Guard the divide: a tree of only empty files has zero lines, and an
+			// unguarded float division prints DRYness as ∞. Matches the guard
+			// snapshotULOC already applies to the same calculation.
+			dryness := 0.0
+			if sumLines > 0 {
+				dryness = float64(len(ulocGlobalCount)) / float64(sumLines)
+			}
 			_, _ = p.Fprintf(str, tabularShortDrynessFormatBody, dryness)
 		}
 		str.WriteString(getTabularShortBreak())

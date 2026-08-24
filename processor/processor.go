@@ -190,10 +190,25 @@ func parseRemapRules(value string) []remapRule {
 }
 
 func newRemapConfig(remapAll string, remapUnknown string) remapConfig {
-	return remapConfig{
+	c := remapConfig{
 		all:     parseRemapRules(remapAll),
 		unknown: parseRemapRules(remapUnknown),
 	}
+
+	// Load the features for every language a rule can remap to. Remapping only
+	// sets job.Language, and in lazy mode (which is every CLI run) nothing else
+	// guarantees that language was ever loaded — CountStats would then find no
+	// features and count the file as plain text, with no comments and no
+	// complexity. Done once here at setup rather than in the remap functions
+	// themselves, which run per file on the hot path.
+	for _, rule := range c.all {
+		LoadLanguageFeature(rule.language)
+	}
+	for _, rule := range c.unknown {
+		LoadLanguageFeature(rule.language)
+	}
+
+	return c
 }
 
 // MatchEngine selects how a CountRule pattern is interpreted. Glob is the
@@ -690,13 +705,14 @@ func LoadLanguageFeature(loadName string) {
 		return
 	}
 
-	var name string
-	var value Language
-
-	for name, value = range languageDatabase {
-		if name == loadName {
-			break
-		}
+	// A plain map lookup, not a range-with-break: ranging leaves value set to
+	// whatever the iteration happened to land on last when loadName is absent,
+	// which would register some arbitrary language's comment and complexity
+	// rules under this name. An unknown name has no features to build, so a
+	// miss must be a no-op — CountStats then treats the file as plain text.
+	value, ok := languageDatabase[loadName]
+	if !ok {
+		return
 	}
 
 	startTime := makeTimestampNano()
@@ -916,6 +932,7 @@ func Process() {
 	ProcessConstants()
 	processFlags()
 	cleanVisitedPaths()
+	cleanDuplicates()
 
 	// Clean up any invalid arguments before setting everything up
 	if len(DirFilePaths) == 0 {
@@ -934,14 +951,14 @@ func Process() {
 			fmt.Fprintf(os.Stderr, "warning: --report only analyses the first positional path (%s); other paths ignored\n", DirFilePaths[0])
 		}
 		if err := runReport(DirFilePaths); err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 		return
 	}
 
 	if Hotspots && (ByAuthor || Timeline) {
-		fmt.Println("--hotspots is mutually exclusive with --by-author / --timeline; pick one report")
+		fmt.Fprintln(os.Stderr, "--hotspots is mutually exclusive with --by-author / --timeline; pick one report")
 		os.Exit(1)
 	}
 
@@ -953,20 +970,20 @@ func Process() {
 
 	// Coupling is a standalone report — it doesn't combine with any other.
 	if Coupling && (Hotspots || ByAuthor || Timeline) {
-		fmt.Println("--coupling/--coupling-for is mutually exclusive with --hotspots / --by-author / --timeline; pick one report")
+		fmt.Fprintln(os.Stderr, "--coupling/--coupling-for is mutually exclusive with --hotspots / --by-author / --timeline; pick one report")
 		os.Exit(1)
 	}
 
 	if Hotspots || Coupling || ByAuthor || Timeline {
 		if err := validateHistoryFlags(os.Stderr); err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 	}
 
 	if Hotspots {
 		if err := runHotspotsReport(DirFilePaths[0]); err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 		return
@@ -974,7 +991,7 @@ func Process() {
 
 	if Coupling {
 		if err := runCouplingReport(DirFilePaths[0]); err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 		return
@@ -982,7 +999,7 @@ func Process() {
 
 	if ByAuthor && Timeline {
 		if err := runAuthorTimelineReport(DirFilePaths[0]); err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 		return
@@ -990,7 +1007,7 @@ func Process() {
 
 	if ByAuthor {
 		if err := runAuthorsReport(DirFilePaths[0]); err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 		return
@@ -998,7 +1015,7 @@ func Process() {
 
 	if Timeline {
 		if err := runLanguagesTimelineReport(DirFilePaths[0]); err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 		return
