@@ -19,7 +19,7 @@ import (
 )
 
 // Version indicates the version of the application
-var Version = "4.0.0 (beta)"
+var Version = "4.0.0"
 
 // Flags set via the CLI which control how the output is displayed
 

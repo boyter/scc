@@ -9,7 +9,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/boyter/scc/v3/processor"
+	"github.com/boyter/scc/v4/processor"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )

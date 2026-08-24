@@ -58,11 +58,11 @@ You can install `scc` by using the standard go toolchain.
 
 To install the latest stable version of scc:
 
-`go install github.com/boyter/scc/v3@latest`
+`go install github.com/boyter/scc/v4@latest`
 
 To install a development version:
 
-`go install github.com/boyter/scc/v3@master`
+`go install github.com/boyter/scc/v4@master`
 
 Note that `scc` needs go version >= 1.25.
 
@@ -260,7 +260,7 @@ features listed below may be missing from your installation.
 ```text
 $ scc -h
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 4.0.0 (beta)
+Version 4.0.0
 Ben Boyter <ben@boyter.org> + Contributors
 https://github.com/boyter/scc
 
@@ -1503,7 +1503,7 @@ import (
   "fmt"
   "io/ioutil"
 
-  "github.com/boyter/scc/v3/processor"
+  "github.com/boyter/scc/v4/processor"
 )
 
 type statsProcessor struct{}
@@ -1548,7 +1548,7 @@ import (
   "fmt"
   "os"
 
-  "github.com/boyter/scc/v3/processor"
+  "github.com/boyter/scc/v4/processor"
 )
 
 func main() {
