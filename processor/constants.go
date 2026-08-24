@@ -9152,8 +9152,8 @@ var languageDatabase = map[string]Language{
 		},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
