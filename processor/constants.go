@@ -11139,6 +11139,12 @@ var languageDatabase = map[string]Language{
 				DocString:    false,
 			},
 			{
+				Start:        "b'",
+				End:          "'",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+			{
 				Start:        "\"",
 				End:          "\"",
 				IgnoreEscape: false,
