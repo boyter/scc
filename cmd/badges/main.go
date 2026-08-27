@@ -206,7 +206,11 @@ func (l *location) String() string {
 		ext = ""
 	}
 
-	parse, _ := url.Parse("https://" + l.Provider + loc + l.User + "/" + l.Repo + ext)
+	rawURL := "https://" + l.Provider + loc + l.User + "/" + l.Repo + ext
+	parse, err := url.Parse(rawURL)
+	if err != nil {
+		return rawURL
+	}
 	return parse.String()
 }
 
