@@ -12,7 +12,7 @@ import "testing"
 // The trigger is a file whose final bytes are a docstring/ignore-escape quote
 // start token (Python """ or ''', C# @") with no trailing newline.
 //
-// verifyIgnoreEscape advances index past the matched start token
+// prepareString advances index past the matched start token
 // (index += len(Quotes[i].Start)) without bounding it against len(Content).
 // When the token ends the file, index lands exactly on len(Content), and
 // blankState then writes ContentByteType[index] out of bounds.

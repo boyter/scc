@@ -364,7 +364,7 @@ func codeState(
 			switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[i:]); tokenType {
 			case TString:
 				// If we are in string state then check what sort of string so we know if docstring OR ignoreescape string
-				i, ignoreEscape := verifyIgnoreEscape(langFeatures, fileJob, index)
+				i, ignoreEscape := prepareString(langFeatures, fileJob, index, offsetJump)
 
 				// It is safe to -1 here as to enter the code state we need to have
 				// transitioned from blank to here hence i should always be >= 1
@@ -483,7 +483,7 @@ func blankState(
 		return index, currentState, endString, endComments, false
 
 	case TString:
-		index, ignoreEscape := verifyIgnoreEscape(langFeatures, fileJob, index)
+		index, ignoreEscape := prepareString(langFeatures, fileJob, index, offsetJump)
 
 		for _, v := range langFeatures.Quotes {
 			if v.End == string(endString) && v.DocString {
@@ -531,9 +531,8 @@ func blankState(
 	return index, currentState, endString, endComments, false
 }
 
-// Some languages such as C# have quoted strings like @"\" where no escape character is required
-// this checks if there is one so we can cater for these cases
-func verifyIgnoreEscape(langFeatures LanguageFeature, fileJob *FileJob, index int) (int, bool) {
+// Advance over a string prefix and report whether escapes are literal.
+func prepareString(langFeatures LanguageFeature, fileJob *FileJob, index, tokenLength int) (int, bool) {
 	ignoreEscape := false
 
 	// loop over the string states and if we have the special flag match, and if so we need to ensure we can handle them
@@ -560,11 +559,12 @@ func verifyIgnoreEscape(langFeatures LanguageFeature, fileJob *FileJob, index in
 				if index >= len(fileJob.Content) {
 					index = len(fileJob.Content) - 1
 				}
+				return index, ignoreEscape
 			}
 		}
 	}
 
-	return index, ignoreEscape
+	return index + max(tokenLength, 1) - 1, ignoreEscape
 }
 
 // CountStats will process the fileJob

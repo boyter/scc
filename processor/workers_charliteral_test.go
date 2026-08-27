@@ -75,3 +75,34 @@ func TestCountStatsCharLiteralCSharp(t *testing.T) {
 		t.Errorf("Expected 2 comments got %d", fileJob.Comment)
 	}
 }
+
+func TestCountStatsByteCharLiteralRust(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{Language: "Rust"}
+	fileJob.SetContent("fn is_quote(byte: u8) -> bool {\n" +
+		"    matches!(byte, b'\"' | b'\\\\')\n" +
+		"}\n" +
+		"\n" +
+		"// This comment must remain visible.\n" +
+		"fn classify(value: bool) {\n" +
+		"    let _ = b'\\'';\n" +
+		"    if value {\n" +
+		"        println!(\"yes\");\n" +
+		"    }\n" +
+		"}")
+
+	CountStats(&fileJob)
+
+	if fileJob.Code != 9 {
+		t.Errorf("Expected 9 code got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 comment got %d", fileJob.Comment)
+	}
+	if fileJob.Blank != 1 {
+		t.Errorf("Expected 1 blank got %d", fileJob.Blank)
+	}
+	if fileJob.Complexity != 1 {
+		t.Errorf("Expected complexity 1 got %d", fileJob.Complexity)
+	}
+}
