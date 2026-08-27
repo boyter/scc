@@ -63,6 +63,8 @@ func main() {
 
 		if filterBad(loc) {
 			log.Error().Str(uniqueCode, "bfee4bd8").Str("loc", loc.String()).Msg("filter bad")
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte("invalid request"))
 			return
 		}
 
