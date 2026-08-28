@@ -12,7 +12,6 @@ import (
 	"sort"
 	"strings"
 
-	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	jsoniter "github.com/json-iterator/go"
@@ -527,14 +526,17 @@ func couplingTargetMiss(tree *object.Tree, target string) error {
 func resolveCouplingTarget(repoPath, target string) (string, error) {
 	fallback := path.Clean(filepath.ToSlash(target))
 
-	repo, err := git.PlainOpenWithOptions(repoPath, &git.PlainOpenOptions{DetectDotGit: true})
+	repo, err := openRepository(repoPath)
 	if err != nil {
 		return "", fmt.Errorf("open git repository: %w", err)
 	}
 	ref, err := repo.Head()
 	if err != nil {
 		if errors.Is(err, plumbing.ErrReferenceNotFound) {
-			return fallback, nil // empty repo — let the walk report the empty window
+			// See runHistory: unresolvable and unborn HEADs are the same
+			// error. The walk warns about it, so stay quiet here and just
+			// let it report the empty window.
+			return fallback, nil
 		}
 		return "", fmt.Errorf("read HEAD: %w", err)
 	}

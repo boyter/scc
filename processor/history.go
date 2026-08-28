@@ -205,14 +205,24 @@ func runHistory(repoPath string, observer CommitObserver) (HistoryWindow, error)
 	// Turn GC back on because we have no idea how much we are about to process
 	EnableGc()
 
-	repo, err := git.PlainOpenWithOptions(repoPath, &git.PlainOpenOptions{DetectDotGit: true})
+	repo, err := openRepository(repoPath)
 	if err != nil {
 		return HistoryWindow{}, fmt.Errorf("open git repository: %w", err)
 	}
 
 	head, err := repo.Head()
 	if err != nil {
+		// An unborn HEAD (freshly initialised, no commits yet) and a HEAD we
+		// simply could not resolve are the same error here, and there is no
+		// signal to tell them apart: both are a symbolic HEAD naming a ref
+		// that does not exist. So say what we actually know rather than
+		// guess. The warning is verbose-gated like every other one, so this
+		// does not shout at someone pointing a report at an empty repo — it
+		// means the next resolution failure of this shape can be diagnosed
+		// with --verbose instead of only looking like an empty table. That
+		// silence is what made the worktree case (issue #765) hard to spot.
 		if errors.Is(err, plumbing.ErrReferenceNotFound) {
+			printWarnF("history: cannot resolve HEAD in %s, treating as an empty repository", repoPath)
 			observer.Finalise(HistoryWindow{}, emptySnapshot())
 			return HistoryWindow{}, nil
 		}

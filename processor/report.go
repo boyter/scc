@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/boyter/gocodewalker"
-	"github.com/go-git/go-git/v5"
 )
 
 // DefaultReportName is the file name used when --report is invoked without
@@ -414,11 +413,11 @@ func CollectReportData(path string) (ReportData, error) {
 }
 
 // detectGit returns true if the path (or any parent) contains a git working
-// directory. Uses go-git's PlainOpenWithOptions with DetectDotGit so callers
-// can pass a subdirectory of a repo. Cached behaviour is not needed here —
-// this is called once at the start of CollectReportData.
+// directory. Goes through openRepository so callers can pass a subdirectory of
+// a repo, or a linked worktree. Cached behaviour is not needed here — this is
+// called once at the start of CollectReportData.
 func detectGit(path string) bool {
-	_, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{DetectDotGit: true})
+	_, err := openRepository(path)
 	return err == nil
 }
 
