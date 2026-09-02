@@ -4,8 +4,10 @@ package processor
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -692,6 +694,76 @@ func TestSparklinePath(t *testing.T) {
 	fill := sparklineFill([]int{0, 10}, 100, 20)
 	if !strings.HasSuffix(fill, " L100.0,20.0 L0.0,20.0 Z") {
 		t.Errorf("sparklineFill should close to baseline, got %q", fill)
+	}
+}
+
+// TestNormZero covers the negative-zero normalisation that keeps rendered
+// coordinates byte-identical across architectures. Go may fuse `a - b*c`
+// into one multiply-add; the loong64 backend uses FNMSUBD, which computes
+// -((b*c) - a), so an exactly-zero result arrives as -0.0 and formats as
+// "-0.0" where amd64 emits "0.0". See issue #767.
+func TestNormZero(t *testing.T) {
+	negZero := math.Copysign(0, -1)
+	if got := normZero(negZero); math.Signbit(got) {
+		t.Errorf("normZero(-0.0) has the sign bit set, want +0.0")
+	}
+	if got := fmt.Sprintf("%.1f", normZero(negZero)); got != "0.0" {
+		t.Errorf("normZero(-0.0) formatted = %q, want %q", got, "0.0")
+	}
+
+	// Non-zero values pass through untouched.
+	for _, v := range []float64{-22.5, -1, 1, 22.5} {
+		if got := normZero(v); got != v {
+			t.Errorf("normZero(%v) = %v, want unchanged", v, got)
+		}
+	}
+
+	// math.FMA is the fused operation on every platform, so this reproduces
+	// the loong64 encoding of the sparkline Y expression exactly: the top of
+	// the box is -0.0 before normalisation and "0.0" after it.
+	h, span, delta := 20.0, 10.0, 10.0
+	fused := -math.FMA(delta/span, h, -h)
+	if !math.Signbit(fused) {
+		t.Fatalf("fused y = %v, want the negative zero loong64 produces", fused)
+	}
+	if got := fmt.Sprintf("%.1f", normZero(fused)); got != "0.0" {
+		t.Errorf("normZero(fused y) = %q, want %q", got, "0.0")
+	}
+}
+
+// TestSparklinePathNoNegativeZero guards the rendered paths directly: no
+// coordinate may ever format with a negative-zero sign, whatever the
+// compiler does with the multiply-subtract. See issue #767.
+func TestSparklinePathNoNegativeZero(t *testing.T) {
+	cases := [][]int{
+		{0, 10},
+		{4000, 8000},
+		{2200, 2400},
+		{48, 3800, 100, 3800},
+		{0, 0, 1},
+	}
+	for _, values := range cases {
+		for _, got := range []string{
+			sparklinePath(values, 140, 22),
+			sparklineFill(values, 140, 22),
+		} {
+			if strings.Contains(got, "-0.0") {
+				t.Errorf("sparkline path for %v contains a negative zero: %q", values, got)
+			}
+		}
+	}
+}
+
+// TestDonutArcsSingleLanguage covers the 100%% case, where the trailing gap
+// of the dasharray is an exact zero and so hits the same negative-zero
+// hazard as the sparkline coordinates.
+func TestDonutArcsSingleLanguage(t *testing.T) {
+	arcs := donutArcs([]LanguageSummary{{Name: "Go", Code: 1234}})
+	if len(arcs) != 1 {
+		t.Fatalf("donutArcs returned %d arcs, want 1", len(arcs))
+	}
+	if arcs[0].Dasharray != "100.000 0.000" {
+		t.Errorf("arc[0].Dasharray = %q, want %q", arcs[0].Dasharray, "100.000 0.000")
 	}
 }
 
