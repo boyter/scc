@@ -9224,7 +9224,7 @@ var languageDatabase = map[string]Language{
 			{
 				Start:        "'",
 				End:          "'",
-				IgnoreEscape: false,
+				IgnoreEscape: true,
 				DocString:    false,
 			},
 		},
@@ -11390,7 +11390,7 @@ var languageDatabase = map[string]Language{
 			{
 				Start:        "'",
 				End:          "'",
-				IgnoreEscape: false,
+				IgnoreEscape: true,
 				DocString:    false,
 			},
 		},

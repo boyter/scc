@@ -300,6 +300,38 @@ func TestCountStatsVimScriptDoubleQuoteOpensAComment(t *testing.T) {
 	}
 }
 
+// Standard SQL escapes a quote by doubling it and the backslash is an ordinary
+// character, so a path ending in one closes the string it sits in. Reading the
+// backslash as an escape leaves the string open and takes the comment under it
+// along with everything below. Oracle's PL/SQL reads the backslash the same
+// way. MySQL is the dialect that does escape with it, and it loses here.
+func TestCountStatsSQLBackslashDoesNotEscapeTheClosingQuote(t *testing.T) {
+	ProcessConstants()
+
+	for _, language := range []string{"SQL", "PL/SQL"} {
+		fileJob := FileJob{Language: language}
+		fileJob.SetContent("UPDATE t SET path = 'C:\\';\n-- a real comment\nSELECT 2;\n")
+
+		CountStats(&fileJob)
+
+		if fileJob.Lines != 3 {
+			t.Errorf("%s: expected 3 lines got %d", language, fileJob.Lines)
+		}
+
+		if fileJob.Code != 2 {
+			t.Errorf("%s: expected 2 code got %d", language, fileJob.Code)
+		}
+
+		if fileJob.Comment != 1 {
+			t.Errorf("%s: expected 1 comment got %d", language, fileJob.Comment)
+		}
+
+		if fileJob.Blank != 0 {
+			t.Errorf("%s: expected 0 blank got %d", language, fileJob.Blank)
+		}
+	}
+}
+
 func TestCountStatsWithQuotes(t *testing.T) {
 	fileJob := FileJob{}
 
