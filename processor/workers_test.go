@@ -380,6 +380,83 @@ func TestCountStatsGroovyStringForms(t *testing.T) {
 	}
 }
 
+// CMake opens a bracket comment with any number of equals signs between its
+// brackets and only a closer carrying the same number ends it. There is no
+// dynamic delimiter here so the levels are enumerated, the way Rust's raw
+// strings are, and this walks the ones that are.
+func TestCountStatsCMakeBracketComment(t *testing.T) {
+	ProcessConstants()
+
+	for level := 0; level <= 8; level++ {
+		equals := strings.Repeat("=", level)
+		fileJob := FileJob{Language: "CMake"}
+		fileJob.SetContent("#[" + equals + "[ a bracket comment\n a second comment line\n]" + equals + "]\nset(X 1)\n")
+
+		CountStats(&fileJob)
+
+		if fileJob.Lines != 4 {
+			t.Errorf("level %d: expected 4 lines got %d", level, fileJob.Lines)
+		}
+
+		if fileJob.Code != 1 {
+			t.Errorf("level %d: expected 1 code got %d", level, fileJob.Code)
+		}
+
+		if fileJob.Comment != 3 {
+			t.Errorf("level %d: expected 3 comment got %d", level, fileJob.Comment)
+		}
+	}
+}
+
+// A closer carrying fewer equals signs than the opener is text, so the comment
+// runs past it to the one that matches.
+func TestCountStatsCMakeBracketCommentShorterCloserIsText(t *testing.T) {
+	ProcessConstants()
+
+	fileJob := FileJob{Language: "CMake"}
+	fileJob.SetContent("#[==[ a bracket comment\n]] not the end\n]==]\nset(X 1)\n")
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 4 {
+		t.Errorf("Expected 4 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 1 {
+		t.Errorf("Expected 1 code got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 3 {
+		t.Errorf("Expected 3 comment got %d", fileJob.Comment)
+	}
+}
+
+// The same brackets without the leading # are a bracket argument, which is how
+// CMake writes a string running over lines. A # inside one is content.
+func TestCountStatsCMakeBracketArgument(t *testing.T) {
+	ProcessConstants()
+
+	for level := 0; level <= 8; level++ {
+		equals := strings.Repeat("=", level)
+		fileJob := FileJob{Language: "CMake"}
+		fileJob.SetContent("set(X [" + equals + "[\n# not a comment\n]" + equals + "])\nset(Y 1)\n")
+
+		CountStats(&fileJob)
+
+		if fileJob.Lines != 4 {
+			t.Errorf("level %d: expected 4 lines got %d", level, fileJob.Lines)
+		}
+
+		if fileJob.Code != 4 {
+			t.Errorf("level %d: expected 4 code got %d", level, fileJob.Code)
+		}
+
+		if fileJob.Comment != 0 {
+			t.Errorf("level %d: expected 0 comment got %d", level, fileJob.Comment)
+		}
+	}
+}
+
 func TestCountStatsWithQuotes(t *testing.T) {
 	fileJob := FileJob{}
 

@@ -1203,8 +1203,53 @@
     ],
     "extensions": ["cmake", "cmakelists.txt"],
     "line_comment": ["#"],
-    "multi_line": [["#[[", "]]"]],
+    "multi_line": [["#[[", "]]"], ["#[=[", "]=]"], ["#[==[", "]==]"], ["#[===[", "]===]"], ["#[====[", "]====]"], ["#[=====[", "]=====]"], ["#[======[", "]======]"], ["#[=======[", "]=======]"], ["#[========[", "]========]"]],
     "quotes": [
+      {
+        "ignoreEscape": true,
+        "end": "]]",
+        "start": "[["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]=]",
+        "start": "[=["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]==]",
+        "start": "[==["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]===]",
+        "start": "[===["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]====]",
+        "start": "[====["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]=====]",
+        "start": "[=====["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]======]",
+        "start": "[======["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]=======]",
+        "start": "[=======["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]========]",
+        "start": "[========["
+      },
       {
         "end": "\"",
         "start": "\""

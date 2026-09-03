@@ -2075,8 +2075,94 @@ var languageDatabase = map[string]Language{
 				"#[[",
 				"]]",
 			},
+			{
+				"#[=[",
+				"]=]",
+			},
+			{
+				"#[==[",
+				"]==]",
+			},
+			{
+				"#[===[",
+				"]===]",
+			},
+			{
+				"#[====[",
+				"]====]",
+			},
+			{
+				"#[=====[",
+				"]=====]",
+			},
+			{
+				"#[======[",
+				"]======]",
+			},
+			{
+				"#[=======[",
+				"]=======]",
+			},
+			{
+				"#[========[",
+				"]========]",
+			},
 		},
 		Quotes: []Quote{
+			{
+				Start:        "[[",
+				End:          "]]",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "[=[",
+				End:          "]=]",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "[==[",
+				End:          "]==]",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "[===[",
+				End:          "]===]",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "[====[",
+				End:          "]====]",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "[=====[",
+				End:          "]=====]",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "[======[",
+				End:          "]======]",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "[=======[",
+				End:          "]=======]",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "[========[",
+				End:          "]========]",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
 			{
 				Start:        "\"",
 				End:          "\"",
