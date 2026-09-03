@@ -250,6 +250,7 @@
     "extensions": ["agda"],
     "line_comment": ["--"],
     "multi_line": [["{-", "-}"]],
+    "nestedmultiline": true,
     "quotes": []
   },
   "Alchemist": {
@@ -1840,6 +1841,7 @@
     ],
     "line_comment": [],
     "multi_line": [["(*", "*)"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
@@ -2057,6 +2059,7 @@
     "extensions": ["dart"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
@@ -2248,6 +2251,7 @@
     "extensions": ["elm"],
     "line_comment": ["--"],
     "multi_line": [["{-", "-}"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
@@ -2388,6 +2392,7 @@
     "extensions": ["fs", "fsi", "fsx", "fsscript"],
     "line_comment": ["//"],
     "multi_line": [["(*", "*)"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
@@ -3363,6 +3368,7 @@
     "extensions": ["hs"],
     "line_comment": ["--"],
     "multi_line": [["{-", "-}"]],
+    "nestedmultiline": true,
     "quotes": []
   },
   "Haxe": {
@@ -5293,6 +5299,7 @@
     "extensions": ["ml", "mli"],
     "line_comment": [],
     "multi_line": [["(*", "*)"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
@@ -5390,6 +5397,7 @@
     "extensions": ["odin"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
@@ -6045,6 +6053,7 @@
     "extensions": ["purs"],
     "line_comment": ["--"],
     "multi_line": [["{-", "-}"]],
+    "nestedmultiline": true,
     "quotes": []
   },
   "Python": {
@@ -6997,6 +7006,7 @@
     "extensions": ["sc", "scala"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",

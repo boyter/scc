@@ -589,6 +589,51 @@ func TestCountStatsNestedCommentsRegression(t *testing.T) {
 	}
 }
 
+// Block comments nest in a good many more languages than the ones that had the
+// flag set. Each of these opens an inner comment inside an outer one, and the
+// text between the inner closer and the outer one is still comment.
+func TestCountStatsNestedCommentsByLanguage(t *testing.T) {
+	ProcessConstants()
+
+	for _, test := range []struct {
+		language string
+		open     string
+		close    string
+	}{
+		{"Haskell", "{-", "-}"},
+		{"Odin", "/*", "*/"},
+		{"Scala", "/*", "*/"},
+		{"F#", "(*", "*)"},
+		{"OCaml", "(*", "*)"},
+		{"Coq", "(*", "*)"},
+		{"Dart", "/*", "*/"},
+		{"Elm", "{-", "-}"},
+		{"PureScript", "{-", "-}"},
+		{"Agda", "{-", "-}"},
+	} {
+		fileJob := FileJob{Language: test.language}
+		fileJob.SetContent(test.open + " outer " + test.open + " inner " + test.close + " still the outer comment " + test.close + "\nx = 1\n")
+
+		CountStats(&fileJob)
+
+		if fileJob.Lines != 2 {
+			t.Errorf("%s: expected 2 lines got %d", test.language, fileJob.Lines)
+		}
+
+		if fileJob.Code != 1 {
+			t.Errorf("%s: expected 1 code got %d", test.language, fileJob.Code)
+		}
+
+		if fileJob.Comment != 1 {
+			t.Errorf("%s: expected 1 comment got %d", test.language, fileJob.Comment)
+		}
+
+		if fileJob.Blank != 0 {
+			t.Errorf("%s: expected 0 blank got %d", test.language, fileJob.Blank)
+		}
+	}
+}
+
 func TestCountStatsSingleCommentRegression(t *testing.T) {
 	ProcessConstants()
 	fileJob := FileJob{
