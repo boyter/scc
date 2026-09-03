@@ -802,6 +802,17 @@ func processLanguageFeature(name string, value Language) {
 		heuristics = append(heuristics, CompiledHeuristic{Re: re, Literals: literals, Anchored: v.Anchored})
 	}
 
+	// A line comment spelled as a word ends where the word does, which costs a
+	// check on every token that matches. Almost no language has one, so work out
+	// here whether this one does and let the hot loop skip the check entirely.
+	wordComments := false
+	for _, token := range value.LineComment {
+		if len(token) > 1 && isIdentifierContinue(token[len(token)-1]) {
+			wordComments = true
+			break
+		}
+	}
+
 	LanguageFeaturesMutex.Lock()
 	LanguageFeatures[name] = LanguageFeature{
 		Complexity:            complexityTrie,
@@ -813,6 +824,7 @@ func processLanguageFeature(name string, value Language) {
 		Tokens:                tokenTrie,
 		Nested:                value.NestedMultiLine,
 		LineSplice:            value.LineSplice,
+		WordComments:          wordComments,
 		PostfixExcludes:       postfixExcludes,
 		ComplexityCheckMask:   complexityMask,
 		MultiLineCommentMask:  multiLineCommentMask,

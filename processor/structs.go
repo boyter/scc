@@ -95,6 +95,7 @@ type LanguageFeature struct {
 	Tokens                *Trie
 	Nested                bool
 	LineSplice            bool
+	WordComments          bool
 	PostfixExcludes       [][]byte
 	ComplexityCheckMask   byte
 	SingleLineCommentMask byte

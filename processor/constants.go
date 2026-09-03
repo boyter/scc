@@ -160,6 +160,8 @@ var languageDatabase = map[string]Language{
 		LineComment: []string{
 			"'",
 			"REM",
+			"Rem",
+			"rem",
 		},
 		ComplexityChecks: []string{
 			"for ",
@@ -1139,6 +1141,8 @@ var languageDatabase = map[string]Language{
 	"Batch": {
 		LineComment: []string{
 			"REM",
+			"Rem",
+			"rem",
 			"::",
 		},
 		ComplexityChecks: []string{
@@ -4696,7 +4700,7 @@ var languageDatabase = map[string]Language{
 	},
 	"Forth": {
 		LineComment: []string{
-			"\\\\",
+			"\\",
 		},
 		ComplexityChecks: []string{
 			"for ",

@@ -613,6 +613,96 @@ func TestCountStatsMarkupApostropheIsNotAString(t *testing.T) {
 	}
 }
 
+// A line comment opened by a word ends where the word does. REM opens a Batch
+// comment and REMOVE is a different word, so matching those three letters as a
+// prefix reads a command as a comment. The same holds for Autoconf's dnl and
+// LOLCODE's BTW.
+func TestCountStatsWordCommentNeedsAWordBreak(t *testing.T) {
+	ProcessConstants()
+
+	for _, test := range []struct {
+		language string
+		comment  string
+		longer   string
+	}{
+		{"Batch", "REM", "REMOVE /Q file.txt"},
+		{"Batch", "rem", "remove /Q file.txt"},
+		{"ASP", "REM", "REMOVE x"},
+		{"Autoconf", "dnl", "dnlfoo bar"},
+		{"LOLCODE", "BTW", "BTWISE x"},
+	} {
+		fileJob := FileJob{Language: test.language}
+		fileJob.SetContent(test.comment + " a comment\n" + test.longer + "\nx\n")
+
+		CountStats(&fileJob)
+
+		if fileJob.Lines != 3 {
+			t.Errorf("%s %s: expected 3 lines got %d", test.language, test.comment, fileJob.Lines)
+		}
+
+		if fileJob.Code != 2 {
+			t.Errorf("%s %s: expected 2 code got %d", test.language, test.comment, fileJob.Code)
+		}
+
+		if fileJob.Comment != 1 {
+			t.Errorf("%s %s: expected 1 comment got %d", test.language, test.comment, fileJob.Comment)
+		}
+	}
+}
+
+// A word break is wanted after a word, not after a symbol, so :: and // and #
+// keep opening a comment with whatever behind them. FORTRAN Legacy is the one
+// that would break: a C in the first column opens a comment there whatever
+// follows it, which is how CCCCCCCC is written as a rule across the page, so
+// the check is only for tokens longer than a single byte.
+func TestCountStatsWordBreakLeavesSymbolCommentsAlone(t *testing.T) {
+	ProcessConstants()
+
+	for _, test := range []struct {
+		language string
+		content  string
+	}{
+		{"Batch", "::comment\nx\n"},
+		{"C", "//comment\nint x = 1;\n"},
+		{"Shell", "#comment\nx=1\n"},
+		{"Haskell", "--comment\nx = 1\n"},
+		{"FORTRAN Legacy", "CCCCCCCCCCCCCCCCCCCC\n      x = 1\n"},
+	} {
+		fileJob := FileJob{Language: test.language}
+		fileJob.SetContent(test.content)
+
+		CountStats(&fileJob)
+
+		if fileJob.Code != 1 {
+			t.Errorf("%s: expected 1 code got %d", test.language, fileJob.Code)
+		}
+
+		if fileJob.Comment != 1 {
+			t.Errorf("%s: expected 1 comment got %d", test.language, fileJob.Comment)
+		}
+	}
+}
+
+// Forth opens a comment with a backslash standing as its own word, so it wants
+// the break after it the way a word does. The delimiter was written \\ before
+// this, which matched nothing, so Forth had no line comment at all.
+func TestCountStatsForthBackslashComment(t *testing.T) {
+	ProcessConstants()
+
+	fileJob := FileJob{Language: "Forth"}
+	fileJob.SetContent("\\ a forth comment\n: double dup + ;\n")
+
+	CountStats(&fileJob)
+
+	if fileJob.Code != 1 {
+		t.Errorf("Expected 1 code got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 comment got %d", fileJob.Comment)
+	}
+}
+
 func TestCountStatsWithQuotes(t *testing.T) {
 	fileJob := FileJob{}
 

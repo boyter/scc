@@ -107,7 +107,7 @@
       "== "
     ],
     "extensions": ["asa", "asp"],
-    "line_comment": ["'", "REM"],
+    "line_comment": ["'", "REM", "Rem", "rem"],
     "multi_line": [],
     "quotes": []
   },
@@ -641,7 +641,7 @@
       "== "
     ],
     "extensions": ["bat", "btm", "cmd"],
-    "line_comment": ["REM", "::"],
+    "line_comment": ["REM", "Rem", "rem", "::"],
     "multi_line": [],
     "quotes": []
   },
@@ -2756,7 +2756,7 @@
       "rx",
       "ft"
     ],
-    "line_comment": ["\\\\"],
+    "line_comment": ["\\"],
     "multi_line": [["( ", ")"]],
     "quotes": []
   },

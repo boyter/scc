@@ -106,6 +106,26 @@ func isIdentifierContinue(b byte) bool {
 	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') || (b >= '0' && b <= '9') || b == '_'
 }
 
+// commentOpensHere reports whether a matched line comment token really opens a
+// comment where it sits. A token spelled as a word, such as Batch's REM or
+// Autoconf's dnl, ends where the word ends, so REMOVE is a command and not a
+// comment. A token of a single byte is left alone because FORTRAN Legacy opens
+// a comment with a C in the first column whatever follows it, which is how a
+// rule of CCCCCCCC across the page is written.
+func commentOpensHere(content []byte, index, offsetJump int) bool {
+	if offsetJump < 2 || !isIdentifierContinue(content[index+offsetJump-1]) {
+		return true
+	}
+
+	if index > 0 && isIdentifierContinue(content[index-1]) {
+		return false
+	}
+
+	after := index + offsetJump
+
+	return after >= len(content) || !isIdentifierContinue(content[after])
+}
+
 func hasNonWhitespaceBefore(content []byte, index int) bool {
 	for i := index - 1; i >= 0; i-- {
 		if !isWhitespace(content[i]) {
@@ -418,6 +438,10 @@ func codeState(
 				return i, currentState, endString, endComments, ignoreEscape
 
 			case TSlcomment:
+				// No word break check here, unlike blankState. A line that already
+				// holds code counts as code whether the token opened a comment on
+				// it or not, so the check buys nothing a line count can see, and
+				// this is the hottest switch in the program.
 				currentState = SCommentCode
 				return i, currentState, endString, endComments, false
 
@@ -517,11 +541,17 @@ func blankState(
 		}
 
 	case TSlcomment:
-		currentState = SComment
-		if fileJob.ContentByteType != nil {
-			fileJob.ContentByteType[index] = ByteTypeComment
+		if !langFeatures.WordComments || commentOpensHere(fileJob.Content, index, offsetJump) {
+			currentState = SComment
+			if fileJob.ContentByteType != nil {
+				fileJob.ContentByteType[index] = ByteTypeComment
+			}
+			return index, currentState, endString, endComments, false
 		}
-		return index, currentState, endString, endComments, false
+		currentState = SCode
+		if fileJob.ContentByteType != nil {
+			fileJob.ContentByteType[index] = ByteTypeCode
+		}
 
 	case TString:
 		index, ignoreEscape := prepareString(langFeatures, fileJob, index, offsetJump)
