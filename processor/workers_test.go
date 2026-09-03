@@ -182,6 +182,124 @@ func TestCountStatsCode(t *testing.T) {
 	}
 }
 
+// A quote delimiter is written in languages.json as "\"" and JSON already
+// escapes it there, so a delimiter carrying a literal backslash in front of
+// its quote is one that was escaped twice and matches nothing a real file
+// holds. Zig's "\\" is the one true backslash delimiter, being the opener of
+// its multiline string literal.
+func TestLanguageQuotesAreNotDoubleEscaped(t *testing.T) {
+	ProcessConstants()
+
+	for name, language := range languageDatabase {
+		for _, quote := range language.Quotes {
+			for _, delimiter := range []string{quote.Start, quote.End} {
+				if strings.Contains(delimiter, `\"`) {
+					t.Errorf("%s: quote delimiter %q holds a literal backslash, so it never matches", name, delimiter)
+				}
+			}
+		}
+	}
+}
+
+// The double escaped delimiters above left these languages with no working
+// double quoted string at all. It only shows on a string running over more
+// than one line, because a single line one sits on a line that is code
+// whether the string was seen or not. Here the middle line opens with the
+// language's own comment token while inside the string, so a language that
+// missed the string reads it as a comment.
+func TestCountStatsMultiLineStringHoldingACommentToken(t *testing.T) {
+	ProcessConstants()
+
+	for _, test := range []struct {
+		language    string
+		lineComment string
+	}{
+		{"Shell", "#"},
+		{"Zsh", "#"},
+		{"BASH", "#"},
+		{"Korn Shell", "#"},
+		{"Fish", "#"},
+		{"Ruby", "#"},
+		{"Rakefile", "#"},
+		{"Gemfile", "#"},
+		{"Crystal", "#"},
+		{"TOML", "#"},
+		{"Julia", "#"},
+		{"Nim", "#"},
+		{"Dockerfile", "#"},
+		{"TCL", "#"},
+		{"Puppet", "#"},
+		{"CoffeeScript", "#"},
+		{"Cython", "#"},
+		{"Just", "#"},
+		{"Scons", "#"},
+		{"Expect", "#"},
+		{"Luna", "#"},
+		{"Raku", "#"},
+		{"Zig", "//"},
+		{"Typst", "//"},
+		{"Pony", "//"},
+		{"Idris", "--"},
+		{"Assembly", ";"},
+		{"Arturo", ";"},
+		{"Basic", "'"},
+		{"Visual Basic", "'"},
+		{"Visual Basic for Applications", "'"},
+		{"Softbridge Basic", "'"},
+		{"Fortran Modern", "!"},
+	} {
+		fileJob := FileJob{Language: test.language}
+		fileJob.SetContent("x = \"line one\n" + test.lineComment + " still inside the string\nend\"\ny = 2\n")
+
+		CountStats(&fileJob)
+
+		if fileJob.Lines != 4 {
+			t.Errorf("%s: expected 4 lines got %d", test.language, fileJob.Lines)
+		}
+
+		if fileJob.Code != 4 {
+			t.Errorf("%s: expected 4 code got %d", test.language, fileJob.Code)
+		}
+
+		if fileJob.Comment != 0 {
+			t.Errorf("%s: expected 0 comment got %d", test.language, fileJob.Comment)
+		}
+
+		if fileJob.Blank != 0 {
+			t.Errorf("%s: expected 0 blank got %d", test.language, fileJob.Blank)
+		}
+	}
+}
+
+// Vim Script is the one language in the sweep above that must not be given a
+// working double quoted string, because the double quote is what opens its
+// comments. A string delimiter is matched ahead of a comment one, so handing
+// it the quote turns every comment in a vimrc into code.
+func TestCountStatsVimScriptDoubleQuoteOpensAComment(t *testing.T) {
+	ProcessConstants()
+
+	fileJob := FileJob{Language: "Vim Script"}
+	fileJob.SetContent("\" a vim comment\nlet x = 1\n\" another comment\nlet y = 2\n")
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 4 {
+		t.Errorf("Expected 4 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 2 {
+		t.Errorf("Expected 2 code got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 2 {
+		t.Errorf("Expected 2 comment got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 0 {
+		t.Errorf("Expected 0 blank got %d", fileJob.Blank)
+	}
+}
+
 func TestCountStatsWithQuotes(t *testing.T) {
 	fileJob := FileJob{}
 

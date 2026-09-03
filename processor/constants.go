@@ -809,8 +809,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -872,8 +872,8 @@ var languageDatabase = map[string]Language{
 		},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -1051,8 +1051,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -1101,8 +1101,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -2879,8 +2879,8 @@ var languageDatabase = map[string]Language{
 		},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -2953,8 +2953,8 @@ var languageDatabase = map[string]Language{
 		},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -3108,8 +3108,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -3246,8 +3246,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -3258,8 +3258,8 @@ var languageDatabase = map[string]Language{
 				DocString:    false,
 			},
 			{
-				Start:        "\\\"\\\"\\\"",
-				End:          "\\\"\\\"\\\"",
+				Start:        "\"\"\"",
+				End:          "\"\"\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -3608,8 +3608,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -3960,8 +3960,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -4161,8 +4161,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -4441,8 +4441,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -4577,8 +4577,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -4894,8 +4894,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:        [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -5539,8 +5539,8 @@ var languageDatabase = map[string]Language{
 		},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -5883,14 +5883,14 @@ var languageDatabase = map[string]Language{
 		},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
 			{
-				Start:        "\\\"\\\"\\\"",
-				End:          "\\\"\\\"\\\"",
+				Start:        "\"\"\"",
+				End:          "\"\"\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -6546,14 +6546,14 @@ var languageDatabase = map[string]Language{
 		},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
 			{
-				Start:        "\\\"\\\"\\\"",
-				End:          "\\\"\\\"\\\"",
+				Start:        "\"\"\"",
+				End:          "\"\"\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -6645,8 +6645,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -6716,8 +6716,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -6873,32 +6873,26 @@ var languageDatabase = map[string]Language{
 		},
 		Quotes: []Quote{
 			{
+				Start:        "r\"",
+				End:          "\"",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "r#\"",
+				End:          "\"#",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
+				Start:        "r##\"",
+				End:          "\"##",
+				IgnoreEscape: true,
+				DocString:    false,
+			},
+			{
 				Start:        "\"",
 				End:          "\"",
-				IgnoreEscape: false,
-				DocString:    false,
-			},
-			{
-				Start:        "\\\"",
-				End:          "\\\"",
-				IgnoreEscape: false,
-				DocString:    false,
-			},
-			{
-				Start:        "\\\"#",
-				End:          "#\\\"",
-				IgnoreEscape: false,
-				DocString:    false,
-			},
-			{
-				Start:        "\\\"##",
-				End:          "r##\\\"",
-				IgnoreEscape: false,
-				DocString:    false,
-			},
-			{
-				Start:        "\\\"#",
-				End:          "r#\\\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -7470,8 +7464,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -8495,8 +8489,8 @@ var languageDatabase = map[string]Language{
 		},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -8633,14 +8627,14 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
 			{
-				Start:        "\\\"\\\"\\\"",
-				End:          "\\\"\\\"\\\"",
+				Start:        "\"\"\"",
+				End:          "\"\"\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -9696,8 +9690,8 @@ var languageDatabase = map[string]Language{
 				DocString:    false,
 			},
 			{
-				Start:        "\\\"\\\"\\\"",
-				End:          "\\\"\\\"\\\"",
+				Start:        "\"\"\"",
+				End:          "\"\"\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -9981,8 +9975,8 @@ var languageDatabase = map[string]Language{
 		},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -10429,8 +10423,8 @@ var languageDatabase = map[string]Language{
 		},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -10556,8 +10550,8 @@ var languageDatabase = map[string]Language{
 		},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -10931,8 +10925,8 @@ var languageDatabase = map[string]Language{
 		},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -11676,8 +11670,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -11688,8 +11682,8 @@ var languageDatabase = map[string]Language{
 				DocString:    false,
 			},
 			{
-				Start:        "\\\"\\\"\\\"",
-				End:          "\\\"\\\"\\\"",
+				Start:        "\"\"\"",
+				End:          "\"\"\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -11774,8 +11768,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -12102,8 +12096,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -12610,8 +12604,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -12677,8 +12671,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -12689,8 +12683,8 @@ var languageDatabase = map[string]Language{
 				DocString:    false,
 			},
 			{
-				Start:        "\\\"\\\"\\\"",
-				End:          "\\\"\\\"\\\"",
+				Start:        "\"\"\"",
+				End:          "\"\"\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -13359,8 +13353,8 @@ var languageDatabase = map[string]Language{
 		},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -13945,12 +13939,6 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
-				IgnoreEscape: false,
-				DocString:    false,
-			},
-			{
 				Start:        "'",
 				End:          "'",
 				IgnoreEscape: false,
@@ -13995,8 +13983,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -14032,8 +14020,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -14728,8 +14716,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -14807,8 +14795,8 @@ var languageDatabase = map[string]Language{
 		MultiLine:     [][]string{},
 		Quotes: []Quote{
 			{
-				Start:        "\\\"",
-				End:          "\\\"",
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
