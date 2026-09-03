@@ -82,6 +82,11 @@ type Language struct {
 	// it to the next one before comments and strings are recognised, which is
 	// the C family and the shading languages that borrow its preprocessor.
 	LineSplice bool `json:"linesplice"`
+	// Escape is the character that escapes a delimiter inside a string. It is
+	// the backslash for nearly everything and left empty for those, PowerShell
+	// being the one that escapes with a backtick and reads a backslash as an
+	// ordinary character of a Windows path.
+	Escape string `json:"escape"`
 }
 
 // LanguageFeature is a struct which represents the conversion from Language into what is used for matching
@@ -96,6 +101,7 @@ type LanguageFeature struct {
 	Nested                bool
 	LineSplice            bool
 	WordComments          bool
+	Escape                byte
 	PostfixExcludes       [][]byte
 	ComplexityCheckMask   byte
 	SingleLineCommentMask byte

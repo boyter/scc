@@ -703,6 +703,67 @@ func TestCountStatsForthBackslashComment(t *testing.T) {
 	}
 }
 
+// PowerShell escapes with a backtick and not a backslash, so the quote in the
+// middle of the first line below closes nothing, and the backslash ending a
+// Windows path closes the string it sits in rather than escaping its way past
+// the closing quote. Reading the backslash as an escape left the string open
+// and swallowed the comment under it.
+func TestCountStatsPowershellEscape(t *testing.T) {
+	ProcessConstants()
+
+	for _, test := range []struct {
+		name    string
+		content string
+	}{
+		{
+			name:    "a backtick escapes the quote in the middle",
+			content: "Write-Host \"a `\" b\"\n# a real comment\n$x = 1\n",
+		},
+		{
+			name:    "a backslash ending a path does not escape the closer",
+			content: "$p = \"C:\\temp\\\"\n# a real comment\n$x = 1\n",
+		},
+	} {
+		fileJob := FileJob{Language: "Powershell"}
+		fileJob.SetContent(test.content)
+
+		CountStats(&fileJob)
+
+		if fileJob.Lines != 3 {
+			t.Errorf("%s: expected 3 lines got %d", test.name, fileJob.Lines)
+		}
+
+		if fileJob.Code != 2 {
+			t.Errorf("%s: expected 2 code got %d", test.name, fileJob.Code)
+		}
+
+		if fileJob.Comment != 1 {
+			t.Errorf("%s: expected 1 comment got %d", test.name, fileJob.Comment)
+		}
+	}
+}
+
+// Every other language keeps the backslash, so a quote escaped with one still
+// does not close the string it is in.
+func TestCountStatsBackslashStillEscapesElsewhere(t *testing.T) {
+	ProcessConstants()
+
+	for _, language := range []string{"C", "Go", "Java", "Python", "JavaScript"} {
+		fileJob := FileJob{Language: language}
+		fileJob.SetContent("x = \"a \\\" b\"\ny = 1\nz = 2\n")
+
+		CountStats(&fileJob)
+
+		if fileJob.Code != 3 {
+			t.Errorf("%s: expected 3 code got %d", language, fileJob.Code)
+		}
+
+		if fileJob.Comment != 0 {
+			t.Errorf("%s: expected 0 comment got %d", language, fileJob.Comment)
+		}
+	}
+}
+
 func TestCountStatsWithQuotes(t *testing.T) {
 	fileJob := FileJob{}
 

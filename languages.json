@@ -5981,6 +5981,7 @@
       "-contains",
       "-notcontains"
     ],
+    "escape": "`",
     "extensions": ["ps1", "psm1"],
     "line_comment": ["#"],
     "multi_line": [["<#", "#>"]],

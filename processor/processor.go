@@ -805,6 +805,11 @@ func processLanguageFeature(name string, value Language) {
 	// A line comment spelled as a word ends where the word does, which costs a
 	// check on every token that matches. Almost no language has one, so work out
 	// here whether this one does and let the hot loop skip the check entirely.
+	escape := byte('\\')
+	if len(value.Escape) != 0 {
+		escape = value.Escape[0]
+	}
+
 	wordComments := false
 	for _, token := range value.LineComment {
 		if len(token) > 1 && isIdentifierContinue(token[len(token)-1]) {
@@ -825,6 +830,7 @@ func processLanguageFeature(name string, value Language) {
 		Nested:                value.NestedMultiLine,
 		LineSplice:            value.LineSplice,
 		WordComments:          wordComments,
+		Escape:                escape,
 		PostfixExcludes:       postfixExcludes,
 		ComplexityCheckMask:   complexityMask,
 		MultiLineCommentMask:  multiLineCommentMask,

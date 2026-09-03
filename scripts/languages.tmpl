@@ -56,6 +56,7 @@ var languageDatabase = map[string]Language{
 		},
 		NestedMultiLine: {{$value.NestedMultiLine}},
 		LineSplice: {{$value.LineSplice}},
+		Escape: {{quote $value.Escape}},
 		Keywords: []string{
 			{{- range $value.Keywords}}
 			{{quote .}},

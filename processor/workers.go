@@ -290,7 +290,7 @@ func resetLineState(currentState int64, spliced bool, ignoreEscape bool) int64 {
 	return resetState(currentState)
 }
 
-func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, currentState int64, ignoreEscape bool) (int, int64) {
+func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, currentState int64, ignoreEscape bool, escape byte) (int, int64) {
 	// It's not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
 	// without checking if it is out of bounds first
 	for i := index; i < endPoint; i++ {
@@ -309,10 +309,10 @@ func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, cu
 
 		is_escaped := false
 		// if there is an escape symbol before us, investigate
-		if fileJob.Content[i-1] == '\\' {
+		if fileJob.Content[i-1] == escape {
 			num_escapes := 0
 			for j := i - 1; j > 0; j-- {
-				if fileJob.Content[j] != '\\' {
+				if fileJob.Content[j] != escape {
 					break
 				}
 				num_escapes++
@@ -431,7 +431,7 @@ func codeState(
 				// transitioned from blank to here hence i should always be >= 1
 				// This check is to ensure we aren't in a character declaration
 				// TODO this should use language features
-				if fileJob.Content[i-1] != '\\' {
+				if fileJob.Content[i-1] != langFeatures.Escape {
 					currentState = SString
 				}
 
@@ -767,7 +767,7 @@ func CountStats(fileJob *FileJob) {
 					&fileJob.Hash,
 				)
 			case SString:
-				index, currentState = stringState(fileJob, index, endPoint, endString, currentState, ignoreEscape)
+				index, currentState = stringState(fileJob, index, endPoint, endString, currentState, ignoreEscape, langFeatures.Escape)
 			case SDocString:
 				// For a docstring we can either move into blank in which case we count it as a docstring
 				// or back into code in which case it should be counted as code
