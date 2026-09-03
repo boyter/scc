@@ -5133,17 +5133,34 @@ var languageDatabase = map[string]Language{
 			"gradle",
 		},
 		ExtensionFile: false,
-		MultiLine:     [][]string{},
+		MultiLine: [][]string{
+			{
+				"/*",
+				"*/",
+			},
+		},
 		Quotes: []Quote{
 			{
-				Start:        "'",
-				End:          "'",
+				Start:        "\"\"\"",
+				End:          "\"\"\"",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+			{
+				Start:        "'''",
+				End:          "'''",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
 			{
 				Start:        "\"",
 				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+			{
+				Start:        "'",
+				End:          "'",
 				IgnoreEscape: false,
 				DocString:    false,
 			},
@@ -5273,8 +5290,26 @@ var languageDatabase = map[string]Language{
 		},
 		Quotes: []Quote{
 			{
+				Start:        "\"\"\"",
+				End:          "\"\"\"",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+			{
+				Start:        "'''",
+				End:          "'''",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+			{
 				Start:        "\"",
 				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+			},
+			{
+				Start:        "'",
+				End:          "'",
 				IgnoreEscape: false,
 				DocString:    false,
 			},

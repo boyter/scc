@@ -332,6 +332,54 @@ func TestCountStatsSQLBackslashDoesNotEscapeTheClosingQuote(t *testing.T) {
 	}
 }
 
+// Groovy writes a string four ways and scc knew one of them, so a comment
+// opener inside any of the other three opened a comment. The single quoted
+// string is the idiomatic one and the triple quoted ones run over lines, which
+// is what lets an unclosed block comment take the rest of the file.
+func TestCountStatsGroovyStringForms(t *testing.T) {
+	ProcessConstants()
+
+	for _, language := range []string{"Groovy", "Gradle"} {
+		for _, quote := range []string{"'", `"`} {
+			fileJob := FileJob{Language: language}
+			fileJob.SetContent("def a = " + quote + "/* not a comment" + quote + "\ndef b = 1\ndef c = 2\n")
+
+			CountStats(&fileJob)
+
+			if fileJob.Lines != 3 {
+				t.Errorf("%s %s: expected 3 lines got %d", language, quote, fileJob.Lines)
+			}
+
+			if fileJob.Code != 3 {
+				t.Errorf("%s %s: expected 3 code got %d", language, quote, fileJob.Code)
+			}
+
+			if fileJob.Comment != 0 {
+				t.Errorf("%s %s: expected 0 comment got %d", language, quote, fileJob.Comment)
+			}
+		}
+
+		for _, quote := range []string{"'''", `"""`} {
+			fileJob := FileJob{Language: language}
+			fileJob.SetContent("def a = " + quote + "\n// this is text inside the string\n/* and so is this\n" + quote + "\ndef b = 1\n")
+
+			CountStats(&fileJob)
+
+			if fileJob.Lines != 5 {
+				t.Errorf("%s %s: expected 5 lines got %d", language, quote, fileJob.Lines)
+			}
+
+			if fileJob.Code != 5 {
+				t.Errorf("%s %s: expected 5 code got %d", language, quote, fileJob.Code)
+			}
+
+			if fileJob.Comment != 0 {
+				t.Errorf("%s %s: expected 0 comment got %d", language, quote, fileJob.Comment)
+			}
+		}
+	}
+}
+
 func TestCountStatsWithQuotes(t *testing.T) {
 	fileJob := FileJob{}
 
