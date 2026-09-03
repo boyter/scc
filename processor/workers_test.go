@@ -457,6 +457,47 @@ func TestCountStatsCMakeBracketArgument(t *testing.T) {
 	}
 }
 
+// A markup language holds prose, and prose holds apostrophes. Listing the
+// single quote as a string delimiter turns every contraction into the start of
+// a string that nothing closes, which then swallows the comments under it and
+// runs to the end of the file. HTML, XML, XHTML, Svelte and JSX are all
+// written with the double quote alone for that reason, and Svelte is the same
+// single file component shape as Vue.
+func TestCountStatsMarkupApostropheIsNotAString(t *testing.T) {
+	ProcessConstants()
+
+	for _, test := range []struct {
+		language string
+		comment  string
+	}{
+		{"Vue", "<!-- a comment -->"},
+		{"Astro", "<!-- a comment -->"},
+		{"Handlebars", "<!-- a comment -->"},
+		{"Mustache", "{{! a comment }}"},
+		// already written with the double quote alone, here to keep it that way
+		{"HTML", "<!-- a comment -->"},
+		{"Svelte", "<!-- a comment -->"},
+		{"XML", "<!-- a comment -->"},
+	} {
+		fileJob := FileJob{Language: test.language}
+		fileJob.SetContent("<p>it's fine</p>\n" + test.comment + "\n<p>x</p>\n")
+
+		CountStats(&fileJob)
+
+		if fileJob.Lines != 3 {
+			t.Errorf("%s: expected 3 lines got %d", test.language, fileJob.Lines)
+		}
+
+		if fileJob.Code != 2 {
+			t.Errorf("%s: expected 2 code got %d", test.language, fileJob.Code)
+		}
+
+		if fileJob.Comment != 1 {
+			t.Errorf("%s: expected 1 comment got %d", test.language, fileJob.Comment)
+		}
+	}
+}
+
 func TestCountStatsWithQuotes(t *testing.T) {
 	fileJob := FileJob{}
 
