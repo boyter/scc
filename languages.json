@@ -899,6 +899,7 @@
     ],
     "extensions": ["c", "ec", "pgc"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -927,6 +928,7 @@
     ],
     "extensions": ["h"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -1051,6 +1053,7 @@
     ],
     "extensions": ["cc", "cpp", "cxx", "c++", "pcc", "ino", "ccm", "cppm", "cxxm", "c++m", "mxx"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -1149,6 +1152,7 @@
       }
     ],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -1948,6 +1952,7 @@
     ],
     "extensions": ["cu", "cuh"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -2894,6 +2899,7 @@
     ],
     "extensions": ["vert", "tesc", "tese", "geom", "frag", "comp", "glsl"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -4844,6 +4850,7 @@
     ],
     "extensions": ["metal"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -5411,6 +5418,7 @@
       "//"
     ],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -5435,6 +5443,7 @@
     ],
     "extensions": ["mm"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {

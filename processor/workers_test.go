@@ -457,6 +457,121 @@ func TestCountStatsCMakeBracketArgument(t *testing.T) {
 	}
 }
 
+// C removes a backslash and the newline behind it before it looks for comments
+// or strings, so a backslash ending a line comment carries the comment onto
+// the next line, and a string that does not end in one is over at the newline
+// whatever it holds. The cases below are LineJudge 5020 to 5070.
+func TestCountStatsLineSplice(t *testing.T) {
+	ProcessConstants()
+
+	for _, test := range []struct {
+		name    string
+		content string
+		lines   int64
+		code    int64
+		comment int64
+		blank   int64
+	}{
+		{
+			name:    "a splice inside a line comment carries it on",
+			content: "// this comment continues \\\n   onto the next line in C\nint x = 1;\n",
+			lines:   3, code: 1, comment: 2, blank: 0,
+		},
+		{
+			name:    "a spliced comment holding no words still carries on",
+			content: "int a = 1;\n// ---- \\\nint b = 2;\nint c = 3;\n",
+			lines:   4, code: 2, comment: 2, blank: 0,
+		},
+		{
+			name:    "a splice after a closed block comment carries the line comment on",
+			content: "int a = 1;\n/* block */ // trailing \\\nint x = 1;\nint y = 2;\n",
+			lines:   4, code: 2, comment: 2, blank: 0,
+		},
+		{
+			name:    "code then a spliced line comment carries the comment on",
+			content: "int a = 1; // comment \\\n   joined to the comment\nint x = 1;\n",
+			lines:   3, code: 2, comment: 1, blank: 0,
+		},
+		{
+			name:    "a blank line inside a spliced comment is comment and not blank",
+			content: "// the blank line below is still this comment \\\n\nint x = 1;\n",
+			lines:   3, code: 1, comment: 2, blank: 0,
+		},
+		{
+			name:    "a string is carried only by a splice, so a blank line ends it",
+			content: "char *s = \"abc \\\n\n// a comment once the string has ended\";\nint x = 1;\n",
+			lines:   4, code: 3, comment: 1, blank: 0,
+		},
+	} {
+		fileJob := FileJob{Language: "C"}
+		fileJob.SetContent(test.content)
+
+		CountStats(&fileJob)
+
+		if fileJob.Lines != test.lines {
+			t.Errorf("%s: expected %d lines got %d", test.name, test.lines, fileJob.Lines)
+		}
+
+		if fileJob.Code != test.code {
+			t.Errorf("%s: expected %d code got %d", test.name, test.code, fileJob.Code)
+		}
+
+		if fileJob.Comment != test.comment {
+			t.Errorf("%s: expected %d comment got %d", test.name, test.comment, fileJob.Comment)
+		}
+
+		if fileJob.Blank != test.blank {
+			t.Errorf("%s: expected %d blank got %d", test.name, test.blank, fileJob.Blank)
+		}
+	}
+}
+
+// A raw string carries over a newline with no splice behind it, so the rule
+// that ends an unspliced string has to leave it alone. The ignoreEscape flag
+// is what tells the two apart, being set on exactly the delimiters that have
+// no escape mechanism to splice with.
+func TestCountStatsLineSpliceLeavesRawStringsAlone(t *testing.T) {
+	ProcessConstants()
+
+	fileJob := FileJob{Language: "C++"}
+	fileJob.SetContent("const char *s = R\"(abc\n// not a comment, it is inside the raw string\n)\";\nint x = 1;\n")
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 4 {
+		t.Errorf("Expected 4 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 4 {
+		t.Errorf("Expected 4 code got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 0 {
+		t.Errorf("Expected 0 comment got %d", fileJob.Comment)
+	}
+}
+
+// Only the C family splices. A backslash ending a line comment in a language
+// that does not do it must leave the next line alone.
+func TestCountStatsLineSpliceIsNotUniversal(t *testing.T) {
+	ProcessConstants()
+
+	for _, language := range []string{"Java", "C#", "Go", "JavaScript"} {
+		fileJob := FileJob{Language: language}
+		fileJob.SetContent("// a comment ending in a backslash \\\nint x = 1;\nint y = 2;\n")
+
+		CountStats(&fileJob)
+
+		if fileJob.Code != 2 {
+			t.Errorf("%s: expected 2 code got %d", language, fileJob.Code)
+		}
+
+		if fileJob.Comment != 1 {
+			t.Errorf("%s: expected 1 comment got %d", language, fileJob.Comment)
+		}
+	}
+}
+
 func TestCountStatsWithQuotes(t *testing.T) {
 	fileJob := FileJob{}
 

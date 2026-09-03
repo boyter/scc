@@ -812,6 +812,7 @@ func processLanguageFeature(name string, value Language) {
 		Strings:               stringTrie,
 		Tokens:                tokenTrie,
 		Nested:                value.NestedMultiLine,
+		LineSplice:            value.LineSplice,
 		PostfixExcludes:       postfixExcludes,
 		ComplexityCheckMask:   complexityMask,
 		MultiLineCommentMask:  multiLineCommentMask,

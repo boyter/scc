@@ -229,6 +229,47 @@ func resetState(currentState int64) int64 {
 	return currentState
 }
 
+// endsWithLineSplice reports whether the newline at index has a backslash
+// immediately in front of it. C joins those two lines in translation phase 2,
+// before it looks for a comment or a string, so the backslash splices whatever
+// is in front of it and needs no escape counting of its own.
+func endsWithLineSplice(content []byte, index int) bool {
+	if index >= len(content) || content[index] != '\n' {
+		return false
+	}
+
+	i := index - 1
+	if i >= 0 && content[i] == '\r' {
+		i--
+	}
+
+	return i >= 0 && content[i] == '\\'
+}
+
+// resetLineState is resetState for a language that splices lines. It differs on
+// two counts, and on both the C family wants the opposite of everything else: a
+// line comment ending in a splice carries on into the next line, and a string
+// that does not end in one is over at the newline whatever it holds.
+//
+// A raw string runs over a newline with no splice behind it, so ending an
+// unspliced string would break every one of them. ignoreEscape marks exactly
+// the delimiters that have no escape mechanism, which is to say the raw ones,
+// and they are left to resetState.
+func resetLineState(currentState int64, spliced bool, ignoreEscape bool) int64 {
+	switch currentState {
+	case SComment, SCommentCode:
+		if spliced {
+			return SComment
+		}
+	case SString:
+		if !spliced && !ignoreEscape {
+			return SBlank
+		}
+	}
+
+	return resetState(currentState)
+}
+
 func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, currentState int64, ignoreEscape bool) (int, int64) {
 	// It's not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
 	// without checking if it is out of bounds first
@@ -753,6 +794,14 @@ func CountStats(fileJob *FileJob) {
 				}
 			}
 
+			// Whether this line hands its state to the next one changes for a
+			// language that splices, so work out once whether it ends in a splice
+			// and let resetLineState answer for both of the branches below.
+			spliced := false
+			if langFeatures.LineSplice {
+				spliced = endsWithLineSplice(fileJob.Content, index)
+			}
+
 			if NoLarge && fileJob.Lines >= LargeLineCount {
 				// Save memory by unsetting the content as we no longer require it
 				fileJob.Content = nil
@@ -762,7 +811,11 @@ func CountStats(fileJob *FileJob) {
 			switch currentState {
 			case SCode, SString, SCommentCode, SMulticommentCode:
 				fileJob.Code++
-				currentState = resetState(currentState)
+				if langFeatures.LineSplice {
+					currentState = resetLineState(currentState, spliced, ignoreEscape)
+				} else {
+					currentState = resetState(currentState)
+				}
 				if fileJob.Callback != nil {
 					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_CODE) {
 						return
@@ -774,7 +827,11 @@ func CountStats(fileJob *FileJob) {
 				}
 			case SComment, SMulticomment, SMulticommentBlank:
 				fileJob.Comment++
-				currentState = resetState(currentState)
+				if langFeatures.LineSplice {
+					currentState = resetLineState(currentState, spliced, ignoreEscape)
+				} else {
+					currentState = resetState(currentState)
+				}
 				if fileJob.Callback != nil {
 					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
 						return

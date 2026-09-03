@@ -78,6 +78,10 @@ type Language struct {
 	SheBangs                        []string    `json:"shebangs"`
 	ExtensionFile                   bool        `json:"extensionFile"`
 	NestedMultiLine                 bool        `json:"nestedmultiline"`
+	// LineSplice marks a language where a backslash at the end of a line joins
+	// it to the next one before comments and strings are recognised, which is
+	// the C family and the shading languages that borrow its preprocessor.
+	LineSplice bool `json:"linesplice"`
 }
 
 // LanguageFeature is a struct which represents the conversion from Language into what is used for matching
@@ -90,6 +94,7 @@ type LanguageFeature struct {
 	Strings               *Trie
 	Tokens                *Trie
 	Nested                bool
+	LineSplice            bool
 	PostfixExcludes       [][]byte
 	ComplexityCheckMask   byte
 	SingleLineCommentMask byte
