@@ -746,202 +746,17 @@ func CountStats(fileJob *FileJob) {
 
 	bomSkip := checkBomSkip(fileJob)
 
-	//We want to track cognitive complexity nesting. Cognitive complexity
-	//means we assign higher complexity to nested branch conditions, so
-	//
-	//if something:
-	//    if otherthing:
-	//
-	//would be assigned a higher complexity than
-	//
-	//if something:
-	//if otherthing:
-	//
-	//because the nested if requires more mental overhead. To do this we need to track
-	//how nested each condition is when we hit it. We do this by counting the number of
-	//whitespace characters are in front of the condition.
-	//This is an appoximation, true for languages like Python, and probably true for anything
-	//else. However, the benefit of this approach is that it's almost free from a CPU point of view
-	//and the increase in spotting complex code, is genuinely useful.
-	var indentStack []int
-	lineStart := bomSkip
-	needIndent := true
-
-	for index := bomSkip; index < int(fileJob.Bytes); index++ {
-		if fileJob.ContentByteType != nil {
-			fileJob.ContentByteType[index] = stateToByteType(currentState)
-		}
-
-		// Based on our current state determine if the state should change by checking
-		// what the character is. The below is very CPU bound so need to be careful if
-		// changing anything in here and profile/measure afterwards!
-		// NB that the order of the if statements matters and has been set to what in benchmarks is most efficient
-		if !isWhitespace(fileJob.Content[index]) {
-
-			// At the first non-whitespace byte of a code-bearing line, update the
-			// indent stack so complexity tokens on this line are weighted by their
-			// nesting depth. Lines that begin a comment must not move the stack;
-			// lines inside a multiline comment/string never reach here in a
-			// blank-derived state so they are excluded automatically.
-			if Cognitive && needIndent && (currentState == SBlank || currentState == SMulticommentBlank) {
-				if tokenType, _, _ := langFeatures.Tokens.Match(fileJob.Content[index:]); tokenType != TSlcomment && tokenType != TMlcomment {
-					indent := index - lineStart
-					for len(indentStack) > 0 && indent < indentStack[len(indentStack)-1] {
-						indentStack = indentStack[:len(indentStack)-1]
-					}
-					if len(indentStack) == 0 || indent > indentStack[len(indentStack)-1] {
-						indentStack = append(indentStack, indent)
-					}
-					nesting := len(indentStack) - 1
-					if nesting < 0 {
-						nesting = 0
-					}
-					fileJob.cognitiveNesting = nesting
-					needIndent = false
-				}
-			}
-
-			switch currentState {
-			case SCode:
-				index, currentState, endString, endComments, ignoreEscape = codeState(
-					fileJob,
-					index,
-					endPoint,
-					currentState,
-					endString,
-					endComments,
-					langFeatures,
-					&fileJob.Hash,
-				)
-			case SString:
-				index, currentState = stringState(fileJob, index, endPoint, endString, currentState, ignoreEscape, langFeatures.Escape)
-			case SDocString:
-				// For a docstring we can either move into blank in which case we count it as a docstring
-				// or back into code in which case it should be counted as code
-				index, currentState = docStringState(fileJob, index, endPoint, endString, currentState)
-			case SMulticomment, SMulticommentCode:
-				index, currentState, endString, endComments = commentState(
-					fileJob,
-					index,
-					endPoint,
-					currentState,
-					endComments,
-					endString,
-					langFeatures,
-				)
-			case SBlank, SMulticommentBlank:
-				// From blank we can move into comment, move into a multiline comment
-				// or move into code but we can only do one.
-				index, currentState, endString, endComments, ignoreEscape = blankState(
-					fileJob,
-					index,
-					currentState,
-					endComments,
-					endString,
-					langFeatures,
-				)
-			}
-		}
-
-		// We shouldn't normally need this, but unclosed strings or comments
-		// might leave the index past the end of the file when we reach this
-		// point.
-		if index >= len(fileJob.Content) {
+	// The main loop lives in its own function so a language with a counter of
+	// its own can stand in for it while everything after it stays shared. It
+	// reports whether it ran to the end of the file: a binary marker, a large
+	// file cut short or a callback asking to stop all end the count there and
+	// the work below is not wanted.
+	if useJavaCounter(fileJob) {
+		if !countLoopJava(fileJob, bomSkip, endPoint) {
 			return
 		}
-
-		// Only check the first 10000 characters for null bytes indicating a binary file
-		// and if we find it then we return otherwise carry on and ignore binary markers
-		if index < 10000 && fileJob.Binary {
-			return
-		}
-
-		// This means the end of processing the line so calculate the stats according to what state
-		// we are currently in
-		if fileJob.Content[index] == '\n' || index >= endPoint {
-			fileJob.Lines++
-			if Cognitive {
-				lineStart = index + 1
-				needIndent = true
-			}
-			if fileJob.TrackComplexityLines {
-				fileJob.ComplexityLine = append(fileJob.ComplexityLine, 0)
-				if Cognitive {
-					fileJob.CognitiveLine = append(fileJob.CognitiveLine, 0)
-				}
-			}
-
-			// Whether this line hands its state to the next one changes for a
-			// language that splices, so work out once whether it ends in a splice
-			// and let resetLineState answer for both of the branches below.
-			spliced := false
-			if langFeatures.LineSplice {
-				spliced = endsWithLineSplice(fileJob.Content, index)
-			}
-
-			if NoLarge && fileJob.Lines >= LargeLineCount {
-				// Save memory by unsetting the content as we no longer require it
-				fileJob.Content = nil
-				return
-			}
-
-			switch currentState {
-			case SCode, SString, SCommentCode, SMulticommentCode:
-				fileJob.Code++
-				if langFeatures.LineSplice {
-					currentState = resetLineState(currentState, spliced, ignoreEscape)
-				} else {
-					currentState = resetState(currentState)
-				}
-				if fileJob.Callback != nil {
-					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_CODE) {
-						return
-					}
-				}
-				if Trace {
-					// Don't remove the outside if-statements, for performance
-					printTraceF("%s line %d ended with state: %d: counted as code", fileJob.Location, fileJob.Lines, currentState)
-				}
-			case SComment, SMulticomment, SMulticommentBlank:
-				fileJob.Comment++
-				if langFeatures.LineSplice {
-					currentState = resetLineState(currentState, spliced, ignoreEscape)
-				} else {
-					currentState = resetState(currentState)
-				}
-				if fileJob.Callback != nil {
-					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
-						return
-					}
-				}
-				if Trace {
-					// Same as above
-					printTraceF("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState)
-				}
-			case SBlank:
-				fileJob.Blank++
-				if fileJob.Callback != nil {
-					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_BLANK) {
-						return
-					}
-				}
-				if Trace {
-					// Same as above
-					printTraceF("%s line %d ended with state: %d: counted as blank", fileJob.Location, fileJob.Lines, currentState)
-				}
-			case SDocString:
-				fileJob.Comment++
-				if fileJob.Callback != nil {
-					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
-						return
-					}
-				}
-				if Trace {
-					// Same as above
-					printTraceF("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState)
-				}
-			}
-		}
+	} else if !countLoopGeneric(fileJob, langFeatures, bomSkip, endPoint, currentState, endString, endComments, ignoreEscape) {
+		return
 	}
 
 	if UlocMode {
@@ -1194,4 +1009,209 @@ func (ctx processorContext) unknownRemapLanguage(job *FileJob) bool {
 	}
 
 	return remapped
+}
+
+// countLoopGeneric walks a file byte by byte for any language, driven by the
+// tries built from its entry in languages.json. It returns false when it ended
+// the count early, which leaves the work after the loop undone.
+func countLoopGeneric(fileJob *FileJob, langFeatures LanguageFeature, bomSkip, endPoint int, currentState int64, endString []byte, endComments [][]byte, ignoreEscape bool) bool {
+	//We want to track cognitive complexity nesting. Cognitive complexity
+	//means we assign higher complexity to nested branch conditions, so
+	//
+	//if something:
+	//    if otherthing:
+	//
+	//would be assigned a higher complexity than
+	//
+	//if something:
+	//if otherthing:
+	//
+	//because the nested if requires more mental overhead. To do this we need to track
+	//how nested each condition is when we hit it. We do this by counting the number of
+	//whitespace characters are in front of the condition.
+	//This is an appoximation, true for languages like Python, and probably true for anything
+	//else. However, the benefit of this approach is that it's almost free from a CPU point of view
+	//and the increase in spotting complex code, is genuinely useful.
+	var indentStack []int
+	lineStart := bomSkip
+	needIndent := true
+
+	for index := bomSkip; index < int(fileJob.Bytes); index++ {
+		if fileJob.ContentByteType != nil {
+			fileJob.ContentByteType[index] = stateToByteType(currentState)
+		}
+
+		// Based on our current state determine if the state should change by checking
+		// what the character is. The below is very CPU bound so need to be careful if
+		// changing anything in here and profile/measure afterwards!
+		// NB that the order of the if statements matters and has been set to what in benchmarks is most efficient
+		if !isWhitespace(fileJob.Content[index]) {
+
+			// At the first non-whitespace byte of a code-bearing line, update the
+			// indent stack so complexity tokens on this line are weighted by their
+			// nesting depth. Lines that begin a comment must not move the stack;
+			// lines inside a multiline comment/string never reach here in a
+			// blank-derived state so they are excluded automatically.
+			if Cognitive && needIndent && (currentState == SBlank || currentState == SMulticommentBlank) {
+				if tokenType, _, _ := langFeatures.Tokens.Match(fileJob.Content[index:]); tokenType != TSlcomment && tokenType != TMlcomment {
+					indent := index - lineStart
+					for len(indentStack) > 0 && indent < indentStack[len(indentStack)-1] {
+						indentStack = indentStack[:len(indentStack)-1]
+					}
+					if len(indentStack) == 0 || indent > indentStack[len(indentStack)-1] {
+						indentStack = append(indentStack, indent)
+					}
+					nesting := len(indentStack) - 1
+					if nesting < 0 {
+						nesting = 0
+					}
+					fileJob.cognitiveNesting = nesting
+					needIndent = false
+				}
+			}
+
+			switch currentState {
+			case SCode:
+				index, currentState, endString, endComments, ignoreEscape = codeState(
+					fileJob,
+					index,
+					endPoint,
+					currentState,
+					endString,
+					endComments,
+					langFeatures,
+					&fileJob.Hash,
+				)
+			case SString:
+				index, currentState = stringState(fileJob, index, endPoint, endString, currentState, ignoreEscape, langFeatures.Escape)
+			case SDocString:
+				// For a docstring we can either move into blank in which case we count it as a docstring
+				// or back into code in which case it should be counted as code
+				index, currentState = docStringState(fileJob, index, endPoint, endString, currentState)
+			case SMulticomment, SMulticommentCode:
+				index, currentState, endString, endComments = commentState(
+					fileJob,
+					index,
+					endPoint,
+					currentState,
+					endComments,
+					endString,
+					langFeatures,
+				)
+			case SBlank, SMulticommentBlank:
+				// From blank we can move into comment, move into a multiline comment
+				// or move into code but we can only do one.
+				index, currentState, endString, endComments, ignoreEscape = blankState(
+					fileJob,
+					index,
+					currentState,
+					endComments,
+					endString,
+					langFeatures,
+				)
+			}
+		}
+
+		// We shouldn't normally need this, but unclosed strings or comments
+		// might leave the index past the end of the file when we reach this
+		// point.
+		if index >= len(fileJob.Content) {
+			return false
+		}
+
+		// Only check the first 10000 characters for null bytes indicating a binary file
+		// and if we find it then we return otherwise carry on and ignore binary markers
+		if index < 10000 && fileJob.Binary {
+			return false
+		}
+
+		// This means the end of processing the line so calculate the stats according to what state
+		// we are currently in
+		if fileJob.Content[index] == '\n' || index >= endPoint {
+			fileJob.Lines++
+			if Cognitive {
+				lineStart = index + 1
+				needIndent = true
+			}
+			if fileJob.TrackComplexityLines {
+				fileJob.ComplexityLine = append(fileJob.ComplexityLine, 0)
+				if Cognitive {
+					fileJob.CognitiveLine = append(fileJob.CognitiveLine, 0)
+				}
+			}
+
+			// Whether this line hands its state to the next one changes for a
+			// language that splices, so work out once whether it ends in a splice
+			// and let resetLineState answer for both of the branches below.
+			spliced := false
+			if langFeatures.LineSplice {
+				spliced = endsWithLineSplice(fileJob.Content, index)
+			}
+
+			if NoLarge && fileJob.Lines >= LargeLineCount {
+				// Save memory by unsetting the content as we no longer require it
+				fileJob.Content = nil
+				return false
+			}
+
+			switch currentState {
+			case SCode, SString, SCommentCode, SMulticommentCode:
+				fileJob.Code++
+				if langFeatures.LineSplice {
+					currentState = resetLineState(currentState, spliced, ignoreEscape)
+				} else {
+					currentState = resetState(currentState)
+				}
+				if fileJob.Callback != nil {
+					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_CODE) {
+						return false
+					}
+				}
+				if Trace {
+					// Don't remove the outside if-statements, for performance
+					printTraceF("%s line %d ended with state: %d: counted as code", fileJob.Location, fileJob.Lines, currentState)
+				}
+			case SComment, SMulticomment, SMulticommentBlank:
+				fileJob.Comment++
+				if langFeatures.LineSplice {
+					currentState = resetLineState(currentState, spliced, ignoreEscape)
+				} else {
+					currentState = resetState(currentState)
+				}
+				if fileJob.Callback != nil {
+					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
+						return false
+					}
+				}
+				if Trace {
+					// Same as above
+					printTraceF("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState)
+				}
+			case SBlank:
+				fileJob.Blank++
+				if fileJob.Callback != nil {
+					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_BLANK) {
+						return false
+					}
+				}
+				if Trace {
+					// Same as above
+					printTraceF("%s line %d ended with state: %d: counted as blank", fileJob.Location, fileJob.Lines, currentState)
+				}
+			case SDocString:
+				fileJob.Comment++
+				if fileJob.Callback != nil {
+					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
+						return false
+					}
+				}
+				if Trace {
+					// Same as above
+					printTraceF("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState)
+				}
+			}
+		}
+	}
+
+	return true
 }
