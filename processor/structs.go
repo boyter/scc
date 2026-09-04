@@ -42,6 +42,11 @@ type Quote struct {
 	End          string `json:"end"`
 	IgnoreEscape bool   `json:"ignoreEscape"` // To enable turning off the \ check for C# @"\" string examples https://github.com/boyter/scc/issues/71
 	DocString    bool   `json:"docString"`    // To enable docstring check for Python where "If the triple quote string starts following a newline with only white-space characters in front and ends followed by only a newline or white-space characters it is a comment" https://github.com/boyter/scc/issues/62
+	// Delimited marks a string that names its own closer, which is the C++ raw
+	// string R"tag(...)tag". The text between the start token and the opening
+	// bracket is read out of the file and the closer built from it, so End
+	// holds only what an empty delimiter closes with.
+	Delimited bool `json:"delimited"`
 }
 
 // Heuristic is a regex pattern used to disambiguate shared file extensions (for

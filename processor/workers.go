@@ -425,7 +425,7 @@ func codeState(
 			switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[i:]); tokenType {
 			case TString:
 				// If we are in string state then check what sort of string so we know if docstring OR ignoreescape string
-				i, ignoreEscape := prepareString(langFeatures, fileJob, index, offsetJump)
+				i, ignoreEscape, stringEnd := prepareString(langFeatures, fileJob, index, offsetJump, endString)
 
 				// It is safe to -1 here as to enter the code state we need to have
 				// transitioned from blank to here hence i should always be >= 1
@@ -435,7 +435,7 @@ func codeState(
 					currentState = SString
 				}
 
-				return i, currentState, endString, endComments, ignoreEscape
+				return i, currentState, stringEnd, endComments, ignoreEscape
 
 			case TSlcomment:
 				// No word break check here, unlike blankState. A line that already
@@ -554,7 +554,7 @@ func blankState(
 		}
 
 	case TString:
-		index, ignoreEscape := prepareString(langFeatures, fileJob, index, offsetJump)
+		index, ignoreEscape, endString := prepareString(langFeatures, fileJob, index, offsetJump, endString)
 
 		for _, v := range langFeatures.Quotes {
 			if v.End == string(endString) && v.DocString {
@@ -602,13 +602,48 @@ func blankState(
 	return index, currentState, endString, endComments, false
 }
 
-// Advance over a string prefix and report whether escapes are literal.
-func prepareString(langFeatures LanguageFeature, fileJob *FileJob, index, tokenLength int) (int, bool) {
+// maxRawStringDelimiter is the longest delimiter a C++ raw string may name,
+// which the standard puts at 16 characters.
+const maxRawStringDelimiter = 16
+
+// rawStringEnd reads the delimiter a raw string names for itself and builds the
+// closer from it. index points at the first byte after the start token, so for
+// R"tag( it points at the t, and the closer that comes back is )tag". The
+// second return is the index of the opening bracket, or -1 when there is no
+// delimiter to be had, which is not valid C++ and is left to the plain string
+// that the quote of the start token opens.
+func rawStringEnd(content []byte, index int, terminator byte) ([]byte, int) {
+	limit := index + maxRawStringDelimiter
+	if limit > len(content) {
+		limit = len(content)
+	}
+
+	for i := index; i < limit; i++ {
+		switch content[i] {
+		case '(':
+			end := make([]byte, 0, (i-index)+2)
+			end = append(end, ')')
+			end = append(end, content[index:i]...)
+
+			return append(end, terminator), i
+		case ')', '\\', ' ', '\t', '\n', '\r':
+			// none of these may appear in a delimiter, so there is no raw string here
+			return nil, -1
+		}
+	}
+
+	return nil, -1
+}
+
+// Advance over a string prefix and report whether escapes are literal. The
+// third return is a closer read out of the file, which is nil for every string
+// whose closer the language already knows.
+func prepareString(langFeatures LanguageFeature, fileJob *FileJob, index, tokenLength int, endString []byte) (int, bool, []byte) {
 	ignoreEscape := false
 
 	// loop over the string states and if we have the special flag match, and if so we need to ensure we can handle them
 	for i := 0; i < len(langFeatures.Quotes); i++ {
-		if langFeatures.Quotes[i].DocString || langFeatures.Quotes[i].IgnoreEscape {
+		if langFeatures.Quotes[i].DocString || langFeatures.Quotes[i].IgnoreEscape || langFeatures.Quotes[i].Delimited {
 			// If so we need to check if where we are falls into these conditions
 			isMatch := true
 			for j := 0; j < len(langFeatures.Quotes[i].Start); j++ {
@@ -623,6 +658,18 @@ func prepareString(langFeatures LanguageFeature, fileJob *FileJob, index, tokenL
 				ignoreEscape = true
 				index = index + len(langFeatures.Quotes[i].Start)
 
+				// A raw string naming its own closer has that closer read out of
+				// the file here, the cursor landing on the opening bracket so the
+				// delimiter is not walked again. A start token with nothing that
+				// can follow it is not a raw string, and falls through to the
+				// plain string its own quote opens.
+				if langFeatures.Quotes[i].Delimited {
+					end := langFeatures.Quotes[i].End
+					if rawEnd, bracket := rawStringEnd(fileJob.Content, index, end[len(end)-1]); bracket != -1 {
+						return bracket, ignoreEscape, rawEnd
+					}
+				}
+
 				// Clamp to the last byte when the start token ends the file, such as a
 				// Python file whose final bytes are """ with no trailing newline. Left
 				// unbounded the caller lands on len(Content) and blankState writes past
@@ -630,12 +677,12 @@ func prepareString(langFeatures LanguageFeature, fileJob *FileJob, index, tokenL
 				if index >= len(fileJob.Content) {
 					index = len(fileJob.Content) - 1
 				}
-				return index, ignoreEscape
+				return index, ignoreEscape, endString
 			}
 		}
 	}
 
-	return index + max(tokenLength, 1) - 1, ignoreEscape
+	return index + max(tokenLength, 1) - 1, ignoreEscape, endString
 }
 
 // CountStats will process the fileJob

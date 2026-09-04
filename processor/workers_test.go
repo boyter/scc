@@ -764,6 +764,80 @@ func TestCountStatsBackslashStillEscapesElsewhere(t *testing.T) {
 	}
 }
 
+// A C++ raw string may put a word of its own between the R" and the bracket,
+// and then ends only at a closer carrying that same word. The closer is chosen
+// where the string is written, so no list of delimiters can hold it and it has
+// to be read out of the file.
+func TestCountStatsCppDelimitedRawString(t *testing.T) {
+	ProcessConstants()
+
+	for _, test := range []struct {
+		name    string
+		content string
+		lines   int64
+		code    int64
+	}{
+		{
+			name:    "a named delimiter holds a quote and a comment opener",
+			content: "const char *raw = R\"xy(a lone \" quote and\n/* this opens nothing, it is inside the raw string\n)xy\";\nprintf(\"done\");\n",
+			lines:   4, code: 4,
+		},
+		{
+			name:    "the delimiter may still be empty",
+			content: "const char *raw = R\"(a \" quote\n// not a comment\n)\";\nint x = 1;\n",
+			lines:   4, code: 4,
+		},
+		{
+			name:    "a closer naming a different word does not end it",
+			content: "const char *raw = R\"outer(\n)inner\"\nstill inside\n)outer\";\nint x = 1;\n",
+			lines:   5, code: 5,
+		},
+		{
+			name:    "the encoding prefixes carry a delimiter too",
+			content: "auto a = u8R\"tag(\n// inside\n)tag\";\nauto b = LR\"tag(\n/* inside\n)tag\";\nint x = 1;\n",
+			lines:   7, code: 7,
+		},
+	} {
+		for _, language := range []string{"C++", "C++ Header"} {
+			fileJob := FileJob{Language: language}
+			fileJob.SetContent(test.content)
+
+			CountStats(&fileJob)
+
+			if fileJob.Lines != test.lines {
+				t.Errorf("%s %s: expected %d lines got %d", language, test.name, test.lines, fileJob.Lines)
+			}
+
+			if fileJob.Code != test.code {
+				t.Errorf("%s %s: expected %d code got %d", language, test.name, test.code, fileJob.Code)
+			}
+
+			if fileJob.Comment != 0 {
+				t.Errorf("%s %s: expected 0 comment got %d", language, test.name, fileJob.Comment)
+			}
+		}
+	}
+}
+
+// An R that does not open a raw string is an ordinary identifier, and the
+// quote after one is an ordinary string.
+func TestCountStatsCppRWithoutARawString(t *testing.T) {
+	ProcessConstants()
+
+	fileJob := FileJob{Language: "C++"}
+	fileJob.SetContent("int R = 1;\nconst char *s = \"plain\";\n// a real comment\n")
+
+	CountStats(&fileJob)
+
+	if fileJob.Code != 2 {
+		t.Errorf("Expected 2 code got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 comment got %d", fileJob.Comment)
+	}
+}
+
 func TestCountStatsWithQuotes(t *testing.T) {
 	fileJob := FileJob{}
 

@@ -1053,29 +1053,34 @@
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "R\"("
+        "start": "R\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "u8R\"("
+        "start": "u8R\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "uR\"("
+        "start": "uR\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "UR\"("
+        "start": "UR\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "LR\"("
+        "start": "LR\""
       },
       {
         "end": "\"",
@@ -1152,29 +1157,34 @@
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "R\"("
+        "start": "R\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "u8R\"("
+        "start": "u8R\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "uR\"("
+        "start": "uR\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "UR\"("
+        "start": "UR\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "LR\"("
+        "start": "LR\""
       },
       {
         "end": "\"",
