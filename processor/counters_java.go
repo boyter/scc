@@ -11,10 +11,24 @@ package processor
 // differ the generic one is right by definition, since it is what the rest of
 // the tests are written against, and countLoopJava is only ever an accelerator.
 
-// javaInteresting marks the bytes that can begin a token of Java: the slash of
-// both comment forms, the two quotes, and the first byte of every complexity
-// check. Everything else is passed over without a second look.
+// javaStop marks every byte the scan has to stop on: the slash of both comment
+// forms, the two quotes, the first byte of every complexity check, and the
+// newline and the null that end a line and a file of bytes rather than text.
+// One load and one branch answer for a byte, where asking each question in turn
+// costs several.
+var javaStop = buildJavaStop()
+
+// javaInteresting marks only the bytes that begin a token, which is javaStop
+// without the two that end things.
 var javaInteresting = buildJavaInteresting()
+
+func buildJavaStop() [256]bool {
+	table := buildJavaInteresting()
+	table['\n'] = true
+	table[0] = true
+
+	return table
+}
 
 func buildJavaInteresting() [256]bool {
 	var table [256]bool
@@ -95,21 +109,31 @@ func hasPrefix(content []byte, prefix string) bool {
 	return true
 }
 
-// javaCountComplexity is the guard the generic loop puts on a complexity check,
-// which is that the token begins a word rather than ending one, so the try in
-// retry is not a branch.
-func javaCountComplexity(fileJob *FileJob, index int) {
-	// The global reads as complexity having been turned off, which is what the
-	// generic loop tests when it decides whether to put the checks into its trie
-	// at all, so the two agree on a file counted with --no-complexity.
+// javaWordStarts reports whether a complexity check could begin at index, which
+// is that the byte in front of it does not carry a word on.
+//
+// The generic loop matches the check first and applies this after, then steps
+// over the token either way. Testing it first is the same thing done in the
+// cheaper order: no check of Java holds the opening of another, or a quote, or
+// a slash, or a newline, so the bytes the generic loop steps over hold nothing
+// that would have been read had it not. It is worth the argument because an f,
+// i, s, w, e, t or c is nearly always in the middle of an identifier, and this
+// is what keeps the match from being run on every one of them.
+func javaWordStarts(content []byte, index int) bool {
+	return index == 0 || !isIdentifierContinue(content[index-1])
+}
+
+// javaCountComplexity counts a check that has already been found to begin a
+// word. The global reads as complexity having been turned off, which is what
+// the generic loop tests when it decides whether to put the checks into its
+// trie at all, so the two agree on a file counted with --no-complexity.
+func javaCountComplexity(fileJob *FileJob) {
 	if Complexity {
 		return
 	}
 
-	if index == 0 || !isIdentifierContinue(fileJob.Content[index-1]) {
-		fileJob.Complexity++
-		fileJob.bumpComplexityLine()
-	}
+	fileJob.Complexity++
+	fileJob.bumpComplexityLine()
 }
 
 // javaBlankState looks at the first byte of content on a line.
@@ -130,9 +154,9 @@ func javaBlankState(fileJob *FileJob, index int) (int, int64, byte) {
 		return index, SString, content[index]
 	}
 
-	if javaInteresting[content[index]] {
+	if javaInteresting[content[index]] && javaWordStarts(content, index) {
 		if length := javaComplexityToken(content[index:]); length != 0 {
-			javaCountComplexity(fileJob, index)
+			javaCountComplexity(fileJob)
 			return index + length - 1, SCode, 0
 		}
 	}
@@ -150,22 +174,19 @@ func javaCodeState(fileJob *FileJob, index, endPoint int) (int, int64, byte) {
 
 	for i := index; i < endPoint; i++ {
 		curByte := content[i]
-		index = i
 
-		if curByte == '\n' {
-			return i, SCode, 0
-		}
-
-		if isBinary(i, curByte) {
-			fileJob.Binary = true
-			return i, SCode, 0
-		}
-
-		if !javaInteresting[curByte] {
+		if !javaStop[curByte] {
 			continue
 		}
 
 		switch curByte {
+		case '\n':
+			return i, SCode, 0
+		case 0:
+			if isBinary(i, curByte) {
+				fileJob.Binary = true
+				return i, SCode, 0
+			}
 		case '/':
 			if i+1 < len(content) {
 				switch content[i+1] {
@@ -185,11 +206,19 @@ func javaCodeState(fileJob *FileJob, index, endPoint int) (int, int64, byte) {
 
 			return i, SCode, 0
 		default:
-			if length := javaComplexityToken(content[i:]); length != 0 {
-				javaCountComplexity(fileJob, i)
-				i += length - 1
+			if javaWordStarts(content, i) {
+				if length := javaComplexityToken(content[i:]); length != 0 {
+					javaCountComplexity(fileJob)
+					i += length - 1
+				}
 			}
 		}
+	}
+
+	// The generic loop leaves the cursor on the last byte it looked at, which
+	// is the one before endPoint when it got that far.
+	if index < endPoint {
+		return endPoint - 1, SCode, 0
 	}
 
 	return index, SCode, 0

@@ -104,7 +104,13 @@ func TestJavaCounterAgreesOnTheCorpus(t *testing.T) {
 	// than in either counter. Nothing here holds on to a file once it is counted.
 	defer debug.SetGCPercent(debug.SetGCPercent(1600))
 
-	corpus := filepath.Join("..", "examples", "performance_tests")
+	// The corpus in examples/performance_tests is one file written out many
+	// thousands of times, which measures throughput and tells us nothing about
+	// whether the two counters agree, so point this at real code instead.
+	corpus := os.Getenv("SCC_DIFF_CORPUS")
+	if corpus == "" {
+		corpus = filepath.Join("..", "examples", "performance_tests")
+	}
 	if _, err := os.Stat(corpus); err != nil {
 		t.Skip("no performance corpus checked out")
 	}
@@ -196,3 +202,53 @@ func benchmarkJavaCounter(b *testing.B, specialised bool) {
 
 func BenchmarkCountStatsJavaGeneric(b *testing.B)     { benchmarkJavaCounter(b, false) }
 func BenchmarkCountStatsJavaSpecialised(b *testing.B) { benchmarkJavaCounter(b, true) }
+
+// benchmarkJavaCorpus counts real Java rather than the one file that
+// examples/performance_tests is made of, whose mix of code, comment and string
+// is its own and not that of Java at large. Point SCC_DIFF_CORPUS at a tree of
+// real code.
+func benchmarkJavaCorpus(b *testing.B, specialised bool) {
+	b.Helper()
+	ProcessConstants()
+
+	corpus := os.Getenv("SCC_DIFF_CORPUS")
+	if corpus == "" {
+		b.Skip("set SCC_DIFF_CORPUS to a tree of real java")
+	}
+
+	var files [][]byte
+	var total int64
+	_ = filepath.Walk(corpus, func(path string, info os.FileInfo, err error) error {
+		if err != nil || info.IsDir() || !strings.HasSuffix(path, ".java") || len(files) >= 400 {
+			return nil
+		}
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return nil
+		}
+		files = append(files, content)
+		total += int64(len(content))
+
+		return nil
+	})
+
+	if len(files) == 0 {
+		b.Skip("no java found in the corpus")
+	}
+
+	DisableSpecialisedCounters = !specialised
+	defer func() { DisableSpecialisedCounters = false }()
+
+	b.SetBytes(total)
+	b.ResetTimer()
+
+	for b.Loop() {
+		for _, content := range files {
+			fileJob := FileJob{Language: "Java", Content: content, Bytes: int64(len(content))}
+			CountStats(&fileJob)
+		}
+	}
+}
+
+func BenchmarkCountStatsJavaCorpusGeneric(b *testing.B)     { benchmarkJavaCorpus(b, false) }
+func BenchmarkCountStatsJavaCorpusSpecialised(b *testing.B) { benchmarkJavaCorpus(b, true) }
