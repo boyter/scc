@@ -157,6 +157,19 @@ func TestJavaCounterAgreesOnTheCorpus(t *testing.T) {
 	t.Logf("checked %d files, %d disagreed", checked, disagreed)
 }
 
+// The counter scans with a smaller table when complexity is off, so that is a
+// second path over the same files and wants the same warrant.
+func TestJavaCounterAgreesOnTheCorpusWithComplexityOff(t *testing.T) {
+	Complexity = true
+	ProcessConstants()
+	defer func() {
+		Complexity = false
+		ProcessConstants()
+	}()
+
+	TestJavaCounterAgreesOnTheCorpus(t)
+}
+
 // --no-complexity sets the global, which the generic loop reads by leaving the
 // checks out of its trie. The counter has to stop counting them too.
 func TestJavaCounterAgreesWithComplexityOff(t *testing.T) {
@@ -252,3 +265,29 @@ func benchmarkJavaCorpus(b *testing.B, specialised bool) {
 
 func BenchmarkCountStatsJavaCorpusGeneric(b *testing.B)     { benchmarkJavaCorpus(b, false) }
 func BenchmarkCountStatsJavaCorpusSpecialised(b *testing.B) { benchmarkJavaCorpus(b, true) }
+
+// Complexity is what stops the scan being able to skip: the checks begin with
+// f, i, s, w, e, t and c, which are better than a third of the bytes of a Java
+// file, so every one of them has to be looked at. With complexity off the scan
+// cares about five bytes in the whole alphabet, which is the shape a vector
+// instruction can answer. These two measure that ceiling.
+func benchmarkJavaCorpusNoComplexity(b *testing.B, specialised bool) {
+	b.Helper()
+
+	Complexity = true
+	ProcessConstants()
+	defer func() {
+		Complexity = false
+		ProcessConstants()
+	}()
+
+	benchmarkJavaCorpus(b, specialised)
+}
+
+func BenchmarkCountStatsJavaCorpusNoComplexityGeneric(b *testing.B) {
+	benchmarkJavaCorpusNoComplexity(b, false)
+}
+
+func BenchmarkCountStatsJavaCorpusNoComplexitySpecialised(b *testing.B) {
+	benchmarkJavaCorpusNoComplexity(b, true)
+}

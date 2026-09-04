@@ -2,6 +2,8 @@
 
 package processor
 
+import "bytes"
+
 // A counter written for one language rather than driven by the tries built from
 // languages.json. The generic loop asks a trie what token sits at a byte, which
 // the profile puts at a quarter of the whole program; Java needs to know about
@@ -22,12 +24,40 @@ var javaStop = buildJavaStop()
 // without the two that end things.
 var javaInteresting = buildJavaInteresting()
 
+// javaStopNoComplexity is javaStop without the eleven bytes that only a
+// complexity check begins with. Seven of those are letters, and f, i, s, w, e,
+// t and c between them are better than a third of the bytes of a Java file, so
+// leaving them out is the difference between stopping on a third of the file
+// and stopping on a few percent of it. It is what a file counted with
+// --no-complexity is scanned with, the generic loop leaving the checks out of
+// its trie under the same flag.
+var javaStopNoComplexity = buildJavaStopNoComplexity()
+
 func buildJavaStop() [256]bool {
 	table := buildJavaInteresting()
 	table['\n'] = true
 	table[0] = true
 
 	return table
+}
+
+func buildJavaStopNoComplexity() [256]bool {
+	var table [256]bool
+	for _, b := range []byte{'/', '"', '\'', '\n', 0} {
+		table[b] = true
+	}
+
+	return table
+}
+
+// javaStopTable picks the table the scan runs with. The global reads as
+// complexity having been turned off.
+func javaStopTable() *[256]bool {
+	if Complexity {
+		return &javaStopNoComplexity
+	}
+
+	return &javaStop
 }
 
 func buildJavaInteresting() [256]bool {
@@ -154,7 +184,7 @@ func javaBlankState(fileJob *FileJob, index int) (int, int64, byte) {
 		return index, SString, content[index]
 	}
 
-	if javaInteresting[content[index]] && javaWordStarts(content, index) {
+	if javaInteresting[content[index]] && !Complexity && javaWordStarts(content, index) {
 		if length := javaComplexityToken(content[index:]); length != 0 {
 			javaCountComplexity(fileJob)
 			return index + length - 1, SCode, 0
@@ -166,7 +196,7 @@ func javaBlankState(fileJob *FileJob, index int) (int, int64, byte) {
 
 // javaCodeState runs to the end of the line or to whatever token takes it out
 // of code.
-func javaCodeState(fileJob *FileJob, index, endPoint int) (int, int64, byte) {
+func javaCodeState(fileJob *FileJob, index, endPoint int, stop *[256]bool) (int, int64, byte) {
 	content := fileJob.Content
 	if endPoint > len(content) {
 		endPoint--
@@ -175,7 +205,7 @@ func javaCodeState(fileJob *FileJob, index, endPoint int) (int, int64, byte) {
 	for i := index; i < endPoint; i++ {
 		curByte := content[i]
 
-		if !javaStop[curByte] {
+		if !stop[curByte] {
 			continue
 		}
 
@@ -288,15 +318,25 @@ func javaCommentState(fileJob *FileJob, index, endPoint int, currentState int64)
 func countLoopJava(fileJob *FileJob, bomSkip, endPoint int) bool {
 	content := fileJob.Content
 	currentState := SBlank
+	stop := javaStopTable()
 	var endQuote byte
 
 	for index := bomSkip; index < int(fileJob.Bytes); index++ {
 		if !isWhitespace(content[index]) {
 			switch currentState {
 			case SCode:
-				index, currentState, endQuote = javaCodeState(fileJob, index, endPoint)
+				index, currentState, endQuote = javaCodeState(fileJob, index, endPoint, stop)
 			case SString:
 				index, currentState = javaStringState(fileJob, index, endPoint, endQuote)
+			case SComment, SCommentCode:
+				// Nothing inside a line comment can change the state, so the rest
+				// of the line is of no interest and IndexByte finds where it ends
+				// a vector at a time rather than a byte.
+				if next := bytesIndexNewline(content[index:]); next >= 0 {
+					index += next
+				} else {
+					index = int(fileJob.Bytes) - 1
+				}
 			case SMulticomment, SMulticommentCode:
 				index, currentState = javaCommentState(fileJob, index, endPoint, currentState)
 			case SBlank, SMulticommentBlank:
@@ -350,4 +390,12 @@ func useJavaCounter(fileJob *FileJob) bool {
 		!fileJob.ClassifyContent &&
 		!fileJob.TrackComplexityLines &&
 		fileJob.Callback == nil
+}
+
+// bytesIndexNewline is bytes.IndexByte under a name that says what it is for.
+// It is written in assembly for every architecture scc is built for, comparing
+// a vector of bytes at a time, which is what makes skipping a run worth doing
+// rather than walking it.
+func bytesIndexNewline(content []byte) int {
+	return bytes.IndexByte(content, '\n')
 }
