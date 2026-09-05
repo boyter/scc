@@ -171,6 +171,10 @@ type remapConfig struct {
 
 type processorContext struct {
 	remap remapConfig
+	// summary, when set, tells the counting workers to fold their own results
+	// into it instead of sending every file down the summary channel. Only the
+	// default and wide summaries can use it; see summariseInWorkers.
+	summary *sharedSummaryTotals
 }
 
 func parseRemapRules(value string) []remapRule {
@@ -264,6 +268,10 @@ var FileListQueueSize = runtime.NumCPU()
 
 // FileProcessJobWorkers is the number of workers that process the file collecting stats
 var FileProcessJobWorkers = runtime.NumCPU() * 4
+
+// FileListJobWorkers is the number of workers that turn a path the walker found
+// into a FileJob, which is a stat and a language lookup each
+var FileListJobWorkers = runtime.NumCPU()
 
 // FileSummaryJobQueueSize is the queue used to hold processed file statistics before formatting
 var FileSummaryJobQueueSize = runtime.NumCPU()
@@ -802,6 +810,33 @@ func processLanguageFeature(name string, value Language) {
 		heuristics = append(heuristics, CompiledHeuristic{Re: re, Literals: literals, Anchored: v.Anchored})
 	}
 
+	// A line comment spelled as a word ends where the word does, which costs a
+	// check on every token that matches. Almost no language has one, so work out
+	// here whether this one does and let the hot loop skip the check entirely.
+	escape := byte('\\')
+	if len(value.Escape) != 0 {
+		escape = value.Escape[0]
+	}
+
+	// The exact set of bytes the counting loop has to stop on, which is every
+	// byte that opens a token plus the newline and the nul. Built here once so
+	// the loop pays a single load and branch per byte instead of a mask test
+	// that nearly always passes followed by a failed trie walk.
+	tokenFirst := newTokenFirst()
+	for i := range tokenTrie.Table {
+		if tokenTrie.Table[i] != nil {
+			tokenFirst[i] = true
+		}
+	}
+
+	wordComments := false
+	for _, token := range value.LineComment {
+		if len(token) > 1 && isIdentifierContinue(token[len(token)-1]) {
+			wordComments = true
+			break
+		}
+	}
+
 	LanguageFeaturesMutex.Lock()
 	LanguageFeatures[name] = LanguageFeature{
 		Complexity:            complexityTrie,
@@ -812,12 +847,16 @@ func processLanguageFeature(name string, value Language) {
 		Strings:               stringTrie,
 		Tokens:                tokenTrie,
 		Nested:                value.NestedMultiLine,
+		LineSplice:            value.LineSplice,
+		WordComments:          wordComments,
+		Escape:                escape,
 		PostfixExcludes:       postfixExcludes,
 		ComplexityCheckMask:   complexityMask,
 		MultiLineCommentMask:  multiLineCommentMask,
 		SingleLineCommentMask: singleLineCommentMask,
 		StringCheckMask:       stringMask,
 		ProcessMask:           processMask,
+		TokenFirst:            tokenFirst,
 		Keywords:              value.Keywords,
 		KeywordBytes:          keywordBytes,
 		Heuristics:            heuristics,
@@ -1048,11 +1087,12 @@ func Process() {
 	printDebugF("SortBy: %s", SortBy)
 	printDebugF("PathDenyList: %v", PathDenyList)
 
-	potentialFilesQueue := make(chan *gocodewalker.File, FileListQueueSize) // files that pass the .gitignore checks
-	fileListQueue := make(chan *FileJob, FileListQueueSize)                 // Files ready to be read from disk
-	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)     // Files ready to be summarised
+	potentialFilesQueue := make(chan []*gocodewalker.File, FileListQueueSize) // files that pass the .gitignore checks
+	fileListQueue := make(chan *FileJob, FileListQueueSize)                   // Files ready to be read from disk
+	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)       // Files ready to be summarised
 
-	fileWalker := gocodewalker.NewParallelFileWalker(dirPaths, potentialFilesQueue)
+	fileWalker := gocodewalker.NewParallelFileWalker(dirPaths, nil)
+	fileWalker.SetFileBatchQueue(potentialFilesQueue)
 	fileWalker.SetErrorHandler(func(e error) bool {
 		printError(e.Error())
 		return true
@@ -1088,45 +1128,17 @@ func Process() {
 		}
 	}()
 
-	go func() {
-		for _, f := range filePaths {
-			fileInfo, err := os.Lstat(f)
-			if err != nil {
-				continue
-			}
+	startFileJobProducer(potentialFilesQueue, filePaths, excludePathRegexes, fileListQueue)
 
-			fileJob := newFileJob(f, f, fileInfo)
-			if fileJob != nil {
-				fileListQueue <- fileJob
-			}
-		}
-
-		for fi := range potentialFilesQueue {
-			shouldExclude := false
-			for _, re := range excludePathRegexes {
-				if re.MatchString(fi.Location) {
-					shouldExclude = true
-					break
-				}
-			}
-			if shouldExclude {
-				continue
-			}
-
-			fileInfo, err := os.Lstat(fi.Location)
-			if err != nil {
-				continue
-			}
-
-			if !fileInfo.IsDir() {
-				fileJob := newFileJob(fi.Location, fi.Filename, fileInfo)
-				if fileJob != nil {
-					fileListQueue <- fileJob
-				}
-			}
-		}
-		close(fileListQueue)
-	}()
+	// Where the output is one of the summaries that only ever prints per
+	// language totals, the workers add up their own results and merge once each
+	// at the end. That deletes a channel send and a channel receive per file
+	// from a stage where the receiver is a single goroutine, which is the
+	// difference between 86,000 handovers and one per worker.
+	if summariseInWorkers() {
+		ctx.summary = newSharedSummaryTotals()
+		workerSummary = ctx.summary
+	}
 
 	go ctx.fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
 

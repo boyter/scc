@@ -50,11 +50,12 @@ func ProcessResult() ([]LanguageSummary, error) {
 	printDebugF("SortBy: %s", SortBy)
 	printDebugF("PathDenyList: %v", PathDenyList)
 
-	potentialFilesQueue := make(chan *gocodewalker.File, FileListQueueSize)
+	potentialFilesQueue := make(chan []*gocodewalker.File, FileListQueueSize)
 	fileListQueue := make(chan *FileJob, FileListQueueSize)
 	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)
 
-	fileWalker := gocodewalker.NewParallelFileWalker(dirPaths, potentialFilesQueue)
+	fileWalker := gocodewalker.NewParallelFileWalker(dirPaths, nil)
+	fileWalker.SetFileBatchQueue(potentialFilesQueue)
 	fileWalker.SetErrorHandler(func(e error) bool {
 		printError(e.Error())
 		return true
@@ -90,45 +91,7 @@ func ProcessResult() ([]LanguageSummary, error) {
 		}
 	}()
 
-	go func() {
-		for _, f := range filePaths {
-			fileInfo, err := os.Lstat(f)
-			if err != nil {
-				continue
-			}
-
-			fileJob := newFileJob(f, f, fileInfo)
-			if fileJob != nil {
-				fileListQueue <- fileJob
-			}
-		}
-
-		for fi := range potentialFilesQueue {
-			shouldExclude := false
-			for _, re := range excludePathRegexes {
-				if re.MatchString(fi.Location) {
-					shouldExclude = true
-					break
-				}
-			}
-			if shouldExclude {
-				continue
-			}
-
-			fileInfo, err := os.Lstat(fi.Location)
-			if err != nil {
-				continue
-			}
-
-			if !fileInfo.IsDir() {
-				fileJob := newFileJob(fi.Location, fi.Filename, fileInfo)
-				if fileJob != nil {
-					fileListQueue <- fileJob
-				}
-			}
-		}
-		close(fileListQueue)
-	}()
+	startFileJobProducer(potentialFilesQueue, filePaths, excludePathRegexes, fileListQueue)
 
 	go ctx.fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
 

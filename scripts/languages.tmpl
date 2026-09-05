@@ -51,10 +51,13 @@ var languageDatabase = map[string]Language{
 				End:          {{quote .End}},
 				IgnoreEscape: {{.IgnoreEscape}},
 				DocString:    {{.DocString}},
+				Delimited:    {{.Delimited}},
 			},
 			{{- end}}
 		},
 		NestedMultiLine: {{$value.NestedMultiLine}},
+		LineSplice: {{$value.LineSplice}},
+		Escape: {{quote $value.Escape}},
 		Keywords: []string{
 			{{- range $value.Keywords}}
 			{{quote .}},

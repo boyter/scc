@@ -5,11 +5,14 @@ package processor
 import (
 	"bytes"
 	"hash"
+	"os"
+	"regexp"
 	"runtime/debug"
 	"strings"
 	"sync"
 	"sync/atomic"
 
+	"github.com/boyter/gocodewalker"
 	"golang.org/x/crypto/blake2b"
 )
 
@@ -94,6 +97,11 @@ func checkForMatchSingle(currentByte byte, index int, endPoint int, matches []by
 	return false
 }
 
+// isBlankRun marks the whitespace that carries no meaning at all to the
+// counting loop. The newline is left out because a line ends on it, which is
+// the one piece of whitespace the loop has to stop for.
+var isBlankRun = [256]bool{' ': true, '\t': true, '\r': true}
+
 func isWhitespace(currentByte byte) bool {
 	if currentByte != ' ' && currentByte != '\t' && currentByte != '\n' && currentByte != '\r' {
 		return false
@@ -104,6 +112,26 @@ func isWhitespace(currentByte byte) bool {
 
 func isIdentifierContinue(b byte) bool {
 	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') || (b >= '0' && b <= '9') || b == '_'
+}
+
+// commentOpensHere reports whether a matched line comment token really opens a
+// comment where it sits. A token spelled as a word, such as Batch's REM or
+// Autoconf's dnl, ends where the word ends, so REMOVE is a command and not a
+// comment. A token of a single byte is left alone because FORTRAN Legacy opens
+// a comment with a C in the first column whatever follows it, which is how a
+// rule of CCCCCCCC across the page is written.
+func commentOpensHere(content []byte, index, offsetJump int) bool {
+	if offsetJump < 2 || !isIdentifierContinue(content[index+offsetJump-1]) {
+		return true
+	}
+
+	if index > 0 && isIdentifierContinue(content[index-1]) {
+		return false
+	}
+
+	after := index + offsetJump
+
+	return after >= len(content) || !isIdentifierContinue(content[after])
 }
 
 func hasNonWhitespaceBefore(content []byte, index int) bool {
@@ -203,6 +231,22 @@ func shouldProcess(currentByte, processBytesMask byte) bool {
 	return currentByte&processBytesMask == currentByte
 }
 
+// newTokenFirst returns a stop table with nothing in it but the two bytes every
+// language stops on whatever its tokens are: the newline that ends a line and
+// the nul that marks the file binary.
+func newTokenFirst() *[256]bool {
+	t := &[256]bool{}
+	t['\n'] = true
+	t[0] = true
+
+	return t
+}
+
+// emptyTokenFirst stands in for a language with no features at all, such as the
+// Unknown bucket --count-unsupported puts files in, where there is no trie to
+// build a table from.
+var emptyTokenFirst = newTokenFirst()
+
 func stateToByteType(state int64) byte {
 	switch state {
 	case SCode:
@@ -229,7 +273,48 @@ func resetState(currentState int64) int64 {
 	return currentState
 }
 
-func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, currentState int64, ignoreEscape bool) (int, int64) {
+// endsWithLineSplice reports whether the newline at index has a backslash
+// immediately in front of it. C joins those two lines in translation phase 2,
+// before it looks for a comment or a string, so the backslash splices whatever
+// is in front of it and needs no escape counting of its own.
+func endsWithLineSplice(content []byte, index int) bool {
+	if index >= len(content) || content[index] != '\n' {
+		return false
+	}
+
+	i := index - 1
+	if i >= 0 && content[i] == '\r' {
+		i--
+	}
+
+	return i >= 0 && content[i] == '\\'
+}
+
+// resetLineState is resetState for a language that splices lines. It differs on
+// two counts, and on both the C family wants the opposite of everything else: a
+// line comment ending in a splice carries on into the next line, and a string
+// that does not end in one is over at the newline whatever it holds.
+//
+// A raw string runs over a newline with no splice behind it, so ending an
+// unspliced string would break every one of them. ignoreEscape marks exactly
+// the delimiters that have no escape mechanism, which is to say the raw ones,
+// and they are left to resetState.
+func resetLineState(currentState int64, spliced bool, ignoreEscape bool) int64 {
+	switch currentState {
+	case SComment, SCommentCode:
+		if spliced {
+			return SComment
+		}
+	case SString:
+		if !spliced && !ignoreEscape {
+			return SBlank
+		}
+	}
+
+	return resetState(currentState)
+}
+
+func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, currentState int64, ignoreEscape bool, escape byte) (int, int64) {
 	// It's not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
 	// without checking if it is out of bounds first
 	for i := index; i < endPoint; i++ {
@@ -248,10 +333,10 @@ func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, cu
 
 		is_escaped := false
 		// if there is an escape symbol before us, investigate
-		if fileJob.Content[i-1] == '\\' {
+		if fileJob.Content[i-1] == escape {
 			num_escapes := 0
 			for j := i - 1; j > 0; j-- {
-				if fileJob.Content[j] != '\\' {
+				if fileJob.Content[j] != escape {
 					break
 				}
 				num_escapes++
@@ -335,6 +420,120 @@ func codeState(
 		endPoint--
 	}
 
+	// Two rarely used features want a record of every byte the loop walked over
+	// rather than only the ones it stopped on, so they keep the byte at a time
+	// scan. Neither is on in a normal count.
+	if Duplicates || fileJob.ContentByteType != nil {
+		return codeStateSlow(fileJob, index, endPoint, currentState, endString, endComments, langFeatures, digest)
+	}
+
+	content := fileJob.Content
+	stop := langFeatures.TokenFirst
+	start := index
+
+	i := start
+	for ; i < endPoint; i++ {
+		curByte := content[i]
+
+		// One load and one branch answers for the newline, the nul and every
+		// byte that could open a token. Everything else is ordinary code and
+		// the loop has no business looking at it.
+		if !stop[curByte] {
+			continue
+		}
+
+		index = i
+
+		if curByte == '\n' {
+			return i, currentState, endString, endComments, false
+		}
+
+		// The nul is the only byte that marks a file binary, so ask that of the
+		// byte already in hand before reaching for the position and the global
+		// that isBinary also wants. Reading them the other way round pays for
+		// both on every token the scan stops on.
+		if curByte == 0 && isBinary(i, curByte) {
+			fileJob.Binary = true
+			return i, currentState, endString, endComments, false
+		}
+
+		switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(content[i:]); tokenType {
+		case TString:
+			// If we are in string state then check what sort of string so we know if docstring OR ignoreescape string
+			i, ignoreEscape, stringEnd := prepareString(langFeatures, fileJob, index, offsetJump, endString)
+
+			// It is safe to -1 here as to enter the code state we need to have
+			// transitioned from blank to here hence i should always be >= 1
+			// This check is to ensure we aren't in a character declaration
+			// TODO this should use language features
+			if content[i-1] != langFeatures.Escape {
+				currentState = SString
+			}
+
+			return i, currentState, stringEnd, endComments, ignoreEscape
+
+		case TSlcomment:
+			// No word break check here, unlike blankState. A line that already
+			// holds code counts as code whether the token opened a comment on
+			// it or not, so the check buys nothing a line count can see, and
+			// this is the hottest switch in the program.
+			currentState = SCommentCode
+			return i, currentState, endString, endComments, false
+
+		case TMlcomment:
+			if langFeatures.Nested || len(endComments) == 0 {
+				endComments = append(endComments, endString)
+				currentState = SMulticommentCode
+				i += offsetJump - 1
+
+				return i, currentState, endString, endComments, false
+			}
+
+		case TComplexity:
+			if index == 0 || !isIdentifierContinue(content[index-1]) {
+				fileJob.Complexity++
+				fileJob.bumpComplexityLine()
+				fileJob.bumpCognitive()
+			}
+			// Skip past the matched token so a shorter token overlapping it
+			// (e.g. 為是 inside 恆為是) is not also counted. See #466.
+			//
+			// A jump that lands on or past the end leaves the byte at a time
+			// scan sitting on the token it just matched, so say so rather than
+			// falling out of the loop and reporting the last byte of the file.
+			if i+offsetJump >= endPoint {
+				return index, currentState, endString, endComments, false
+			}
+			i += offsetJump - 1
+
+		case TComplexityPostfix:
+			countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
+		}
+	}
+
+	// The byte at a time scan reports the last byte it looked at, which after a
+	// run to the end is the one before endPoint. Skipping over bytes does not
+	// change which byte that is.
+	if endPoint > start {
+		index = endPoint - 1
+	}
+
+	return index, currentState, endString, endComments, false
+}
+
+// codeStateSlow is codeState for the two features that need every byte visited:
+// --duplicates, which folds the bytes it walks past into the file hash, and
+// content classification, which records a type for each of them.
+func codeStateSlow(
+	fileJob *FileJob,
+	index int,
+	endPoint int,
+	currentState int64,
+	endString []byte,
+	endComments [][]byte,
+	langFeatures LanguageFeature,
+	digest *hash.Hash,
+) (int, int64, []byte, [][]byte, bool) {
 	for i := index; i < endPoint; i++ {
 		curByte := fileJob.Content[i]
 		index = i
@@ -364,19 +563,23 @@ func codeState(
 			switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[i:]); tokenType {
 			case TString:
 				// If we are in string state then check what sort of string so we know if docstring OR ignoreescape string
-				i, ignoreEscape := prepareString(langFeatures, fileJob, index, offsetJump)
+				i, ignoreEscape, stringEnd := prepareString(langFeatures, fileJob, index, offsetJump, endString)
 
 				// It is safe to -1 here as to enter the code state we need to have
 				// transitioned from blank to here hence i should always be >= 1
 				// This check is to ensure we aren't in a character declaration
 				// TODO this should use language features
-				if fileJob.Content[i-1] != '\\' {
+				if fileJob.Content[i-1] != langFeatures.Escape {
 					currentState = SString
 				}
 
-				return i, currentState, endString, endComments, ignoreEscape
+				return i, currentState, stringEnd, endComments, ignoreEscape
 
 			case TSlcomment:
+				// No word break check here, unlike blankState. A line that already
+				// holds code counts as code whether the token opened a comment on
+				// it or not, so the check buys nothing a line count can see, and
+				// this is the hottest switch in the program.
 				currentState = SCommentCode
 				return i, currentState, endString, endComments, false
 
@@ -463,6 +666,20 @@ func blankState(
 	endString []byte,
 	langFeatures LanguageFeature,
 ) (int, int64, []byte, [][]byte, bool) {
+	// The first byte of a line that opens no token at all is the default case
+	// below: ordinary code. The stop table answers that with one load, where
+	// the trie walk that used to answer it started at the root of the tokens
+	// and failed at its first step, and it is walked once for every line of
+	// every file that starts with something the language has no token for.
+	if !langFeatures.TokenFirst[fileJob.Content[index]] {
+		currentState = SCode
+		if fileJob.ContentByteType != nil {
+			fileJob.ContentByteType[index] = ByteTypeCode
+		}
+
+		return index, currentState, endString, endComments, false
+	}
+
 	switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[index:]); tokenType {
 	case TMlcomment:
 		if langFeatures.Nested || len(endComments) == 0 {
@@ -476,14 +693,20 @@ func blankState(
 		}
 
 	case TSlcomment:
-		currentState = SComment
-		if fileJob.ContentByteType != nil {
-			fileJob.ContentByteType[index] = ByteTypeComment
+		if !langFeatures.WordComments || commentOpensHere(fileJob.Content, index, offsetJump) {
+			currentState = SComment
+			if fileJob.ContentByteType != nil {
+				fileJob.ContentByteType[index] = ByteTypeComment
+			}
+			return index, currentState, endString, endComments, false
 		}
-		return index, currentState, endString, endComments, false
+		currentState = SCode
+		if fileJob.ContentByteType != nil {
+			fileJob.ContentByteType[index] = ByteTypeCode
+		}
 
 	case TString:
-		index, ignoreEscape := prepareString(langFeatures, fileJob, index, offsetJump)
+		index, ignoreEscape, endString := prepareString(langFeatures, fileJob, index, offsetJump, endString)
 
 		for _, v := range langFeatures.Quotes {
 			if v.End == string(endString) && v.DocString {
@@ -531,13 +754,53 @@ func blankState(
 	return index, currentState, endString, endComments, false
 }
 
-// Advance over a string prefix and report whether escapes are literal.
-func prepareString(langFeatures LanguageFeature, fileJob *FileJob, index, tokenLength int) (int, bool) {
+// maxRawStringDelimiter is the longest delimiter a C++ raw string may name,
+// which the standard puts at 16 characters.
+const maxRawStringDelimiter = 16
+
+// rawStringEnd reads the delimiter a raw string names for itself and builds the
+// closer from it. index points at the first byte after the start token, so for
+// R"tag( it points at the t, and the closer that comes back is )tag". The
+// second return is the index of the opening bracket, or -1 when there is no
+// delimiter to be had, which is not valid C++ and is left to the plain string
+// that the quote of the start token opens.
+func rawStringEnd(content []byte, index int, terminator byte) ([]byte, int) {
+	// The delimiter may be up to maxRawStringDelimiter bytes, so the bracket
+	// that ends it sits one past that at the longest, and the bound has to
+	// reach it. Stopping a byte short left a raw string with a full length
+	// delimiter unrecognised, and the plain quote it fell back to opened a
+	// string that ran to the end of the file.
+	limit := index + maxRawStringDelimiter + 1
+	if limit > len(content) {
+		limit = len(content)
+	}
+
+	for i := index; i < limit; i++ {
+		switch content[i] {
+		case '(':
+			end := make([]byte, 0, (i-index)+2)
+			end = append(end, ')')
+			end = append(end, content[index:i]...)
+
+			return append(end, terminator), i
+		case ')', '\\', ' ', '\t', '\n', '\r':
+			// none of these may appear in a delimiter, so there is no raw string here
+			return nil, -1
+		}
+	}
+
+	return nil, -1
+}
+
+// Advance over a string prefix and report whether escapes are literal. The
+// third return is a closer read out of the file, which is nil for every string
+// whose closer the language already knows.
+func prepareString(langFeatures LanguageFeature, fileJob *FileJob, index, tokenLength int, endString []byte) (int, bool, []byte) {
 	ignoreEscape := false
 
 	// loop over the string states and if we have the special flag match, and if so we need to ensure we can handle them
 	for i := 0; i < len(langFeatures.Quotes); i++ {
-		if langFeatures.Quotes[i].DocString || langFeatures.Quotes[i].IgnoreEscape {
+		if langFeatures.Quotes[i].DocString || langFeatures.Quotes[i].IgnoreEscape || langFeatures.Quotes[i].Delimited {
 			// If so we need to check if where we are falls into these conditions
 			isMatch := true
 			for j := 0; j < len(langFeatures.Quotes[i].Start); j++ {
@@ -550,7 +813,27 @@ func prepareString(langFeatures LanguageFeature, fileJob *FileJob, index, tokenL
 			// If we have a match then jump ahead enough so we don't pick it up again for cases like @"
 			if isMatch {
 				ignoreEscape = true
-				index = index + len(langFeatures.Quotes[i].Start)
+				afterStart := index + len(langFeatures.Quotes[i].Start)
+
+				// A raw string naming its own closer has that closer read out of
+				// the file here, the cursor landing on the opening bracket so the
+				// delimiter is not walked again. A start token with nothing that
+				// can follow it is not a raw string, and falls through to the
+				// plain string its own quote opens.
+				if langFeatures.Quotes[i].Delimited {
+					end := langFeatures.Quotes[i].End
+					if rawEnd, bracket := rawStringEnd(fileJob.Content, afterStart, end[len(end)-1]); bracket != -1 {
+						return bracket, ignoreEscape, rawEnd
+					}
+				}
+
+				// Report the last byte of the opening token, the same as the plain
+				// path below does with tokenLength. The caller steps on one byte
+				// before it looks again, so returning the byte after the token
+				// instead would step over the first byte of the string: for a one
+				// byte quote that is the closer of an empty string, and '' would
+				// swallow every line under it until something else closed it.
+				index = afterStart - 1
 
 				// Clamp to the last byte when the start token ends the file, such as a
 				// Python file whose final bytes are """ with no trailing newline. Left
@@ -559,12 +842,12 @@ func prepareString(langFeatures LanguageFeature, fileJob *FileJob, index, tokenL
 				if index >= len(fileJob.Content) {
 					index = len(fileJob.Content) - 1
 				}
-				return index, ignoreEscape
+				return index, ignoreEscape, endString
 			}
 		}
 	}
 
-	return index + max(tokenLength, 1) - 1, ignoreEscape
+	return index + max(tokenLength, 1) - 1, ignoreEscape, endString
 }
 
 // CountStats will process the fileJob
@@ -592,6 +875,9 @@ func CountStats(fileJob *FileJob) {
 	langFeatures := LanguageFeatures[fileJob.Language]
 	LanguageFeaturesMutex.Unlock()
 
+	if langFeatures.TokenFirst == nil {
+		langFeatures.TokenFirst = emptyTokenFirst
+	}
 	if langFeatures.Complexity == nil {
 		langFeatures.Complexity = &Trie{}
 	}
@@ -628,185 +914,23 @@ func CountStats(fileJob *FileJob) {
 
 	bomSkip := checkBomSkip(fileJob)
 
-	//We want to track cognitive complexity nesting. Cognitive complexity
-	//means we assign higher complexity to nested branch conditions, so
-	//
-	//if something:
-	//    if otherthing:
-	//
-	//would be assigned a higher complexity than
-	//
-	//if something:
-	//if otherthing:
-	//
-	//because the nested if requires more mental overhead. To do this we need to track
-	//how nested each condition is when we hit it. We do this by counting the number of
-	//whitespace characters are in front of the condition.
-	//This is an appoximation, true for languages like Python, and probably true for anything
-	//else. However, the benefit of this approach is that it's almost free from a CPU point of view
-	//and the increase in spotting complex code, is genuinely useful.
-	var indentStack []int
-	lineStart := bomSkip
-	needIndent := true
-
-	for index := bomSkip; index < int(fileJob.Bytes); index++ {
-		if fileJob.ContentByteType != nil {
-			fileJob.ContentByteType[index] = stateToByteType(currentState)
-		}
-
-		// Based on our current state determine if the state should change by checking
-		// what the character is. The below is very CPU bound so need to be careful if
-		// changing anything in here and profile/measure afterwards!
-		// NB that the order of the if statements matters and has been set to what in benchmarks is most efficient
-		if !isWhitespace(fileJob.Content[index]) {
-
-			// At the first non-whitespace byte of a code-bearing line, update the
-			// indent stack so complexity tokens on this line are weighted by their
-			// nesting depth. Lines that begin a comment must not move the stack;
-			// lines inside a multiline comment/string never reach here in a
-			// blank-derived state so they are excluded automatically.
-			if Cognitive && needIndent && (currentState == SBlank || currentState == SMulticommentBlank) {
-				if tokenType, _, _ := langFeatures.Tokens.Match(fileJob.Content[index:]); tokenType != TSlcomment && tokenType != TMlcomment {
-					indent := index - lineStart
-					for len(indentStack) > 0 && indent < indentStack[len(indentStack)-1] {
-						indentStack = indentStack[:len(indentStack)-1]
-					}
-					if len(indentStack) == 0 || indent > indentStack[len(indentStack)-1] {
-						indentStack = append(indentStack, indent)
-					}
-					nesting := len(indentStack) - 1
-					if nesting < 0 {
-						nesting = 0
-					}
-					fileJob.cognitiveNesting = nesting
-					needIndent = false
-				}
-			}
-
-			switch currentState {
-			case SCode:
-				index, currentState, endString, endComments, ignoreEscape = codeState(
-					fileJob,
-					index,
-					endPoint,
-					currentState,
-					endString,
-					endComments,
-					langFeatures,
-					&fileJob.Hash,
-				)
-			case SString:
-				index, currentState = stringState(fileJob, index, endPoint, endString, currentState, ignoreEscape)
-			case SDocString:
-				// For a docstring we can either move into blank in which case we count it as a docstring
-				// or back into code in which case it should be counted as code
-				index, currentState = docStringState(fileJob, index, endPoint, endString, currentState)
-			case SMulticomment, SMulticommentCode:
-				index, currentState, endString, endComments = commentState(
-					fileJob,
-					index,
-					endPoint,
-					currentState,
-					endComments,
-					endString,
-					langFeatures,
-				)
-			case SBlank, SMulticommentBlank:
-				// From blank we can move into comment, move into a multiline comment
-				// or move into code but we can only do one.
-				index, currentState, endString, endComments, ignoreEscape = blankState(
-					fileJob,
-					index,
-					currentState,
-					endComments,
-					endString,
-					langFeatures,
-				)
-			}
-		}
-
-		// We shouldn't normally need this, but unclosed strings or comments
-		// might leave the index past the end of the file when we reach this
-		// point.
-		if index >= len(fileJob.Content) {
+	// The main loop lives in its own function so a language with a counter of
+	// its own can stand in for it while everything after it stays shared. It
+	// reports whether it ran to the end of the file: a binary marker, a large
+	// file cut short or a callback asking to stop all end the count there and
+	// the work below is not wanted.
+	switch {
+	case useJavaCounter(fileJob):
+		if !countLoopJava(fileJob, bomSkip, endPoint) {
 			return
 		}
-
-		// Only check the first 10000 characters for null bytes indicating a binary file
-		// and if we find it then we return otherwise carry on and ignore binary markers
-		if index < 10000 && fileJob.Binary {
+	case useCCounter(fileJob):
+		if !countLoopC(fileJob, bomSkip, endPoint, fileJob.Language == "C Header") {
 			return
 		}
-
-		// This means the end of processing the line so calculate the stats according to what state
-		// we are currently in
-		if fileJob.Content[index] == '\n' || index >= endPoint {
-			fileJob.Lines++
-			if Cognitive {
-				lineStart = index + 1
-				needIndent = true
-			}
-			if fileJob.TrackComplexityLines {
-				fileJob.ComplexityLine = append(fileJob.ComplexityLine, 0)
-				if Cognitive {
-					fileJob.CognitiveLine = append(fileJob.CognitiveLine, 0)
-				}
-			}
-
-			if NoLarge && fileJob.Lines >= LargeLineCount {
-				// Save memory by unsetting the content as we no longer require it
-				fileJob.Content = nil
-				return
-			}
-
-			switch currentState {
-			case SCode, SString, SCommentCode, SMulticommentCode:
-				fileJob.Code++
-				currentState = resetState(currentState)
-				if fileJob.Callback != nil {
-					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_CODE) {
-						return
-					}
-				}
-				if Trace {
-					// Don't remove the outside if-statements, for performance
-					printTraceF("%s line %d ended with state: %d: counted as code", fileJob.Location, fileJob.Lines, currentState)
-				}
-			case SComment, SMulticomment, SMulticommentBlank:
-				fileJob.Comment++
-				currentState = resetState(currentState)
-				if fileJob.Callback != nil {
-					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
-						return
-					}
-				}
-				if Trace {
-					// Same as above
-					printTraceF("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState)
-				}
-			case SBlank:
-				fileJob.Blank++
-				if fileJob.Callback != nil {
-					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_BLANK) {
-						return
-					}
-				}
-				if Trace {
-					// Same as above
-					printTraceF("%s line %d ended with state: %d: counted as blank", fileJob.Location, fileJob.Lines, currentState)
-				}
-			case SDocString:
-				fileJob.Comment++
-				if fileJob.Callback != nil {
-					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
-						return
-					}
-				}
-				if Trace {
-					// Same as above
-					printTraceF("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState)
-				}
-			}
+	default:
+		if !countLoopGeneric(fileJob, langFeatures, bomSkip, endPoint, currentState, endString, endComments, ignoreEscape) {
+			return
 		}
 	}
 
@@ -885,6 +1009,95 @@ func checkBomSkip(fileJob *FileJob) int {
 	return 0
 }
 
+func pathExcluded(location string, excludePathRegexes []*regexp.Regexp) bool {
+	for _, re := range excludePathRegexes {
+		if re.MatchString(location) {
+			return true
+		}
+	}
+	return false
+}
+
+// startFileJobProducer stats what the walker found and turns it into the
+// FileJobs the readers consume, closing fileListQueue once the walk is done and
+// every path has been handled.
+//
+// The stat is done by a pool rather than by one goroutine. A single goroutine
+// could not keep up with the walker in front of it or the readers behind it, so
+// it sat between a queue that was always full and one that was always empty:
+// the readers spent the run parked, and every file the stat goroutine produced
+// had to wake a sleeping thread to hand it over. On the Linux kernel that cost
+// 100,000 futex calls and roughly a third of the wall clock. A pool keeps the
+// read queue non-empty, so the readers stay on their cores and the wakes go
+// away — futex calls drop to about 6,000 and the count runs 1.5x faster.
+//
+// newFileJob is safe to call concurrently; its caches are sync.Maps.
+// atLeastOneWorker keeps a pool size sane. A count of zero, which the flags
+// accept, would start no goroutines at all: nothing would drain the queue, the
+// stage below would see it closed and the run would report a tree of no files
+// and exit successfully. A run that counts nothing and says so quietly is worse
+// than one that is slow, so the floor is one worker.
+func atLeastOneWorker(workers int) int {
+	if workers < 1 {
+		return 1
+	}
+
+	return workers
+}
+
+func startFileJobProducer(potentialFilesQueue chan []*gocodewalker.File, filePaths []string, excludePathRegexes []*regexp.Regexp, fileListQueue chan *FileJob) {
+	var wg sync.WaitGroup
+
+	if potentialFilesQueue != nil {
+		for i := 0; i < atLeastOneWorker(FileListJobWorkers); i++ {
+			wg.Go(func() {
+				for fis := range potentialFilesQueue {
+					for _, fi := range fis {
+						if pathExcluded(fi.Location, excludePathRegexes) {
+							continue
+						}
+
+						// Ask the name first. Whether a file is one this run counts
+						// at all is settled by its extension and the include and
+						// exclude lists, none of which need a system call, so a run
+						// told to count one language does not stat the rest of the
+						// tree to find that out.
+						guess, ok := detectForJob(fi.Location, fi.Filename)
+						if !ok {
+							continue
+						}
+
+						fileInfo, err := os.Lstat(fi.Location)
+						if err != nil || fileInfo.IsDir() {
+							continue
+						}
+
+						if fileJob := newFileJobGuessed(fi.Location, fi.Filename, fileInfo, guess); fileJob != nil {
+							fileListQueue <- fileJob
+						}
+					}
+				}
+			})
+		}
+	}
+
+	go func() {
+		for _, f := range filePaths {
+			fileInfo, err := os.Lstat(f)
+			if err != nil {
+				continue
+			}
+
+			if fileJob := newFileJob(f, f, fileInfo); fileJob != nil {
+				fileListQueue <- fileJob
+			}
+		}
+
+		wg.Wait()
+		close(fileListQueue)
+	}()
+}
+
 // Reads and processes files from input chan in parallel, and sends results to
 // output chan
 func (ctx processorContext) fileProcessorWorker(input chan *FileJob, output chan *FileJob) {
@@ -893,9 +1106,18 @@ func (ctx processorContext) fileProcessorWorker(input chan *FileJob, output chan
 	var gcEnabled int64
 	var wg sync.WaitGroup
 
-	for i := 0; i < FileProcessJobWorkers; i++ {
+	for i := 0; i < atLeastOneWorker(FileProcessJobWorkers); i++ {
 		wg.Go(func() {
 			reader := NewFileReader()
+
+			// Each worker folds into totals of its own, which nothing else
+			// touches for the length of the run, and merges them once when it
+			// is done. See summariseInWorkers.
+			var totals *summaryTotals
+			if ctx.summary != nil {
+				totals = newSummaryTotals(false, false, false)
+				defer func() { ctx.summary.mergeLocked(totals) }()
+			}
 
 			for job := range input {
 				atomic.CompareAndSwapInt64(&startTime, 0, makeTimestampMilli())
@@ -920,7 +1142,11 @@ func (ctx processorContext) fileProcessorWorker(input chan *FileJob, output chan
 				if err == nil {
 					job.Content = content
 					if ctx.processFile(job) {
-						output <- job
+						if totals != nil {
+							totals.add(job)
+						} else {
+							output <- job
+						}
 					}
 				} else {
 					printWarnF("error reading: %s %s", job.Location, err)
@@ -1060,4 +1286,236 @@ func (ctx processorContext) unknownRemapLanguage(job *FileJob) bool {
 	}
 
 	return remapped
+}
+
+// countLoopGeneric walks a file byte by byte for any language, driven by the
+// tries built from its entry in languages.json. It returns false when it ended
+// the count early, which leaves the work after the loop undone.
+func countLoopGeneric(fileJob *FileJob, langFeatures LanguageFeature, bomSkip, endPoint int, currentState int64, endString []byte, endComments [][]byte, ignoreEscape bool) bool {
+	//We want to track cognitive complexity nesting. Cognitive complexity
+	//means we assign higher complexity to nested branch conditions, so
+	//
+	//if something:
+	//    if otherthing:
+	//
+	//would be assigned a higher complexity than
+	//
+	//if something:
+	//if otherthing:
+	//
+	//because the nested if requires more mental overhead. To do this we need to track
+	//how nested each condition is when we hit it. We do this by counting the number of
+	//whitespace characters are in front of the condition.
+	//This is an appoximation, true for languages like Python, and probably true for anything
+	//else. However, the benefit of this approach is that it's almost free from a CPU point of view
+	//and the increase in spotting complex code, is genuinely useful.
+	var indentStack []int
+	lineStart := bomSkip
+	needIndent := true
+
+	content := fileJob.Content
+	// Hoisted because neither changes for the life of the loop and both are
+	// read on every byte of the file.
+	byteType := fileJob.ContentByteType
+	total := int(fileJob.Bytes)
+
+	for index := bomSkip; index < total; index++ {
+		curByte := content[index]
+
+		if byteType != nil {
+			byteType[index] = stateToByteType(currentState)
+		} else if index < endPoint && isBlankRun[curByte] {
+			// A run of spaces, tabs and carriage returns changes nothing: no
+			// state moves, no line ends, and the only byte of it the loop has
+			// anything to say about is the last. Walking it a byte at a time
+			// costs the whole of the loop body for each one, so find the end of
+			// the run and carry on from there. The newline is deliberately not
+			// in the table, because a line ends on it.
+			next := index + 1
+			for next < endPoint && isBlankRun[content[next]] {
+				next++
+			}
+			index = next
+			curByte = content[index]
+		}
+
+		// Based on our current state determine if the state should change by checking
+		// what the character is. The below is very CPU bound so need to be careful if
+		// changing anything in here and profile/measure afterwards!
+		// NB that the order of the if statements matters and has been set to what in benchmarks is most efficient
+		if !isWhitespace(curByte) {
+
+			// At the first non-whitespace byte of a code-bearing line, update the
+			// indent stack so complexity tokens on this line are weighted by their
+			// nesting depth. Lines that begin a comment must not move the stack;
+			// lines inside a multiline comment/string never reach here in a
+			// blank-derived state so they are excluded automatically.
+			if Cognitive && needIndent && (currentState == SBlank || currentState == SMulticommentBlank) {
+				if tokenType, _, _ := langFeatures.Tokens.Match(fileJob.Content[index:]); tokenType != TSlcomment && tokenType != TMlcomment {
+					indent := index - lineStart
+					for len(indentStack) > 0 && indent < indentStack[len(indentStack)-1] {
+						indentStack = indentStack[:len(indentStack)-1]
+					}
+					if len(indentStack) == 0 || indent > indentStack[len(indentStack)-1] {
+						indentStack = append(indentStack, indent)
+					}
+					nesting := len(indentStack) - 1
+					if nesting < 0 {
+						nesting = 0
+					}
+					fileJob.cognitiveNesting = nesting
+					needIndent = false
+				}
+			}
+
+			switch currentState {
+			case SCode:
+				index, currentState, endString, endComments, ignoreEscape = codeState(
+					fileJob,
+					index,
+					endPoint,
+					currentState,
+					endString,
+					endComments,
+					langFeatures,
+					&fileJob.Hash,
+				)
+			case SString:
+				index, currentState = stringState(fileJob, index, endPoint, endString, currentState, ignoreEscape, langFeatures.Escape)
+			case SDocString:
+				// For a docstring we can either move into blank in which case we count it as a docstring
+				// or back into code in which case it should be counted as code
+				index, currentState = docStringState(fileJob, index, endPoint, endString, currentState)
+			case SMulticomment, SMulticommentCode:
+				index, currentState, endString, endComments = commentState(
+					fileJob,
+					index,
+					endPoint,
+					currentState,
+					endComments,
+					endString,
+					langFeatures,
+				)
+			case SBlank, SMulticommentBlank:
+				// From blank we can move into comment, move into a multiline comment
+				// or move into code but we can only do one.
+				index, currentState, endString, endComments, ignoreEscape = blankState(
+					fileJob,
+					index,
+					currentState,
+					endComments,
+					endString,
+					langFeatures,
+				)
+			}
+
+			// Only a state above moves the index or marks the file binary, so
+			// both of the checks that follow belong here rather than on the
+			// whitespace the loop walked over to get to one.
+
+			// We shouldn't normally need this, but unclosed strings or comments
+			// might leave the index past the end of the file when we reach this
+			// point.
+			if index >= len(content) {
+				return false
+			}
+
+			// Only check the first 10000 characters for null bytes indicating a binary file
+			// and if we find it then we return otherwise carry on and ignore binary markers
+			if index < 10000 && fileJob.Binary {
+				return false
+			}
+
+			curByte = content[index]
+		}
+
+		// This means the end of processing the line so calculate the stats according to what state
+		// we are currently in
+		if curByte == '\n' || index >= endPoint {
+			fileJob.Lines++
+			if Cognitive {
+				lineStart = index + 1
+				needIndent = true
+			}
+			if fileJob.TrackComplexityLines {
+				fileJob.ComplexityLine = append(fileJob.ComplexityLine, 0)
+				if Cognitive {
+					fileJob.CognitiveLine = append(fileJob.CognitiveLine, 0)
+				}
+			}
+
+			// Whether this line hands its state to the next one changes for a
+			// language that splices, so work out once whether it ends in a splice
+			// and let resetLineState answer for both of the branches below.
+			spliced := false
+			if langFeatures.LineSplice {
+				spliced = endsWithLineSplice(fileJob.Content, index)
+			}
+
+			if NoLarge && fileJob.Lines >= LargeLineCount {
+				// Save memory by unsetting the content as we no longer require it
+				fileJob.Content = nil
+				return false
+			}
+
+			switch currentState {
+			case SCode, SString, SCommentCode, SMulticommentCode:
+				fileJob.Code++
+				if langFeatures.LineSplice {
+					currentState = resetLineState(currentState, spliced, ignoreEscape)
+				} else {
+					currentState = resetState(currentState)
+				}
+				if fileJob.Callback != nil {
+					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_CODE) {
+						return false
+					}
+				}
+				if Trace {
+					// Don't remove the outside if-statements, for performance
+					printTraceF("%s line %d ended with state: %d: counted as code", fileJob.Location, fileJob.Lines, currentState)
+				}
+			case SComment, SMulticomment, SMulticommentBlank:
+				fileJob.Comment++
+				if langFeatures.LineSplice {
+					currentState = resetLineState(currentState, spliced, ignoreEscape)
+				} else {
+					currentState = resetState(currentState)
+				}
+				if fileJob.Callback != nil {
+					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
+						return false
+					}
+				}
+				if Trace {
+					// Same as above
+					printTraceF("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState)
+				}
+			case SBlank:
+				fileJob.Blank++
+				if fileJob.Callback != nil {
+					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_BLANK) {
+						return false
+					}
+				}
+				if Trace {
+					// Same as above
+					printTraceF("%s line %d ended with state: %d: counted as blank", fileJob.Location, fileJob.Lines, currentState)
+				}
+			case SDocString:
+				fileJob.Comment++
+				if fileJob.Callback != nil {
+					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_COMMENT) {
+						return false
+					}
+				}
+				if Trace {
+					// Same as above
+					printTraceF("%s line %d ended with state: %d: counted as comment", fileJob.Location, fileJob.Lines, currentState)
+				}
+			}
+		}
+	}
+
+	return true
 }
