@@ -42,6 +42,11 @@ type Quote struct {
 	End          string `json:"end"`
 	IgnoreEscape bool   `json:"ignoreEscape"` // To enable turning off the \ check for C# @"\" string examples https://github.com/boyter/scc/issues/71
 	DocString    bool   `json:"docString"`    // To enable docstring check for Python where "If the triple quote string starts following a newline with only white-space characters in front and ends followed by only a newline or white-space characters it is a comment" https://github.com/boyter/scc/issues/62
+	// Delimited marks a string that names its own closer, which is the C++ raw
+	// string R"tag(...)tag". The text between the start token and the opening
+	// bracket is read out of the file and the closer built from it, so End
+	// holds only what an empty delimiter closes with.
+	Delimited bool `json:"delimited"`
 }
 
 // Heuristic is a regex pattern used to disambiguate shared file extensions (for
@@ -78,28 +83,63 @@ type Language struct {
 	SheBangs                        []string    `json:"shebangs"`
 	ExtensionFile                   bool        `json:"extensionFile"`
 	NestedMultiLine                 bool        `json:"nestedmultiline"`
+	// LineSplice marks a language where a backslash at the end of a line joins
+	// it to the next one before comments and strings are recognised, which is
+	// the C family and the shading languages that borrow its preprocessor.
+	LineSplice bool `json:"linesplice"`
+	// Escape is the character that escapes a delimiter inside a string. It is
+	// the backslash for nearly everything and left empty for those, PowerShell
+	// being the one that escapes with a backtick and reads a backslash as an
+	// ordinary character of a Windows path.
+	Escape string `json:"escape"`
+	// CaseInsensitive marks a language that reads its own keywords in any case,
+	// so REM, rem and rEm all open a comment. The tokens are expanded into
+	// every spelling when the language is compiled rather than the match being
+	// folded, which keeps the case out of the counting loop entirely.
+	CaseInsensitive bool `json:"caseinsensitive"`
+	// CommentIsWord marks a language where a line comment token is a word in
+	// its own right and has to stand alone to open a comment. Forth writes its
+	// comment as a backslash, which is a word like any other, so "\ x" is a
+	// comment and "\x" is not. Distinct from the boundary that a token ending
+	// in a letter gets for free, which is worked out from the token itself.
+	CommentIsWord bool `json:"commentisword"`
 }
 
 // LanguageFeature is a struct which represents the conversion from Language into what is used for matching
 type LanguageFeature struct {
-	Complexity            *Trie
-	MultiLineComments     *Trie
-	MultiLine             [][]string // in case someone needs the actual value
-	SingleLineComments    *Trie
-	LineComment           []string // in case someone needs the actual value
-	Strings               *Trie
-	Tokens                *Trie
-	Nested                bool
+	Complexity         *Trie
+	MultiLineComments  *Trie
+	MultiLine          [][]string // in case someone needs the actual value
+	SingleLineComments *Trie
+	LineComment        []string // in case someone needs the actual value
+	Strings            *Trie
+	Tokens             *Trie
+	Nested             bool
+	LineSplice         bool
+	WordComments       bool
+	// CommentIsWord requires a line comment token to stand alone as a word, for
+	// the languages that spell their comment with something that is not a
+	// letter and so gets no boundary from WordComments. See Language.
+	CommentIsWord         bool
+	Escape                byte
 	PostfixExcludes       [][]byte
 	ComplexityCheckMask   byte
 	SingleLineCommentMask byte
 	MultiLineCommentMask  byte
 	StringCheckMask       byte
 	ProcessMask           byte
-	Keywords              []string
-	KeywordBytes          [][]byte
-	Heuristics            []CompiledHeuristic
-	Quotes                []Quote
+	// TokenFirst answers, for a byte, whether the counting loop has any reason
+	// to stop on it: the byte opens some token in the Tokens trie, or it is a
+	// newline, or it is the nul that marks the file binary. ProcessMask answers
+	// the same question with an OR of the token first bytes, which for most
+	// languages is 0x7f and so lets every ASCII byte through to a trie walk
+	// that then fails at its first step. The table is exact, so the walk only
+	// happens where a token really can start.
+	TokenFirst   *[256]bool
+	Keywords     []string
+	KeywordBytes [][]byte
+	Heuristics   []CompiledHeuristic
+	Quotes       []Quote
 }
 
 // CompiledHeuristic is the runtime form of a Heuristic with its regex compiled

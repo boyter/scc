@@ -171,6 +171,10 @@ type remapConfig struct {
 
 type processorContext struct {
 	remap remapConfig
+	// summary, when set, tells the counting workers to fold their own results
+	// into it instead of sending every file down the summary channel. Only the
+	// default and wide summaries can use it; see summariseInWorkers.
+	summary *sharedSummaryTotals
 }
 
 func parseRemapRules(value string) []remapRule {
@@ -264,6 +268,10 @@ var FileListQueueSize = runtime.NumCPU()
 
 // FileProcessJobWorkers is the number of workers that process the file collecting stats
 var FileProcessJobWorkers = runtime.NumCPU() * 4
+
+// FileListJobWorkers is the number of workers that turn a path the walker found
+// into a FileJob, which is a stat and a language lookup each
+var FileListJobWorkers = runtime.NumCPU()
 
 // FileSummaryJobQueueSize is the queue used to hold processed file statistics before formatting
 var FileSummaryJobQueueSize = runtime.NumCPU()
@@ -720,6 +728,69 @@ func LoadLanguageFeature(loadName string) {
 	printTraceF("nanoseconds to build language %s features: %d", loadName, makeTimestampNano()-startTime)
 }
 
+// caseSpellings returns the tokens as written, and for a language that reads
+// its keywords in any case, every other spelling of them too. Batch and ASP
+// open a comment with REM, and mean it however it is typed.
+//
+// Expanding here rather than folding case at match time keeps the counting loop
+// exactly as it is: it walks a trie of bytes and knows nothing about letters. A
+// token of n letters becomes 2^n entries, so the expansion is refused past a
+// length that would be silly, which no comment token comes near.
+func caseSpellings(tokens []string, caseInsensitive bool) []string {
+	if !caseInsensitive {
+		return tokens
+	}
+
+	const maxLetters = 8
+
+	spellings := make([]string, 0, len(tokens))
+	for _, token := range tokens {
+		letters := 0
+		for i := 0; i < len(token); i++ {
+			if token[i] != asciiLower(token[i]) || token[i] != asciiUpper(token[i]) {
+				letters++
+			}
+		}
+
+		if letters == 0 || letters > maxLetters {
+			spellings = append(spellings, token)
+			continue
+		}
+
+		variants := []string{""}
+		for i := 0; i < len(token); i++ {
+			lower, upper := asciiLower(token[i]), asciiUpper(token[i])
+			next := make([]string, 0, len(variants)*2)
+			for _, prefix := range variants {
+				next = append(next, prefix+string(lower))
+				if upper != lower {
+					next = append(next, prefix+string(upper))
+				}
+			}
+			variants = next
+		}
+		spellings = append(spellings, variants...)
+	}
+
+	return spellings
+}
+
+func asciiLower(b byte) byte {
+	if b >= 'A' && b <= 'Z' {
+		return b + 'a' - 'A'
+	}
+
+	return b
+}
+
+func asciiUpper(b byte) byte {
+	if b >= 'a' && b <= 'z' {
+		return b - 'a' + 'A'
+	}
+
+	return b
+}
+
 func processLanguageFeature(name string, value Language) {
 	complexityTrie := &Trie{}
 	slCommentTrie := &Trie{}
@@ -757,7 +828,7 @@ func processLanguageFeature(name string, value Language) {
 		postfixExcludes = append(postfixExcludes, []byte(v))
 	}
 
-	for _, v := range value.LineComment {
+	for _, v := range caseSpellings(value.LineComment, value.CaseInsensitive) {
 		singleLineCommentMask |= v[0]
 		slCommentTrie.Insert(TSlcomment, []byte(v))
 		tokenTrie.Insert(TSlcomment, []byte(v))
@@ -802,6 +873,33 @@ func processLanguageFeature(name string, value Language) {
 		heuristics = append(heuristics, CompiledHeuristic{Re: re, Literals: literals, Anchored: v.Anchored})
 	}
 
+	// A line comment spelled as a word ends where the word does, which costs a
+	// check on every token that matches. Almost no language has one, so work out
+	// here whether this one does and let the hot loop skip the check entirely.
+	escape := byte('\\')
+	if len(value.Escape) != 0 {
+		escape = value.Escape[0]
+	}
+
+	// The exact set of bytes the counting loop has to stop on, which is every
+	// byte that opens a token plus the newline and the nul. Built here once so
+	// the loop pays a single load and branch per byte instead of a mask test
+	// that nearly always passes followed by a failed trie walk.
+	tokenFirst := newTokenFirst()
+	for i := range tokenTrie.Table {
+		if tokenTrie.Table[i] != nil {
+			tokenFirst[i] = true
+		}
+	}
+
+	wordComments := false
+	for _, token := range value.LineComment {
+		if len(token) > 1 && isIdentifierContinue(token[len(token)-1]) {
+			wordComments = true
+			break
+		}
+	}
+
 	LanguageFeaturesMutex.Lock()
 	LanguageFeatures[name] = LanguageFeature{
 		Complexity:            complexityTrie,
@@ -812,12 +910,17 @@ func processLanguageFeature(name string, value Language) {
 		Strings:               stringTrie,
 		Tokens:                tokenTrie,
 		Nested:                value.NestedMultiLine,
+		LineSplice:            value.LineSplice,
+		WordComments:          wordComments,
+		CommentIsWord:         value.CommentIsWord,
+		Escape:                escape,
 		PostfixExcludes:       postfixExcludes,
 		ComplexityCheckMask:   complexityMask,
 		MultiLineCommentMask:  multiLineCommentMask,
 		SingleLineCommentMask: singleLineCommentMask,
 		StringCheckMask:       stringMask,
 		ProcessMask:           processMask,
+		TokenFirst:            tokenFirst,
 		Keywords:              value.Keywords,
 		KeywordBytes:          keywordBytes,
 		Heuristics:            heuristics,
@@ -1048,11 +1151,12 @@ func Process() {
 	printDebugF("SortBy: %s", SortBy)
 	printDebugF("PathDenyList: %v", PathDenyList)
 
-	potentialFilesQueue := make(chan *gocodewalker.File, FileListQueueSize) // files that pass the .gitignore checks
-	fileListQueue := make(chan *FileJob, FileListQueueSize)                 // Files ready to be read from disk
-	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)     // Files ready to be summarised
+	potentialFilesQueue := make(chan []*gocodewalker.File, FileListQueueSize) // files that pass the .gitignore checks
+	fileListQueue := make(chan *FileJob, FileListQueueSize)                   // Files ready to be read from disk
+	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)       // Files ready to be summarised
 
-	fileWalker := gocodewalker.NewParallelFileWalker(dirPaths, potentialFilesQueue)
+	fileWalker := gocodewalker.NewParallelFileWalker(dirPaths, nil)
+	fileWalker.SetFileBatchQueue(potentialFilesQueue)
 	fileWalker.SetErrorHandler(func(e error) bool {
 		printError(e.Error())
 		return true
@@ -1088,45 +1192,17 @@ func Process() {
 		}
 	}()
 
-	go func() {
-		for _, f := range filePaths {
-			fileInfo, err := os.Lstat(f)
-			if err != nil {
-				continue
-			}
+	startFileJobProducer(potentialFilesQueue, filePaths, excludePathRegexes, fileListQueue)
 
-			fileJob := newFileJob(f, f, fileInfo)
-			if fileJob != nil {
-				fileListQueue <- fileJob
-			}
-		}
-
-		for fi := range potentialFilesQueue {
-			shouldExclude := false
-			for _, re := range excludePathRegexes {
-				if re.MatchString(fi.Location) {
-					shouldExclude = true
-					break
-				}
-			}
-			if shouldExclude {
-				continue
-			}
-
-			fileInfo, err := os.Lstat(fi.Location)
-			if err != nil {
-				continue
-			}
-
-			if !fileInfo.IsDir() {
-				fileJob := newFileJob(fi.Location, fi.Filename, fileInfo)
-				if fileJob != nil {
-					fileListQueue <- fileJob
-				}
-			}
-		}
-		close(fileListQueue)
-	}()
+	// Where the output is one of the summaries that only ever prints per
+	// language totals, the workers add up their own results and merge once each
+	// at the end. That deletes a channel send and a channel receive per file
+	// from a stage where the receiver is a single goroutine, which is the
+	// difference between 86,000 handovers and one per worker.
+	if summariseInWorkers() {
+		ctx.summary = newSharedSummaryTotals()
+		workerSummary = ctx.summary
+	}
 
 	go ctx.fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
 

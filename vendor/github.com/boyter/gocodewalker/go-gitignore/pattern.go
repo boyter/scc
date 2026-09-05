@@ -3,7 +3,7 @@
 package gitignore
 
 import (
-	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/danwakefield/fnmatch"
@@ -34,9 +34,12 @@ type pattern struct {
 type matchType int
 
 const (
-	matchComplex matchType = iota // requires fnmatch
-	matchExact                    // no glob chars → string ==
-	matchSuffix                   // leading * + literal tail → HasSuffix
+	matchComplex  matchType = iota // requires fnmatch
+	matchExact                     // no glob chars → string ==
+	matchSuffix                    // leading * + literal tail → HasSuffix
+	matchPrefix                    // literal head + trailing * → HasPrefix
+	matchContains                  // leading and trailing * + literal middle → Contains
+	matchAny                       // bare "*" → matches every name
 )
 
 // name represents patterns matching a file or path name (i.e. the last
@@ -165,16 +168,33 @@ func containsGlob(s string) bool {
 func (p *pattern) name(tokens []*Token) Pattern {
 	n := &name{pattern: *p}
 
-	// classify the fnmatch expression for fast-path dispatch
+	// Classify the fnmatch expression for fast-path dispatch. A name pattern is
+	// only ever matched against a single path component, which never contains a
+	// '/', so an fnmatch '*' here is equivalent to "any run of characters" and
+	// the prefix/suffix/contains forms below are exact substitutions for it.
+	fn := p._fnmatch
 	switch {
-	case !containsGlob(p._fnmatch):
+	case !containsGlob(fn):
 		// exact literal (e.g. "node_modules", ".DS_Store")
 		n._matchType = matchExact
-		n._literal = p._fnmatch
-	case p._fnmatch[0] == '*' && !containsGlob(p._fnmatch[1:]):
+		n._literal = fn
+	case fn == "*":
+		// bare "*" matches any name, so there is nothing to compare
+		n._matchType = matchAny
+	case fn[0] == '*' && !containsGlob(fn[1:]):
 		// suffix match (e.g. "*.o", "*.pyc")
 		n._matchType = matchSuffix
-		n._literal = p._fnmatch[1:]
+		n._literal = fn[1:]
+	case fn[len(fn)-1] == '*' && !containsGlob(fn[:len(fn)-1]):
+		// prefix match (e.g. ".*", "vmlinuz*") — very common, and the Linux
+		// kernel's root .gitignore leads with ".*", which was previously
+		// evaluated by fnmatch for every file in the tree
+		n._matchType = matchPrefix
+		n._literal = fn[:len(fn)-1]
+	case len(fn) > 2 && fn[0] == '*' && fn[len(fn)-1] == '*' && !containsGlob(fn[1:len(fn)-1]):
+		// contains match (e.g. "*.o.*")
+		n._matchType = matchContains
+		n._literal = fn[1 : len(fn)-1]
 	default:
 		n._matchType = matchComplex
 	}
@@ -195,7 +215,19 @@ func (n *name) Match(path string, isdir bool) bool {
 	// determine the string to match against
 	_target := path
 	if !n._anchored {
-		_, _target = filepath.Split(path)
+		// the base name of the path. filepath.Split was previously used here,
+		// but it scans backwards a byte at a time through os.IsPathSeparator
+		// while this runs once per pattern per path, so for a tree the size of
+		// the Linux kernel it was several percent of the whole walk. The
+		// GOOS test is a compile time constant, so on Unix this is a single
+		// vectorised LastIndexByte.
+		i := strings.LastIndexByte(path, '/')
+		if runtime.GOOS == "windows" {
+			if j := strings.LastIndexByte(path, '\\'); j > i {
+				i = j
+			}
+		}
+		_target = path[i+1:]
 	} else if strings.ContainsRune(_target, '/') {
 		// an anchored name pattern is a single path component anchored to the
 		// base directory, so it can only ever match a single-segment path. A
@@ -211,6 +243,12 @@ func (n *name) Match(path string, isdir bool) bool {
 		return _target == n._literal
 	case matchSuffix:
 		return strings.HasSuffix(_target, n._literal)
+	case matchPrefix:
+		return strings.HasPrefix(_target, n._literal)
+	case matchContains:
+		return strings.Contains(_target, n._literal)
+	case matchAny:
+		return true
 	default:
 		return fnmatch.Match(n._fnmatch, _target, 0)
 	}
@@ -300,11 +338,19 @@ func (a *any) match(path []string, tokens []*Token) bool {
 	_token := tokens[0]
 	switch _token.Type {
 	case ANY:
+		// A trailing "**" matches everything *inside* the directory named
+		// by the preceding tokens, so it must consume at least one path
+		// component: gitignore(5) gives "abc/**" as matching all files
+		// inside "abc", and git does not ignore "abc" itself. A leading or
+		// embedded "**" is the opposite case and may match no component at
+		// all, so "**/foo" matches "foo" and "a/**/b" matches "a/b".
+		if len(tokens) == 1 {
+			return len(path) != 0
+		}
 		if len(path) == 0 {
 			return a.match(path, tokens[1:])
-		} else {
-			return a.match(path, tokens[1:]) || a.match(path[1:], tokens)
 		}
+		return a.match(path, tokens[1:]) || a.match(path[1:], tokens)
 
 	default:
 		// if we have a non-ANY token, then we must have a non-empty path

@@ -1,6 +1,5 @@
 # gocodewalker
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/boyter/gocodewalker)](https://goreportcard.com/report/github.com/boyter/gocodewalker)
 [![Str Count Badge](https://sloc.xyz/github/boyter/gocodewalker/)](https://github.com/boyter/gocodewalker/)
 
 Library to help with walking of code directories in Go. 

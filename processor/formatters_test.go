@@ -2125,3 +2125,54 @@ func TestToJSON2Keys(t *testing.T) {
 		t.Error("JSON2 estimatedPeople check failed")
 	}
 }
+
+// unicodeAwareTrimOneAtATime is what unicodeAwareTrim used to be, kept as the
+// oracle the rewritten one is checked against. It removes a rune at a time from
+// the front and asks the width again after each.
+func unicodeAwareTrimOneAtATime(tmp string, size int) string {
+	r := []rune(tmp)
+
+	if len(r) > size {
+		for runewidth.StringWidth(tmp) > size {
+			r = r[1:]
+			tmp = string(r)
+		}
+
+		tmp = "~" + strings.TrimSpace(tmp)
+	}
+
+	return tmp
+}
+
+func TestUnicodeAwareTrimMatchesOneAtATime(t *testing.T) {
+	inputs := []string{
+		"",
+		"a",
+		"abc",
+		"a/very/ordinary/looking/path/to/some/file.go",
+		"drivers/gpu/drm/amd/display/dc/dml2/dml21/src/dml2_core/dml2_core_dcn4_calcs.c",
+		"文中文中文中文中文中文中文中文中",
+		"a文b中c文d中e",
+		"éééééééééééééééééééé",
+		"ｆｕｌｌｗｉｄｔｈｆｉｌｅｎａｍｅ.go",
+		"   leading and trailing   ",
+		"🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂",
+		"mixed🙂文a b/c   ",
+		"👨\u200d👩\u200d👧\u200d👦",
+		"👨\u200d👩\u200d👧\u200d👦/src/main.go",
+		"a/👍🏽/b.go",
+		"🏳️\u200d🌈🏳️\u200d🌈/x.go",
+		strings.Repeat("x", 200),
+		strings.Repeat("文", 60),
+	}
+
+	for _, in := range inputs {
+		for size := 0; size <= 40; size++ {
+			want := unicodeAwareTrimOneAtATime(in, size)
+			got := unicodeAwareTrim(in, size)
+			if got != want {
+				t.Errorf("unicodeAwareTrim(%q, %d) = %q, one at a time gives %q", in, size, got, want)
+			}
+		}
+	}
+}
