@@ -4,7 +4,6 @@ package processor
 
 import (
 	"bytes"
-	"cmp"
 	"errors"
 	"slices"
 	"strings"
@@ -144,94 +143,69 @@ type languageGuess struct {
 	Count int
 }
 
-// heuristicCanMatch reports whether content contains at least one of the
-// heuristic's necessary literals, meaning the regex is worth running. Each
-// literal is a substring that must be present for the pattern to match, so a
-// negative result here means the regex cannot match and can be safely skipped.
-// A heuristic with no literals is always run so a pattern is never silently
-// disabled.
-func heuristicCanMatch(h CompiledHeuristic, content []byte) bool {
-	if len(h.Literals) == 0 {
-		return true
+// planFoundStack is the size of the stack array used to hold which of a plan's
+// literals a file contains. No language set comes close to it, and one that did
+// would fall back to a heap slice rather than break.
+const planFoundStack = 128
+
+// better reports whether a guess beats the best so far: more matches wins, and
+// the alphabetically first name breaks a tie so the choice is deterministic.
+// Only the winner is ever read, so the candidates are compared as they are
+// counted rather than collected into a slice and sorted.
+func better(a, best languageGuess) bool {
+	if a.Count != best.Count {
+		return a.Count > best.Count
 	}
-	for _, lit := range h.Literals {
-		if h.Anchored {
-			if anchoredContains(content, lit) {
-				return true
-			}
-		} else if bytes.Contains(content, lit) {
-			return true
-		}
-	}
-	return false
+	return a.Name < best.Name
 }
 
-// anchoredContains reports whether lit appears in content at the start of a line
-// preceded only by spaces or tabs, mirroring a (?m)^[ \t]* regex prefix. This is
-// far cheaper than running the regex and avoids substring false positives such
-// as "entry" satisfying a check for the "try" keyword.
-func anchoredContains(content, lit []byte) bool {
-	offset := 0
-	for {
-		i := bytes.Index(content[offset:], lit)
-		if i < 0 {
-			return false
-		}
-		pos := offset + i
-		j := pos
-		for j > 0 && (content[j-1] == ' ' || content[j-1] == '\t') {
-			j--
-		}
-		if j == 0 || content[j-1] == '\n' {
-			return true
-		}
-		offset = pos + 1
+func guessByHeuristics(filename string, plan *heuristicPlan, toCheck []byte) (string, bool) {
+	if len(plan.langs) == 0 {
+		return "", false
 	}
-}
 
-func guessByHeuristics(filename string, possibleLanguages []string, toCheck []byte) (string, bool) {
-	guesses := make([]languageGuess, 0, len(possibleLanguages))
-	hasHeuristics := false
+	// One set of passes over the file answers every literal of every candidate,
+	// rather than a pass per literal. See detector_plan.go.
+	var stack [planFoundStack]bool
+	var found []bool
+	if plan.nlits <= planFoundStack {
+		found = stack[:plan.nlits]
+	} else {
+		found = make([]bool, plan.nlits)
+	}
+	plan.present(toCheck, found)
 
-	for _, lan := range possibleLanguages {
-		LanguageFeaturesMutex.Lock()
-		langFeatures := LanguageFeatures[lan]
-		LanguageFeaturesMutex.Unlock()
+	var best languageGuess
 
-		if len(langFeatures.Heuristics) == 0 {
-			continue
-		}
-		hasHeuristics = true
-
+	for i, lan := range plan.langs {
 		count := 0
-		for _, h := range langFeatures.Heuristics {
+		for _, h := range lan.heuristics {
 			// Cheap necessary-literal pre-check so the expensive regex only runs
 			// on the rare files that could actually match it.
-			if !heuristicCanMatch(h, toCheck) {
+			canMatch := len(h.ids) == 0
+			for _, id := range h.ids {
+				if found[id] {
+					canMatch = true
+					break
+				}
+			}
+			if !canMatch {
 				continue
 			}
-			if h.Re.Match(toCheck) {
+			if h.re.Match(toCheck) {
 				count++
 			}
 		}
 
-		guesses = append(guesses, languageGuess{Name: lan, Count: count})
-	}
-
-	if !hasHeuristics {
-		return "", false
-	}
-
-	slices.SortFunc(guesses, func(a, b languageGuess) int {
-		if order := cmp.Compare(b.Count, a.Count); order != 0 {
-			return order
+		guess := languageGuess{Name: lan.name, Count: count}
+		if i == 0 || better(guess, best) {
+			best = guess
 		}
-		return strings.Compare(a.Name, b.Name)
-	})
+	}
 
-	if len(guesses) != 0 && guesses[0].Count > 0 {
-		printWarnF("guessing language %s for file %s via heuristics", guesses[0].Name, filename)
-		return guesses[0].Name, true
+	if best.Count > 0 {
+		printWarnF("guessing language %s for file %s via heuristics", best.Name, filename)
+		return best.Name, true
 	}
 
 	return "", false
@@ -260,74 +234,54 @@ func DetermineLanguage(filename string, fallbackLanguage string, possibleLanguag
 		toCheck = content[:20_000]
 	}
 
+	// The candidate set settles which literals are worth looking for and which
+	// languages the keyword count then has to weigh, and neither depends on the
+	// file, so both are worked out once per set and held on the plan.
+	plan := planFor(possibleLanguages)
+
 	// First attempt regex heuristic disambiguation, used for shared extensions
 	// such as .h between C / C++ / Objective-C.
 	// Based on how linguist does it https://github.com/github-linguist/linguist/
 	// which should be fine as its under MIT license
-	if lang, ok := guessByHeuristics(filename, possibleLanguages, toCheck); ok {
+	if lang, ok := guessByHeuristics(filename, plan, toCheck); ok {
 		printTraceF("nanoseconds to guess language: %s: %d", filename, makeTimestampNano()-startTime)
 		return lang
 	}
 
-	primary := ""
-
-	toSort := make([]languageGuess, 0, len(possibleLanguages))
-	for _, lan := range possibleLanguages {
-		LanguageFeaturesMutex.Lock()
-		langFeatures := LanguageFeatures[lan]
-		LanguageFeaturesMutex.Unlock()
-
-		// We only do language checks if no heuristics exist
-		if len(langFeatures.Heuristics) != 0 {
-			continue
-		}
-
+	// A language with heuristics of its own has had its say above, so what is
+	// left is the ones settled by counting keywords. The primary among them --
+	// the one with no keywords either -- is what a file falls back to when
+	// nothing else is convincing: consider YAML files for example, where
+	// cloudformation files can also be YAML. YAML can have any form so it's not
+	// possible to say "this is a yaml file", only "this is likely to be a
+	// cloudformation file", so there has to be a fallback.
+	var best languageGuess
+	for i, lan := range plan.fallbacks {
 		count := 0
-		for _, key := range langFeatures.KeywordBytes {
+		for _, key := range lan.keywords {
 			if bytes.Contains(toCheck, key) {
 				count++
 			}
 		}
 
-		// if no features are found that means that this one is considered the primary
-		// and as such the default fallback if we don't find a suitable number of matching
-		// keywords
-		// consider YAML files for example, where cloudformation files can also be YAML
-		// YAML can have any form so it's not possible to say "this is a yaml file"
-		// so we can only say "this is likely to be a cloudformation file", and as such
-		// we need to handle a fallback case, which in this case is nothing
-		// When several candidates qualify as the fallback we pick the
-		// alphabetically first so the choice is deterministic.
-		if len(langFeatures.Keywords) == 0 && len(langFeatures.Heuristics) == 0 {
-			if primary == "" || lan < primary {
-				primary = lan
-			}
-		}
-
-		toSort = append(toSort, languageGuess{Name: lan, Count: count})
-	}
-
-	slices.SortFunc(toSort, func(a, b languageGuess) int {
-		if order := cmp.Compare(b.Count, a.Count); order != 0 {
-			return order
-		}
-		return strings.Compare(a.Name, b.Name)
-	})
-
-	if primary != "" && len(toSort) != 0 {
-		// OK at this point we have a primary, which means we want 3 or more matches to count as something else
-		if toSort[0].Count < 3 {
-			// we didn't find enough results, so lets return the primary in this case
-			return primary
+		guess := languageGuess{Name: lan.name, Count: count}
+		if i == 0 || better(guess, best) {
+			best = guess
 		}
 	}
 
-	printWarnF("guessing language %s for file %s", toSort[0].Name, filename)
+	if len(plan.fallbacks) == 0 {
+		return fallbackLanguage
+	}
+
+	if plan.primary != "" && best.Count < 3 {
+		// OK at this point we have a primary, which means we want 3 or more
+		// matches to count as something else, and we didn't find enough.
+		return plan.primary
+	}
+
+	printWarnF("guessing language %s for file %s", best.Name, filename)
 	printTraceF("nanoseconds to guess language: %s: %d", filename, makeTimestampNano()-startTime)
 
-	if len(toSort) != 0 {
-		return toSort[0].Name
-	}
-
-	return fallbackLanguage
+	return best.Name
 }

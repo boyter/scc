@@ -6,8 +6,9 @@ ignore ./examples
 
 require (
 	github.com/agnivade/levenshtein v1.2.2-0.20250519083737-420867539855
-	github.com/boyter/gocodewalker v1.5.2-0.20260627224246-75bd04cd8742
+	github.com/boyter/gocodewalker v1.5.2-0.20260905064325-27ad42ef7a81
 	github.com/boyter/simplecache v0.0.0-20260310220729-445661819a53
+	github.com/clipperhouse/uax29/v2 v2.7.0
 	github.com/go-git/go-git/v5 v5.19.2
 	github.com/json-iterator/go v1.1.12
 	github.com/mark3labs/mcp-go v0.55.0
@@ -25,7 +26,6 @@ require (
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.4.1 // indirect
-	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/cyphar/filepath-securejoin v0.6.1 // indirect
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
