@@ -215,7 +215,7 @@ var languageDatabase = map[string]Language{
 			},
 			{
 				"<%--",
-				"-->",
+				"--%>",
 			},
 		},
 		Quotes:          []Quote{},
