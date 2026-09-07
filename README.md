@@ -260,7 +260,7 @@ features listed below may be missing from your installation.
 ```text
 $ scc -h
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 4.0.0
+Version 4.1.0
 Ben Boyter <ben@boyter.org> + Contributors
 https://github.com/boyter/scc
 
@@ -331,7 +331,9 @@ Flags:
       --exclude-dir strings                 directories to exclude (default [.git,.hg,.svn])
   -x, --exclude-ext strings                 ignore file extensions (overrides include-ext) [comma separated list: e.g. go,java,js]
   -n, --exclude-file strings                ignore files with matching names (default [package-lock.json,Cargo.lock,yarn.lock,pubspec.lock,Podfile.lock,pnpm-lock.yaml])
+      --exp-per-language-counters           experimental, may change or be removed: count with the scanner written for the file's language where there is one, currently C, C Header and Java
       --file-gc-count int                   number of files to parse before turning the GC on (default 10000)
+      --file-list-job-workers int           number of goroutine workers that turn a walked path into a job to be counted (default 8)
       --file-list-queue-size int            the size of the queue of files found and ready to be read into memory (default 8)
       --file-process-job-workers int        number of goroutine workers that process files collecting stats (default 8)
       --file-summary-job-queue-size int     the size of the queue used to hold processed file statistics before formatting (default 8)
