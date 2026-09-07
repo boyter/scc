@@ -101,6 +101,41 @@ func getTabularWideBreak() string {
 	return tabularWideBreak
 }
 
+// summariseInWorkers reports whether the output about to be printed needs
+// nothing more than per language totals, in which case the counting workers can
+// fold the run themselves and the summary channel carries nothing at all.
+//
+// The cases mirror fileSummarize below one for one: only the two tabular
+// summaries qualify, and only when no option asks them for per file detail.
+// --by-file prints a row per file and --max-mean needs every line length, and
+// the rest of the formats emit a record per file, so all of those keep folding
+// job by job off the channel.
+func summariseInWorkers() bool {
+	if FormatMulti != "" || Files || MaxMean {
+		return false
+	}
+
+	switch {
+	case More || strings.EqualFold(Format, "wide"):
+		return true
+	case strings.EqualFold(Format, "json"),
+		strings.EqualFold(Format, "json2"),
+		strings.EqualFold(Format, "cloc-yaml"),
+		strings.EqualFold(Format, "cloc-yml"),
+		strings.EqualFold(Format, "csv"),
+		strings.EqualFold(Format, "csv-stream"),
+		strings.EqualFold(Format, "html"),
+		strings.EqualFold(Format, "html-table"),
+		strings.EqualFold(Format, "sql"),
+		strings.EqualFold(Format, "sql-insert"),
+		strings.EqualFold(Format, "openmetrics"):
+		return false
+	}
+
+	// Anything else falls through to fileSummarizeShort, the same as below.
+	return true
+}
+
 func fileSummarize(input chan *FileJob) string {
 	if FormatMulti != "" {
 		return fileSummarizeMulti(input)

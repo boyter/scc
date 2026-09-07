@@ -108,6 +108,7 @@
     ],
     "extensions": ["asa", "asp"],
     "line_comment": ["'", "REM"],
+    "caseinsensitive": true,
     "multi_line": [],
     "quotes": []
   },
@@ -250,6 +251,7 @@
     "extensions": ["agda"],
     "line_comment": ["--"],
     "multi_line": [["{-", "-}"]],
+    "nestedmultiline": true,
     "quotes": []
   },
   "Alchemist": {
@@ -450,8 +452,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -485,8 +487,8 @@
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -516,10 +518,6 @@
       {
         "end": "\"",
         "start": "\""
-      },
-      {
-        "end": "'",
-        "start": "'"
       }
     ]
   },
@@ -594,8 +592,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -624,8 +622,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       }
     ]
   },
@@ -645,6 +643,7 @@
     ],
     "extensions": ["bat", "btm", "cmd"],
     "line_comment": ["REM", "::"],
+    "caseinsensitive": true,
     "multi_line": [],
     "quotes": []
   },
@@ -898,6 +897,7 @@
     ],
     "extensions": ["c", "ec", "pgc"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -926,6 +926,7 @@
     ],
     "extensions": ["h"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -1050,32 +1051,38 @@
     ],
     "extensions": ["cc", "cpp", "cxx", "c++", "pcc", "ino", "ccm", "cppm", "cxxm", "c++m", "mxx"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "R\"("
+        "start": "R\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "u8R\"("
+        "start": "u8R\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "uR\"("
+        "start": "uR\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "UR\"("
+        "start": "UR\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "LR\"("
+        "start": "LR\""
       },
       {
         "end": "\"",
@@ -1114,7 +1121,7 @@
       {
         "pattern": "(?m)^\\s*template\\s*<",
         "literals": ["template"],
-        "anchored": false
+        "anchored": true
       },
       {
         "pattern": "(?m)^[ \\t]*(try|constexpr)",
@@ -1148,32 +1155,38 @@
       }
     ],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "R\"("
+        "start": "R\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "u8R\"("
+        "start": "u8R\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "uR\"("
+        "start": "uR\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "UR\"("
+        "start": "UR\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "LR\"("
+        "start": "LR\""
       },
       {
         "end": "\"",
@@ -1202,8 +1215,53 @@
     ],
     "extensions": ["cmake", "cmakelists.txt"],
     "line_comment": ["#"],
-    "multi_line": [["#[[", "]]"]],
+    "multi_line": [["#[[", "]]"], ["#[=[", "]=]"], ["#[==[", "]==]"], ["#[===[", "]===]"], ["#[====[", "]====]"], ["#[=====[", "]=====]"], ["#[======[", "]======]"], ["#[=======[", "]=======]"], ["#[========[", "]========]"]],
     "quotes": [
+      {
+        "ignoreEscape": true,
+        "end": "]]",
+        "start": "[["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]=]",
+        "start": "[=["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]==]",
+        "start": "[==["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]===]",
+        "start": "[===["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]====]",
+        "start": "[====["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]=====]",
+        "start": "[=====["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]======]",
+        "start": "[======["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]=======]",
+        "start": "[=======["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]========]",
+        "start": "[========["
+      },
       {
         "end": "\"",
         "start": "\""
@@ -1724,8 +1782,8 @@
     "multi_line": [["###", "###"]],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -1771,8 +1829,8 @@
     "multi_line": [["<!---", "--->"]],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -1840,6 +1898,7 @@
     ],
     "line_comment": [],
     "multi_line": [["(*", "*)"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
@@ -1873,8 +1932,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -1901,6 +1960,7 @@
     ],
     "extensions": ["cu", "cuh"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -1928,16 +1988,16 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
         "start": "'"
       },
       {
-        "end": "\\\"\\\"\\\"",
-        "start": "\\\"\\\"\\\""
+        "end": "\"\"\"",
+        "start": "\"\"\""
       },
       {
         "end": "'''",
@@ -2057,6 +2117,7 @@
     "extensions": ["dart"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
@@ -2128,8 +2189,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -2248,6 +2309,7 @@
     "extensions": ["elm"],
     "line_comment": ["--"],
     "multi_line": [["{-", "-}"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
@@ -2355,8 +2417,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -2388,6 +2450,7 @@
     "extensions": ["fs", "fsi", "fsx", "fsscript"],
     "line_comment": ["//"],
     "multi_line": [["(*", "*)"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
@@ -2472,8 +2535,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -2640,8 +2703,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -2705,7 +2768,8 @@
       "rx",
       "ft"
     ],
-    "line_comment": ["\\\\"],
+    "line_comment": ["\\"],
+    "commentisword": true,
     "multi_line": [["( ", ")"]],
     "quotes": []
   },
@@ -2728,8 +2792,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       }
     ]
   },
@@ -2844,6 +2908,7 @@
     ],
     "extensions": ["vert", "tesc", "tese", "geom", "frag", "comp", "glsl"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -2918,8 +2983,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -3099,15 +3164,23 @@
     "complexitychecks": [],
     "extensions": ["gradle"],
     "line_comment": ["//"],
-    "multi_line": [],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
-        "end": "'",
-        "start": "'"
+        "end": "\"\"\"",
+        "start": "\"\"\""
+      },
+      {
+        "end": "'''",
+        "start": "'''"
       },
       {
         "end": "\"",
         "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
       }
     ]
   },
@@ -3159,8 +3232,20 @@
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
+        "end": "\"\"\"",
+        "start": "\"\"\""
+      },
+      {
+        "end": "'''",
+        "start": "'''"
+      },
+      {
         "end": "\"",
         "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
       }
     ]
   },
@@ -3305,12 +3390,8 @@
     "multi_line": [["<!--", "-->"], ["{{!", "}}"]],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
-      },
-      {
-        "end": "'",
-        "start": "'"
+        "end": "\"",
+        "start": "\""
       }
     ]
   },
@@ -3363,6 +3444,7 @@
     "extensions": ["hs"],
     "line_comment": ["--"],
     "multi_line": [["{-", "-}"]],
+    "nestedmultiline": true,
     "quotes": []
   },
   "Haxe": {
@@ -3523,12 +3605,12 @@
     "nestedmultiline": true,
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
-        "end": "\\\"\\\"\\\"",
-        "start": "\\\"\\\"\\\""
+        "end": "\"\"\"",
+        "start": "\"\"\""
       }
     ]
   },
@@ -3903,12 +3985,12 @@
     "nestedmultiline": true,
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
-        "end": "\\\"\\\"\\\"",
-        "start": "\\\"\\\"\\\""
+        "end": "\"\"\"",
+        "start": "\"\"\""
       }
     ]
   },
@@ -3962,8 +4044,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       }
     ]
   },
@@ -3998,8 +4080,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -4099,24 +4181,23 @@
     "nestedmultiline": true,
     "quotes": [
       {
+        "ignoreEscape": true,
+        "end": "\"",
+        "start": "r\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"#",
+        "start": "r#\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"##",
+        "start": "r##\""
+      },
+      {
         "end": "\"",
         "start": "\""
-      },
-      {
-        "end": "\\\"",
-        "start": "\\\""
-      },
-      {
-        "end": "#\\\"",
-        "start": "\\\"#"
-      },
-      {
-        "end": "r##\\\"",
-        "start": "\\\"##"
-      },
-      {
-        "end": "r#\\\"",
-        "start": "\\\"#"
       }
     ]
   },
@@ -4448,8 +4529,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -4774,6 +4855,7 @@
     ],
     "extensions": ["metal"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -5125,12 +5207,8 @@
     "multi_line": [["{{!", "}}"]],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
-      },
-      {
-        "end": "'",
-        "start": "'"
+        "end": "\"",
+        "start": "\""
       }
     ]
   },
@@ -5217,12 +5295,12 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
-        "end": "\\\"\\\"\\\"",
-        "start": "\\\"\\\"\\\""
+        "end": "\"\"\"",
+        "start": "\"\"\""
       }
     ]
   },
@@ -5293,6 +5371,7 @@
     "extensions": ["ml", "mli"],
     "line_comment": [],
     "multi_line": [["(*", "*)"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
@@ -5319,7 +5398,7 @@
       {
         "pattern": "(?m)^\\s*(@(interface|class|protocol|property|end|synchronised|selector|implementation)\\b|#import\\s+.+\\.h[\">])",
         "literals": ["@interface", "@class", "@protocol", "@property", "@end", "@synchronised", "@selector", "@implementation", "#import"],
-        "anchored": false
+        "anchored": true
       }
     ],
     "keywords": [
@@ -5340,6 +5419,7 @@
       "//"
     ],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -5364,6 +5444,7 @@
     ],
     "extensions": ["mm"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -5390,6 +5471,7 @@
     "extensions": ["odin"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
@@ -5573,6 +5655,7 @@
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
+        "ignoreEscape": true,
         "end": "'",
         "start": "'"
       }
@@ -5848,8 +5931,8 @@
         "start": "\""
       },
       {
-        "end": "\\\"\\\"\\\"",
-        "start": "\\\"\\\"\\\""
+        "end": "\"\"\"",
+        "start": "\"\"\""
       }
     ]
   },
@@ -5911,6 +5994,7 @@
       "-contains",
       "-notcontains"
     ],
+    "escape": "`",
     "extensions": ["ps1", "psm1"],
     "line_comment": ["#"],
     "multi_line": [["<#", "#>"]],
@@ -6019,8 +6103,8 @@
     "multi_line": [["=begin", "=end"]],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -6045,6 +6129,7 @@
     "extensions": ["purs"],
     "line_comment": ["--"],
     "multi_line": [["{-", "-}"]],
+    "nestedmultiline": true,
     "quotes": []
   },
   "Python": {
@@ -6300,8 +6385,8 @@
     "multi_line": [["=begin", "=end"]],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -6391,8 +6476,8 @@
     ],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -6607,8 +6692,8 @@
     "multi_line": [["=begin", "=end"]],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -6904,6 +6989,7 @@
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
+        "ignoreEscape": true,
         "end": "'",
         "start": "'"
       }
@@ -6997,6 +7083,7 @@
     "extensions": ["sc", "scala"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
@@ -7081,16 +7168,16 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
         "start": "'"
       },
       {
-        "end": "\\\"\\\"\\\"",
-        "start": "\\\"\\\"\\\""
+        "end": "\"\"\"",
+        "start": "\"\"\""
       },
       {
         "end": "'''",
@@ -7144,8 +7231,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -7355,8 +7442,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       }
     ]
   },
@@ -7654,8 +7741,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -7690,16 +7777,16 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
         "start": "'"
       },
       {
-        "end": "\\\"\\\"\\\"",
-        "start": "\\\"\\\"\\\""
+        "end": "\"\"\"",
+        "start": "\"\"\""
       },
       {
         "end": "'''",
@@ -8069,8 +8156,8 @@
     "nestedmultiline": true,
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       }
     ]
   },
@@ -8479,10 +8566,6 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
-      },
-      {
         "end": "'",
         "start": "'"
       }
@@ -8508,8 +8591,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       }
     ]
   },
@@ -8533,8 +8616,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       }
     ]
   },
@@ -8559,10 +8642,6 @@
       {
         "end": "\"",
         "start": "\""
-      },
-      {
-        "end": "'",
-        "start": "'"
       }
     ]
   },
@@ -8932,8 +9011,8 @@
     "line_comment": ["//"],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "\n",
@@ -8977,8 +9056,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",

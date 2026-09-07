@@ -352,6 +352,8 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.IntVar(intVar(&processor.GcFileCount), "file-gc-count", 10000, "number of files to parse before turning the GC on")
 	flags.IntVar(intVar(&processor.FileListQueueSize), "file-list-queue-size", runtime.NumCPU(), "the size of the queue of files found and ready to be read into memory")
 	flags.IntVar(intVar(&processor.FileProcessJobWorkers), "file-process-job-workers", runtime.NumCPU(), "number of goroutine workers that process files collecting stats")
+	flags.BoolVar(boolVar(&processor.SpecialisedCounters), "exp-per-language-counters", false, "experimental, may change or be removed: count with the scanner written for the file's language where there is one, currently C, C Header and Java")
+	flags.IntVar(intVar(&processor.FileListJobWorkers), "file-list-job-workers", runtime.NumCPU(), "number of goroutine workers that turn a walked path into a job to be counted")
 	flags.IntVar(intVar(&processor.FileSummaryJobQueueSize), "file-summary-job-queue-size", runtime.NumCPU(), "the size of the queue used to hold processed file statistics before formatting")
 	flags.IntVar(intVar(&processor.DirectoryWalkerJobWorkers), "directory-walker-job-workers", 8, "controls the maximum number of workers which will walk the directory tree")
 	flags.StringVarP(strVar(&processor.Format), "format", "f", "tabular", "set output format [tabular, wide, json, json2, csv, csv-stream, cloc-yaml, html, html-table, sql, sql-insert, openmetrics]")

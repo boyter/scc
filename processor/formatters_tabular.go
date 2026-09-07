@@ -4,6 +4,7 @@ package processor
 
 import (
 	"fmt"
+	"github.com/clipperhouse/uax29/v2/graphemes"
 	"os"
 	"slices"
 	"strings"
@@ -69,71 +70,19 @@ func fileSummarizeLong(input chan *FileJob) string {
 		str.WriteString(getTabularWideBreak())
 	}
 
-	langs := map[string]LanguageSummary{}
-	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumCognitive, sumBytes int64 = 0, 0, 0, 0, 0, 0, 0, 0
-
 	p := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
 
-	for res := range input {
-		sumFiles++
-		sumLines += res.Lines
-		sumCode += res.Code
-		sumComment += res.Comment
-		sumBlank += res.Blank
-		sumComplexity += res.Complexity
-		sumCognitive += res.Cognitive
-		sumBytes += res.Bytes
+	totals := collectSummaryTotals(input, Files, MaxMean, Files)
+	sumFiles := totals.sumFiles
+	sumLines := totals.sumLines
+	sumCode := totals.sumCode
+	sumComment := totals.sumComment
+	sumBlank := totals.sumBlank
+	sumComplexity := totals.sumComplexity
+	sumCognitive := totals.sumCognitive
+	sumBytes := totals.sumBytes
 
-		var weightedComplexity float64
-		if res.Code != 0 {
-			weightedComplexity = (float64(res.Complexity) / float64(res.Code)) * 100
-		}
-		res.WeightedComplexity = weightedComplexity
-
-		_, ok := langs[res.Language]
-
-		if !ok {
-			files := []*FileJob{}
-			files = append(files, res)
-
-			langs[res.Language] = LanguageSummary{
-				Name:       res.Language,
-				Lines:      res.Lines,
-				Code:       res.Code,
-				Comment:    res.Comment,
-				Blank:      res.Blank,
-				Complexity: res.Complexity,
-				Cognitive:  res.Cognitive,
-				Count:      1,
-				Files:      files,
-				LineLength: res.LineLength,
-			}
-		} else {
-			tmp := langs[res.Language]
-			files := append(tmp.Files, res)
-			lineLength := append(tmp.LineLength, res.LineLength...)
-
-			langs[res.Language] = LanguageSummary{
-				Name:       res.Language,
-				Lines:      tmp.Lines + res.Lines,
-				Code:       tmp.Code + res.Code,
-				Comment:    tmp.Comment + res.Comment,
-				Blank:      tmp.Blank + res.Blank,
-				Complexity: tmp.Complexity + res.Complexity,
-				Cognitive:  tmp.Cognitive + res.Cognitive,
-				Count:      tmp.Count + 1,
-				Files:      files,
-				LineLength: lineLength,
-			}
-		}
-	}
-
-	language := make([]LanguageSummary, 0, len(langs))
-	for _, summary := range langs {
-		language = append(language, summary)
-	}
-
-	language = sortLanguageSummary(language)
+	language := totals.sorted()
 
 	startTime := makeTimestampMilli()
 	for _, summary := range language {
@@ -160,7 +109,7 @@ func fileSummarizeLong(input chan *FileJob) string {
 		if Percent {
 			_, _ = p.Fprintf(str,
 				tabularWideFormatBodyPercent,
-				pct(int64(len(summary.Files)), sumFiles),
+				pct(summary.Count, sumFiles),
 				pct(summary.Lines, sumLines),
 				pct(summary.Blank, sumBlank),
 				pct(summary.Comment, sumComment),
@@ -253,21 +202,64 @@ func fileSummarizeLong(input chan *FileJob) string {
 // We need to trim the file display for tabular output formats which this does in a unicode aware way
 // to avoid cutting bytes... note that it needs to be expanded to deal with longer display characters at some
 // point in the future
+//
+// What is wanted is the longest tail of the string that fits the width, with a
+// ~ in front of it to say something was cut. Removing one rune at a time and
+// asking the width again after each is the obvious way to find it and costs a
+// fresh string and a fresh walk of that string for every rune removed, which on
+// a --by-file run over a tree of long paths was two thirds of the whole run.
+// Walking back from the end and adding up the widths finds the same place in
+// one pass, StringWidth being the sum of RuneWidth over the string.
 func unicodeAwareTrim(tmp string, size int) string {
-	// iterate all the runes so we can cut off correctly and get the correct length
-	r := []rune(tmp)
-
-	if len(r) > size {
-		for runewidth.StringWidth(tmp) > size {
-			// remove character one at a time till we get the length we want
-			r = r[1:]
-			tmp = string(r)
-		}
-
-		tmp = "~" + strings.TrimSpace(tmp)
+	// A string of size bytes or fewer cannot hold more than size runes, and a
+	// rune is never narrower than nothing, so there is nothing to cut. This is
+	// the answer for nearly every name.
+	if len(tmp) <= size {
+		return tmp
 	}
 
-	return tmp
+	r := []rune(tmp)
+	if len(r) <= size {
+		return tmp
+	}
+
+	// Width is asked per grapheme cluster, not per rune, because that is what
+	// StringWidth answers and the two disagree: a family emoji is four runes
+	// joined by zero width joiners and is two cells wide, where the runes add
+	// up to eight. Summing runes cut a name that already fitted, and cut it
+	// through the middle of a cluster, leaving a dangling joiner.
+	//
+	// Two walks rather than one so nothing is allocated: the first asks how
+	// wide the whole name is, the second drops clusters off the front until
+	// what is left fits.
+	total := 0
+	forward := graphemes.FromString(tmp)
+	for forward.Next() {
+		total += graphemeWidth(forward.Value())
+	}
+
+	dropped := 0
+	offset := 0
+	trim := graphemes.FromString(tmp)
+	for total-dropped > size && trim.Next() {
+		cluster := trim.Value()
+		dropped += graphemeWidth(cluster)
+		offset += len(cluster)
+	}
+
+	return "~" + strings.TrimSpace(tmp[offset:])
+}
+
+// graphemeWidth is the width of one grapheme cluster, which runewidth takes to
+// be the width of the first rune in it that has one.
+func graphemeWidth(cluster string) int {
+	for _, r := range cluster {
+		if w := runewidth.RuneWidth(r); w > 0 {
+			return w
+		}
+	}
+
+	return 0
 }
 
 // Using %-30s in string format does not appear to be unicode aware with characters such as
@@ -291,65 +283,19 @@ func fileSummarizeShort(input chan *FileJob) string {
 		str.WriteString(getTabularShortBreak())
 	}
 
-	lang := map[string]LanguageSummary{}
-	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumCognitive, sumBytes int64 = 0, 0, 0, 0, 0, 0, 0, 0
-
 	p := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
 
-	for res := range input {
-		sumFiles++
-		sumLines += res.Lines
-		sumCode += res.Code
-		sumComment += res.Comment
-		sumBlank += res.Blank
-		sumComplexity += res.Complexity
-		sumCognitive += res.Cognitive
-		sumBytes += res.Bytes
+	totals := collectSummaryTotals(input, Files, MaxMean, false)
+	sumFiles := totals.sumFiles
+	sumLines := totals.sumLines
+	sumCode := totals.sumCode
+	sumComment := totals.sumComment
+	sumBlank := totals.sumBlank
+	sumComplexity := totals.sumComplexity
+	sumCognitive := totals.sumCognitive
+	sumBytes := totals.sumBytes
 
-		_, ok := lang[res.Language]
-
-		if !ok {
-			files := []*FileJob{}
-			files = append(files, res)
-
-			lang[res.Language] = LanguageSummary{
-				Name:       res.Language,
-				Lines:      res.Lines,
-				Code:       res.Code,
-				Comment:    res.Comment,
-				Blank:      res.Blank,
-				Complexity: res.Complexity,
-				Cognitive:  res.Cognitive,
-				Count:      1,
-				Files:      files,
-				LineLength: res.LineLength,
-			}
-		} else {
-			tmp := lang[res.Language]
-			files := append(tmp.Files, res)
-			lineLength := append(tmp.LineLength, res.LineLength...)
-
-			lang[res.Language] = LanguageSummary{
-				Name:       res.Language,
-				Lines:      tmp.Lines + res.Lines,
-				Code:       tmp.Code + res.Code,
-				Comment:    tmp.Comment + res.Comment,
-				Blank:      tmp.Blank + res.Blank,
-				Complexity: tmp.Complexity + res.Complexity,
-				Cognitive:  tmp.Cognitive + res.Cognitive,
-				Count:      tmp.Count + 1,
-				Files:      files,
-				LineLength: lineLength,
-			}
-		}
-	}
-
-	language := make([]LanguageSummary, 0, len(lang))
-	for _, summary := range lang {
-		language = append(language, summary)
-	}
-
-	language = sortLanguageSummary(language)
+	language := totals.sorted()
 
 	startTime := makeTimestampMilli()
 	for _, summary := range language {
@@ -371,7 +317,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 			if !Complexity {
 				_, _ = p.Fprintf(str,
 					tabularShortPercentLanguageFormatBody,
-					pct(int64(len(summary.Files)), sumFiles),
+					pct(summary.Count, sumFiles),
 					pct(summary.Lines, sumLines),
 					pct(summary.Blank, sumBlank),
 					pct(summary.Comment, sumComment),
@@ -381,7 +327,7 @@ func fileSummarizeShort(input chan *FileJob) string {
 			} else {
 				_, _ = p.Fprintf(str,
 					tabularShortPercentLanguageFormatBodyNoComplexity,
-					pct(int64(len(summary.Files)), sumFiles),
+					pct(summary.Count, sumFiles),
 					pct(summary.Lines, sumLines),
 					pct(summary.Blank, sumBlank),
 					pct(summary.Comment, sumComment),

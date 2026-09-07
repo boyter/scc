@@ -182,6 +182,662 @@ func TestCountStatsCode(t *testing.T) {
 	}
 }
 
+// A quote delimiter is written in languages.json as "\"" and JSON already
+// escapes it there, so a delimiter carrying a literal backslash in front of
+// its quote is one that was escaped twice and matches nothing a real file
+// holds. Zig's "\\" is the one true backslash delimiter, being the opener of
+// its multiline string literal.
+func TestLanguageQuotesAreNotDoubleEscaped(t *testing.T) {
+	ProcessConstants()
+
+	for name, language := range languageDatabase {
+		for _, quote := range language.Quotes {
+			for _, delimiter := range []string{quote.Start, quote.End} {
+				if strings.Contains(delimiter, `\"`) {
+					t.Errorf("%s: quote delimiter %q holds a literal backslash, so it never matches", name, delimiter)
+				}
+			}
+		}
+	}
+}
+
+// The double escaped delimiters above left these languages with no working
+// double quoted string at all. It only shows on a string running over more
+// than one line, because a single line one sits on a line that is code
+// whether the string was seen or not. Here the middle line opens with the
+// language's own comment token while inside the string, so a language that
+// missed the string reads it as a comment.
+func TestCountStatsMultiLineStringHoldingACommentToken(t *testing.T) {
+	ProcessConstants()
+
+	for _, test := range []struct {
+		language    string
+		lineComment string
+	}{
+		{"Shell", "#"},
+		{"Zsh", "#"},
+		{"BASH", "#"},
+		{"Korn Shell", "#"},
+		{"Fish", "#"},
+		{"Ruby", "#"},
+		{"Rakefile", "#"},
+		{"Gemfile", "#"},
+		{"Crystal", "#"},
+		{"TOML", "#"},
+		{"Julia", "#"},
+		{"Nim", "#"},
+		{"Dockerfile", "#"},
+		{"TCL", "#"},
+		{"Puppet", "#"},
+		{"CoffeeScript", "#"},
+		{"Cython", "#"},
+		{"Just", "#"},
+		{"Scons", "#"},
+		{"Expect", "#"},
+		{"Luna", "#"},
+		{"Raku", "#"},
+		{"Zig", "//"},
+		{"Typst", "//"},
+		{"Pony", "//"},
+		{"Idris", "--"},
+		{"Assembly", ";"},
+		{"Arturo", ";"},
+		{"Basic", "'"},
+		{"Visual Basic", "'"},
+		{"Visual Basic for Applications", "'"},
+		{"Softbridge Basic", "'"},
+		{"Fortran Modern", "!"},
+	} {
+		fileJob := FileJob{Language: test.language}
+		fileJob.SetContent("x = \"line one\n" + test.lineComment + " still inside the string\nend\"\ny = 2\n")
+
+		CountStats(&fileJob)
+
+		if fileJob.Lines != 4 {
+			t.Errorf("%s: expected 4 lines got %d", test.language, fileJob.Lines)
+		}
+
+		if fileJob.Code != 4 {
+			t.Errorf("%s: expected 4 code got %d", test.language, fileJob.Code)
+		}
+
+		if fileJob.Comment != 0 {
+			t.Errorf("%s: expected 0 comment got %d", test.language, fileJob.Comment)
+		}
+
+		if fileJob.Blank != 0 {
+			t.Errorf("%s: expected 0 blank got %d", test.language, fileJob.Blank)
+		}
+	}
+}
+
+// Vim Script is the one language in the sweep above that must not be given a
+// working double quoted string, because the double quote is what opens its
+// comments. A string delimiter is matched ahead of a comment one, so handing
+// it the quote turns every comment in a vimrc into code.
+func TestCountStatsVimScriptDoubleQuoteOpensAComment(t *testing.T) {
+	ProcessConstants()
+
+	fileJob := FileJob{Language: "Vim Script"}
+	fileJob.SetContent("\" a vim comment\nlet x = 1\n\" another comment\nlet y = 2\n")
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 4 {
+		t.Errorf("Expected 4 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 2 {
+		t.Errorf("Expected 2 code got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 2 {
+		t.Errorf("Expected 2 comment got %d", fileJob.Comment)
+	}
+
+	if fileJob.Blank != 0 {
+		t.Errorf("Expected 0 blank got %d", fileJob.Blank)
+	}
+}
+
+// Standard SQL escapes a quote by doubling it and the backslash is an ordinary
+// character, so a path ending in one closes the string it sits in. Reading the
+// backslash as an escape leaves the string open and takes the comment under it
+// along with everything below. Oracle's PL/SQL reads the backslash the same
+// way. MySQL is the dialect that does escape with it, and it loses here.
+func TestCountStatsSQLBackslashDoesNotEscapeTheClosingQuote(t *testing.T) {
+	ProcessConstants()
+
+	for _, language := range []string{"SQL", "PL/SQL"} {
+		fileJob := FileJob{Language: language}
+		fileJob.SetContent("UPDATE t SET path = 'C:\\';\n-- a real comment\nSELECT 2;\n")
+
+		CountStats(&fileJob)
+
+		if fileJob.Lines != 3 {
+			t.Errorf("%s: expected 3 lines got %d", language, fileJob.Lines)
+		}
+
+		if fileJob.Code != 2 {
+			t.Errorf("%s: expected 2 code got %d", language, fileJob.Code)
+		}
+
+		if fileJob.Comment != 1 {
+			t.Errorf("%s: expected 1 comment got %d", language, fileJob.Comment)
+		}
+
+		if fileJob.Blank != 0 {
+			t.Errorf("%s: expected 0 blank got %d", language, fileJob.Blank)
+		}
+	}
+}
+
+// Groovy writes a string four ways and scc knew one of them, so a comment
+// opener inside any of the other three opened a comment. The single quoted
+// string is the idiomatic one and the triple quoted ones run over lines, which
+// is what lets an unclosed block comment take the rest of the file.
+func TestCountStatsGroovyStringForms(t *testing.T) {
+	ProcessConstants()
+
+	for _, language := range []string{"Groovy", "Gradle"} {
+		for _, quote := range []string{"'", `"`} {
+			fileJob := FileJob{Language: language}
+			fileJob.SetContent("def a = " + quote + "/* not a comment" + quote + "\ndef b = 1\ndef c = 2\n")
+
+			CountStats(&fileJob)
+
+			if fileJob.Lines != 3 {
+				t.Errorf("%s %s: expected 3 lines got %d", language, quote, fileJob.Lines)
+			}
+
+			if fileJob.Code != 3 {
+				t.Errorf("%s %s: expected 3 code got %d", language, quote, fileJob.Code)
+			}
+
+			if fileJob.Comment != 0 {
+				t.Errorf("%s %s: expected 0 comment got %d", language, quote, fileJob.Comment)
+			}
+		}
+
+		for _, quote := range []string{"'''", `"""`} {
+			fileJob := FileJob{Language: language}
+			fileJob.SetContent("def a = " + quote + "\n// this is text inside the string\n/* and so is this\n" + quote + "\ndef b = 1\n")
+
+			CountStats(&fileJob)
+
+			if fileJob.Lines != 5 {
+				t.Errorf("%s %s: expected 5 lines got %d", language, quote, fileJob.Lines)
+			}
+
+			if fileJob.Code != 5 {
+				t.Errorf("%s %s: expected 5 code got %d", language, quote, fileJob.Code)
+			}
+
+			if fileJob.Comment != 0 {
+				t.Errorf("%s %s: expected 0 comment got %d", language, quote, fileJob.Comment)
+			}
+		}
+	}
+}
+
+// CMake opens a bracket comment with any number of equals signs between its
+// brackets and only a closer carrying the same number ends it. There is no
+// dynamic delimiter here so the levels are enumerated, the way Rust's raw
+// strings are, and this walks the ones that are.
+func TestCountStatsCMakeBracketComment(t *testing.T) {
+	ProcessConstants()
+
+	for level := 0; level <= 8; level++ {
+		equals := strings.Repeat("=", level)
+		fileJob := FileJob{Language: "CMake"}
+		fileJob.SetContent("#[" + equals + "[ a bracket comment\n a second comment line\n]" + equals + "]\nset(X 1)\n")
+
+		CountStats(&fileJob)
+
+		if fileJob.Lines != 4 {
+			t.Errorf("level %d: expected 4 lines got %d", level, fileJob.Lines)
+		}
+
+		if fileJob.Code != 1 {
+			t.Errorf("level %d: expected 1 code got %d", level, fileJob.Code)
+		}
+
+		if fileJob.Comment != 3 {
+			t.Errorf("level %d: expected 3 comment got %d", level, fileJob.Comment)
+		}
+	}
+}
+
+// A closer carrying fewer equals signs than the opener is text, so the comment
+// runs past it to the one that matches.
+func TestCountStatsCMakeBracketCommentShorterCloserIsText(t *testing.T) {
+	ProcessConstants()
+
+	fileJob := FileJob{Language: "CMake"}
+	fileJob.SetContent("#[==[ a bracket comment\n]] not the end\n]==]\nset(X 1)\n")
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 4 {
+		t.Errorf("Expected 4 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 1 {
+		t.Errorf("Expected 1 code got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 3 {
+		t.Errorf("Expected 3 comment got %d", fileJob.Comment)
+	}
+}
+
+// The same brackets without the leading # are a bracket argument, which is how
+// CMake writes a string running over lines. A # inside one is content.
+func TestCountStatsCMakeBracketArgument(t *testing.T) {
+	ProcessConstants()
+
+	for level := 0; level <= 8; level++ {
+		equals := strings.Repeat("=", level)
+		fileJob := FileJob{Language: "CMake"}
+		fileJob.SetContent("set(X [" + equals + "[\n# not a comment\n]" + equals + "])\nset(Y 1)\n")
+
+		CountStats(&fileJob)
+
+		if fileJob.Lines != 4 {
+			t.Errorf("level %d: expected 4 lines got %d", level, fileJob.Lines)
+		}
+
+		if fileJob.Code != 4 {
+			t.Errorf("level %d: expected 4 code got %d", level, fileJob.Code)
+		}
+
+		if fileJob.Comment != 0 {
+			t.Errorf("level %d: expected 0 comment got %d", level, fileJob.Comment)
+		}
+	}
+}
+
+// C removes a backslash and the newline behind it before it looks for comments
+// or strings, so a backslash ending a line comment carries the comment onto
+// the next line, and a string that does not end in one is over at the newline
+// whatever it holds. The cases below are LineJudge 5020 to 5070.
+func TestCountStatsLineSplice(t *testing.T) {
+	ProcessConstants()
+
+	for _, test := range []struct {
+		name    string
+		content string
+		lines   int64
+		code    int64
+		comment int64
+		blank   int64
+	}{
+		{
+			name:    "a splice inside a line comment carries it on",
+			content: "// this comment continues \\\n   onto the next line in C\nint x = 1;\n",
+			lines:   3, code: 1, comment: 2, blank: 0,
+		},
+		{
+			name:    "a spliced comment holding no words still carries on",
+			content: "int a = 1;\n// ---- \\\nint b = 2;\nint c = 3;\n",
+			lines:   4, code: 2, comment: 2, blank: 0,
+		},
+		{
+			name:    "a splice after a closed block comment carries the line comment on",
+			content: "int a = 1;\n/* block */ // trailing \\\nint x = 1;\nint y = 2;\n",
+			lines:   4, code: 2, comment: 2, blank: 0,
+		},
+		{
+			name:    "code then a spliced line comment carries the comment on",
+			content: "int a = 1; // comment \\\n   joined to the comment\nint x = 1;\n",
+			lines:   3, code: 2, comment: 1, blank: 0,
+		},
+		{
+			name:    "a blank line inside a spliced comment is comment and not blank",
+			content: "// the blank line below is still this comment \\\n\nint x = 1;\n",
+			lines:   3, code: 1, comment: 2, blank: 0,
+		},
+		{
+			name:    "a string is carried only by a splice, so a blank line ends it",
+			content: "char *s = \"abc \\\n\n// a comment once the string has ended\";\nint x = 1;\n",
+			lines:   4, code: 3, comment: 1, blank: 0,
+		},
+	} {
+		fileJob := FileJob{Language: "C"}
+		fileJob.SetContent(test.content)
+
+		CountStats(&fileJob)
+
+		if fileJob.Lines != test.lines {
+			t.Errorf("%s: expected %d lines got %d", test.name, test.lines, fileJob.Lines)
+		}
+
+		if fileJob.Code != test.code {
+			t.Errorf("%s: expected %d code got %d", test.name, test.code, fileJob.Code)
+		}
+
+		if fileJob.Comment != test.comment {
+			t.Errorf("%s: expected %d comment got %d", test.name, test.comment, fileJob.Comment)
+		}
+
+		if fileJob.Blank != test.blank {
+			t.Errorf("%s: expected %d blank got %d", test.name, test.blank, fileJob.Blank)
+		}
+	}
+}
+
+// A raw string carries over a newline with no splice behind it, so the rule
+// that ends an unspliced string has to leave it alone. The ignoreEscape flag
+// is what tells the two apart, being set on exactly the delimiters that have
+// no escape mechanism to splice with.
+func TestCountStatsLineSpliceLeavesRawStringsAlone(t *testing.T) {
+	ProcessConstants()
+
+	fileJob := FileJob{Language: "C++"}
+	fileJob.SetContent("const char *s = R\"(abc\n// not a comment, it is inside the raw string\n)\";\nint x = 1;\n")
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 4 {
+		t.Errorf("Expected 4 lines got %d", fileJob.Lines)
+	}
+
+	if fileJob.Code != 4 {
+		t.Errorf("Expected 4 code got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 0 {
+		t.Errorf("Expected 0 comment got %d", fileJob.Comment)
+	}
+}
+
+// Only the C family splices. A backslash ending a line comment in a language
+// that does not do it must leave the next line alone.
+func TestCountStatsLineSpliceIsNotUniversal(t *testing.T) {
+	ProcessConstants()
+
+	for _, language := range []string{"Java", "C#", "Go", "JavaScript"} {
+		fileJob := FileJob{Language: language}
+		fileJob.SetContent("// a comment ending in a backslash \\\nint x = 1;\nint y = 2;\n")
+
+		CountStats(&fileJob)
+
+		if fileJob.Code != 2 {
+			t.Errorf("%s: expected 2 code got %d", language, fileJob.Code)
+		}
+
+		if fileJob.Comment != 1 {
+			t.Errorf("%s: expected 1 comment got %d", language, fileJob.Comment)
+		}
+	}
+}
+
+// A markup language holds prose, and prose holds apostrophes. Listing the
+// single quote as a string delimiter turns every contraction into the start of
+// a string that nothing closes, which then swallows the comments under it and
+// runs to the end of the file. HTML, XML, XHTML, Svelte and JSX are all
+// written with the double quote alone for that reason, and Svelte is the same
+// single file component shape as Vue.
+func TestCountStatsMarkupApostropheIsNotAString(t *testing.T) {
+	ProcessConstants()
+
+	for _, test := range []struct {
+		language string
+		comment  string
+	}{
+		{"Vue", "<!-- a comment -->"},
+		{"Astro", "<!-- a comment -->"},
+		{"Handlebars", "<!-- a comment -->"},
+		{"Mustache", "{{! a comment }}"},
+		// already written with the double quote alone, here to keep it that way
+		{"HTML", "<!-- a comment -->"},
+		{"Svelte", "<!-- a comment -->"},
+		{"XML", "<!-- a comment -->"},
+	} {
+		fileJob := FileJob{Language: test.language}
+		fileJob.SetContent("<p>it's fine</p>\n" + test.comment + "\n<p>x</p>\n")
+
+		CountStats(&fileJob)
+
+		if fileJob.Lines != 3 {
+			t.Errorf("%s: expected 3 lines got %d", test.language, fileJob.Lines)
+		}
+
+		if fileJob.Code != 2 {
+			t.Errorf("%s: expected 2 code got %d", test.language, fileJob.Code)
+		}
+
+		if fileJob.Comment != 1 {
+			t.Errorf("%s: expected 1 comment got %d", test.language, fileJob.Comment)
+		}
+	}
+}
+
+// A line comment opened by a word ends where the word does. REM opens a Batch
+// comment and REMOVE is a different word, so matching those three letters as a
+// prefix reads a command as a comment. The same holds for Autoconf's dnl and
+// LOLCODE's BTW.
+func TestCountStatsWordCommentNeedsAWordBreak(t *testing.T) {
+	ProcessConstants()
+
+	for _, test := range []struct {
+		language string
+		comment  string
+		longer   string
+	}{
+		{"Batch", "REM", "REMOVE /Q file.txt"},
+		{"Batch", "rem", "remove /Q file.txt"},
+		{"ASP", "REM", "REMOVE x"},
+		{"Autoconf", "dnl", "dnlfoo bar"},
+		{"LOLCODE", "BTW", "BTWISE x"},
+	} {
+		fileJob := FileJob{Language: test.language}
+		fileJob.SetContent(test.comment + " a comment\n" + test.longer + "\nx\n")
+
+		CountStats(&fileJob)
+
+		if fileJob.Lines != 3 {
+			t.Errorf("%s %s: expected 3 lines got %d", test.language, test.comment, fileJob.Lines)
+		}
+
+		if fileJob.Code != 2 {
+			t.Errorf("%s %s: expected 2 code got %d", test.language, test.comment, fileJob.Code)
+		}
+
+		if fileJob.Comment != 1 {
+			t.Errorf("%s %s: expected 1 comment got %d", test.language, test.comment, fileJob.Comment)
+		}
+	}
+}
+
+// A word break is wanted after a word, not after a symbol, so :: and // and #
+// keep opening a comment with whatever behind them. FORTRAN Legacy is the one
+// that would break: a C in the first column opens a comment there whatever
+// follows it, which is how CCCCCCCC is written as a rule across the page, so
+// the check is only for tokens longer than a single byte.
+func TestCountStatsWordBreakLeavesSymbolCommentsAlone(t *testing.T) {
+	ProcessConstants()
+
+	for _, test := range []struct {
+		language string
+		content  string
+	}{
+		{"Batch", "::comment\nx\n"},
+		{"C", "//comment\nint x = 1;\n"},
+		{"Shell", "#comment\nx=1\n"},
+		{"Haskell", "--comment\nx = 1\n"},
+		{"FORTRAN Legacy", "CCCCCCCCCCCCCCCCCCCC\n      x = 1\n"},
+	} {
+		fileJob := FileJob{Language: test.language}
+		fileJob.SetContent(test.content)
+
+		CountStats(&fileJob)
+
+		if fileJob.Code != 1 {
+			t.Errorf("%s: expected 1 code got %d", test.language, fileJob.Code)
+		}
+
+		if fileJob.Comment != 1 {
+			t.Errorf("%s: expected 1 comment got %d", test.language, fileJob.Comment)
+		}
+	}
+}
+
+// Forth opens a comment with a backslash standing as its own word, so it wants
+// the break after it the way a word does. The delimiter was written \\ before
+// this, which matched nothing, so Forth had no line comment at all.
+func TestCountStatsForthBackslashComment(t *testing.T) {
+	ProcessConstants()
+
+	fileJob := FileJob{Language: "Forth"}
+	fileJob.SetContent("\\ a forth comment\n: double dup + ;\n")
+
+	CountStats(&fileJob)
+
+	if fileJob.Code != 1 {
+		t.Errorf("Expected 1 code got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 comment got %d", fileJob.Comment)
+	}
+}
+
+// PowerShell escapes with a backtick and not a backslash, so the quote in the
+// middle of the first line below closes nothing, and the backslash ending a
+// Windows path closes the string it sits in rather than escaping its way past
+// the closing quote. Reading the backslash as an escape left the string open
+// and swallowed the comment under it.
+func TestCountStatsPowershellEscape(t *testing.T) {
+	ProcessConstants()
+
+	for _, test := range []struct {
+		name    string
+		content string
+	}{
+		{
+			name:    "a backtick escapes the quote in the middle",
+			content: "Write-Host \"a `\" b\"\n# a real comment\n$x = 1\n",
+		},
+		{
+			name:    "a backslash ending a path does not escape the closer",
+			content: "$p = \"C:\\temp\\\"\n# a real comment\n$x = 1\n",
+		},
+	} {
+		fileJob := FileJob{Language: "Powershell"}
+		fileJob.SetContent(test.content)
+
+		CountStats(&fileJob)
+
+		if fileJob.Lines != 3 {
+			t.Errorf("%s: expected 3 lines got %d", test.name, fileJob.Lines)
+		}
+
+		if fileJob.Code != 2 {
+			t.Errorf("%s: expected 2 code got %d", test.name, fileJob.Code)
+		}
+
+		if fileJob.Comment != 1 {
+			t.Errorf("%s: expected 1 comment got %d", test.name, fileJob.Comment)
+		}
+	}
+}
+
+// Every other language keeps the backslash, so a quote escaped with one still
+// does not close the string it is in.
+func TestCountStatsBackslashStillEscapesElsewhere(t *testing.T) {
+	ProcessConstants()
+
+	for _, language := range []string{"C", "Go", "Java", "Python", "JavaScript"} {
+		fileJob := FileJob{Language: language}
+		fileJob.SetContent("x = \"a \\\" b\"\ny = 1\nz = 2\n")
+
+		CountStats(&fileJob)
+
+		if fileJob.Code != 3 {
+			t.Errorf("%s: expected 3 code got %d", language, fileJob.Code)
+		}
+
+		if fileJob.Comment != 0 {
+			t.Errorf("%s: expected 0 comment got %d", language, fileJob.Comment)
+		}
+	}
+}
+
+// A C++ raw string may put a word of its own between the R" and the bracket,
+// and then ends only at a closer carrying that same word. The closer is chosen
+// where the string is written, so no list of delimiters can hold it and it has
+// to be read out of the file.
+func TestCountStatsCppDelimitedRawString(t *testing.T) {
+	ProcessConstants()
+
+	for _, test := range []struct {
+		name    string
+		content string
+		lines   int64
+		code    int64
+	}{
+		{
+			name:    "a named delimiter holds a quote and a comment opener",
+			content: "const char *raw = R\"xy(a lone \" quote and\n/* this opens nothing, it is inside the raw string\n)xy\";\nprintf(\"done\");\n",
+			lines:   4, code: 4,
+		},
+		{
+			name:    "the delimiter may still be empty",
+			content: "const char *raw = R\"(a \" quote\n// not a comment\n)\";\nint x = 1;\n",
+			lines:   4, code: 4,
+		},
+		{
+			name:    "a closer naming a different word does not end it",
+			content: "const char *raw = R\"outer(\n)inner\"\nstill inside\n)outer\";\nint x = 1;\n",
+			lines:   5, code: 5,
+		},
+		{
+			name:    "the encoding prefixes carry a delimiter too",
+			content: "auto a = u8R\"tag(\n// inside\n)tag\";\nauto b = LR\"tag(\n/* inside\n)tag\";\nint x = 1;\n",
+			lines:   7, code: 7,
+		},
+	} {
+		for _, language := range []string{"C++", "C++ Header"} {
+			fileJob := FileJob{Language: language}
+			fileJob.SetContent(test.content)
+
+			CountStats(&fileJob)
+
+			if fileJob.Lines != test.lines {
+				t.Errorf("%s %s: expected %d lines got %d", language, test.name, test.lines, fileJob.Lines)
+			}
+
+			if fileJob.Code != test.code {
+				t.Errorf("%s %s: expected %d code got %d", language, test.name, test.code, fileJob.Code)
+			}
+
+			if fileJob.Comment != 0 {
+				t.Errorf("%s %s: expected 0 comment got %d", language, test.name, fileJob.Comment)
+			}
+		}
+	}
+}
+
+// An R that does not open a raw string is an ordinary identifier, and the
+// quote after one is an ordinary string.
+func TestCountStatsCppRWithoutARawString(t *testing.T) {
+	ProcessConstants()
+
+	fileJob := FileJob{Language: "C++"}
+	fileJob.SetContent("int R = 1;\nconst char *s = \"plain\";\n// a real comment\n")
+
+	CountStats(&fileJob)
+
+	if fileJob.Code != 2 {
+		t.Errorf("Expected 2 code got %d", fileJob.Code)
+	}
+
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 comment got %d", fileJob.Comment)
+	}
+}
+
 func TestCountStatsWithQuotes(t *testing.T) {
 	fileJob := FileJob{}
 
@@ -586,6 +1242,51 @@ func TestCountStatsNestedCommentsRegression(t *testing.T) {
 
 	if fileJob.Blank != 0 {
 		t.Errorf("Expected 0 lines got %d", fileJob.Blank)
+	}
+}
+
+// Block comments nest in a good many more languages than the ones that had the
+// flag set. Each of these opens an inner comment inside an outer one, and the
+// text between the inner closer and the outer one is still comment.
+func TestCountStatsNestedCommentsByLanguage(t *testing.T) {
+	ProcessConstants()
+
+	for _, test := range []struct {
+		language string
+		open     string
+		close    string
+	}{
+		{"Haskell", "{-", "-}"},
+		{"Odin", "/*", "*/"},
+		{"Scala", "/*", "*/"},
+		{"F#", "(*", "*)"},
+		{"OCaml", "(*", "*)"},
+		{"Coq", "(*", "*)"},
+		{"Dart", "/*", "*/"},
+		{"Elm", "{-", "-}"},
+		{"PureScript", "{-", "-}"},
+		{"Agda", "{-", "-}"},
+	} {
+		fileJob := FileJob{Language: test.language}
+		fileJob.SetContent(test.open + " outer " + test.open + " inner " + test.close + " still the outer comment " + test.close + "\nx = 1\n")
+
+		CountStats(&fileJob)
+
+		if fileJob.Lines != 2 {
+			t.Errorf("%s: expected 2 lines got %d", test.language, fileJob.Lines)
+		}
+
+		if fileJob.Code != 1 {
+			t.Errorf("%s: expected 1 code got %d", test.language, fileJob.Code)
+		}
+
+		if fileJob.Comment != 1 {
+			t.Errorf("%s: expected 1 comment got %d", test.language, fileJob.Comment)
+		}
+
+		if fileJob.Blank != 0 {
+			t.Errorf("%s: expected 0 blank got %d", test.language, fileJob.Blank)
+		}
 	}
 }
 
