@@ -1658,7 +1658,7 @@ The MCP server exposes three tools:
 | `locomo` | boolean | no | Include LOCOMO (LLM cost) estimation in results. |
 | `locomo_preset` | string | no | LOCOMO model preset: `large`, `medium`, `small`, `local`. Default: `medium`. |
 
-Results are returned as JSON with per-language breakdown (files, lines, code, comments, blanks, complexity, bytes), totals, and COCOMO cost/schedule estimates. When `locomo` is enabled, LOCOMO estimates (token counts, cost, generation time, review hours) are also included.
+Results are returned as JSON with per-language breakdown (files, lines, code, comments, blanks, complexity, cognitive, bytes), totals, and COCOMO cost/schedule estimates. When `locomo` is enabled, LOCOMO estimates (token counts, cost, generation time, review hours) are also included.
 
 **`hotspots`** - Rank the files in a git repository by hotspot score (complexity × change-frequency over recent history), surfacing the files most likely to need refactoring or close review.
 
