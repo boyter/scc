@@ -1651,14 +1651,16 @@ The MCP server exposes three tools:
 | `path` | string | no | Directory or file path to analyze. Defaults to current directory. |
 | `sort` | string | no | Column to sort by: `files`, `name`, `lines`, `blanks`, `code`, `comments`, `complexity`, `bytes`. Default: `files`. |
 | `by_file` | boolean | no | If true, return per-file results instead of per-language summary. |
+| `limit` | number | no | Maximum number of files to return per language when `by_file` is true. Default: `10`. Set to `-1` for unlimited. |
 | `include_ext` | string | no | Comma-separated file extensions to include (e.g. `go,java,js`). |
 | `exclude_ext` | string | no | Comma-separated file extensions to exclude (e.g. `json,xml`). |
 | `no_duplicates` | boolean | no | Remove duplicate files from stats. |
 | `no_min_gen` | boolean | no | Ignore minified or generated files. |
+| `cognitive` | boolean | no | Also compute nesting-weighted cognitive complexity. Off by default, in which case the `cognitive` field is `0`. |
 | `locomo` | boolean | no | Include LOCOMO (LLM cost) estimation in results. |
 | `locomo_preset` | string | no | LOCOMO model preset: `large`, `medium`, `small`, `local`. Default: `medium`. |
 
-Results are returned as JSON with per-language breakdown (files, lines, code, comments, blanks, complexity, bytes), totals, and COCOMO cost/schedule estimates. When `locomo` is enabled, LOCOMO estimates (token counts, cost, generation time, review hours) are also included.
+Results are returned as JSON with per-language breakdown (files, lines, code, comments, blanks, complexity, cognitive, bytes), totals, and COCOMO cost/schedule estimates. When `locomo` is enabled, LOCOMO estimates (token counts, cost, generation time, review hours) are also included.
 
 **`hotspots`** - Rank the files in a git repository by hotspot score (complexity × change-frequency over recent history), surfacing the files most likely to need refactoring or close review.
 
