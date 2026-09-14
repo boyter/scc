@@ -22,7 +22,7 @@ package processor
 // depending on what came before it. That is M16, it is the one place this
 // counter deliberately disagrees with the generic loop, and it is why the
 // counter is worth writing even where the speed case is weak. See
-// jsRegexAllowed.
+// ecmaRegexAllowed.
 //
 // Everything that is not the stop table, the complexity matcher and the regex
 // question lives in counters_shared.go.
@@ -38,14 +38,6 @@ var jsStop = buildJsStop()
 // with, the generic loop leaving the checks out of its trie under the same
 // flag.
 var jsStopNoComplexity = buildJsStopNoComplexity()
-
-// The three quotes of JavaScript, held here so the shared string state is
-// handed a slice rather than building one per string.
-var (
-	jsDoubleQuote = []byte{'"'}
-	jsSingleQuote = []byte{'\''}
-	jsBacktick    = []byte{'`'}
-)
 
 // jsComplexityAnchors is the byte each complexity check of JavaScript is
 // stopped on, the postfix three included. It is what the structural conformance
@@ -221,230 +213,6 @@ func jsComplexityAtLineStart(content []byte, index, floor int) bool {
 	return false
 }
 
-// jsPostfixToken reports the length of the postfix complexity check that begins
-// at index, or zero where none does. The trie the generic loop asks takes the
-// longest match, so ??= is answered before ??, and the caller does not step
-// over what it matched: the generic loop does not either, which is why a??.b
-// counts twice, once for the ?? and once for the ?. that overlaps it.
-func jsPostfixToken(content []byte, index int) int {
-	if index+1 >= len(content) {
-		return 0
-	}
-
-	switch content[index+1] {
-	case '?':
-		if index+2 < len(content) && content[index+2] == '=' {
-			return 3
-		}
-
-		return 2
-	case '.':
-		return 2
-	}
-
-	return 0
-}
-
-// jsPostfixCounts is countComplexityPostfix for JavaScript, which declares no
-// postfix excludes. A postfix check counts wherever it sits except at the very
-// first byte of the file, or where nothing but whitespace comes before it.
-//
-// The test is against absolute zero rather than against floor because that is
-// what the generic loop tests, and agreeing with the generic loop is the whole
-// contract. A counter handed a range rather than a file will want floor here.
-func jsPostfixCounts(content []byte, index int) bool {
-	if index == 0 {
-		return false
-	}
-
-	if isWhitespace(byteBefore(content, index, 0)) && !hasNonWhitespaceBefore(content, index-1) {
-		return false
-	}
-
-	return true
-}
-
-// jsRegexOperators marks the bytes after which a slash opens a regular
-// expression literal rather than dividing. See jsRegexAllowed.
-//
-// < and > are in here because they are comparison operators, and a slash after
-// one divides nothing. The side effect is that the closing tag of a JSX element
-// reads as a pattern opening: in <b>x</b> the slash sits behind a <, so the
-// scan runs on to the next slash on the line and treats what lies between as
-// pattern body. Real JSX in a .js file therefore has runs of element text
-// skipped rather than scanned.
-//
-// It is left that way deliberately, on two grounds. Measured over 5610 files of
-// React and three.js it never once made a count worse than the generic loop,
-// and where it changes one it changes it for the better: the generic loop reads
-// the apostrophe of a word like doesn't in element text as opening a string
-// that never closes, and swallows the rest of the file into it, where skipping
-// the run avoids that. And the alternative, telling JSX from comparison, needs
-// a parse of the element rather than a byte of look behind.
-//
-// It is still reasoning the counter arrives at by accident, so it is written
-// down here rather than left to be rediscovered. A JSX aware counter would drop
-// < and > from this table and handle elements as their own state.
-var jsRegexOperators = buildJsRegexOperators()
-
-func buildJsRegexOperators() [256]bool {
-	var table [256]bool
-	for _, b := range []byte("(,=:[!&|?{};+-*%<>~^") {
-		table[b] = true
-	}
-
-	return table
-}
-
-// jsRegexKeywords are the words a regular expression literal may follow. Every
-// other word ends an expression, and a slash behind one of those is a division.
-var jsRegexKeywords = []string{
-	"return", "typeof", "case", "in", "of", "new", "delete",
-	"void", "do", "yield", "await", "throw", "else", "instanceof",
-}
-
-// jsRegexLookBehind bounds how far back jsRegexAllowed will walk over
-// whitespace looking for the token in front of a slash. The token is within a
-// byte or two of it in anything anyone writes, and a bound is what keeps a file
-// of nothing but whitespace and slashes from costing time in the square of its
-// length.
-const jsRegexLookBehind = 64
-
-// jsRegexLongestKeyword is the length of the longest word in jsRegexKeywords,
-// which bounds how far back the word in front of a slash is read.
-const jsRegexLongestKeyword = len("instanceof")
-
-// jsRegexAllowed reports whether the slash at index can open a regular
-// expression literal rather than being a division.
-//
-// This is the one question about JavaScript that a table cannot answer, and it
-// is the whole argument for writing counters by hand. `/` is a division, a
-// comment or the start of a pattern depending on the token in front of it, and
-// the generic loop has no way to keep that one token of context. It reads the
-// quote in /["']/ as opening a string and the slashes in /[//]/ as opening a
-// comment, which is LineJudge 7010 and 7020, the only group scc scores zero on.
-//
-// The rule is the one every JavaScript lexer uses, read conservatively: a
-// pattern may follow an operator, an opening bracket, a separator, or one of
-// the keywords that cannot end an expression. Anything else — an identifier, a
-// digit, a closing bracket, a quote — ends an expression, and a slash behind
-// one of those divides.
-//
-// Conservative matters. Reading a division as a pattern would swallow code and
-// diverge from the generic loop somewhere it is right; failing to spot a
-// pattern only leaves scc counting what it counts today. So every case that is
-// not clearly a pattern is left alone: a slash behind the end of a block
-// comment, or behind more than jsRegexLookBehind bytes of whitespace, reads as
-// a division.
-func jsRegexAllowed(content []byte, index, floor int) bool {
-	limit := index - jsRegexLookBehind
-	if limit < floor {
-		limit = floor
-	}
-
-	i := index - 1
-	for i >= limit && isWhitespace(content[i]) {
-		i--
-	}
-
-	if i < limit {
-		// Either the region starts here, in which case there is no expression
-		// for the slash to divide and a pattern may open, or the look behind
-		// bound was reached and the answer is unknown, which reads as a
-		// division.
-		return limit == floor
-	}
-
-	if !isIdentifierContinue(content[i]) {
-		return jsRegexOperators[content[i]]
-	}
-
-	// An identifier or a number ends an expression and the slash divides it,
-	// unless the word is one of the keywords that cannot end one. Only as many
-	// bytes as the longest of those are read back; a longer word is an
-	// identifier whatever it spells.
-	start := i
-	bound := i - jsRegexLongestKeyword + 1
-	if bound < floor {
-		bound = floor
-	}
-	for start > bound && isIdentifierContinue(content[start-1]) {
-		start--
-	}
-	if start > floor && isIdentifierContinue(content[start-1]) {
-		return false
-	}
-
-	word := string(content[start : i+1])
-	for _, keyword := range jsRegexKeywords {
-		if word == keyword {
-			return true
-		}
-	}
-
-	return false
-}
-
-// jsRegexEnd returns the index of the slash that closes the regular expression
-// literal opened at index, or -1 where nothing does before the line or the
-// region ends.
-//
-// A slash inside a character class does not close the pattern, which is the
-// whole of LineJudge 7020, and a slash behind a backslash does not either. A
-// pattern cannot run over a newline, so a line that ends without closing one
-// was never a pattern and the caller falls back to reading the slash the way
-// the generic loop does.
-func jsRegexEnd(content []byte, index, endPoint int) int {
-	inClass := false
-
-	for i := index + 1; i < endPoint; i++ {
-		switch content[i] {
-		case '\\':
-			i++
-		case '\n':
-			return -1
-		case '[':
-			inClass = true
-		case ']':
-			inClass = false
-		case '/':
-			if !inClass {
-				return i
-			}
-		}
-	}
-
-	return -1
-}
-
-// jsRegexLiterals turns the one deliberate disagreement with the generic loop on
-// and off. It is on, and nothing but a test turns it off.
-//
-// M16 is not confined to the two LineJudge inputs it is named by: a regular
-// expression literal holding a quote, a comment opener or a complexity token
-// reads differently from the generic loop wherever one appears, which on real
-// code is a little under one file in a hundred. That makes "the counter agrees
-// with the generic loop on every file of the corpus" untestable for JavaScript
-// unless the one difference can be taken out, so this takes it out. The corpus
-// differential runs once with it off, where exact agreement is still required
-// and still holds, and once with it on, where it reports what the fix moved.
-//
-// The behaviour itself is pinned by the fixtures of counterDivergences, which
-// assert both answers, and by the hand written table in the test file.
-var jsRegexLiterals = true
-
-// jsSkipRegex reports the last byte of the regular expression literal opened by
-// the slash at index, or -1 where the slash opens no pattern. The caller carries
-// on from the byte after it, so nothing inside the pattern is read as a quote or
-// a comment.
-func jsSkipRegex(content []byte, index, endPoint, floor int) int {
-	if !jsRegexLiterals || !jsRegexAllowed(content, index, floor) {
-		return -1
-	}
-
-	return jsRegexEnd(content, index, endPoint)
-}
-
 // jsBlankState looks at the first byte of content on a line.
 func jsBlankState(content []byte, tally *counterTally, index, endPoint, floor int) (int, counterState, []byte) {
 	switch content[index] {
@@ -462,19 +230,19 @@ func jsBlankState(content []byte, tally *counterTally, index, endPoint, floor in
 		// says so is on a line above. Reading it here rather than leaving it to
 		// the code scan is what stops a quote inside that pattern opening a
 		// string.
-		if end := jsSkipRegex(content, index, endPoint, floor); end >= 0 {
+		if end := ecmaSkipRegex(content, index, endPoint, floor); end >= 0 {
 			return end, SCode, nil
 		}
 
 		return index, SCode, nil
 	case '"':
-		return index, SString, jsDoubleQuote
+		return index, SString, ecmaDoubleQuote
 	case '\'':
-		return index, SString, jsSingleQuote
+		return index, SString, ecmaSingleQuote
 	case '`':
-		return index, SString, jsBacktick
+		return index, SString, ecmaBacktick
 	case '?':
-		if !Complexity && jsPostfixToken(content, index) != 0 && jsPostfixCounts(content, index) {
+		if !Complexity && ecmaPostfixToken(content, index) != 0 && ecmaPostfixCounts(content, index) {
 			tally.Complexity++
 		}
 
@@ -524,7 +292,7 @@ func jsCodeState(content []byte, tally *counterTally, index, endPoint, floor int
 			// pattern. Where it opens one the scan carries on from the byte
 			// after the pattern closes, and the quotes and slashes inside it are
 			// never read as anything.
-			if end := jsSkipRegex(content, i, endPoint, floor); end >= 0 {
+			if end := ecmaSkipRegex(content, i, endPoint, floor); end >= 0 {
 				i = end
 			}
 		case '"', '\'', '`':
@@ -537,17 +305,17 @@ func jsCodeState(content []byte, tally *counterTally, index, endPoint, floor int
 			if byteBefore(content, i, floor) != '\\' {
 				switch curByte {
 				case '"':
-					return i, SString, jsDoubleQuote
+					return i, SString, ecmaDoubleQuote
 				case '\'':
-					return i, SString, jsSingleQuote
+					return i, SString, ecmaSingleQuote
 				}
 
-				return i, SString, jsBacktick
+				return i, SString, ecmaBacktick
 			}
 
 			return i, SCode, nil
 		case '?':
-			if jsPostfixToken(content, i) != 0 && jsPostfixCounts(content, i) {
+			if ecmaPostfixToken(content, i) != 0 && ecmaPostfixCounts(content, i) {
 				tally.Complexity++
 			}
 		default:
@@ -582,7 +350,7 @@ func countLoopJavaScript(fileJob *FileJob, bomSkip, endPoint int) bool {
 	// It is never nil: the states below hand back the quote only when they
 	// opened a string, and anything else leaves the last one in place rather
 	// than clearing it.
-	endQuote := jsDoubleQuote
+	endQuote := ecmaDoubleQuote
 	openQuote := func(quote []byte) {
 		if quote != nil {
 			endQuote = quote

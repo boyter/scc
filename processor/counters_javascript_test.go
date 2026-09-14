@@ -5,8 +5,6 @@ package processor
 import (
 	"os"
 	"path/filepath"
-	"runtime/debug"
-	"strconv"
 	"strings"
 	"testing"
 )
@@ -17,9 +15,9 @@ import (
 func withoutRegexLiterals(t *testing.T, fn func()) {
 	t.Helper()
 
-	previous := jsRegexLiterals
-	jsRegexLiterals = false
-	defer func() { jsRegexLiterals = previous }()
+	previous := ecmaRegexLiterals
+	ecmaRegexLiterals = false
+	defer func() { ecmaRegexLiterals = previous }()
 
 	fn()
 }
@@ -244,77 +242,7 @@ func TestCounterDivergenceFixturesExist(t *testing.T) {
 // identical once the one deliberate difference is taken out. Point
 // SCC_DIFF_JS_CORPUS at a checkout of something large.
 func TestJavaScriptCounterAgreesOnTheCorpus(t *testing.T) {
-	ProcessConstants()
-
-	if testing.Short() {
-		t.Skip("walks a whole source tree")
-	}
-
-	corpus := os.Getenv("SCC_DIFF_JS_CORPUS")
-	if corpus == "" {
-		t.Skip("set SCC_DIFF_JS_CORPUS to a tree of real JavaScript")
-	}
-
-	defer debug.SetGCPercent(debug.SetGCPercent(1600))
-
-	limit := 0
-	if v := os.Getenv("SCC_DIFF_LIMIT"); v != "" {
-		limit, _ = strconv.Atoi(v)
-	}
-
-	// M16 fires wherever a pattern holds a quote, a comment opener or a
-	// complexity token, which is far more than the two inputs it is named by.
-	// With it off the counter has nothing else to disagree about and exact
-	// agreement is required; with it on the disagreements are counted and
-	// reported, every one of them having been read by hand and found to be the
-	// generic loop being wrong.
-	for _, regexLiterals := range []bool{false, true} {
-		previous := jsRegexLiterals
-		jsRegexLiterals = regexLiterals
-
-		checked := 0
-		disagreed := 0
-		_ = filepath.Walk(corpus, func(path string, info os.FileInfo, err error) error {
-			if err != nil || info.IsDir() || !strings.HasSuffix(path, ".js") {
-				return nil
-			}
-
-			if limit != 0 && checked >= limit {
-				return filepath.SkipAll
-			}
-
-			content, err := os.ReadFile(path)
-			if err != nil {
-				return nil
-			}
-
-			fast, generic := countBothWays(t, "JavaScript", content)
-			checked++
-			if countsDiffer(fast, generic) {
-				disagreed++
-				if !regexLiterals && disagreed <= 5 {
-					compareCounts(t, "JavaScript", path, fast, generic)
-				}
-			}
-
-			return nil
-		})
-
-		jsRegexLiterals = previous
-
-		if checked == 0 {
-			t.Skip("no JavaScript found in the corpus")
-		}
-
-		if regexLiterals {
-			t.Logf("with regex literals on: checked %d files, %d diverged", checked, disagreed)
-		} else {
-			t.Logf("with regex literals off: checked %d files, %d disagreed", checked, disagreed)
-			if disagreed != 0 {
-				t.Errorf("%d files disagree with the generic loop for a reason that is not the regex fix", disagreed)
-			}
-		}
-	}
+	diffCorpusRegex(t, "JavaScript", "SCC_DIFF_JS_CORPUS", ".js")
 }
 
 // The counter scans with a smaller table when complexity is off, which is a

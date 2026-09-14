@@ -92,9 +92,9 @@ func FuzzSpecialisedCounter(f *testing.F) {
 	// quote or a comment opener, which is a shape the fuzzer reaches constantly
 	// and which says nothing about whether the rest of the counter is right.
 	// The divergence itself is pinned by the fixtures of counterDivergences.
-	previousRegexLiterals := jsRegexLiterals
-	jsRegexLiterals = false
-	f.Cleanup(func() { jsRegexLiterals = previousRegexLiterals })
+	previousRegexLiterals := ecmaRegexLiterals
+	ecmaRegexLiterals = false
+	f.Cleanup(func() { ecmaRegexLiterals = previousRegexLiterals })
 
 	f.Fuzz(func(t *testing.T, content []byte) {
 		// A file scc would never reach: the loops are bounded by fileJob.Bytes
@@ -130,9 +130,9 @@ func FuzzSpecialisedCounterNoComplexity(f *testing.F) {
 	f.Add([]byte("if (a) { for (;;) {} }\n// a comment\n"))
 	f.Add([]byte("/* a\n b */ \"a string\"\n"))
 
-	previousRegexLiterals := jsRegexLiterals
-	jsRegexLiterals = false
-	f.Cleanup(func() { jsRegexLiterals = previousRegexLiterals })
+	previousRegexLiterals := ecmaRegexLiterals
+	ecmaRegexLiterals = false
+	f.Cleanup(func() { ecmaRegexLiterals = previousRegexLiterals })
 
 	f.Fuzz(func(t *testing.T, content []byte) {
 		if len(content) > 1<<20 {

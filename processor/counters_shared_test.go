@@ -381,3 +381,82 @@ func benchmarkCorpus(b *testing.B, language, envVar, extension string, specialis
 		}
 	}
 }
+
+// diffCorpusRegex is diffCorpus for the two languages that carry M16, the
+// regular expression disambiguation, which is the one place a counter is meant
+// to disagree with the generic loop.
+//
+// M16 fires wherever a pattern holds a quote, a comment opener or a complexity
+// token, which is far more than the two LineJudge inputs it is named by, so
+// "the counter agrees with the generic loop on every file" is only testable
+// with the difference taken out. It runs twice: once with the fix off, where
+// exact agreement is still required and any disagreement is a bug, and once
+// with it on, where the divergences are counted and reported.
+func diffCorpusRegex(t *testing.T, language, envVar, extension string) {
+	t.Helper()
+	ProcessConstants()
+
+	if testing.Short() {
+		t.Skip("walks a whole source tree")
+	}
+
+	corpus := os.Getenv(envVar)
+	if corpus == "" {
+		t.Skipf("set %s to a tree of real %s", envVar, language)
+	}
+
+	defer debug.SetGCPercent(debug.SetGCPercent(1600))
+
+	limit := 0
+	if v := os.Getenv("SCC_DIFF_LIMIT"); v != "" {
+		limit, _ = strconv.Atoi(v)
+	}
+
+	for _, regexLiterals := range []bool{false, true} {
+		previous := ecmaRegexLiterals
+		ecmaRegexLiterals = regexLiterals
+
+		checked := 0
+		disagreed := 0
+		_ = filepath.Walk(corpus, func(path string, info os.FileInfo, err error) error {
+			if err != nil || info.IsDir() || !strings.HasSuffix(path, extension) {
+				return nil
+			}
+
+			if limit != 0 && checked >= limit {
+				return filepath.SkipAll
+			}
+
+			content, err := os.ReadFile(path)
+			if err != nil {
+				return nil
+			}
+
+			fast, generic := countBothWays(t, language, content)
+			checked++
+			if countsDiffer(fast, generic) {
+				disagreed++
+				if !regexLiterals && disagreed <= 5 {
+					compareCounts(t, language, path, fast, generic)
+				}
+			}
+
+			return nil
+		})
+
+		ecmaRegexLiterals = previous
+
+		if checked == 0 {
+			t.Skipf("no %s found in the corpus", language)
+		}
+
+		if regexLiterals {
+			t.Logf("with regex literals on: checked %d files, %d diverged", checked, disagreed)
+		} else {
+			t.Logf("with regex literals off: checked %d files, %d disagreed", checked, disagreed)
+			if disagreed != 0 {
+				t.Errorf("%d files disagree with the generic loop for a reason that is not the regex fix", disagreed)
+			}
+		}
+	}
+}
