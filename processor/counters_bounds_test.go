@@ -50,7 +50,10 @@ func TestSpecialisedCountersShortContent(t *testing.T) {
 	// R and ( are C++: a raw string is recognised by reading R back from its
 	// quote and its closer is read out of the file between the two, so a bare
 	// R" or R"( at the end of a file is where that read can run off the end.
-	alphabet := []byte{'"', '\'', '\\', '/', '*', '\n', '\r', ' ', '\t', 0, 'a', '{', '#', 'h', 'y', '?', '<', '>', '@', '`', 'R', '(', '=', 'b', 'e', 'r', 'f'}
+	// k and m are the anchors LLVM IR reads furthest back from, invoke and
+	// llvm.loop, and the dot belongs to llvm.loop as well; without them the
+	// walk never puts those arms where the read runs off the front of a file.
+	alphabet := []byte{'"', '\'', '\\', '/', '*', '\n', '\r', ' ', '\t', 0, 'a', '{', '#', 'h', 'y', '?', '<', '>', '@', '`', 'R', '(', '=', 'b', 'e', 'r', 'f', 'k', 'm', '.'}
 
 	var contents [][]byte
 	for _, a := range alphabet {
@@ -88,7 +91,7 @@ func TestSpecialisedCountersRandomContent(t *testing.T) {
 	// Every letter the complexity checks of these languages are spelled with, so
 	// a random string can assemble a keyword, a near miss of one, and an anchor
 	// with nothing behind it.
-	alphabet := []byte(`"'\/*()` + "\n\r\t {}#=!|&?<>@`" + "abcdefghilnopRrstuUwxyL8")
+	alphabet := []byte(`"'\/*()` + "\n\r\t {}#=!|&?<>@`" + "abcdefghilnopRrstuUwxyL8" + "km.v%")
 	random := rand.New(rand.NewSource(1))
 
 	for _, language := range countersBoundsLanguages {

@@ -86,7 +86,8 @@ func TestLLVMIRCounterAgreesOnHandWrittenFiles(t *testing.T) {
 
 		// The m anchor: llvm.loop and resume.
 		{"llvm.loop", "  br label %a, !llvm.loop !0\n"},
-		{"llvm.loop has no trailing space", "!0 = !{!\"llvm.loop\"}\n"},
+		{"llvm.loop has no trailing space", "  br label %a, !llvm.loop!0\n"},
+		{"llvm.loop inside a string opens no check", "!0 = !{!\"llvm.loop\"}\n"},
 		{"resume", "  resume { i8*, i32 } %e\n"},
 		{"llvm.loop and resume together", "  br label %a, !llvm.loop !0\n  resume { i8*, i32 } %e\n"},
 		{"llvm inside a word", "%allvm.loop = add i32 %0, 1\n"},

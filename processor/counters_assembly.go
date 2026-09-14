@@ -232,11 +232,18 @@ func asmBlankState(content []byte, tally *counterTally, index, floor int) (int, 
 			return index + 1, SMulticomment, nil
 		}
 	case '"', '\'':
-		if quote := asmString(content, index, floor); quote != nil {
-			return index, SString, quote
+		// Unconditionally, the way blankState and every sibling counter do it.
+		// asmString refuses a quote behind a backslash, which is a thing that
+		// can happen in code and cannot happen here: the blank state is only
+		// ever entered with a newline, a space, a tab, a carriage return, the
+		// slash that closed a block comment or the BOM in front of the byte.
+		// Asking anyway would be a difference from the generic loop that the
+		// entry conditions happen to hide.
+		if content[index] == '\'' {
+			return index, SString, asmCharQuote
 		}
 
-		return index, SCode, nil
+		return index, SString, asmQuote
 	}
 
 	if !Complexity && asmComplexityAtLineStart(content, index, floor) {
