@@ -518,7 +518,14 @@ func codeState(
 			if langFeatures.Nested || len(endComments) == 0 {
 				endComments = append(endComments, endString)
 				currentState = SMulticommentCode
-				i += offsetJump - 1
+				// max(offsetJump, 1) because Trie.Match reports the depth its
+				// walk reached, which is one short when the token runs to the
+				// very end of the slice it was handed: there is no byte left to
+				// stop on. For a token of a single byte that is zero, and the
+				// step back by one drove the index to -1 and crashed the count
+				// on a file ending in one. prepareString already clamps the same
+				// way for the same reason.
+				i += max(offsetJump, 1) - 1
 
 				return i, currentState, endString, endComments, false
 			}
@@ -538,7 +545,7 @@ func codeState(
 			if i+offsetJump >= endPoint {
 				return index, currentState, endString, endComments, false
 			}
-			i += offsetJump - 1
+			i += max(offsetJump, 1) - 1
 
 		case TComplexityPostfix:
 			countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
@@ -621,7 +628,7 @@ func codeStateSlow(
 				if langFeatures.Nested || len(endComments) == 0 {
 					endComments = append(endComments, endString)
 					currentState = SMulticommentCode
-					i += offsetJump - 1
+					i += max(offsetJump, 1) - 1
 
 					return i, currentState, endString, endComments, false
 				}
@@ -634,7 +641,7 @@ func codeStateSlow(
 				}
 				// Skip past the matched token so a shorter token overlapping it
 				// (e.g. 為是 inside 恆為是) is not also counted. See #466.
-				i += offsetJump - 1
+				i += max(offsetJump, 1) - 1
 
 			case TComplexityPostfix:
 				countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
@@ -674,7 +681,7 @@ func commentState(fileJob *FileJob, index int, endPoint int, currentState int64,
 				}
 			}
 
-			i += offsetJump - 1
+			i += max(offsetJump, 1) - 1
 			return i, currentState, endString, endComments
 		}
 		// Check if we are entering another multiline comment
@@ -682,7 +689,7 @@ func commentState(fileJob *FileJob, index int, endPoint int, currentState int64,
 		if langFeatures.Nested || len(endComments) == 0 {
 			if ok, offsetJump, endString := langFeatures.MultiLineComments.Match(fileJob.Content[i:]); ok != 0 {
 				endComments = append(endComments, endString)
-				i += offsetJump - 1
+				i += max(offsetJump, 1) - 1
 
 				return i, currentState, endString, endComments
 			}
@@ -719,7 +726,7 @@ func blankState(
 		if langFeatures.Nested || len(endComments) == 0 {
 			endComments = append(endComments, endString)
 			currentState = SMulticomment
-			index += offsetJump - 1
+			index += max(offsetJump, 1) - 1
 			if fileJob.ContentByteType != nil {
 				fileJob.ContentByteType[index] = ByteTypeComment
 			}
@@ -769,7 +776,7 @@ func blankState(
 		}
 		// Skip past the matched token so a shorter token overlapping it
 		// (e.g. 為是 inside 恆為是) is not also counted. See #466.
-		index += offsetJump - 1
+		index += max(offsetJump, 1) - 1
 
 	case TComplexityPostfix:
 		currentState = SCode
