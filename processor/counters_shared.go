@@ -738,6 +738,18 @@ func counterSpecs() []counterSpec {
 			StopNoComplexity: &phpStopNoComplexity,
 		},
 		{
+			Language:         "Ruby",
+			Count:            countLoopRuby,
+			Extension:        ".rb",
+			Anchors:          rubyComplexityAnchors,
+			LineComments:     []string{"#"},
+			BlockComments:    [][]string{{"=begin", "=end"}},
+			Quotes:           []string{`"`, `"`, `'`, `'`},
+			Stop:             &rubyStop,
+			StopNoComplexity: &rubyStopNoComplexity,
+			Collisions:       "=ei",
+		},
+		{
 			Language:         "TypeScript",
 			Count:            countLoopTypeScript,
 			Extension:        ".ts",

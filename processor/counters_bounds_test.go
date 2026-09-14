@@ -50,7 +50,7 @@ func TestSpecialisedCountersShortContent(t *testing.T) {
 	// R and ( are C++: a raw string is recognised by reading R back from its
 	// quote and its closer is read out of the file between the two, so a bare
 	// R" or R"( at the end of a file is where that read can run off the end.
-	alphabet := []byte{'"', '\'', '\\', '/', '*', '\n', '\r', ' ', '\t', 0, 'a', '{', '#', 'h', 'y', '?', '<', '>', '@', '`', 'R', '('}
+	alphabet := []byte{'"', '\'', '\\', '/', '*', '\n', '\r', ' ', '\t', 0, 'a', '{', '#', 'h', 'y', '?', '<', '>', '@', '`', 'R', '(', '=', 'b', 'e'}
 
 	var contents [][]byte
 	for _, a := range alphabet {

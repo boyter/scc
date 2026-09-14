@@ -82,6 +82,21 @@ func FuzzSpecialisedCounter(f *testing.F) {
 		"\xEF\xBB\xBFif (a) {}\n",
 		"\t\t\t\t\t\t\t\t   \t \t if (a) {}\n",
 		"/* a\n\n\n\n b */\n",
+		// Ruby's block comment, the first multi-byte delimiter of the sixteen,
+		// and the = collision that comes with it.
+		"=begin\ncomment\n=end\nx = 1\n",
+		"=begin",
+		"=beg",
+		"=end",
+		"=begin\n",
+		"x ==begin\n=end\n",
+		"a=begin\ncomment\n=end\n",
+		"=begin\n=begin\n=end\n",
+		"=begin\ncomment =end more\n",
+		"=belse \n",
+		"x !=end\n",
+		"=en",
+		"# =begin\nx = 1\n",
 		// C++ raw strings, whose closer is read out of the file. The delimiter
 		// is attacker controlled and bounded only by maxRawStringDelimiter, so
 		// the shapes that matter are the ones that end before it does.
