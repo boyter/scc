@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"regexp"
 	"slices"
+	"strings"
 	"sync"
 	"sync/atomic"
 )
@@ -58,6 +59,74 @@ var anchorSkip = func() [256]bool {
 type planHeuristic struct {
 	re  *regexp.Regexp
 	ids []int32 // literal ids, any of which lets the regex run; empty always runs
+	// slot indexes the plan's anchored regexes when this heuristic is settled by
+	// the line walk rather than by scanning the file with re, and is -1 when it
+	// is not. See anchoredForm.
+	slot int32
+}
+
+// anchoredLead is the leading "start of a line, then its indentation" that an
+// anchored heuristic's pattern is written with. Everything after it can only
+// match where the indentation ends, which is a place the line walk already
+// stops at, so the pattern does not have to be searched for.
+var anchoredLead = regexp.MustCompile(`^\(\?m\)\^(?:\\s\*|\[ \\t\]\*)`)
+
+// anchoredForm rewrites an anchored heuristic's pattern into one that only ever
+// matches at the start of the text it is given, so it can be tried at a known
+// position instead of searched for across the file.
+//
+// The rewrite is worth the trouble because a pattern beginning ^\s* has no
+// literal prefix, so regexp cannot skip ahead and instead tries every byte
+// offset in the file: on LLVM's headers that is twenty times the work of trying
+// the handful of offsets where the pattern could actually begin.
+//
+// It only fires on a pattern whose shape it recognises, and returns nil
+// otherwise, so a hand written pattern that does something cleverer is left to
+// the ordinary search.
+func anchoredForm(pattern string) *regexp.Regexp {
+	lead := anchoredLead.FindString(pattern)
+	if lead == "" {
+		return nil
+	}
+
+	rest := pattern[len(lead):]
+	if rest == "" {
+		return nil
+	}
+
+	// A pattern that begins by asking about the text before it means something
+	// different when the text is cut at that point, so leave it alone. \A and \z
+	// go the same way: the rewrite supplies its own \A.
+	for _, bad := range []string{`\b`, `\B`, `\A`, `\z`, `\Z`} {
+		if strings.HasPrefix(rest, bad) {
+			return nil
+		}
+	}
+
+	// (?m) is kept so a $ inside the pattern still means end of line, and \A
+	// pins the whole thing to where it is tried.
+	re, err := regexp.Compile(`(?m)\A(?:` + rest + `)`)
+	if err != nil {
+		return nil
+	}
+
+	return re
+}
+
+// anchoredLiterals reports whether a heuristic's literals can stand in for
+// where its anchored pattern begins: each has to be something the line walk can
+// find, which means non empty and not starting with the whitespace the walk
+// steps over.
+func anchoredLiterals(literals [][]byte) bool {
+	if len(literals) == 0 {
+		return false
+	}
+	for _, lit := range literals {
+		if len(lit) == 0 || isAnchorSkip(lit[0]) {
+			return false
+		}
+	}
+	return true
 }
 
 type planLanguage struct {
@@ -102,6 +171,12 @@ type heuristicPlan struct {
 	hasAnch bool
 	groups  []planGroup  // unanchored literals sharing a first byte
 	singles []planSingle // unanchored literals scanned one at a time
+
+	// Heuristics settled by the line walk, in place of a search of the file.
+	// anchRe is indexed by a heuristic's slot, and litSlots says which of them a
+	// literal being found at a line start is worth trying.
+	anchRe   []*regexp.Regexp
+	litSlots [][]int32
 
 	// What the keyword count falls back to when no heuristic matched.
 	fallbacks []planFallback
@@ -169,6 +244,7 @@ func buildHeuristicPlan(possibleLanguages []string) *heuristicPlan {
 	}
 	ids := map[litKey]int32{}
 	anchored := map[int32]bool{}
+	litSlots := map[int32][]int32{}
 
 	intern := func(lit []byte, isAnchored bool) int32 {
 		k := litKey{s: string(lit), anchored: isAnchored}
@@ -202,7 +278,28 @@ func buildHeuristicPlan(possibleLanguages []string) *heuristicPlan {
 
 		pl := planLanguage{name: lan}
 		for _, h := range langFeatures.Heuristics {
-			ph := planHeuristic{re: h.Re}
+			ph := planHeuristic{re: h.Re, slot: -1}
+
+			// An anchored heuristic whose pattern can be pinned is answered by
+			// the line walk, which tries it only where its literals sit rather
+			// than searching the file for it.
+			if h.Anchored && anchoredLiterals(h.Literals) {
+				if anch := anchoredForm(h.Re.String()); anch != nil {
+					ph.slot = int32(len(plan.anchRe))
+					plan.anchRe = append(plan.anchRe, anch)
+					for _, lit := range h.Literals {
+						id := intern(lit, true)
+						litSlots[id] = append(litSlots[id], ph.slot)
+						// The ids are kept as well, so the heuristic still
+						// has the ordinary pre-check behind it and the plan's
+						// own property test still covers these literals.
+						ph.ids = append(ph.ids, id)
+					}
+					pl.heuristics = append(pl.heuristics, ph)
+					continue
+				}
+			}
+
 			for _, lit := range h.Literals {
 				if len(lit) == 0 {
 					// A zero length literal matches everywhere, so the regex
@@ -226,6 +323,13 @@ func buildHeuristicPlan(possibleLanguages []string) *heuristicPlan {
 	}
 
 	plan.nlits = len(plan.lits)
+
+	if len(litSlots) != 0 {
+		plan.litSlots = make([][]int32, plan.nlits)
+		for id, slots := range litSlots {
+			plan.litSlots[id] = slots
+		}
+	}
 
 	// Split the literals into the line walk, the shared first byte scans and
 	// the leftovers.
@@ -321,10 +425,11 @@ func pickScreen(lit []byte) (int, []byte) {
 	return best, lit[best:]
 }
 
-// present fills found with which of the plan's literals the content holds.
-func (plan *heuristicPlan) present(content []byte, found []bool) {
+// present fills found with which of the plan's literals the content holds, and
+// hit with which of the plan's anchored heuristics matched.
+func (plan *heuristicPlan) present(content []byte, found, hit []bool) {
 	if plan.hasAnch {
-		plan.scanLineStarts(content, found)
+		plan.scanLineStarts(content, found, hit)
 	}
 
 	for i := range plan.groups {
@@ -366,7 +471,7 @@ func (plan *heuristicPlan) present(content []byte, found []bool) {
 // literal has to sit at the start of a line preceded only by spaces and tabs,
 // which is to say immediately after the line's indentation, so there is exactly
 // one place per line worth looking at.
-func (plan *heuristicPlan) scanLineStarts(content []byte, found []bool) {
+func (plan *heuristicPlan) scanLineStarts(content []byte, found, hit []bool) {
 	pos := 0
 	for pos < len(content) {
 		j := pos
@@ -382,8 +487,21 @@ func (plan *heuristicPlan) scanLineStarts(content []byte, found []bool) {
 		// header out of a six kilobyte one.
 		if plan.anchTop[content[j]] {
 			for _, id := range plan.anchor[content[j]] {
-				if !found[id] && bytes.HasPrefix(content[j:], plan.lits[id]) {
-					found[id] = true
+				// A literal already found still has to be compared while a
+				// heuristic of its own is undecided, because the pattern is
+				// tried where the literal sits.
+				slots := plan.slotsFor(id, hit)
+				if found[id] && slots == nil {
+					continue
+				}
+				if !bytes.HasPrefix(content[j:], plan.lits[id]) {
+					continue
+				}
+				found[id] = true
+				for _, s := range slots {
+					if !hit[s] && plan.anchRe[s].Match(content[j:]) {
+						hit[s] = true
+					}
 				}
 			}
 		}
@@ -396,6 +514,21 @@ func (plan *heuristicPlan) scanLineStarts(content []byte, found []bool) {
 		}
 		pos = j + n + 1
 	}
+}
+
+// slotsFor returns the anchored heuristics a literal is worth trying for, and
+// nil once every one of them has already matched.
+func (plan *heuristicPlan) slotsFor(id int32, hit []bool) []int32 {
+	if plan.litSlots == nil {
+		return nil
+	}
+	slots := plan.litSlots[id]
+	for _, s := range slots {
+		if !hit[s] {
+			return slots
+		}
+	}
+	return nil
 }
 
 // scanGroup answers a set of literals that share a first byte with one scan for
