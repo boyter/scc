@@ -7763,19 +7763,7 @@
     "quotes": []
   },
   "TOML": {
-    "complexitychecks": [
-      "for ",
-      "for(",
-      "if ",
-      "if(",
-      "switch ",
-      "while ",
-      "else ",
-      "|| ",
-      "&& ",
-      "!= ",
-      "== "
-    ],
+    "complexitychecks": [],
     "extensions": ["toml"],
     "line_comment": ["#"],
     "multi_line": [],
@@ -7785,6 +7773,7 @@
         "start": "\""
       },
       {
+        "ignoreEscape": true,
         "end": "'",
         "start": "'"
       },
@@ -7793,6 +7782,7 @@
         "start": "\"\"\""
       },
       {
+        "ignoreEscape": true,
         "end": "'''",
         "start": "'''"
       }
@@ -8058,6 +8048,13 @@
   "Twig Template": {
     "complexitychecks": ["{% for ", "{% if ", "{% else ", "{% elseif "],
     "extensions": ["twig"],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": []
+  },
+  "Txtar": {
+    "complexitychecks": [],
+    "extensions": ["txtar"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []

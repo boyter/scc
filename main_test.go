@@ -979,6 +979,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"TOML",
 		"TOON",
 		"TTCN-3",
+		"Txtar",
 		"TypeScript",
 		"TypeSpec",
 		"Typst",

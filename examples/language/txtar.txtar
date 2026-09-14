@@ -1,0 +1,6 @@
+-- main.go --
+package main
+
+func main() {}
+-- data.txt --
+hello world
