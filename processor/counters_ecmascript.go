@@ -212,6 +212,14 @@ func ecmaRegexEnd(content []byte, index, endPoint int) int {
 	for i := index + 1; i < endPoint; i++ {
 		switch content[i] {
 		case '\\':
+			// A backslash escapes the byte behind it, but a pattern may not
+			// cross a line and a line terminator is not a thing that can be
+			// escaped. Stepping over this one without looking would carry the
+			// search onto the next line and swallow it, which costs a line of
+			// the count, so the newline is tested before it is skipped.
+			if i+1 < endPoint && content[i+1] == '\n' {
+				return -1
+			}
 			i++
 		case '\n':
 			return -1

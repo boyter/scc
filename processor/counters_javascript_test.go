@@ -120,6 +120,17 @@ func TestJavaScriptRegexLiterals(t *testing.T) {
 			genericCode: 1, genericComment: 2,
 		},
 		{
+			// A pattern may not cross a line, and a line terminator is not a
+			// thing a backslash can escape, so the slash opens no pattern at
+			// all and the line behind the backslash is still a line. Stepping
+			// over the newline as an escaped byte lost it, and the counter
+			// answered two lines where the generic loop answered three.
+			name:    "a backslash at the end of a line opens no pattern",
+			content: "var re = /foo\\\nbar/;\nif (x) { y(); }\n",
+			lines:   3, code: 3, comment: 0, blank: 0, complexity: 1,
+			genericCode: 3, genericComment: 0,
+		},
+		{
 			name:    "an escaped slash pair inside a pattern",
 			content: "const re = /^https?:\\/\\//i;\nconst x = 1;\n",
 			lines:   2, code: 2, comment: 0, blank: 0, complexity: 0,
