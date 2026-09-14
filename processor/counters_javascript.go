@@ -616,7 +616,7 @@ func countLoopJavaScript(fileJob *FileJob, bomSkip, endPoint int) bool {
 
 			return lastByte, state
 		case SMulticomment, SMulticommentCode:
-			return counterCommentState(content, index, endPoint, state, slashStarOpen, slashStarClose, false, &tally)
+			return counterCommentState(content, index, endPoint, state, slashStarClose, &tally)
 		default: // SBlank and SMulticommentBlank
 			index, state, quote := jsBlankState(content, &tally, index, endPoint, floor)
 			openQuote(quote)

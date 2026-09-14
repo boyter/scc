@@ -360,11 +360,10 @@ func escapedAt(content []byte, index, floor int) bool {
 // rather than swallowing it, so the file's trailing line is worked out in the
 // one place that knows how.
 //
-// nested marks a language whose block comments count their own openers, which is
-// Rust, Swift, Kotlin and Scala among the sixteen and none of the three counted
-// today. It takes the nearer of the next opener and the next closer, which is
-// two vector scans and a comparison rather than a byte loop.
-func counterCommentState(content []byte, index, endPoint int, state counterState, opener, closer []byte, nested bool, tally *counterTally) (int, counterState) {
+// A language whose comments nest wants counterNestedCommentState instead. This
+// one jumps straight to the first closer, which is only the right closer when
+// nothing between here and there can open another comment.
+func counterCommentState(content []byte, index, endPoint int, state counterState, closer []byte, tally *counterTally) (int, counterState) {
 	// Nothing is left to scan, which is the shape the outer loop hands back on
 	// the last byte of a file.
 	if index >= endPoint {
@@ -376,43 +375,103 @@ func counterCommentState(content []byte, index, endPoint int, state counterState
 	// final byte is not seen by the generic loop either.
 	region := content[:endPoint]
 
-	depth := 1
-	newlines := 0
+	i := index
+
+	closeAt, newlines := skipToTerminator(region, i, closer)
+	if closeAt < 0 {
+		return commentRunsOut(content, index, endPoint, state, newlines, tally)
+	}
+
+	state = bulkLines(tally, state, int64(newlines))
+
+	// Only a comment that opened and closed on the one line can still be holding
+	// the state that says there was code in front of it.
+	if state == SMulticommentCode {
+		return closeAt + len(closer) - 1, SCode
+	}
+
+	return closeAt + len(closer) - 1, SMulticommentBlank
+}
+
+// counterNestedCommentState runs a block comment for a language whose comments
+// count their own openers, which is Rust, Swift, Kotlin and Scala among the
+// sixteen. It takes the nearer of the next opener and the next closer, so
+// /* a /* b */ is still open and needs a second closer.
+//
+// It carries depth in and out, because a nested comment left open at the end of
+// a line is open to a depth the next line has to know. The generic loop keeps
+// the same count in endComments and hands it round the outer loop the same way.
+//
+// It stops at the newline rather than jumping the whole comment the way
+// counterCommentState does. A depth is only meaningful at a position, so a scan
+// that hopped several openers and then ran out of file cannot hand back both
+// the newline it should stop on and the depth it had reached there: it would
+// have to report a depth from further ahead, and the tokens it had already
+// passed would be read a second time. Stopping on the line keeps the two in
+// step. The search within the line is still two vector scans rather than a byte
+// loop, which is what spec 07 03-architecture §4.2.2 asks for.
+func counterNestedCommentState(content []byte, index, endPoint int, state counterState, opener, closer []byte, depth int) (int, counterState, int) {
+	// Nothing is left to scan, which is the shape the outer loop hands back on
+	// the last byte of a file.
+	if index >= endPoint {
+		return index, state, depth
+	}
+
+	// Bound the scan to this line. The outer loop counts the line that ends on
+	// the newline, so the state must hand it back rather than swallow it.
+	limit := endPoint
+	if next := bytesIndexNewline(content[index:endPoint]); next >= 0 {
+		limit = index + next
+	}
+
+	region := content[:limit]
 	i := index
 
 	for {
-		closeAt, closeLines := skipToTerminator(region, i, closer)
+		closeAt, _ := skipToTerminator(region, i, closer)
+		openAt, _ := skipToTerminator(region, i, opener)
 
-		if nested && closeAt >= 0 {
-			openAt, openLines := skipToTerminator(region, i, opener)
-			if openAt >= 0 && openAt < closeAt {
-				depth++
-				newlines += openLines
-				i = openAt + len(opener)
-				continue
-			}
+		// The nearer of the two wins, and on a tie the closer does, which is the
+		// order the generic loop tests them in.
+		if openAt >= 0 && (closeAt < 0 || openAt < closeAt) {
+			depth++
+			i = openAt + len(opener)
+
+			continue
 		}
 
 		if closeAt < 0 {
-			return commentRunsOut(content, index, endPoint, state, newlines+closeLines, tally)
+			break
 		}
 
-		newlines += closeLines
 		depth--
 		if depth == 0 {
-			state = bulkLines(tally, state, int64(newlines))
-
-			// Only a comment that opened and closed on the one line can still
-			// be holding the state that says there was code in front of it.
+			// Only a comment that opened and closed on the one line can still be
+			// holding the state that says there was code in front of it.
 			if state == SMulticommentCode {
-				return closeAt + len(closer) - 1, SCode
+				return closeAt + len(closer) - 1, SCode, 0
 			}
 
-			return closeAt + len(closer) - 1, SMulticommentBlank
+			return closeAt + len(closer) - 1, SMulticommentBlank, 0
 		}
 
 		i = closeAt + len(closer)
 	}
+
+	// Nothing closed it on this line, so hand back the newline and the depth it
+	// is still open to.
+	if limit < endPoint {
+		return limit, state, depth
+	}
+
+	// No newline either, so the scan reached the end of the file. Saying so, the
+	// way the other states do, is what stops the outer loop stepping on one byte
+	// and handing the whole remaining tail back to be scanned again.
+	if index < endPoint {
+		return endPoint - 1, state, depth
+	}
+
+	return index, state, depth
 }
 
 // commentRunsOut is counterCommentState where nothing closes the comment before
@@ -618,6 +677,39 @@ func counterSpecs() []counterSpec {
 			Quotes:           []string{`"`, `"`, `'`, `'`, "`", "`"},
 			Stop:             &jsStop,
 			StopNoComplexity: &jsStopNoComplexity,
+		},
+		{
+			Language:         "Kotlin",
+			Count:            countLoopKotlin,
+			Extension:        ".kt",
+			Anchors:          kotlinComplexityAnchors,
+			LineComments:     cComments,
+			BlockComments:    cBlocks,
+			Quotes:           []string{`"`, `"`},
+			Stop:             &kotlinStop,
+			StopNoComplexity: &kotlinStopNoComplexity,
+		},
+		{
+			Language:         "Scala",
+			Count:            countLoopScala,
+			Extension:        ".scala",
+			Anchors:          scalaComplexityAnchors,
+			LineComments:     cComments,
+			BlockComments:    cBlocks,
+			Quotes:           []string{`"`, `"`},
+			Stop:             &scalaStop,
+			StopNoComplexity: &scalaStopNoComplexity,
+		},
+		{
+			Language:         "Swift",
+			Count:            countLoopSwift,
+			Extension:        ".swift",
+			Anchors:          swiftComplexityAnchors,
+			LineComments:     cComments,
+			BlockComments:    cBlocks,
+			Quotes:           []string{`"`, `"`},
+			Stop:             &swiftStop,
+			StopNoComplexity: &swiftStopNoComplexity,
 		},
 	}
 }

@@ -3,6 +3,10 @@
 package processor
 
 import (
+	"os"
+	"path/filepath"
+	"runtime/debug"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -132,14 +136,13 @@ func TestCounterCommentStateNesting(t *testing.T) {
 			content := []byte(test.content)
 			endPoint := len(content) - 1
 
-			var tally counterTally
-			got, _ := counterCommentState(content, test.from, endPoint, SMulticomment, slashStarOpen, slashStarClose, true, &tally)
+			got, _, _ := counterNestedCommentState(content, test.from, endPoint, SMulticomment, slashStarOpen, slashStarClose, 1)
 			if got != test.nestedEnd {
 				t.Errorf("nested ended on %d (%q), want %d", got, content[got], test.nestedEnd)
 			}
 
-			tally = counterTally{}
-			got, _ = counterCommentState(content, test.from, endPoint, SMulticomment, slashStarOpen, slashStarClose, false, &tally)
+			var tally counterTally
+			got, _ = counterCommentState(content, test.from, endPoint, SMulticomment, slashStarClose, &tally)
 			if got != test.flatEnd {
 				t.Errorf("flat ended on %d (%q), want %d", got, content[got], test.flatEnd)
 			}
@@ -153,18 +156,47 @@ func TestCounterCommentStateNestedUnterminated(t *testing.T) {
 	content := []byte("/* a /* b\n c\n d")
 	endPoint := len(content) - 1
 
-	var tally counterTally
-	got, state := counterCommentState(content, 2, endPoint, SMulticomment, slashStarOpen, slashStarClose, true, &tally)
+	// The nested state stops on the first newline, not the last: the depth it
+	// hands back has to belong to the position it hands back, or the caller
+	// re-reads the tokens it already passed.
+	got, state, depth := counterNestedCommentState(content, 2, endPoint, SMulticomment, slashStarOpen, slashStarClose, 1)
 
-	last := strings.LastIndexByte(string(content[:endPoint]), '\n')
-	if got != last {
-		t.Errorf("ended on %d, want the last newline at %d", got, last)
+	first := strings.IndexByte(string(content[:endPoint]), '\n')
+	if got != first {
+		t.Errorf("ended on %d, want the first newline at %d", got, first)
 	}
 	if state != SMulticomment {
 		t.Errorf("left state %d, want SMulticomment", state)
 	}
-	if tally.Lines != 1 || tally.Comment != 1 {
-		t.Errorf("accounted %+v, want one comment line held back for the outer loop", tally)
+	if depth != 2 {
+		t.Errorf("left depth %d, want 2: the line opened a second comment and closed neither", depth)
+	}
+}
+
+// The depth has to survive being handed back and in again, which is the whole
+// reason the nested state carries it. This walks the shape the fuzzer found:
+// a nested opener, then a newline, then a single closer that must NOT end the
+// outer comment.
+func TestCounterNestedCommentStateCarriesDepth(t *testing.T) {
+	// /*00000/*0\n*/0 — the closer on the second line brings the depth from two
+	// to one, so the comment is still open and the last line is still comment.
+	content := []byte("/*00000/*0\n*/0")
+	endPoint := len(content) - 1
+
+	index, state, depth := counterNestedCommentState(content, 2, endPoint, SMulticomment, slashStarOpen, slashStarClose, 1)
+	if depth != 2 {
+		t.Fatalf("first line left depth %d, want 2", depth)
+	}
+	if content[index] != '\n' {
+		t.Fatalf("first line ended on %q, want the newline", content[index])
+	}
+
+	_, state, depth = counterNestedCommentState(content, index+1, endPoint, state, slashStarOpen, slashStarClose, depth)
+	if depth != 1 {
+		t.Errorf("second line left depth %d, want 1: one closer cannot end two comments", depth)
+	}
+	if state != SMulticomment {
+		t.Errorf("second line left state %d, want SMulticomment", state)
 	}
 }
 
@@ -235,5 +267,117 @@ func TestSkipBlankRun(t *testing.T) {
 	allBlank := []byte("      ")
 	if got := skipBlankRun(allBlank, 0, len(allBlank)-1); got != len(allBlank)-1 {
 		t.Errorf("skipped to %d, want to stop on endPoint at %d", got, len(allBlank)-1)
+	}
+}
+
+// diffCorpus reads every file of one extension under the tree named by an env
+// var both ways and requires the counts to be identical. The C, Java and
+// JavaScript tests each grew their own copy of this walk; the counters added
+// after them share one.
+//
+// It is skipped rather than failed when the tree is not there, since a corpus is
+// a checkout and not something the repository carries.
+func diffCorpus(t *testing.T, language, envVar, extension string) {
+	t.Helper()
+	ProcessConstants()
+
+	if testing.Short() {
+		t.Skip("walks a whole source tree")
+	}
+
+	corpus := os.Getenv(envVar)
+	if corpus == "" {
+		t.Skipf("set %s to a tree of real %s", envVar, language)
+	}
+
+	// The live heap here is the trie built for every one of the languages, which
+	// is large and all pointers, so the default collector rescans it on every
+	// cycle and the walk below spends its time in the garbage collector rather
+	// than in either counter.
+	defer debug.SetGCPercent(debug.SetGCPercent(1600))
+
+	limit := 0
+	if v := os.Getenv("SCC_DIFF_LIMIT"); v != "" {
+		limit, _ = strconv.Atoi(v)
+	}
+
+	checked := 0
+	disagreed := 0
+	_ = filepath.Walk(corpus, func(path string, info os.FileInfo, err error) error {
+		if err != nil || info.IsDir() || !strings.HasSuffix(path, extension) {
+			return nil
+		}
+
+		if limit != 0 && checked >= limit {
+			return filepath.SkipAll
+		}
+
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return nil
+		}
+
+		fast, generic := countBothWays(t, language, content)
+		checked++
+		if countsDiffer(fast, generic) {
+			disagreed++
+			if disagreed <= 5 {
+				compareCounts(t, language, path, fast, generic)
+			}
+		}
+
+		return nil
+	})
+
+	if checked == 0 {
+		t.Skipf("no %s found in the corpus", language)
+	}
+
+	t.Logf("checked %d files, %d disagreed", checked, disagreed)
+}
+
+// benchmarkCorpus is the shared shape of every counter's corpus benchmark: read
+// a bounded number of real files once, then measure only the counting.
+func benchmarkCorpus(b *testing.B, language, envVar, extension string, specialised bool) {
+	b.Helper()
+	ProcessConstants()
+
+	corpus := os.Getenv(envVar)
+	if corpus == "" {
+		b.Skipf("set %s to a tree of real %s", envVar, language)
+	}
+
+	var files [][]byte
+	var total int64
+	_ = filepath.Walk(corpus, func(path string, info os.FileInfo, err error) error {
+		if err != nil || info.IsDir() || !strings.HasSuffix(path, extension) || len(files) >= 400 {
+			return nil
+		}
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return nil
+		}
+		files = append(files, content)
+		total += int64(len(content))
+
+		return nil
+	})
+
+	if len(files) == 0 {
+		b.Skipf("no %s found in the corpus", language)
+	}
+
+	previous := SpecialisedCounters
+	SpecialisedCounters = specialised
+	defer func() { SpecialisedCounters = previous }()
+
+	b.SetBytes(total)
+	b.ResetTimer()
+
+	for b.Loop() {
+		for _, content := range files {
+			fileJob := FileJob{Language: language, Content: content, Bytes: int64(len(content))}
+			CountStats(&fileJob)
+		}
 	}
 }

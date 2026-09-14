@@ -38,11 +38,16 @@ func TestSpecialisedCountersShortContent(t *testing.T) {
 	t.Cleanup(func() { SpecialisedCounters = previous })
 	SpecialisedCounters = true
 
-	// h and y are the anchors Java reads furthest back from: four bytes for the
-	// catch behind an h, two for the try behind a y. A string of three bytes
-	// cannot hold either keyword, which is the point: it puts the anchor where
-	// the read runs off the front of the file.
-	alphabet := []byte{'"', '\'', '\\', '/', '*', '\n', '\r', ' ', '\t', 0, 'a', '{', '#', 'h', 'y'}
+	// h and y are the anchors Java and Kotlin read furthest back from: four
+	// bytes for the catch behind an h, two for the try behind a y. A string of
+	// three bytes cannot hold either keyword, which is the point: it puts the
+	// anchor where the read runs off the front of the file.
+	//
+	// ? is Swift's whole complexity check and JavaScript's postfix three, and
+	// < and > are Scala's four bracket checks. Each is a stop byte that is not
+	// a letter, so a short string of them reaches the matcher with nothing in
+	// front of it and nothing behind.
+	alphabet := []byte{'"', '\'', '\\', '/', '*', '\n', '\r', ' ', '\t', 0, 'a', '{', '#', 'h', 'y', '?', '<', '>'}
 
 	var contents [][]byte
 	for _, a := range alphabet {
@@ -80,7 +85,7 @@ func TestSpecialisedCountersRandomContent(t *testing.T) {
 	// Every letter the complexity checks of these languages are spelled with, so
 	// a random string can assemble a keyword, a near miss of one, and an anchor
 	// with nothing behind it.
-	alphabet := []byte(`"'\/*` + "\n\r\t {}#=!|&" + "abcefhilorstwy")
+	alphabet := []byte(`"'\/*` + "\n\r\t {}#=!|&?<>" + "abcdefghilnorstuwy")
 	random := rand.New(rand.NewSource(1))
 
 	for _, language := range countersBoundsLanguages {

@@ -85,18 +85,26 @@ func TestUnterminatedBlockCommentIsLinear(t *testing.T) {
 	endPoint := len(content)
 	var tally counterTally
 
-	for _, nested := range []bool{false, true} {
-		got, _ := counterCommentState(content, 2, endPoint, SMulticomment, slashStarOpen, slashStarClose, nested, &tally)
-		if got != endPoint-1 {
-			t.Errorf("counterCommentState nested=%t reported %d on exhaustion, want %d", nested, got, endPoint-1)
-		}
+	got, _ := counterCommentState(content, 2, endPoint, SMulticomment, slashStarClose, &tally)
+	if got != endPoint-1 {
+		t.Errorf("counterCommentState reported %d on exhaustion, want %d", got, endPoint-1)
+	}
 
-		// An index already at or past the end must not be moved backwards, which
-		// would walk the outer loop over the same bytes forever.
-		got, _ = counterCommentState(content, endPoint, endPoint, SMulticomment, slashStarOpen, slashStarClose, nested, &tally)
-		if got != endPoint {
-			t.Errorf("counterCommentState nested=%t moved an exhausted index to %d, want %d", nested, got, endPoint)
-		}
+	// An index already at or past the end must not be moved backwards, which
+	// would walk the outer loop over the same bytes forever.
+	got, _ = counterCommentState(content, endPoint, endPoint, SMulticomment, slashStarClose, &tally)
+	if got != endPoint {
+		t.Errorf("counterCommentState moved an exhausted index to %d, want %d", got, endPoint)
+	}
+
+	got, _, _ = counterNestedCommentState(content, 2, endPoint, SMulticomment, slashStarOpen, slashStarClose, 1)
+	if got != endPoint-1 {
+		t.Errorf("counterNestedCommentState reported %d on exhaustion, want %d", got, endPoint-1)
+	}
+
+	got, _, _ = counterNestedCommentState(content, endPoint, endPoint, SMulticomment, slashStarOpen, slashStarClose, 1)
+	if got != endPoint {
+		t.Errorf("counterNestedCommentState moved an exhausted index to %d, want %d", got, endPoint)
 	}
 
 	if tally != (counterTally{}) {
