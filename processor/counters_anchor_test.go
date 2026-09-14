@@ -94,6 +94,7 @@ func TestAnchorSelectionIsRecorded(t *testing.T) {
 		{"C", ".c"},
 		{"C Header", ".h"},
 		{"Java", ".java"},
+		{"JavaScript", ".js"},
 	} {
 		var spec counterSpec
 		for _, candidate := range counterSpecs() {

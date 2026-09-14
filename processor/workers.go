@@ -958,6 +958,10 @@ func CountStats(fileJob *FileJob) {
 		if !countLoopJava(fileJob, bomSkip, endPoint) {
 			return
 		}
+	case useJavaScriptCounter(fileJob):
+		if !countLoopJavaScript(fileJob, bomSkip, endPoint) {
+			return
+		}
 	case useCCounter(fileJob):
 		if !countLoopC(fileJob, bomSkip, endPoint, fileJob.Language == "C Header") {
 			return

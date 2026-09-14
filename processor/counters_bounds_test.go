@@ -27,7 +27,7 @@ func countWithoutPanic(t *testing.T, language string, content []byte) {
 	CountStats(fileJob)
 }
 
-var countersBoundsLanguages = []string{"C", "C Header", "Java"}
+var countersBoundsLanguages = []string{"C", "C Header", "Java", "JavaScript"}
 
 // TestSpecialisedCountersShortContent walks every string of up to three bytes
 // over the bytes that mean something to these counters, with and without a byte

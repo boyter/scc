@@ -584,5 +584,64 @@ func counterSpecs() []counterSpec {
 			Stop:             &javaStop,
 			StopNoComplexity: &javaStopNoComplexity,
 		},
+		{
+			Language:         "JavaScript",
+			Anchors:          jsComplexityAnchors,
+			LineComments:     cComments,
+			BlockComments:    cBlocks,
+			Quotes:           []string{`"`, `"`, `'`, `'`, "`", "`"},
+			Stop:             &jsStop,
+			StopNoComplexity: &jsStopNoComplexity,
+		},
+	}
+}
+
+// counterDivergence records a case where a specialised counter deliberately
+// disagrees with the generic loop, because the generic loop is wrong and the
+// fix needs reasoning a trie cannot carry.
+//
+// Exact agreement with countLoopGeneric is what makes the differential test and
+// the fuzzer worth anything, so the exception is a closed set: a divergence
+// that is not on this list fails the build. Each entry carries a LineJudge case
+// id and a fixture that pins both answers, so the difference is asserted rather
+// than merely tolerated, and the list shrinks as fixes turn out to be
+// expressible in languages.json after all.
+//
+// See spec 07 01-conformance.md §4. At run time there is no such concept, only
+// a counter that counts correctly; the differential test and the fuzz oracle
+// are the only readers.
+type counterDivergence struct {
+	// Language is the languages.json name of the counter that diverges.
+	Language string
+	// Case is the LineJudge case id, which is what makes the divergence a named
+	// one rather than a counter being "a bit different".
+	Case string
+	// Fixture is the path under examples/linejudge/ holding the input.
+	Fixture string
+	// Reason is one line, present tense, saying what the counter does instead.
+	Reason string
+}
+
+// counterDivergences is every deliberate disagreement there is.
+//
+// The fixtures under examples/linejudge/ are reconstructions written from the
+// case descriptions in spec 07 01-conformance.md, not the suite's own files:
+// LineJudge is not checked out here. They reproduce the counts the spec records
+// for each case, which is what makes them useful for pinning the behaviour, but
+// a claim about the recorded suite score wants the real suite run against it.
+func counterDivergences() []counterDivergence {
+	return []counterDivergence{
+		{
+			Language: "JavaScript",
+			Case:     "7010-regex_literal_holding_a_quote",
+			Fixture:  "examples/linejudge/7010-regex_literal_holding_a_quote.js",
+			Reason:   "a quote inside a regular expression literal opens no string, where the generic loop reads it as opening one that never closes",
+		},
+		{
+			Language: "JavaScript",
+			Case:     "7020-regex_holding_a_comment_opener",
+			Fixture:  "examples/linejudge/7020-regex_holding_a_comment_opener.js",
+			Reason:   "a slash pair inside a regular expression literal opens no comment, where the generic loop reads it as opening a line comment",
+		},
 	}
 }

@@ -22,7 +22,7 @@ import (
 
 // fuzzCounterLanguages is every language a counter answers for. It grows with
 // the dispatch.
-var fuzzCounterLanguages = []string{"C", "C Header", "Java"}
+var fuzzCounterLanguages = []string{"C", "C Header", "Java", "JavaScript"}
 
 // seedFromExamples reads the sample files scc keeps for language detection and
 // hands them to the fuzzer as seeds, which is a far better starting corpus than
@@ -85,6 +85,16 @@ func FuzzSpecialisedCounter(f *testing.F) {
 		f.Add([]byte(seed))
 	}
 
+	// The oracle is the generic loop, so the one place a counter is meant to
+	// disagree with it has to come out, exactly as it does for the corpus
+	// differential. M16 fires wherever a regular expression literal holds a
+	// quote or a comment opener, which is a shape the fuzzer reaches constantly
+	// and which says nothing about whether the rest of the counter is right.
+	// The divergence itself is pinned by the fixtures of counterDivergences.
+	previousRegexLiterals := jsRegexLiterals
+	jsRegexLiterals = false
+	f.Cleanup(func() { jsRegexLiterals = previousRegexLiterals })
+
 	f.Fuzz(func(t *testing.T, content []byte) {
 		// A file scc would never reach: the loops are bounded by fileJob.Bytes
 		// and the caller sets that from the content it read.
@@ -118,6 +128,10 @@ func FuzzSpecialisedCounterNoComplexity(f *testing.F) {
 	seedFromExamples(f)
 	f.Add([]byte("if (a) { for (;;) {} }\n// a comment\n"))
 	f.Add([]byte("/* a\n b */ \"a string\"\n"))
+
+	previousRegexLiterals := jsRegexLiterals
+	jsRegexLiterals = false
+	f.Cleanup(func() { jsRegexLiterals = previousRegexLiterals })
 
 	f.Fuzz(func(t *testing.T, content []byte) {
 		if len(content) > 1<<20 {
