@@ -130,14 +130,6 @@ func jsStopTable() *[256]bool {
 	return &jsStop
 }
 
-// spaceOpens reports whether a byte closes a keyword that languages.json spells
-// with a space behind it and nothing else. JavaScript writes switch, while and
-// else that way, where it writes for, if and case twice, once with a space and
-// once with the bracket.
-func spaceOpens(content []byte, index int) bool {
-	return index < len(content) && content[index] == ' '
-}
-
 // jsComplexityAnchored reports whether a complexity check of JavaScript sits on
 // the anchor byte at index, which is what jsStop stopped the scan on.
 //

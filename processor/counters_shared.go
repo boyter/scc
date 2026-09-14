@@ -176,6 +176,15 @@ func braceOpens(content []byte, index int) bool {
 	return b == ' ' || b == '{'
 }
 
+// spaceOpens reports whether a byte closes a keyword that languages.json spells
+// with a space behind it and nothing else. JavaScript and C# write switch and
+// while that way, where the rest of the family writes them twice, once with a
+// space and once with the bracket. Using cOpens for those would count a
+// switch( the language database does not carry.
+func spaceOpens(content []byte, index int) bool {
+	return index < len(content) && content[index] == ' '
+}
+
 // bytesIndexNewline is bytes.IndexByte under a name that says what it is for.
 // It is written in assembly for every architecture scc is built for, comparing a
 // vector of bytes at a time, which is what makes skipping a run worth doing
@@ -666,6 +675,28 @@ func counterSpecs() []counterSpec {
 			Quotes:           []string{`"`, `"`, `'`, `'`},
 			Stop:             &javaStop,
 			StopNoComplexity: &javaStopNoComplexity,
+		},
+		{
+			Language:         "C#",
+			Count:            countLoopCsharp,
+			Extension:        ".cs",
+			Anchors:          csharpComplexityAnchors,
+			LineComments:     cComments,
+			BlockComments:    cBlocks,
+			Quotes:           []string{`@"`, `"`, `"`, `"`, `'`, `'`},
+			Stop:             &csharpStop,
+			StopNoComplexity: &csharpStopNoComplexity,
+		},
+		{
+			Language:         "Go",
+			Count:            countLoopGo,
+			Extension:        ".go",
+			Anchors:          goComplexityAnchors,
+			LineComments:     cComments,
+			BlockComments:    cBlocks,
+			Quotes:           []string{`"`, `"`, "`", "`", `'`, `'`},
+			Stop:             &goStop,
+			StopNoComplexity: &goStopNoComplexity,
 		},
 		{
 			Language:         "JavaScript",
