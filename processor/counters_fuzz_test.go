@@ -20,9 +20,10 @@ import (
 // countLoopGeneric is the oracle. Where the two disagree the generic one is
 // right by definition, so any disagreement at all is a failure.
 
-// fuzzCounterLanguages is every language a counter answers for. It grows with
-// the dispatch.
-var fuzzCounterLanguages = []string{"C", "C Header", "Java", "JavaScript"}
+// fuzzCounterLanguages is every language a counter answers for, derived from
+// the one registry so a new counter is fuzzed without anyone remembering to add
+// it here.
+var fuzzCounterLanguages = counterLanguages()
 
 // seedFromExamples reads the sample files scc keeps for language detection and
 // hands them to the fuzzer as seeds, which is a far better starting corpus than

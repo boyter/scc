@@ -628,13 +628,3 @@ func countLoopJavaScript(fileJob *FileJob, bomSkip, endPoint int) bool {
 	// JavaScript does not splice lines, so a line hands its state on unchanged.
 	return countLoopShared(fileJob, &tally, bomSkip, endPoint, false, step)
 }
-
-// useJavaScriptCounter reports whether the JavaScript counter can answer for
-// this file.
-func useJavaScriptCounter(fileJob *FileJob) bool {
-	if fileJob.Language != "JavaScript" {
-		return false
-	}
-
-	return specialisedCounterEligible(fileJob)
-}

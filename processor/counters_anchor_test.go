@@ -84,32 +84,19 @@ func TestAnchorSelectionIsRecorded(t *testing.T) {
 		corpus = filepath.Join("..", "examples", "language")
 	}
 
-	// The extensions each counted language is sampled by. A real tree is walked
-	// with scc's own detection in the layer 3 differential; here the extension
-	// is enough and keeps the test free of it.
-	for _, sample := range []struct {
-		language  string
-		extension string
-	}{
-		{"C", ".c"},
-		{"C Header", ".h"},
-		{"Java", ".java"},
-		{"JavaScript", ".js"},
-	} {
-		var spec counterSpec
-		for _, candidate := range counterSpecs() {
-			if candidate.Language == sample.language {
-				spec = candidate
-			}
-		}
-		if spec.Language == "" {
-			t.Errorf("%s has no counter spec", sample.language)
+	// Every counter there is, sampled by the extension it declares. A real tree
+	// is walked with scc's own detection in the layer 3 differential; here the
+	// extension is enough and keeps the test free of it.
+	for _, spec := range counterSpecs() {
+		if spec.Extension == "" {
+			t.Errorf("%s declares no extension to sample a corpus by", spec.Language)
 			continue
 		}
+		sample := spec
 
 		var content []byte
 		_ = filepath.Walk(corpus, func(path string, info os.FileInfo, err error) error {
-			if err != nil || info.IsDir() || !strings.HasSuffix(path, sample.extension) {
+			if err != nil || info.IsDir() || !strings.HasSuffix(path, sample.Extension) {
 				return nil
 			}
 			if len(content) > 32<<20 {
@@ -125,23 +112,23 @@ func TestAnchorSelectionIsRecorded(t *testing.T) {
 		})
 
 		if len(content) == 0 {
-			t.Logf("%s: no %s files under %s, nothing measured", sample.language, sample.extension, corpus)
+			t.Logf("%s: no %s files under %s, nothing measured", sample.Language, sample.Extension, corpus)
 			continue
 		}
 
-		naiveTable := firstByteStop(languageDatabase[sample.language], spec.StopNoComplexity)
+		naiveTable := firstByteStop(languageDatabase[spec.Language], spec.StopNoComplexity)
 		naive, total := countStopRate(content, &naiveTable)
 		anchored, _ := countStopRate(content, spec.Stop)
 
 		naiveRate := float64(naive) * 100 / float64(total)
 		anchoredRate := float64(anchored) * 100 / float64(total)
 
-		t.Logf("%-9s %7d bytes  naive %5.1f%%  anchored %5.1f%%  %.2fx fewer stops",
-			sample.language, total, naiveRate, anchoredRate, naiveRate/anchoredRate)
+		t.Logf("%-11s %8d bytes  naive %5.1f%%  anchored %5.1f%%  %.2fx fewer stops",
+			spec.Language, total, naiveRate, anchoredRate, naiveRate/anchoredRate)
 
 		if anchored > naive {
 			t.Errorf("%s: anchoring made the scan stop on more bytes, %.1f%% against %.1f%%",
-				sample.language, anchoredRate, naiveRate)
+				spec.Language, anchoredRate, naiveRate)
 		}
 	}
 }

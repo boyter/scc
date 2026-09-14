@@ -953,23 +953,12 @@ func CountStats(fileJob *FileJob) {
 	// reports whether it ran to the end of the file: a binary marker, a large
 	// file cut short or a callback asking to stop all end the count there and
 	// the work below is not wanted.
-	switch {
-	case useJavaCounter(fileJob):
-		if !countLoopJava(fileJob, bomSkip, endPoint) {
+	if count := counterFor(fileJob); count != nil {
+		if !count(fileJob, bomSkip, endPoint) {
 			return
 		}
-	case useJavaScriptCounter(fileJob):
-		if !countLoopJavaScript(fileJob, bomSkip, endPoint) {
-			return
-		}
-	case useCCounter(fileJob):
-		if !countLoopC(fileJob, bomSkip, endPoint, fileJob.Language == "C Header") {
-			return
-		}
-	default:
-		if !countLoopGeneric(fileJob, langFeatures, bomSkip, endPoint, currentState, endString, endComments, ignoreEscape) {
-			return
-		}
+	} else if !countLoopGeneric(fileJob, langFeatures, bomSkip, endPoint, currentState, endString, endComments, ignoreEscape) {
+		return
 	}
 
 	if UlocMode {

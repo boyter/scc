@@ -29,6 +29,12 @@ var Files = false
 // Languages indicates if the command line should print out the supported languages
 var Languages = false
 
+// ListCounters indicates if the command line should print out the languages that
+// have a scanner written for them rather than being counted by the generic loop.
+// Sixteen names is unreadable in a flag help string, so the flag names the count
+// and this prints the list.
+var ListCounters = false
+
 // Verbose enables verbose logging output
 var Verbose = false
 
@@ -1029,6 +1035,11 @@ var ulocLanguageCount = map[string]map[string]struct{}{}
 func Process() {
 	if Languages {
 		PrintLanguages(os.Stdout)
+		return
+	}
+
+	if ListCounters {
+		PrintCounters(os.Stdout)
 		return
 	}
 

@@ -357,12 +357,3 @@ func countLoopJava(fileJob *FileJob, bomSkip, endPoint int) bool {
 // these have some road behind them. It is also what the differential test runs
 // the same file through both ways with.
 var SpecialisedCounters bool
-
-// useJavaCounter reports whether the Java counter can answer for this file.
-func useJavaCounter(fileJob *FileJob) bool {
-	if fileJob.Language != "Java" {
-		return false
-	}
-
-	return specialisedCounterEligible(fileJob)
-}

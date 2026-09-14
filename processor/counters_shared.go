@@ -2,7 +2,12 @@
 
 package processor
 
-import "bytes"
+import (
+	"bytes"
+	"fmt"
+	"io"
+	"sort"
+)
 
 // The half of a specialised counter that does not change from one language to
 // the next.
@@ -518,6 +523,11 @@ func resetCounterLineState(content []byte, index int, state counterState, linesp
 	return resetLineState(state, endsWithLineSplice(content, index), false)
 }
 
+// counterFn is a counter's entry point, the shape countLoopGeneric has minus
+// the language features it no longer needs to be handed. It reports whether it
+// ran to the end of the file.
+type counterFn func(fileJob *FileJob, bomSkip, endPoint int) bool
+
 // counterSpec is what a counter declares about itself so it can be held against
 // languages.json with no corpus, no env var and no file counted. It is the
 // mechanism that makes hand-writing a counter safe: edit languages.json without
@@ -528,6 +538,12 @@ func resetCounterLineState(content []byte, index int, state counterState, linesp
 type counterSpec struct {
 	// Language is the languages.json name the counter answers for.
 	Language string
+	// Count is the counter itself, which the dispatch resolves to.
+	Count counterFn
+	// Extension is what a corpus of this language is sampled by, which the
+	// anchor measurement walks a tree for. It is not how a file's language is
+	// decided; that is detection's job and it is far cleverer than this.
+	Extension string
 	// Anchors maps every complexity check the counter handles to the byte the
 	// scan stops on for it, which for an anchored check is the rarest byte of
 	// the check rather than its first.
@@ -550,8 +566,10 @@ type counterSpec struct {
 	Collisions string
 }
 
-// counterSpecs is every counter there is. The conformance test walks it, and
-// nothing else should: the dispatch is a switch in CountStats.
+// counterSpecs is every counter there is, and the only place a new one is
+// registered. The dispatch, the conformance test, the fuzz target, the bounds
+// walk, the anchor measurement and the flag help all derive from it, so adding a
+// language is one entry here rather than five lists that have to agree.
 func counterSpecs() []counterSpec {
 	cComments := []string{"//"}
 	cBlocks := [][]string{{"/*", "*/"}}
@@ -559,6 +577,8 @@ func counterSpecs() []counterSpec {
 	return []counterSpec{
 		{
 			Language:         "C",
+			Count:            func(f *FileJob, b, e int) bool { return countLoopC(f, b, e, false) },
+			Extension:        ".c",
 			Anchors:          cComplexityAnchors,
 			LineComments:     cComments,
 			BlockComments:    cBlocks,
@@ -568,6 +588,8 @@ func counterSpecs() []counterSpec {
 		},
 		{
 			Language:         "C Header",
+			Count:            func(f *FileJob, b, e int) bool { return countLoopC(f, b, e, true) },
+			Extension:        ".h",
 			Anchors:          cHeaderComplexityAnchors,
 			LineComments:     cComments,
 			BlockComments:    cBlocks,
@@ -577,6 +599,8 @@ func counterSpecs() []counterSpec {
 		},
 		{
 			Language:         "Java",
+			Count:            countLoopJava,
+			Extension:        ".java",
 			Anchors:          javaComplexityAnchors,
 			LineComments:     cComments,
 			BlockComments:    cBlocks,
@@ -586,6 +610,8 @@ func counterSpecs() []counterSpec {
 		},
 		{
 			Language:         "JavaScript",
+			Count:            countLoopJavaScript,
+			Extension:        ".js",
 			Anchors:          jsComplexityAnchors,
 			LineComments:     cComments,
 			BlockComments:    cBlocks,
@@ -644,4 +670,55 @@ func counterDivergences() []counterDivergence {
 			Reason:   "a slash pair inside a regular expression literal opens no comment, where the generic loop reads it as opening a line comment",
 		},
 	}
+}
+
+// counterDispatch resolves a language to its counter once, rather than walking a
+// chain of predicates per file. Built from counterSpecs at startup, which is
+// safe: --count-as remapping and the (gen) and (min) suffixes all leave Language
+// an arbitrary string, and the suffixes are applied after counting, so a lookup
+// that misses simply falls through to the generic loop.
+var counterDispatch = buildCounterDispatch()
+
+func buildCounterDispatch() map[string]counterFn {
+	dispatch := make(map[string]counterFn, len(counterSpecs()))
+	for _, spec := range counterSpecs() {
+		dispatch[spec.Language] = spec.Count
+	}
+
+	return dispatch
+}
+
+// counterFor returns the counter that may answer for this file, or nil where
+// the generic loop has to. One map lookup per file, behind the guard.
+func counterFor(fileJob *FileJob) counterFn {
+	if !specialisedCounterEligible(fileJob) {
+		return nil
+	}
+
+	return counterDispatch[fileJob.Language]
+}
+
+// counterLanguages is every language with a counter, sorted, which is what the
+// tests walk and what --list-counters prints.
+func counterLanguages() []string {
+	languages := make([]string, 0, len(counterSpecs()))
+	for _, spec := range counterSpecs() {
+		languages = append(languages, spec.Language)
+	}
+	sort.Strings(languages)
+
+	return languages
+}
+
+// PrintCounters writes the languages that have a counter of their own, which is
+// what --list-counters asks for. Derived from the one registry, so it cannot
+// fall out of step with what the dispatch actually resolves.
+func PrintCounters(w io.Writer) {
+	languages := counterLanguages()
+
+	fmt.Fprintf(w, "%d of %d languages have a scanner written for them, used with --exp-per-language-counters:\n\n", len(languages), len(languageDatabase))
+	for _, language := range languages {
+		fmt.Fprintf(w, "  %s\n", language)
+	}
+	fmt.Fprintln(w, "\nEvery other language is counted by the generic loop, which is also what\nthese are held to: a counter that disagrees with it is a bug in the counter.")
 }

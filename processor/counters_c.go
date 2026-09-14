@@ -325,12 +325,3 @@ func countLoopC(fileJob *FileJob, bomSkip, endPoint int, withCase bool) bool {
 	// string that is not carried.
 	return countLoopShared(fileJob, &tally, bomSkip, endPoint, true, step)
 }
-
-// useCCounter reports whether the C counter can answer for this file.
-func useCCounter(fileJob *FileJob) bool {
-	if fileJob.Language != "C" && fileJob.Language != "C Header" {
-		return false
-	}
-
-	return specialisedCounterEligible(fileJob)
-}
