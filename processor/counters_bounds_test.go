@@ -47,7 +47,10 @@ func TestSpecialisedCountersShortContent(t *testing.T) {
 	// < and > are Scala's four bracket checks. Each is a stop byte that is not
 	// a letter, so a short string of them reaches the matcher with nothing in
 	// front of it and nothing behind.
-	alphabet := []byte{'"', '\'', '\\', '/', '*', '\n', '\r', ' ', '\t', 0, 'a', '{', '#', 'h', 'y', '?', '<', '>', '@', '`'}
+	// R and ( are C++: a raw string is recognised by reading R back from its
+	// quote and its closer is read out of the file between the two, so a bare
+	// R" or R"( at the end of a file is where that read can run off the end.
+	alphabet := []byte{'"', '\'', '\\', '/', '*', '\n', '\r', ' ', '\t', 0, 'a', '{', '#', 'h', 'y', '?', '<', '>', '@', '`', 'R', '('}
 
 	var contents [][]byte
 	for _, a := range alphabet {
@@ -85,7 +88,7 @@ func TestSpecialisedCountersRandomContent(t *testing.T) {
 	// Every letter the complexity checks of these languages are spelled with, so
 	// a random string can assemble a keyword, a near miss of one, and an anchor
 	// with nothing behind it.
-	alphabet := []byte(`"'\/*` + "\n\r\t {}#=!|&?<>@`" + "abcdefghilnorstuwy")
+	alphabet := []byte(`"'\/*()` + "\n\r\t {}#=!|&?<>@`" + "abcdefghilnoRrstuUwyL8")
 	random := rand.New(rand.NewSource(1))
 
 	for _, language := range countersBoundsLanguages {

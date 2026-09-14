@@ -154,16 +154,22 @@ func TestCounterStopTableCoversTheGenericLoop(t *testing.T) {
 			t.Fatalf("%s: no token table was built for the language", spec.Language)
 		}
 
-		checkFirst := map[byte]struct{}{}
+		// The first byte of anything the counter anchors elsewhere, which the
+		// counter is not expected to stop on: assertion 3 holds it to stopping
+		// on the anchor it declared instead.
+		anchoredFirst := map[byte]struct{}{}
 		for _, check := range languageChecks(language) {
-			checkFirst[check[0]] = struct{}{}
+			anchoredFirst[check[0]] = struct{}{}
+		}
+		for token := range spec.QuoteAnchors {
+			anchoredFirst[token[0]] = struct{}{}
 		}
 
 		for b := range 256 {
 			if !features.TokenFirst[byte(b)] {
 				continue
 			}
-			if _, anchored := checkFirst[byte(b)]; anchored {
+			if _, anchored := anchoredFirst[byte(b)]; anchored {
 				continue
 			}
 			if !spec.Stop[byte(b)] {
@@ -176,6 +182,13 @@ func TestCounterStopTableCoversTheGenericLoop(t *testing.T) {
 		// all under that flag.
 		for _, token := range languageOpeners(language) {
 			if token == "" {
+				continue
+			}
+			if anchor, ok := spec.QuoteAnchors[token]; ok {
+				if !spec.StopNoComplexity[anchor] {
+					t.Errorf("%s: --no-complexity does not stop on %q, the anchor of %q", spec.Language, anchor, token)
+				}
+
 				continue
 			}
 			if !spec.StopNoComplexity[token[0]] {
@@ -205,6 +218,25 @@ func TestCounterAnchorsAreInTheStopTable(t *testing.T) {
 			}
 			if !strings.ContainsRune(check, rune(anchor)) {
 				t.Errorf("%s: %q is anchored on %q, which the check is not spelled with", spec.Language, check, anchor)
+			}
+		}
+
+		// A quote anchored on a later byte of its opening token is held to the
+		// same two things, and to being a real quote of the language, so a raw
+		// form added to languages.json cannot be quietly left unhandled.
+		starts := map[string]struct{}{}
+		for _, quote := range languageDatabase[spec.Language].Quotes {
+			starts[quote.Start] = struct{}{}
+		}
+		for token, anchor := range spec.QuoteAnchors {
+			if !spec.Stop[anchor] || !spec.StopNoComplexity[anchor] {
+				t.Errorf("%s: %q is anchored on %q, which is not in the stop table", spec.Language, token, anchor)
+			}
+			if !strings.ContainsRune(token, rune(anchor)) {
+				t.Errorf("%s: %q is anchored on %q, which the token is not spelled with", spec.Language, token, anchor)
+			}
+			if _, ok := starts[token]; !ok {
+				t.Errorf("%s: %q is anchored but is not a quote of the language", spec.Language, token)
 			}
 		}
 	}

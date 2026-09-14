@@ -323,5 +323,5 @@ func countLoopC(fileJob *FileJob, bomSkip, endPoint int, withCase bool) bool {
 	// C joins a line ending in a backslash to the one under it before it looks
 	// for a comment or a string, which carries a line comment on and ends a
 	// string that is not carried.
-	return countLoopShared(fileJob, &tally, bomSkip, endPoint, true, step)
+	return countLoopShared(fileJob, &tally, bomSkip, endPoint, spliceRule{Splices: true}, step)
 }

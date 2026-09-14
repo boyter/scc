@@ -340,5 +340,5 @@ func countLoopKotlin(fileJob *FileJob, bomSkip, endPoint int) bool {
 	}
 
 	// Kotlin does not splice lines, so a line hands its state on unchanged.
-	return countLoopShared(fileJob, &tally, bomSkip, endPoint, false, step)
+	return countLoopShared(fileJob, &tally, bomSkip, endPoint, spliceRule{}, step)
 }

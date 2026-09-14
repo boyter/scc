@@ -521,7 +521,7 @@ type counterStep func(index int, state counterState) (int, counterState)
 // It reports whether it ran to the end of the file, the same way the generic
 // loop does. A binary marker or a state leaving the index past the end both end
 // the count there.
-func countLoopShared(fileJob *FileJob, tally *counterTally, bomSkip, endPoint int, linesplice bool, step counterStep) bool {
+func countLoopShared(fileJob *FileJob, tally *counterTally, bomSkip, endPoint int, splice spliceRule, step counterStep) bool {
 	content := fileJob.Content
 	total := int(fileJob.Bytes)
 	state := counterState(SBlank)
@@ -561,10 +561,10 @@ func countLoopShared(fileJob *FileJob, tally *counterTally, bomSkip, endPoint in
 			switch state {
 			case SCode, SString, SCommentCode, SMulticommentCode:
 				tally.Code++
-				state = resetCounterLineState(content, index, state, linesplice)
+				state = resetCounterLineState(content, index, state, splice)
 			case SComment, SMulticomment, SMulticommentBlank:
 				tally.Comment++
-				state = resetCounterLineState(content, index, state, linesplice)
+				state = resetCounterLineState(content, index, state, splice)
 			case SBlank:
 				tally.Blank++
 			}
@@ -576,19 +576,39 @@ func countLoopShared(fileJob *FileJob, tally *counterTally, bomSkip, endPoint in
 	return true
 }
 
-// resetCounterLineState hands the state at the end of a line to the line under
-// it. A language that splices joins the two before it looks for a comment or a
-// string, which carries a line comment on and ends a string that is not carried.
+// spliceRule says how a line hands its state to the line under it.
 //
-// ignoreEscape is false because no quote of any language counted today is a raw
-// one. C++ has five of them and also splices, so its counter has to thread the
-// open quote's flag through to here. See spec 07 03-architecture §7.1.
-func resetCounterLineState(content []byte, index int, state counterState, linesplice bool) counterState {
-	if !linesplice {
+// A language that splices joins a line ending in a backslash to the next one
+// before it looks for a comment or a string, which carries a line comment on and
+// ends a string that is not carried. That second half is the trap: a raw string
+// has no escape mechanism at all, so a backslash at the end of one is an
+// ordinary byte and the string runs on whether or not it looks spliced. Ending
+// it at the newline would break every C++ raw string that spans lines.
+type spliceRule struct {
+	// Splices marks a language whose backslash at the end of a line joins it to
+	// the next, which among the counted languages is only the C family.
+	Splices bool
+	// InRawString reports whether the string the scan is currently inside was
+	// opened by a quote with no escape mechanism. It is read at the end of every
+	// line, so the counter that owns it writes it when it opens a string and
+	// leaves it alone otherwise. nil for a language with no raw quote, which is
+	// every splicing language except C++ and C++ Header.
+	InRawString *bool
+}
+
+// resetCounterLineState hands the state at the end of a line to the line under
+// it. See spliceRule, and spec 07 03-architecture §7.1.
+func resetCounterLineState(content []byte, index int, state counterState, splice spliceRule) counterState {
+	if !splice.Splices {
 		return resetState(state)
 	}
 
-	return resetLineState(state, endsWithLineSplice(content, index), false)
+	ignoreEscape := false
+	if splice.InRawString != nil {
+		ignoreEscape = *splice.InRawString
+	}
+
+	return resetLineState(state, endsWithLineSplice(content, index), ignoreEscape)
 }
 
 // counterFn is a counter's entry point, the shape countLoopGeneric has minus
@@ -616,6 +636,14 @@ type counterSpec struct {
 	// scan stops on for it, which for an anchored check is the rarest byte of
 	// the check rather than its first.
 	Anchors map[string]byte
+	// QuoteAnchors maps a quote's start token to the byte the counter stops on
+	// for it, where that is not its first byte. Anchoring is usually described
+	// as a trick for keywords, but a quote whose opening token is several bytes
+	// can be caught on a later one just as well: C++ stops on the " that ends
+	// R" and u8R" and reads the prefix backwards, which keeps R, u, U and L out
+	// of a table they would cost 3.32% of a C++ file to sit in. Empty for a
+	// language whose quotes are all found at their first byte.
+	QuoteAnchors map[string]byte
 	// LineComments, BlockComments and Quotes are the rest of what the counter
 	// handles, spelled exactly as languages.json spells them.
 	LineComments  []string
@@ -719,6 +747,30 @@ func counterSpecs() []counterSpec {
 			Quotes:           []string{`"`, `"`, `'`, `'`, "`", "`"},
 			Stop:             &tsStop,
 			StopNoComplexity: &tsStopNoComplexity,
+		},
+		{
+			Language:         "C++",
+			Count:            countLoopCpp,
+			Extension:        ".cpp",
+			Anchors:          cppComplexityAnchors,
+			LineComments:     cComments,
+			BlockComments:    cBlocks,
+			Quotes:           []string{`"`, `"`, `R"`, `)"`, `u8R"`, `)"`, `uR"`, `)"`, `UR"`, `)"`, `LR"`, `)"`},
+			QuoteAnchors:     cppQuoteAnchors,
+			Stop:             &cppStop,
+			StopNoComplexity: &cppStopNoComplexity,
+		},
+		{
+			Language:         "C++ Header",
+			Count:            countLoopCpp,
+			Extension:        ".hpp",
+			Anchors:          cppComplexityAnchors,
+			LineComments:     cComments,
+			BlockComments:    cBlocks,
+			Quotes:           []string{`"`, `"`, `R"`, `)"`, `u8R"`, `)"`, `uR"`, `)"`, `UR"`, `)"`, `LR"`, `)"`},
+			QuoteAnchors:     cppQuoteAnchors,
+			Stop:             &cppStop,
+			StopNoComplexity: &cppStopNoComplexity,
 		},
 		{
 			Language:         "JavaScript",

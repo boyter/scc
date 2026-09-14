@@ -82,6 +82,21 @@ func FuzzSpecialisedCounter(f *testing.F) {
 		"\xEF\xBB\xBFif (a) {}\n",
 		"\t\t\t\t\t\t\t\t   \t \t if (a) {}\n",
 		"/* a\n\n\n\n b */\n",
+		// C++ raw strings, whose closer is read out of the file. The delimiter
+		// is attacker controlled and bounded only by maxRawStringDelimiter, so
+		// the shapes that matter are the ones that end before it does.
+		`R"`,
+		`R"(`,
+		`R"()"`,
+		`R"tag(x)tag"`,
+		`R"(a "b" c)";`,
+		`R"(` + "\n\n" + `)";`,
+		`u8R"(x)";`,
+		`R"aaaaaaaaaaaaaaaa(x)aaaaaaaaaaaaaaaa";`,
+		`R"aaaaaaaaaaaaaaaaa(x)aaaaaaaaaaaaaaaaa";`,
+		`R" (`,
+		`R")"`,
+		"const char *s = R\"(a\\\n b)\";\n",
 	} {
 		f.Add([]byte(seed))
 	}
