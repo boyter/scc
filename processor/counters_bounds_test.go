@@ -34,10 +34,15 @@ var countersBoundsLanguages = []string{"C", "C Header", "Java"}
 // order mark, since the mark moves the index the loop starts from.
 func TestSpecialisedCountersShortContent(t *testing.T) {
 	ProcessConstants()
+	previous := SpecialisedCounters
+	t.Cleanup(func() { SpecialisedCounters = previous })
 	SpecialisedCounters = true
-	defer func() { SpecialisedCounters = false }()
 
-	alphabet := []byte{'"', '\'', '\\', '/', '*', '\n', '\r', ' ', '\t', 0, 'a', '{', '#'}
+	// h and y are the anchors Java reads furthest back from: four bytes for the
+	// catch behind an h, two for the try behind a y. A string of three bytes
+	// cannot hold either keyword, which is the point: it puts the anchor where
+	// the read runs off the front of the file.
+	alphabet := []byte{'"', '\'', '\\', '/', '*', '\n', '\r', ' ', '\t', 0, 'a', '{', '#', 'h', 'y'}
 
 	var contents [][]byte
 	for _, a := range alphabet {
@@ -68,10 +73,14 @@ func TestSpecialisedCountersShortContent(t *testing.T) {
 // backslashes.
 func TestSpecialisedCountersRandomContent(t *testing.T) {
 	ProcessConstants()
+	previous := SpecialisedCounters
+	t.Cleanup(func() { SpecialisedCounters = previous })
 	SpecialisedCounters = true
-	defer func() { SpecialisedCounters = false }()
 
-	alphabet := []byte(`"'\/*` + "\n\r\t {}#abc=!|&")
+	// Every letter the complexity checks of these languages are spelled with, so
+	// a random string can assemble a keyword, a near miss of one, and an anchor
+	// with nothing behind it.
+	alphabet := []byte(`"'\/*` + "\n\r\t {}#=!|&" + "abcefhilorstwy")
 	random := rand.New(rand.NewSource(1))
 
 	for _, language := range countersBoundsLanguages {

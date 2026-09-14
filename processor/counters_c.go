@@ -11,6 +11,9 @@ package processor
 // the linesplice flag in languages.json. And C has no character literal in its
 // table, so a quote inside one opens a string, which is wrong but is what the
 // generic loop does and so is what this has to do too.
+//
+// Everything that is not the stop table and the complexity matcher lives in
+// counters_shared.go.
 
 // cStop marks every byte the scan stops on for C: the slash of both comment
 // forms, the one quote, one anchor byte out of every complexity check, and the
@@ -31,6 +34,43 @@ var cHeaderStop = buildCStop(true)
 // cStopNoComplexity holds only what changes the state, which is what a file
 // counted with --no-complexity is scanned with.
 var cStopNoComplexity = buildCStopNoComplexity()
+
+// cQuote is the one quote of C. Held here so the shared string state is handed
+// a slice it can compare without building one per call.
+var cQuote = []byte{'"'}
+
+// cComplexityAnchors is the byte each complexity check of C is stopped on. It
+// is what the structural conformance test holds against cStop, and it is the
+// written form of the argument in buildCStop.
+//
+// case is C Header's and not C's. The two counters are one piece of code told
+// apart by withCase, and this is held against C Header, whose check list is C's
+// plus that one.
+var cComplexityAnchors = map[string]byte{
+	"for ": 'f', "for(": 'f',
+	"if ": 'f', "if(": 'f',
+	"switch ": 'w', "switch(": 'w',
+	"while ": 'w', "while(": 'w',
+	"else ": 'l', "else{": 'l',
+	"|| ": '|',
+	"&& ": '&',
+	"!= ": '=',
+	"== ": '=',
+}
+
+// cHeaderComplexityAnchors is cComplexityAnchors with the case that C Header
+// counts and C does not.
+var cHeaderComplexityAnchors = buildCHeaderAnchors()
+
+func buildCHeaderAnchors() map[string]byte {
+	anchors := make(map[string]byte, len(cComplexityAnchors)+1)
+	for check, anchor := range cComplexityAnchors {
+		anchors[check] = anchor
+	}
+	anchors["case "] = 'c'
+
+	return anchors
+}
 
 // buildCStop marks the anchor of every complexity check of C.
 //
@@ -75,31 +115,6 @@ func cStopTable(withCase bool) *[256]bool {
 	return &cStop
 }
 
-// hasPrefixAt reports whether prefix sits at index, which is the form every
-// anchored match is written with. One test covers the bounds of the whole
-// comparison, and the compiler then does the comparison a word at a time rather
-// than a byte. index is allowed to be negative, since a match read back from
-// its anchor can ask about bytes in front of the file.
-func hasPrefixAt(content []byte, index int, prefix string) bool {
-	if index < 0 || index+len(prefix) > len(content) {
-		return false
-	}
-
-	return string(content[index:index+len(prefix)]) == prefix
-}
-
-// cOpens reports whether a byte closes the keyword of a complexity check. Every
-// keyword of C is written twice in the table, once with a space behind it and
-// once with the bracket or brace that C is normally written with instead.
-func cOpens(content []byte, index int) bool {
-	if index >= len(content) {
-		return false
-	}
-	b := content[index]
-
-	return b == ' ' || b == '('
-}
-
 // cComplexityAnchored reports whether a complexity check of C sits on the
 // anchor byte at index, which is what cStop stopped the scan on.
 //
@@ -107,70 +122,59 @@ func cOpens(content []byte, index int) bool {
 // are read back, and the word boundary is tested at the front of the check
 // rather than at the anchor. A check can never begin before a quote, a slash or
 // a newline, since none of those is a byte any check is spelled with, so
-// reading back never crosses out of the code the scan is in.
+// reading back never crosses out of the code the scan is in. Nor can it read in
+// front of the region the counter owns, every backwards read being clamped to
+// floor.
 //
 // The pairs are told apart on the byte behind the anchor and cannot both match:
 // the f of if has an i behind it and the f of for cannot, i being a byte that
 // carries a word on, and the same holds of the w of switch against while and
 // the = of != against ==.
-func cComplexityAnchored(content []byte, index int, withCase bool) bool {
+func cComplexityAnchored(content []byte, index, floor int, withCase bool) bool {
 	switch content[index] {
 	case 'f':
-		if content[index-1] == 'i' {
-			return javaWordStarts(content, index-1) && cOpens(content, index+1)
+		if byteBefore(content, index, floor) == 'i' {
+			return wordStartsAt(content, index-1, floor) && cOpens(content, index+1)
 		}
 
-		return javaWordStarts(content, index) &&
-			hasPrefixAt(content, index+1, "or") && cOpens(content, index+3)
+		return wordStartsAt(content, index, floor) &&
+			hasPrefixAt(content, index+1, floor, "or") && cOpens(content, index+3)
 	case 'l':
-		if content[index-1] != 'e' {
+		if byteBefore(content, index, floor) != 'e' {
 			return false
 		}
 
-		return javaWordStarts(content, index-1) &&
-			hasPrefixAt(content, index+1, "se") && elseOpens(content, index+3)
+		return wordStartsAt(content, index-1, floor) &&
+			hasPrefixAt(content, index+1, floor, "se") && braceOpens(content, index+3)
 	case 'w':
-		if content[index-1] == 's' {
-			return javaWordStarts(content, index-1) &&
-				hasPrefixAt(content, index+1, "itch") && cOpens(content, index+5)
+		if byteBefore(content, index, floor) == 's' {
+			return wordStartsAt(content, index-1, floor) &&
+				hasPrefixAt(content, index+1, floor, "itch") && cOpens(content, index+5)
 		}
 
-		return javaWordStarts(content, index) &&
-			hasPrefixAt(content, index+1, "hile") && cOpens(content, index+5)
+		return wordStartsAt(content, index, floor) &&
+			hasPrefixAt(content, index+1, floor, "hile") && cOpens(content, index+5)
 	case '=':
-		if b := content[index-1]; b != '=' && b != '!' {
+		if b := byteBefore(content, index, floor); b != '=' && b != '!' {
 			return false
 		}
 
-		return javaWordStarts(content, index-1) &&
+		return wordStartsAt(content, index-1, floor) &&
 			index+1 < len(content) && content[index+1] == ' '
 	case '|':
-		return javaWordStarts(content, index) && hasPrefixAt(content, index+1, "| ")
+		return wordStartsAt(content, index, floor) && hasPrefixAt(content, index+1, floor, "| ")
 	case '&':
-		return javaWordStarts(content, index) && hasPrefixAt(content, index+1, "& ")
+		return wordStartsAt(content, index, floor) && hasPrefixAt(content, index+1, floor, "& ")
 	case 'c':
-		return withCase && javaWordStarts(content, index) &&
-			hasPrefixAt(content, index+1, "ase ")
+		return withCase && wordStartsAt(content, index, floor) &&
+			hasPrefixAt(content, index+1, floor, "ase ")
 	}
 
 	return false
 }
 
-// elseOpens is cOpens for else, which is written with a brace rather than a
-// bracket behind it.
-func elseOpens(content []byte, index int) bool {
-	if index >= len(content) {
-		return false
-	}
-	b := content[index]
-
-	return b == ' ' || b == '{'
-}
-
 // cBlankState looks at the first byte of content on a line.
-func cBlankState(fileJob *FileJob, index int, withCase bool) (int, int64) {
-	content := fileJob.Content
-
+func cBlankState(content []byte, tally *counterTally, index, floor int, withCase bool) (int, counterState) {
 	switch content[index] {
 	case '/':
 		if index+1 < len(content) {
@@ -185,9 +189,8 @@ func cBlankState(fileJob *FileJob, index int, withCase bool) (int, int64) {
 		return index, SString
 	}
 
-	if !Complexity && cComplexityAtLineStart(content, index, withCase) {
-		fileJob.Complexity++
-		fileJob.bumpComplexityLine()
+	if !Complexity && cComplexityAtLineStart(content, index, floor, withCase) {
+		tally.Complexity++
 	}
 
 	return index, SCode
@@ -203,18 +206,23 @@ func cBlankState(fileJob *FileJob, index int, withCase bool) (int, int64) {
 // Nothing carries a word into the first byte of code on a line — whitespace or
 // the slash of a closed block comment is all that can sit in front of it — so
 // the word boundary needs no test.
-func cComplexityAtLineStart(content []byte, index int, withCase bool) bool {
+//
+// This is not an optimisation that can be left out. Without it the checks
+// anchored on their first byte are never found at all, and it is the reason the
+// backwards reads of cComplexityAnchored can be written as reads rather than as
+// searches. The two are one thing.
+func cComplexityAtLineStart(content []byte, index, floor int, withCase bool) bool {
 	switch content[index] {
 	case 'f':
-		return hasPrefixAt(content, index+1, "or") && cOpens(content, index+3)
+		return hasPrefixAt(content, index+1, floor, "or") && cOpens(content, index+3)
 	case 'w':
-		return hasPrefixAt(content, index+1, "hile") && cOpens(content, index+5)
+		return hasPrefixAt(content, index+1, floor, "hile") && cOpens(content, index+5)
 	case '|':
-		return hasPrefixAt(content, index+1, "| ")
+		return hasPrefixAt(content, index+1, floor, "| ")
 	case '&':
-		return hasPrefixAt(content, index+1, "& ")
+		return hasPrefixAt(content, index+1, floor, "& ")
 	case 'c':
-		return withCase && hasPrefixAt(content, index+1, "ase ")
+		return withCase && hasPrefixAt(content, index+1, floor, "ase ")
 	}
 
 	return false
@@ -222,8 +230,7 @@ func cComplexityAtLineStart(content []byte, index int, withCase bool) bool {
 
 // cCodeState runs to the end of the line or to whatever token takes it out of
 // code.
-func cCodeState(fileJob *FileJob, index, endPoint int, stop *[256]bool, withCase bool) (int, int64) {
-	content := fileJob.Content
+func cCodeState(content []byte, tally *counterTally, index, endPoint, floor int, stop *[256]bool, withCase bool) (int, counterState) {
 	if endPoint > len(content) {
 		endPoint--
 	}
@@ -240,7 +247,7 @@ func cCodeState(fileJob *FileJob, index, endPoint int, stop *[256]bool, withCase
 			return i, SCode
 		case 0:
 			if isBinary(i, curByte) {
-				fileJob.Binary = true
+				tally.Binary = true
 				return i, SCode
 			}
 		case '/':
@@ -255,18 +262,17 @@ func cCodeState(fileJob *FileJob, index, endPoint int, stop *[256]bool, withCase
 		case '"':
 			// The generic loop tests the byte in front rather than counting the
 			// run of them, so a quote behind a backslash opens nothing. A quote
-			// at the first byte has nothing in front of it and so is not
-			// escaped; the state machine cannot reach here at i of zero, having
-			// started blank, but the check does not depend on that holding.
-			if i == 0 || content[i-1] != '\\' {
+			// on the floor has nothing in front of it and so is not escaped; the
+			// state machine cannot reach here on it, having started blank, but
+			// the check does not depend on that holding.
+			if byteBefore(content, i, floor) != '\\' {
 				return i, SString
 			}
 
 			return i, SCode
 		default:
-			if cComplexityAnchored(content, i, withCase) {
-				fileJob.Complexity++
-				fileJob.bumpComplexityLine()
+			if cComplexityAnchored(content, i, floor, withCase) {
+				tally.Complexity++
 			}
 		}
 	}
@@ -280,156 +286,51 @@ func cCodeState(fileJob *FileJob, index, endPoint int, stop *[256]bool, withCase
 	return index, SCode
 }
 
-// cStringState runs to the closing quote, which a run of backslashes of odd
-// length in front of it does not count as.
-func cStringState(fileJob *FileJob, index, endPoint int) (int, int64) {
-	content := fileJob.Content
-
-	for i := index; i < endPoint; i++ {
-		index = i
-
-		if content[i] == '\n' {
-			return i, SString
-		}
-
-		isEscaped := false
-		if i > 0 && content[i-1] == '\\' {
-			escapes := 0
-			for j := i - 1; j > 0; j-- {
-				if content[j] != '\\' {
-					break
-				}
-				escapes++
-			}
-			if escapes%2 != 0 {
-				isEscaped = true
-			}
-		}
-
-		if !isEscaped && content[i] == '"' {
-			return i, SCode
-		}
-	}
-
-	return index, SString
-}
-
-// cCommentState runs to the closer of a block comment, which does not nest in
-// C.
-func cCommentState(fileJob *FileJob, index, endPoint int, currentState int64) (int, int64) {
-	content := fileJob.Content
-
-	for i := index; i < endPoint; i++ {
-		if content[i] == '\n' {
-			return i, currentState
-		}
-
-		if content[i] == '*' && i+1 < endPoint && content[i+1] == '/' {
-			if currentState == SMulticommentCode {
-				currentState = SCode
-			} else {
-				currentState = SMulticommentBlank
-			}
-
-			return i + 1, currentState
-		}
-	}
-
-	// Nothing closed the comment and no line ended, so the scan reached the end
-	// and the last byte it looked at is the one before endPoint. Saying so, the
-	// way the other states do, is what stops the outer loop stepping on one byte
-	// and handing the whole remaining tail back to be scanned again: an
-	// unterminated block comment with no newline in it took time in the square
-	// of its length, eleven seconds for 250KB and three minutes for a megabyte.
-	if index < endPoint {
-		return endPoint - 1, currentState
-	}
-
-	return index, currentState
-}
-
 // countLoopC stands in for countLoopGeneric where the language is C or C
 // Header. It returns false when it ended the count early, the same way the
 // generic loop does.
 func countLoopC(fileJob *FileJob, bomSkip, endPoint int, withCase bool) bool {
 	content := fileJob.Content
-	currentState := SBlank
 	stop := cStopTable(withCase)
+	floor := bomSkip
+	lastByte := int(fileJob.Bytes) - 1
 
-	for index := bomSkip; index < int(fileJob.Bytes); index++ {
-		if !isWhitespace(content[index]) {
-			switch currentState {
-			case SCode:
-				index, currentState = cCodeState(fileJob, index, endPoint, stop, withCase)
-			case SString:
-				index, currentState = cStringState(fileJob, index, endPoint)
-			case SComment, SCommentCode:
-				// Nothing inside a line comment can change the state before the
-				// newline, so the rest of the line is skipped a vector at a time.
-				// Whether it carries on past the newline is the splice, worked out
-				// below where the line is counted.
-				if next := bytesIndexNewline(content[index:]); next >= 0 {
-					index += next
-				} else {
-					index = int(fileJob.Bytes) - 1
-				}
-			case SMulticomment, SMulticommentCode:
-				index, currentState = cCommentState(fileJob, index, endPoint, currentState)
-			case SBlank, SMulticommentBlank:
-				index, currentState = cBlankState(fileJob, index, withCase)
+	var tally counterTally
+
+	step := func(index int, state counterState) (int, counterState) {
+		switch state {
+		case SCode:
+			return cCodeState(content, &tally, index, endPoint, floor, stop, withCase)
+		case SString:
+			return counterStringState(content, index, endPoint, floor, cQuote, false)
+		case SComment, SCommentCode:
+			// Nothing inside a line comment can change the state before the
+			// newline, so the rest of the line is skipped a vector at a time.
+			// Whether it carries on past the newline is the splice, worked out
+			// in the shared loop where the line is counted.
+			if next := bytesIndexNewline(content[index:]); next >= 0 {
+				return index + next, state
 			}
-		}
 
-		if index >= len(content) {
-			return false
-		}
-
-		if index < 10000 && fileJob.Binary {
-			return false
-		}
-
-		if content[index] == '\n' || index >= endPoint {
-			fileJob.Lines++
-
-			// C joins a line ending in a backslash to the one under it before it
-			// looks for a comment or a string, which carries a line comment on and
-			// ends a string that is not carried. No quote of C is a raw one so the
-			// escape is never ignored.
-			spliced := endsWithLineSplice(content, index)
-
-			switch currentState {
-			case SCode, SString, SCommentCode, SMulticommentCode:
-				fileJob.Code++
-				currentState = resetLineState(currentState, spliced, false)
-			case SComment, SMulticomment, SMulticommentBlank:
-				fileJob.Comment++
-				currentState = resetLineState(currentState, spliced, false)
-			case SBlank:
-				fileJob.Blank++
-			}
+			return lastByte, state
+		case SMulticomment, SMulticommentCode:
+			return counterCommentState(content, index, endPoint, state, slashStarOpen, slashStarClose, false, &tally)
+		default: // SBlank and SMulticommentBlank
+			return cBlankState(content, &tally, index, floor, withCase)
 		}
 	}
 
-	return true
+	// C joins a line ending in a backslash to the one under it before it looks
+	// for a comment or a string, which carries a line comment on and ends a
+	// string that is not carried.
+	return countLoopShared(fileJob, &tally, bomSkip, endPoint, true, step)
 }
 
-// useCCounter reports whether the C counter can answer for this file. It
-// produces the four line counts and the complexity count and nothing else, so
-// anything that asks for more is left to the generic loop.
+// useCCounter reports whether the C counter can answer for this file.
 func useCCounter(fileJob *FileJob) bool {
-	if !SpecialisedCounters {
-		return false
-	}
-
 	if fileJob.Language != "C" && fileJob.Language != "C Header" {
 		return false
 	}
 
-	return !Duplicates &&
-		!Cognitive &&
-		!Trace &&
-		!NoLarge &&
-		!fileJob.ClassifyContent &&
-		!fileJob.TrackComplexityLines &&
-		fileJob.Callback == nil
+	return specialisedCounterEligible(fileJob)
 }

@@ -45,7 +45,7 @@ func TestCCounterAgreesOnHandWrittenFiles(t *testing.T) {
 			{"crlf with a splice", "// carries \\\r\n   on\r\nint x = 1;\r\n"},
 		} {
 			fast, generic := countBothWays(t, language, []byte(test.content))
-			compareCounts(t, language+" "+test.name, fast, generic)
+			compareCounts(t, language, test.name, fast, generic)
 		}
 	}
 }
@@ -99,12 +99,10 @@ func TestCCounterAgreesOnTheCorpus(t *testing.T) {
 
 		fast, generic := countBothWays(t, language, content)
 		checked++
-		if fast.Lines != generic.Lines || fast.Code != generic.Code ||
-			fast.Comment != generic.Comment || fast.Blank != generic.Blank ||
-			fast.Complexity != generic.Complexity {
+		if countsDiffer(fast, generic) {
 			disagreed++
 			if disagreed <= 5 {
-				compareCounts(t, path, fast, generic)
+				compareCounts(t, language, path, fast, generic)
 			}
 		}
 

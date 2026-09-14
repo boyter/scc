@@ -1,0 +1,588 @@
+// SPDX-License-Identifier: MIT
+
+package processor
+
+import "bytes"
+
+// The half of a specialised counter that does not change from one language to
+// the next.
+//
+// A counter is two pieces. The hot one is the switch over a [256]bool stop
+// table and the complexity matcher behind it, which is written by hand for each
+// language because that is where the per-language reasoning lives. Everything
+// around it — the runs of whitespace, the end-of-line accounting, the splice,
+// the binary bail, the string and block comment bodies — is the same shape for
+// every language and lives here. The states below are entered per token rather
+// than per byte, so an argument more or less costs nothing measurable.
+//
+// Everything here must agree with countLoopGeneric to the line. Where the two
+// differ the generic one is right by definition, since it is what the rest of
+// the tests are written against and a counter is only ever an accelerator.
+
+// counterState is the state the scan is in. The constants are the generic
+// loop's, under a name that says a counter carries the state across a range
+// rather than over a whole file.
+type counterState = int64
+
+// counterTally is what a counter produces. Counting into one of these rather
+// than into the FileJob is what lets a range of one language sitting inside
+// another be attributed to the language that owns it, and it keeps the four
+// counters the loop increments in registers rather than behind a pointer.
+//
+// It is the whole of what a counter is allowed to produce. FileJob.ComplexityLine
+// is deliberately not here and no counter bumps it: specialisedCounterEligible
+// declines any file that asked for per line complexity, so the slice is always
+// empty on this path and there is nothing to bump. A counter that wanted to
+// produce more would have to be let past the guard first, and the guard has a
+// test of its own now.
+type counterTally struct {
+	Lines      int64
+	Code       int64
+	Comment    int64
+	Blank      int64
+	Complexity int64
+	Binary     bool
+}
+
+// addTo folds a tally into the file it was counted from. Every path out of a
+// counter goes through it, including the ones that end the count early, so a
+// file cut short reports what was counted before it was.
+func (t *counterTally) addTo(fileJob *FileJob) {
+	fileJob.Lines += t.Lines
+	fileJob.Code += t.Code
+	fileJob.Comment += t.Comment
+	fileJob.Blank += t.Blank
+	fileJob.Complexity += t.Complexity
+	if t.Binary {
+		fileJob.Binary = true
+	}
+}
+
+// newlineByte is the separator bytes.Count is handed. Held here rather than
+// written at the call site so nothing has to reason about whether the literal
+// escapes.
+var newlineByte = []byte{'\n'}
+
+// The block comment delimiters of the C family, which is every language counted
+// today and most of the sixteen. Held as slices so no call site converts one.
+var (
+	slashStarOpen  = []byte("/*")
+	slashStarClose = []byte("*/")
+)
+
+// specialisedCounterEligible reports whether a counter can answer for this file
+// at all. A counter produces the four line counts, the complexity count and the
+// binary marker and nothing else, so anything that asks for more is left to the
+// generic loop. Each of these is a thing the generic loop does inside its own
+// state functions that no counter replicates:
+//
+//	Duplicates            folds every byte it walks past into the file hash
+//	Cognitive             carries an indent stack and weights each check by it
+//	Trace                 logs what every line was counted as
+//	NoLarge               truncates the file and frees its content part way
+//	ClassifyContent       records a type for every byte
+//	TrackComplexityLines  appends a per-line complexity count
+//	Callback              is called for every line, which --history uses
+//
+// The language is not tested here. That is the dispatch's job.
+func specialisedCounterEligible(fileJob *FileJob) bool {
+	return SpecialisedCounters &&
+		!Duplicates &&
+		!Cognitive &&
+		!Trace &&
+		!NoLarge &&
+		!fileJob.ClassifyContent &&
+		!fileJob.TrackComplexityLines &&
+		fileJob.Callback == nil
+}
+
+// hasPrefixAt reports whether prefix sits at index, which is the form every
+// anchored match is written with. One test covers the bounds of the whole
+// comparison, and the compiler then does the comparison a word at a time rather
+// than a byte.
+//
+// index is allowed to be below floor, since a match read back from its anchor
+// can ask about bytes in front of the region the counter owns, and the answer
+// for those is no. floor subsumes the test against zero, being never negative.
+func hasPrefixAt(content []byte, index, floor int, prefix string) bool {
+	if index < floor || index+len(prefix) > len(content) {
+		return false
+	}
+
+	return string(content[index:index+len(prefix)]) == prefix
+}
+
+// wordStartsAt reports whether a complexity check could begin at index, which is
+// that the byte in front of it does not carry a word on.
+//
+// The generic loop matches the check first and applies this after, then steps
+// over the token either way. Testing it first is the same thing done in the
+// cheaper order: no check holds the opening of another, or a quote, or a slash,
+// or a newline, so the bytes the generic loop steps over hold nothing that would
+// have been read had it not. It is worth the argument because the letters the
+// checks are spelled with are nearly always in the middle of an identifier, and
+// this is what keeps the match from being run on every one of them.
+//
+// floor is the first byte of the region the counter owns. Nothing carries a word
+// into it, whether it is the start of the file or the start of a script tag, so
+// the floor is a word boundary.
+func wordStartsAt(content []byte, index, floor int) bool {
+	return index <= floor || !isIdentifierContinue(content[index-1])
+}
+
+// byteBefore returns the byte in front of index, or zero where index sits on the
+// floor and there is nothing in front of it to read. Zero is not a byte any
+// check is spelled with, so a caller comparing it against a letter reads the
+// absence of a byte as the mismatch it is.
+//
+// Every backwards read of every counter goes through this or through
+// wordStartsAt. Reading content[index-1] raw is safe only while the reduced
+// check set of the line start covers the checks anchored on their own first
+// byte, which is an invariant of one language's counter and not of the machinery
+// around it, and scc must not crash on a file whatever shape it is.
+func byteBefore(content []byte, index, floor int) byte {
+	if index <= floor {
+		return 0
+	}
+
+	return content[index-1]
+}
+
+// cOpens reports whether a byte closes the keyword of a complexity check that is
+// normally written with a bracket behind it. Every such keyword is written twice
+// in languages.json, once with a space and once with the bracket.
+func cOpens(content []byte, index int) bool {
+	if index >= len(content) {
+		return false
+	}
+	b := content[index]
+
+	return b == ' ' || b == '('
+}
+
+// braceOpens is cOpens for the keywords written with a brace behind them rather
+// than a bracket, which is else across the C family and try and finally in Java.
+func braceOpens(content []byte, index int) bool {
+	if index >= len(content) {
+		return false
+	}
+	b := content[index]
+
+	return b == ' ' || b == '{'
+}
+
+// bytesIndexNewline is bytes.IndexByte under a name that says what it is for.
+// It is written in assembly for every architecture scc is built for, comparing a
+// vector of bytes at a time, which is what makes skipping a run worth doing
+// rather than walking it.
+func bytesIndexNewline(content []byte) int {
+	return bytes.IndexByte(content, '\n')
+}
+
+// skipBlankRun returns the first byte that is not a space, a tab or a carriage
+// return, given an index that is one of those, or endPoint where the run reaches
+// it. That is the byte the loop has something to say about, and it is what the
+// generic loop moves to.
+//
+// This is tuning 7, and the generic loop has had it for some time while
+// neither counter did: leading indentation is a fifth of the bytes of a Java
+// file and a sixth of a Python one, and walking it a byte at a time costs the
+// whole of the loop body for each of them.
+//
+// The newline is deliberately not in isBlankRun, because a line ends on it and
+// that is the one piece of whitespace the loop has to stop for.
+func skipBlankRun(content []byte, index, endPoint int) int {
+	next := index + 1
+	for next < endPoint && isBlankRun[content[next]] {
+		next++
+	}
+
+	return next
+}
+
+// skipToTerminator finds closer in content[i:] and counts the newlines in front
+// of it, both a vector at a time rather than a byte at a time. end is the index
+// of the first byte of closer, or -1 where it is not there at all, in which case
+// newlines is counted over the whole of content[i:].
+//
+// This is tuning 8, and it is what lets any region whose only exits are a fixed
+// terminator and the end of the file be jumped over rather than walked. A fifth
+// of a C file sits inside a block comment and a fifth of a Python one inside a
+// triple quote.
+//
+// It deliberately does not look for a nul. isBinary is called only from the code
+// state, in both loops, so neither of them marks a file binary on a nul inside a
+// comment or a string. Looking for one here reads like an improvement and would
+// break conformance with the generic loop.
+func skipToTerminator(content []byte, i int, closer []byte) (end, newlines int) {
+	rel := bytes.Index(content[i:], closer)
+	if rel < 0 {
+		return -1, bytes.Count(content[i:], newlineByte)
+	}
+
+	return i + rel, bytes.Count(content[i:i+rel], newlineByte)
+}
+
+// bulkLines accounts for n whole lines that all sit inside a region the state
+// does not change across, and returns the state the last of them left behind.
+//
+// The line accounting is exactly what the outer loop would have done had it
+// stopped on each of those newlines, minus the splice, which cannot matter here:
+// resetLineState differs from resetState only for a line comment and a string,
+// and a region that is jumped over in bulk is neither. Only the first line is a
+// special case, since resetState is idempotent from the second one on: a block
+// comment opened after code on the line ends that one line as code and every
+// line under it as comment.
+//
+// A blank line inside a block comment is never counted blank. The state there is
+// SMulticomment, which resets to itself, so the line counts as comment; the
+// blank-looking SMulticommentBlank is the closing line of a comment rather than
+// an empty line inside one.
+func bulkLines(tally *counterTally, state counterState, n int64) counterState {
+	if n <= 0 {
+		return state
+	}
+
+	tally.Lines += n
+	if isCodeLineState(state) {
+		tally.Code++
+	} else {
+		tally.Comment++
+	}
+
+	state = resetState(state)
+	if n--; n > 0 {
+		if isCodeLineState(state) {
+			tally.Code += n
+		} else {
+			tally.Comment += n
+		}
+	}
+
+	return state
+}
+
+// isCodeLineState reports whether a line ending in this state counts as code,
+// which is the same split the end-of-line switch of every loop is written with.
+// SBlank is not among them and cannot reach here, a blank line being the one
+// thing no region is jumped over in.
+func isCodeLineState(state counterState) bool {
+	switch state {
+	case SCode, SString, SCommentCode, SMulticommentCode:
+		return true
+	}
+
+	return false
+}
+
+// counterStringState runs to the closing quote, which a run of escapes of odd
+// length in front of it does not count as. A raw quote has no escape mechanism
+// at all and passes ignoreEscape, which is what stops a backslash at the end of
+// one ending it.
+//
+// endQuote is a slice so a language whose quote closes with more than one byte
+// is covered, but the single byte case is every quote of C and Java and is the
+// one worth keeping cheap, so the first byte is compared before anything else.
+func counterStringState(content []byte, index, endPoint, floor int, endQuote []byte, ignoreEscape bool) (int, counterState) {
+	first := endQuote[0]
+	single := len(endQuote) == 1
+
+	for i := index; i < endPoint; i++ {
+		index = i
+
+		if content[i] == '\n' {
+			return i, SString
+		}
+
+		if content[i] != first {
+			continue
+		}
+
+		if !ignoreEscape && escapedAt(content, i, floor) {
+			continue
+		}
+
+		if single {
+			return i, SCode
+		}
+
+		if i+len(endQuote) <= endPoint && string(content[i:i+len(endQuote)]) == string(endQuote) {
+			// Step past the whole terminator. For a multi byte one such as the
+			// C++ raw string )" the trailing byte is itself a quote start, so
+			// leaving the cursor on it would open a new string. See #175.
+			return i + len(endQuote) - 1, SCode
+		}
+	}
+
+	return index, SString
+}
+
+// escapedAt reports whether the byte at index is escaped, which is that the run
+// of backslashes in front of it is of odd length. An even run is a run of
+// backslashes that escape each other and leave the byte alone.
+//
+// The escape is the backslash and is not read from the language, because none
+// of the sixteen escapes with anything else. PowerShell escapes with a backtick
+// and has no counter; a language like it would have to thread langFeatures.Escape
+// through to here.
+//
+// The generic loop counts the run the same way and stops at index 1 rather than
+// at 0, which makes a file opening with a backslash come out one escape short.
+// It is reproduced rather than fixed, since a counter that is right where the
+// generic loop is wrong is a counter that disagrees with it.
+func escapedAt(content []byte, index, floor int) bool {
+	if index <= floor || content[index-1] != '\\' {
+		return false
+	}
+
+	escapes := 0
+	for j := index - 1; j > floor; j-- {
+		if content[j] != '\\' {
+			break
+		}
+		escapes++
+	}
+
+	return escapes%2 != 0
+}
+
+// counterCommentState runs a block comment to its closer, jumping over the body
+// rather than walking it, and accounts for every whole line it jumped over.
+//
+// It returns the last byte it consumed and the state that byte left behind, the
+// same contract every state of every loop is written to. Where nothing closes
+// the comment it hands the last newline of the file back to the outer loop
+// rather than swallowing it, so the file's trailing line is worked out in the
+// one place that knows how.
+//
+// nested marks a language whose block comments count their own openers, which is
+// Rust, Swift, Kotlin and Scala among the sixteen and none of the three counted
+// today. It takes the nearer of the next opener and the next closer, which is
+// two vector scans and a comparison rather than a byte loop.
+func counterCommentState(content []byte, index, endPoint int, state counterState, opener, closer []byte, nested bool, tally *counterTally) (int, counterState) {
+	// Nothing is left to scan, which is the shape the outer loop hands back on
+	// the last byte of a file.
+	if index >= endPoint {
+		return index, state
+	}
+
+	// Everything the counters do is bounded by endPoint, which is the byte
+	// before the last one of the file. A closer whose last byte sits on that
+	// final byte is not seen by the generic loop either.
+	region := content[:endPoint]
+
+	depth := 1
+	newlines := 0
+	i := index
+
+	for {
+		closeAt, closeLines := skipToTerminator(region, i, closer)
+
+		if nested && closeAt >= 0 {
+			openAt, openLines := skipToTerminator(region, i, opener)
+			if openAt >= 0 && openAt < closeAt {
+				depth++
+				newlines += openLines
+				i = openAt + len(opener)
+				continue
+			}
+		}
+
+		if closeAt < 0 {
+			return commentRunsOut(content, index, endPoint, state, newlines+closeLines, tally)
+		}
+
+		newlines += closeLines
+		depth--
+		if depth == 0 {
+			state = bulkLines(tally, state, int64(newlines))
+
+			// Only a comment that opened and closed on the one line can still
+			// be holding the state that says there was code in front of it.
+			if state == SMulticommentCode {
+				return closeAt + len(closer) - 1, SCode
+			}
+
+			return closeAt + len(closer) - 1, SMulticommentBlank
+		}
+
+		i = closeAt + len(closer)
+	}
+}
+
+// commentRunsOut is counterCommentState where nothing closes the comment before
+// the end of the file. Every line but the last is accounted for here and the
+// last newline is handed back, which is where the byte at a time version
+// returned on each of them.
+func commentRunsOut(content []byte, index, endPoint int, state counterState, newlines int, tally *counterTally) (int, counterState) {
+	if newlines == 0 {
+		// Saying the scan reached the end, the way the other states do, is what
+		// stops the outer loop stepping on one byte and handing the whole
+		// remaining tail back to be scanned again: an unterminated block comment
+		// with no newline in it took time in the square of its length, eleven
+		// seconds for 250KB and three minutes for a megabyte.
+		if index < endPoint {
+			return endPoint - 1, state
+		}
+
+		return index, state
+	}
+
+	state = bulkLines(tally, state, int64(newlines-1))
+
+	return index + bytes.LastIndexByte(content[index:endPoint], '\n'), state
+}
+
+// counterStep is the per-language half of a counter. It is handed the byte the
+// scan stopped on and the state it is in, and runs until the state changes or
+// the line ends, returning the last byte it consumed. Everything around it is
+// countLoopShared.
+type counterStep func(index int, state counterState) (int, counterState)
+
+// countLoopShared is the outer loop every counter runs under. It is the generic
+// loop with the parts no counter supports taken out: there is no callback, no
+// trace, no cognitive indent stack, no byte classification and no large file
+// truncation, because specialisedCounterEligible declined the file if any of
+// them was asked for.
+//
+// It reports whether it ran to the end of the file, the same way the generic
+// loop does. A binary marker or a state leaving the index past the end both end
+// the count there.
+func countLoopShared(fileJob *FileJob, tally *counterTally, bomSkip, endPoint int, linesplice bool, step counterStep) bool {
+	content := fileJob.Content
+	total := int(fileJob.Bytes)
+	state := counterState(SBlank)
+
+	for index := bomSkip; index < total; index++ {
+		curByte := content[index]
+
+		if index < endPoint && isBlankRun[curByte] {
+			index = skipBlankRun(content, index, endPoint)
+			curByte = content[index]
+		}
+
+		if !isWhitespace(curByte) {
+			index, state = step(index, state)
+
+			// Only a state above moves the index or marks the file binary, so
+			// both of the checks that follow belong here rather than on the
+			// whitespace the loop walked over to get to one.
+			if index >= len(content) {
+				tally.addTo(fileJob)
+
+				return false
+			}
+
+			if index < 10000 && tally.Binary {
+				tally.addTo(fileJob)
+
+				return false
+			}
+
+			curByte = content[index]
+		}
+
+		if curByte == '\n' || index >= endPoint {
+			tally.Lines++
+
+			switch state {
+			case SCode, SString, SCommentCode, SMulticommentCode:
+				tally.Code++
+				state = resetCounterLineState(content, index, state, linesplice)
+			case SComment, SMulticomment, SMulticommentBlank:
+				tally.Comment++
+				state = resetCounterLineState(content, index, state, linesplice)
+			case SBlank:
+				tally.Blank++
+			}
+		}
+	}
+
+	tally.addTo(fileJob)
+
+	return true
+}
+
+// resetCounterLineState hands the state at the end of a line to the line under
+// it. A language that splices joins the two before it looks for a comment or a
+// string, which carries a line comment on and ends a string that is not carried.
+//
+// ignoreEscape is false because no quote of any language counted today is a raw
+// one. C++ has five of them and also splices, so its counter has to thread the
+// open quote's flag through to here. See spec 07 03-architecture §7.1.
+func resetCounterLineState(content []byte, index int, state counterState, linesplice bool) counterState {
+	if !linesplice {
+		return resetState(state)
+	}
+
+	return resetLineState(state, endsWithLineSplice(content, index), false)
+}
+
+// counterSpec is what a counter declares about itself so it can be held against
+// languages.json with no corpus, no env var and no file counted. It is the
+// mechanism that makes hand-writing a counter safe: edit languages.json without
+// touching the counter and go test fails, which is the failure a differential
+// test behind an env var will not catch.
+//
+// See spec 07 04-testing §2 for the four things the test asserts with it.
+type counterSpec struct {
+	// Language is the languages.json name the counter answers for.
+	Language string
+	// Anchors maps every complexity check the counter handles to the byte the
+	// scan stops on for it, which for an anchored check is the rarest byte of
+	// the check rather than its first.
+	Anchors map[string]byte
+	// LineComments, BlockComments and Quotes are the rest of what the counter
+	// handles, spelled exactly as languages.json spells them.
+	LineComments  []string
+	BlockComments [][]string
+	Quotes        []string
+	// Stop is the table the scan runs with, and StopNoComplexity the smaller
+	// one it runs with under --no-complexity.
+	Stop             *[256]bool
+	StopNoComplexity *[256]bool
+	// Collisions is the bytes this language's complexity checks are spelled
+	// with that also open or close a quote, a line comment or a block comment,
+	// sorted and with no repeats. Those are the bytes a backwards read from an
+	// anchor could cross, so where this is not empty the counter has to carry
+	// the argument for why the read is still sound. Thirteen of the sixteen
+	// languages are empty; Python is "fr", Ruby is "=ei" and Rust is "r".
+	Collisions string
+}
+
+// counterSpecs is every counter there is. The conformance test walks it, and
+// nothing else should: the dispatch is a switch in CountStats.
+func counterSpecs() []counterSpec {
+	cComments := []string{"//"}
+	cBlocks := [][]string{{"/*", "*/"}}
+
+	return []counterSpec{
+		{
+			Language:         "C",
+			Anchors:          cComplexityAnchors,
+			LineComments:     cComments,
+			BlockComments:    cBlocks,
+			Quotes:           []string{`"`, `"`},
+			Stop:             &cStop,
+			StopNoComplexity: &cStopNoComplexity,
+		},
+		{
+			Language:         "C Header",
+			Anchors:          cHeaderComplexityAnchors,
+			LineComments:     cComments,
+			BlockComments:    cBlocks,
+			Quotes:           []string{`"`, `"`},
+			Stop:             &cHeaderStop,
+			StopNoComplexity: &cStopNoComplexity,
+		},
+		{
+			Language:         "Java",
+			Anchors:          javaComplexityAnchors,
+			LineComments:     cComments,
+			BlockComments:    cBlocks,
+			Quotes:           []string{`"`, `"`, `'`, `'`},
+			Stop:             &javaStop,
+			StopNoComplexity: &javaStopNoComplexity,
+		},
+	}
+}

@@ -13,8 +13,15 @@ import (
 
 // countBothWays runs the same content through the counter written for the
 // language and through the generic loop, and hands back the two results.
+//
+// SpecialisedCounters is a package global and this has to move it, so it is put
+// back on the way out rather than left off. Leaving it off made the test depend
+// on the order the tests ran in, which is a thing that changes on its own.
 func countBothWays(t *testing.T, language string, content []byte) (FileJob, FileJob) {
 	t.Helper()
+
+	previous := SpecialisedCounters
+	t.Cleanup(func() { SpecialisedCounters = previous })
 
 	fast := FileJob{Language: language}
 	fast.SetContent(string(content))
@@ -29,16 +36,27 @@ func countBothWays(t *testing.T, language string, content []byte) (FileJob, File
 	return fast, generic
 }
 
-func compareCounts(t *testing.T, name string, fast, generic FileJob) {
+// countsDiffer is the whole of what a counter is allowed to produce, so a
+// disagreement on any of it is a disagreement.
+//
+// Binary is in here because both counters set it and bail, and a counter that
+// gets it wrong changes whether the file is reported at all. Minified,
+// Generated and Uloc are worked out after the loop from the content and are
+// genuinely unaffected by which loop ran.
+func countsDiffer(fast, generic FileJob) bool {
+	return fast.Lines != generic.Lines || fast.Code != generic.Code ||
+		fast.Comment != generic.Comment || fast.Blank != generic.Blank ||
+		fast.Complexity != generic.Complexity || fast.Binary != generic.Binary
+}
+
+func compareCounts(t *testing.T, language, name string, fast, generic FileJob) {
 	t.Helper()
 
-	if fast.Lines != generic.Lines || fast.Code != generic.Code ||
-		fast.Comment != generic.Comment || fast.Blank != generic.Blank ||
-		fast.Complexity != generic.Complexity {
-		t.Errorf("%s disagrees\n  java   : lines=%d code=%d comment=%d blank=%d complexity=%d\n  generic: lines=%d code=%d comment=%d blank=%d complexity=%d",
-			name,
-			fast.Lines, fast.Code, fast.Comment, fast.Blank, fast.Complexity,
-			generic.Lines, generic.Code, generic.Comment, generic.Blank, generic.Complexity)
+	if countsDiffer(fast, generic) {
+		t.Errorf("%s disagrees\n  %-7s: lines=%d code=%d comment=%d blank=%d complexity=%d binary=%t\n  generic: lines=%d code=%d comment=%d blank=%d complexity=%d binary=%t",
+			name, language,
+			fast.Lines, fast.Code, fast.Comment, fast.Blank, fast.Complexity, fast.Binary,
+			generic.Lines, generic.Code, generic.Comment, generic.Blank, generic.Complexity, generic.Binary)
 	}
 }
 
@@ -83,7 +101,7 @@ func TestJavaCounterAgreesOnHandWrittenFiles(t *testing.T) {
 		{"star slash outside a comment", "int x = a */ b;\n"},
 	} {
 		fast, generic := countBothWays(t, "Java", []byte(test.content))
-		compareCounts(t, test.name, fast, generic)
+		compareCounts(t, "Java", test.name, fast, generic)
 	}
 }
 
@@ -137,12 +155,10 @@ func TestJavaCounterAgreesOnTheCorpus(t *testing.T) {
 
 		fast, generic := countBothWays(t, "Java", content)
 		checked++
-		if fast.Lines != generic.Lines || fast.Code != generic.Code ||
-			fast.Comment != generic.Comment || fast.Blank != generic.Blank ||
-			fast.Complexity != generic.Complexity {
+		if countsDiffer(fast, generic) {
 			disagreed++
 			if disagreed <= 5 {
-				compareCounts(t, path, fast, generic)
+				compareCounts(t, "Java", path, fast, generic)
 			}
 		}
 
@@ -183,7 +199,7 @@ func TestJavaCounterAgreesWithComplexityOff(t *testing.T) {
 
 	content := []byte("if (a) { for (;;) {} }\nwhile (b) { try {} catch (E e) {} }\n")
 	fast, generic := countBothWays(t, "Java", content)
-	compareCounts(t, "complexity off", fast, generic)
+	compareCounts(t, "Java", "complexity off", fast, generic)
 
 	if fast.Complexity != 0 {
 		t.Errorf("expected no complexity counted, got %d", fast.Complexity)

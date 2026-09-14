@@ -82,20 +82,25 @@ func TestUnterminatedBlockCommentIsLinear(t *testing.T) {
 		content[i] = 'a'
 	}
 
-	fileJob := &FileJob{Content: content}
 	endPoint := len(content)
+	var tally counterTally
 
-	if got, _ := cCommentState(fileJob, 2, endPoint, SMulticomment); got != endPoint-1 {
-		t.Errorf("cCommentState reported %d on exhaustion, want %d", got, endPoint-1)
-	}
-	if got, _ := javaCommentState(fileJob, 2, endPoint, SMulticomment); got != endPoint-1 {
-		t.Errorf("javaCommentState reported %d on exhaustion, want %d", got, endPoint-1)
+	for _, nested := range []bool{false, true} {
+		got, _ := counterCommentState(content, 2, endPoint, SMulticomment, slashStarOpen, slashStarClose, nested, &tally)
+		if got != endPoint-1 {
+			t.Errorf("counterCommentState nested=%t reported %d on exhaustion, want %d", nested, got, endPoint-1)
+		}
+
+		// An index already at or past the end must not be moved backwards, which
+		// would walk the outer loop over the same bytes forever.
+		got, _ = counterCommentState(content, endPoint, endPoint, SMulticomment, slashStarOpen, slashStarClose, nested, &tally)
+		if got != endPoint {
+			t.Errorf("counterCommentState nested=%t moved an exhausted index to %d, want %d", nested, got, endPoint)
+		}
 	}
 
-	// An index already at or past the end must not be moved backwards, which
-	// would walk the outer loop over the same bytes forever.
-	if got, _ := cCommentState(fileJob, endPoint, endPoint, SMulticomment); got != endPoint {
-		t.Errorf("cCommentState moved an exhausted index to %d, want %d", got, endPoint)
+	if tally != (counterTally{}) {
+		t.Errorf("a comment holding no newline counted lines: %+v", tally)
 	}
 }
 

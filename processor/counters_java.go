@@ -2,8 +2,6 @@
 
 package processor
 
-import "bytes"
-
 // A counter written for one language rather than driven by the tries built from
 // languages.json. The generic loop asks a trie what token sits at a byte, which
 // the profile puts at a quarter of the whole program; Java needs to know about
@@ -12,31 +10,77 @@ import "bytes"
 // Everything here must agree with the generic loop to the line. Where the two
 // differ the generic one is right by definition, since it is what the rest of
 // the tests are written against, and countLoopJava is only ever an accelerator.
+//
+// Everything that is not the stop table and the complexity matcher lives in
+// counters_shared.go.
 
 // javaStop marks every byte the scan has to stop on: the slash of both comment
-// forms, the two quotes, the first byte of every complexity check, and the
+// forms, the two quotes, one anchor byte out of every complexity check, and the
 // newline and the null that end a line and a file of bytes rather than text.
 // One load and one branch answer for a byte, where asking each question in turn
 // costs several.
 var javaStop = buildJavaStop()
 
-// javaInteresting marks only the bytes that begin a token, which is javaStop
-// without the two that end things.
-var javaInteresting = buildJavaInteresting()
-
-// javaStopNoComplexity is javaStop without the eleven bytes that only a
-// complexity check begins with. Seven of those are letters, and f, i, s, w, e,
-// t and c between them are better than a third of the bytes of a Java file, so
-// leaving them out is the difference between stopping on a third of the file
-// and stopping on a few percent of it. It is what a file counted with
-// --no-complexity is scanned with, the generic loop leaving the checks out of
-// its trie under the same flag.
+// javaStopNoComplexity is javaStop without the bytes that only a complexity
+// check is spelled with. It is what a file counted with --no-complexity is
+// scanned with, the generic loop leaving the checks out of its trie under the
+// same flag.
 var javaStopNoComplexity = buildJavaStopNoComplexity()
 
+// The two quotes of Java, held here so the shared string state is handed a
+// slice rather than building one per string.
+var (
+	javaDoubleQuote = []byte{'"'}
+	javaSingleQuote = []byte{'\''}
+)
+
+// javaComplexityAnchors is the byte each complexity check of Java is stopped
+// on. It is what the structural conformance test holds against javaStop, and it
+// is the written form of the argument in buildJavaStop.
+var javaComplexityAnchors = map[string]byte{
+	"for ": 'f', "for(": 'f',
+	"if ": 'f', "if(": 'f',
+	"finally ": 'f', "finally{": 'f',
+	"switch ": 'w', "switch(": 'w',
+	"while ": 'w', "while(": 'w',
+	"else ": 'l', "else{": 'l',
+	"try ": 'y', "try{": 'y',
+	"catch ": 'h', "catch(": 'h',
+	"|| ": '|',
+	"&& ": '&',
+	"!= ": '=',
+	"== ": '=',
+}
+
+// buildJavaStop marks the anchor of every complexity check of Java.
+//
+//	f   if, for, finally   the f of if is read backwards, the other two forwards
+//	w   while, switch
+//	l   else
+//	y   try
+//	h   catch
+//	|   ||
+//	&   &&
+//	=   ==, and the = of != read backwards, so ! is not needed at all
+//
+// The anchor is the rarest byte of the check rather than its first, which is
+// what the C counter does and what Java did not. Stopping on the first byte of
+// every check means stopping on f, i, s, w, e, t and c, better than a third of
+// the bytes of a Java file; the anchors above are f, w, l, y and h, which are
+// nearer a tenth. Counted over 1.8MB of real Java the two rates are 27.1% and
+// 11.1%.
+//
+// The bytes are chosen so that no check holds the anchor of another check in a
+// position where reading back from it can match. finally carries an l and a y,
+// but the l of else wants an e in front of it and finds an a or an l, and the y
+// of try wants an r and finds an l. switch carries the h of catch, but reading
+// four bytes back from it gives witc and not catc. So the scan never counts a
+// check twice and never counts one that is not there.
 func buildJavaStop() [256]bool {
-	table := buildJavaInteresting()
-	table['\n'] = true
-	table[0] = true
+	table := buildJavaStopNoComplexity()
+	for _, b := range []byte{'f', 'w', 'l', 'y', 'h', '|', '&', '='} {
+		table[b] = true
+	}
 
 	return table
 }
@@ -60,144 +104,133 @@ func javaStopTable() *[256]bool {
 	return &javaStop
 }
 
-func buildJavaInteresting() [256]bool {
-	var table [256]bool
-	for _, b := range []byte{'/', '"', '\'', 'f', 'i', 's', 'w', 'e', 't', 'c', '|', '&', '!', '='} {
-		table[b] = true
-	}
-
-	return table
-}
-
-// javaComplexityToken reports the length of the complexity check that begins at
-// the front of content, or zero when none does. None of Java's checks is a
-// prefix of another, so the first that matches is the longest.
-func javaComplexityToken(content []byte) int {
-	switch content[0] {
+// javaComplexityAnchored reports whether a complexity check of Java sits on the
+// anchor byte at index, which is what javaStop stopped the scan on.
+//
+// Where the anchor is not the first byte of the check the bytes in front of it
+// are read back, and the word boundary is tested at the front of the check
+// rather than at the anchor. A check can never begin before a quote, a slash or
+// a newline, since none of those is a byte any check of Java is spelled with,
+// so reading back never crosses out of the code the scan is in. Nor can it read
+// in front of the region the counter owns, every backwards read being clamped
+// to floor.
+//
+// The checks that share an anchor are told apart on the byte behind it and
+// cannot both match: the f of if has an i behind it and the f of for or finally
+// cannot, i being a byte that carries a word on, and the same holds of the w of
+// switch against while and the = of != against ==.
+func javaComplexityAnchored(content []byte, index, floor int) bool {
+	switch content[index] {
 	case 'f':
-		if hasPrefix(content, "for ") || hasPrefix(content, "for(") {
-			return 4
+		if byteBefore(content, index, floor) == 'i' {
+			return wordStartsAt(content, index-1, floor) && cOpens(content, index+1)
 		}
-		if hasPrefix(content, "finally ") || hasPrefix(content, "finally{") {
-			return 8
-		}
-	case 'i':
-		if hasPrefix(content, "if ") || hasPrefix(content, "if(") {
-			return 3
-		}
-	case 's':
-		if hasPrefix(content, "switch ") || hasPrefix(content, "switch(") {
-			return 7
-		}
-	case 'w':
-		if hasPrefix(content, "while ") || hasPrefix(content, "while(") {
-			return 6
-		}
-	case 'e':
-		if hasPrefix(content, "else ") || hasPrefix(content, "else{") {
-			return 5
-		}
-	case 't':
-		if hasPrefix(content, "try ") || hasPrefix(content, "try{") {
-			return 4
-		}
-	case 'c':
-		if hasPrefix(content, "catch ") || hasPrefix(content, "catch(") {
-			return 6
-		}
-	case '|':
-		if hasPrefix(content, "|| ") {
-			return 3
-		}
-	case '&':
-		if hasPrefix(content, "&& ") {
-			return 3
-		}
-	case '!':
-		if hasPrefix(content, "!= ") {
-			return 3
-		}
-	case '=':
-		if hasPrefix(content, "== ") {
-			return 3
-		}
-	}
-
-	return 0
-}
-
-func hasPrefix(content []byte, prefix string) bool {
-	if len(content) < len(prefix) {
-		return false
-	}
-	for i := 0; i < len(prefix); i++ {
-		if content[i] != prefix[i] {
+		if !wordStartsAt(content, index, floor) {
 			return false
 		}
+
+		return (hasPrefixAt(content, index+1, floor, "or") && cOpens(content, index+3)) ||
+			(hasPrefixAt(content, index+1, floor, "inally") && braceOpens(content, index+7))
+	case 'w':
+		if byteBefore(content, index, floor) == 's' {
+			return wordStartsAt(content, index-1, floor) &&
+				hasPrefixAt(content, index+1, floor, "itch") && cOpens(content, index+5)
+		}
+
+		return wordStartsAt(content, index, floor) &&
+			hasPrefixAt(content, index+1, floor, "hile") && cOpens(content, index+5)
+	case 'l':
+		if byteBefore(content, index, floor) != 'e' {
+			return false
+		}
+
+		return wordStartsAt(content, index-1, floor) &&
+			hasPrefixAt(content, index+1, floor, "se") && braceOpens(content, index+3)
+	case 'y':
+		if byteBefore(content, index, floor) != 'r' {
+			return false
+		}
+
+		return wordStartsAt(content, index-2, floor) &&
+			hasPrefixAt(content, index-2, floor, "try") && braceOpens(content, index+1)
+	case 'h':
+		return wordStartsAt(content, index-4, floor) &&
+			hasPrefixAt(content, index-4, floor, "catch") && cOpens(content, index+1)
+	case '=':
+		if b := byteBefore(content, index, floor); b != '=' && b != '!' {
+			return false
+		}
+
+		return wordStartsAt(content, index-1, floor) &&
+			index+1 < len(content) && content[index+1] == ' '
+	case '|':
+		return wordStartsAt(content, index, floor) && hasPrefixAt(content, index+1, floor, "| ")
+	case '&':
+		return wordStartsAt(content, index, floor) && hasPrefixAt(content, index+1, floor, "& ")
 	}
 
-	return true
+	return false
 }
 
-// javaWordStarts reports whether a complexity check could begin at index, which
-// is that the byte in front of it does not carry a word on.
+// javaComplexityAtLineStart is javaComplexityAnchored for the first byte of
+// code on a line, which has nothing in front of it to read back to. Only the
+// checks anchored on their own first byte are looked for here; the rest are
+// anchored on a byte the code scan reaches, since that begins on the byte after
+// this one and no check that is anchored on its first byte holds an anchor of
+// its own anywhere else that can match.
 //
-// The generic loop matches the check first and applies this after, then steps
-// over the token either way. Testing it first is the same thing done in the
-// cheaper order: no check of Java holds the opening of another, or a quote, or
-// a slash, or a newline, so the bytes the generic loop steps over hold nothing
-// that would have been read had it not. It is worth the argument because an f,
-// i, s, w, e, t or c is nearly always in the middle of an identifier, and this
-// is what keeps the match from being run on every one of them.
-func javaWordStarts(content []byte, index int) bool {
-	return index == 0 || !isIdentifierContinue(content[index-1])
-}
-
-// javaCountComplexity counts a check that has already been found to begin a
-// word. The global reads as complexity having been turned off, which is what
-// the generic loop tests when it decides whether to put the checks into its
-// trie at all, so the two agree on a file counted with --no-complexity.
-func javaCountComplexity(fileJob *FileJob) {
-	if Complexity {
-		return
+// Nothing carries a word into the first byte of code on a line — whitespace or
+// the slash of a closed block comment is all that can sit in front of it — so
+// the word boundary needs no test.
+//
+// This is not an optimisation that can be left out. Without it for, finally,
+// while, || and && are never counted when they open a line, and it is the
+// reason the backwards reads above can be written as reads rather than as
+// searches. The two are one thing.
+func javaComplexityAtLineStart(content []byte, index, floor int) bool {
+	switch content[index] {
+	case 'f':
+		return (hasPrefixAt(content, index+1, floor, "or") && cOpens(content, index+3)) ||
+			(hasPrefixAt(content, index+1, floor, "inally") && braceOpens(content, index+7))
+	case 'w':
+		return hasPrefixAt(content, index+1, floor, "hile") && cOpens(content, index+5)
+	case '|':
+		return hasPrefixAt(content, index+1, floor, "| ")
+	case '&':
+		return hasPrefixAt(content, index+1, floor, "& ")
 	}
 
-	fileJob.Complexity++
-	fileJob.bumpComplexityLine()
+	return false
 }
 
 // javaBlankState looks at the first byte of content on a line.
-func javaBlankState(fileJob *FileJob, index int) (int, int64, byte) {
-	content := fileJob.Content
-
+func javaBlankState(content []byte, tally *counterTally, index, floor int) (int, counterState, []byte) {
 	switch content[index] {
 	case '/':
 		if index+1 < len(content) {
 			switch content[index+1] {
 			case '/':
-				return index, SComment, 0
+				return index, SComment, nil
 			case '*':
-				return index + 1, SMulticomment, 0
+				return index + 1, SMulticomment, nil
 			}
 		}
-	case '"', '\'':
-		return index, SString, content[index]
+	case '"':
+		return index, SString, javaDoubleQuote
+	case '\'':
+		return index, SString, javaSingleQuote
 	}
 
-	if javaInteresting[content[index]] && !Complexity && javaWordStarts(content, index) {
-		if length := javaComplexityToken(content[index:]); length != 0 {
-			javaCountComplexity(fileJob)
-			return index + length - 1, SCode, 0
-		}
+	if !Complexity && javaComplexityAtLineStart(content, index, floor) {
+		tally.Complexity++
 	}
 
-	return index, SCode, 0
+	return index, SCode, nil
 }
 
 // javaCodeState runs to the end of the line or to whatever token takes it out
 // of code.
-func javaCodeState(fileJob *FileJob, index, endPoint int, stop *[256]bool) (int, int64, byte) {
-	content := fileJob.Content
+func javaCodeState(content []byte, tally *counterTally, index, endPoint, floor int, stop *[256]bool) (int, counterState, []byte) {
 	if endPoint > len(content) {
 		endPoint--
 	}
@@ -211,39 +244,40 @@ func javaCodeState(fileJob *FileJob, index, endPoint int, stop *[256]bool) (int,
 
 		switch curByte {
 		case '\n':
-			return i, SCode, 0
+			return i, SCode, nil
 		case 0:
 			if isBinary(i, curByte) {
-				fileJob.Binary = true
-				return i, SCode, 0
+				tally.Binary = true
+				return i, SCode, nil
 			}
 		case '/':
 			if i+1 < len(content) {
 				switch content[i+1] {
 				case '/':
-					return i, SCommentCode, 0
+					return i, SCommentCode, nil
 				case '*':
-					return i + 1, SMulticommentCode, 0
+					return i + 1, SMulticommentCode, nil
 				}
 			}
 		case '"', '\'':
 			// The generic loop tests the byte in front rather than counting the
 			// run of them, so a quote behind a backslash opens nothing and the
-			// line carries on as code. A quote at the first byte has nothing in
-			// front of it and so is not escaped; the state machine cannot reach
-			// here at i of zero, having started blank, but the check does not
-			// depend on that holding.
-			if i == 0 || content[i-1] != '\\' {
-				return i, SString, curByte
+			// line carries on as code. A quote on the floor has nothing in front
+			// of it and so is not escaped; the state machine cannot reach here
+			// on it, having started blank, but the check does not depend on that
+			// holding.
+			if byteBefore(content, i, floor) != '\\' {
+				if curByte == '"' {
+					return i, SString, javaDoubleQuote
+				}
+
+				return i, SString, javaSingleQuote
 			}
 
-			return i, SCode, 0
+			return i, SCode, nil
 		default:
-			if javaWordStarts(content, i) {
-				if length := javaComplexityToken(content[i:]); length != 0 {
-					javaCountComplexity(fileJob)
-					i += length - 1
-				}
+			if javaComplexityAnchored(content, i, floor) {
+				tally.Complexity++
 			}
 		}
 	}
@@ -251,78 +285,10 @@ func javaCodeState(fileJob *FileJob, index, endPoint int, stop *[256]bool) (int,
 	// The generic loop leaves the cursor on the last byte it looked at, which
 	// is the one before endPoint when it got that far.
 	if index < endPoint {
-		return endPoint - 1, SCode, 0
+		return endPoint - 1, SCode, nil
 	}
 
-	return index, SCode, 0
-}
-
-// javaStringState runs to the closing quote, which a run of backslashes of odd
-// length in front of it does not count as.
-func javaStringState(fileJob *FileJob, index, endPoint int, endQuote byte) (int, int64) {
-	content := fileJob.Content
-
-	for i := index; i < endPoint; i++ {
-		index = i
-
-		if content[i] == '\n' {
-			return i, SString
-		}
-
-		isEscaped := false
-		if i > 0 && content[i-1] == '\\' {
-			escapes := 0
-			for j := i - 1; j > 0; j-- {
-				if content[j] != '\\' {
-					break
-				}
-				escapes++
-			}
-			if escapes%2 != 0 {
-				isEscaped = true
-			}
-		}
-
-		if !isEscaped && content[i] == endQuote {
-			return i, SCode
-		}
-	}
-
-	return index, SString
-}
-
-// javaCommentState runs to the closer of a block comment, which does not nest
-// in Java.
-func javaCommentState(fileJob *FileJob, index, endPoint int, currentState int64) (int, int64) {
-	content := fileJob.Content
-
-	for i := index; i < endPoint; i++ {
-		if content[i] == '\n' {
-			return i, currentState
-		}
-
-		if content[i] == '*' && i+1 < endPoint && content[i+1] == '/' {
-			if currentState == SMulticommentCode {
-				currentState = SCode
-			} else {
-				currentState = SMulticommentBlank
-			}
-
-			return i + 1, currentState
-		}
-	}
-
-	// Nothing closed the comment and no line ended, so the scan reached the end
-	// and the last byte it looked at is the one before endPoint. Saying so, the
-	// way the other states do, is what stops the outer loop stepping on one byte
-	// and handing the whole remaining tail back to be scanned again: an
-	// unterminated block comment with no newline in it took time in the square
-	// of its length, eleven seconds for 250KB and three minutes for a megabyte.
-	if index < endPoint {
-		return endPoint - 1, currentState
-	}
-
-	return index, currentState
+	return index, SCode, nil
 }
 
 // countLoopJava stands in for countLoopGeneric where the language is Java and
@@ -330,58 +296,54 @@ func javaCommentState(fileJob *FileJob, index, endPoint int, currentState int64)
 // count early, the same way the generic loop does.
 func countLoopJava(fileJob *FileJob, bomSkip, endPoint int) bool {
 	content := fileJob.Content
-	currentState := SBlank
 	stop := javaStopTable()
-	var endQuote byte
+	floor := bomSkip
+	lastByte := int(fileJob.Bytes) - 1
 
-	for index := bomSkip; index < int(fileJob.Bytes); index++ {
-		if !isWhitespace(content[index]) {
-			switch currentState {
-			case SCode:
-				index, currentState, endQuote = javaCodeState(fileJob, index, endPoint, stop)
-			case SString:
-				index, currentState = javaStringState(fileJob, index, endPoint, endQuote)
-			case SComment, SCommentCode:
-				// Nothing inside a line comment can change the state, so the rest
-				// of the line is of no interest and IndexByte finds where it ends
-				// a vector at a time rather than a byte.
-				if next := bytesIndexNewline(content[index:]); next >= 0 {
-					index += next
-				} else {
-					index = int(fileJob.Bytes) - 1
-				}
-			case SMulticomment, SMulticommentCode:
-				index, currentState = javaCommentState(fileJob, index, endPoint, currentState)
-			case SBlank, SMulticommentBlank:
-				index, currentState, endQuote = javaBlankState(fileJob, index)
-			}
-		}
+	var tally counterTally
 
-		if index >= len(content) {
-			return false
-		}
-
-		if index < 10000 && fileJob.Binary {
-			return false
-		}
-
-		if content[index] == '\n' || index >= endPoint {
-			fileJob.Lines++
-
-			switch currentState {
-			case SCode, SString, SCommentCode, SMulticommentCode:
-				fileJob.Code++
-				currentState = resetState(currentState)
-			case SComment, SMulticomment, SMulticommentBlank:
-				fileJob.Comment++
-				currentState = resetState(currentState)
-			case SBlank:
-				fileJob.Blank++
-			}
+	// The quote the string state is looking for. Java has two and the code and
+	// blank states say which one opened, so it is carried across calls. It is
+	// never nil: the states below hand back the quote only when they opened a
+	// string, and anything else leaves the last one in place rather than
+	// clearing it. Reading it depends on no invariant that way.
+	endQuote := javaDoubleQuote
+	openQuote := func(quote []byte) {
+		if quote != nil {
+			endQuote = quote
 		}
 	}
 
-	return true
+	step := func(index int, state counterState) (int, counterState) {
+		switch state {
+		case SCode:
+			index, state, quote := javaCodeState(content, &tally, index, endPoint, floor, stop)
+			openQuote(quote)
+
+			return index, state
+		case SString:
+			return counterStringState(content, index, endPoint, floor, endQuote, false)
+		case SComment, SCommentCode:
+			// Nothing inside a line comment can change the state, so the rest of
+			// the line is of no interest and IndexByte finds where it ends a
+			// vector at a time rather than a byte.
+			if next := bytesIndexNewline(content[index:]); next >= 0 {
+				return index + next, state
+			}
+
+			return lastByte, state
+		case SMulticomment, SMulticommentCode:
+			return counterCommentState(content, index, endPoint, state, slashStarOpen, slashStarClose, false, &tally)
+		default: // SBlank and SMulticommentBlank
+			index, state, quote := javaBlankState(content, &tally, index, floor)
+			openQuote(quote)
+
+			return index, state
+		}
+	}
+
+	// Java does not splice lines, so a line hands its state on unchanged.
+	return countLoopShared(fileJob, &tally, bomSkip, endPoint, false, step)
 }
 
 // SpecialisedCounters turns on the counters written for one language, which
@@ -396,25 +358,11 @@ func countLoopJava(fileJob *FileJob, bomSkip, endPoint int) bool {
 // the same file through both ways with.
 var SpecialisedCounters bool
 
-// useJavaCounter reports whether the Java counter can answer for this file. It
-// produces the four line counts and the complexity count and nothing else, so
-// anything that asks for more is left to the generic loop.
+// useJavaCounter reports whether the Java counter can answer for this file.
 func useJavaCounter(fileJob *FileJob) bool {
-	return SpecialisedCounters &&
-		fileJob.Language == "Java" &&
-		!Duplicates &&
-		!Cognitive &&
-		!Trace &&
-		!NoLarge &&
-		!fileJob.ClassifyContent &&
-		!fileJob.TrackComplexityLines &&
-		fileJob.Callback == nil
-}
+	if fileJob.Language != "Java" {
+		return false
+	}
 
-// bytesIndexNewline is bytes.IndexByte under a name that says what it is for.
-// It is written in assembly for every architecture scc is built for, comparing
-// a vector of bytes at a time, which is what makes skipping a run worth doing
-// rather than walking it.
-func bytesIndexNewline(content []byte) int {
-	return bytes.IndexByte(content, '\n')
+	return specialisedCounterEligible(fileJob)
 }
