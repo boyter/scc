@@ -1430,6 +1430,23 @@ func countLoopGeneric(fileJob *FileJob, langFeatures LanguageFeature, bomSkip, e
 					endString,
 					langFeatures,
 				)
+			case SComment, SCommentCode:
+				// A line comment runs to the end of the line and nothing in it
+				// can move the state, so the only byte of it the loop has
+				// anything to say about is the newline that ends it. Before
+				// this case existed the switch had none for either comment
+				// state and every byte of a line comment walked the whole loop
+				// body to do nothing at all, which on a tree of LLVM IR was
+				// nine tenths of every iteration the loop ran.
+				// byteType wants a classification written for every byte
+				// of the file, so the skip is only for a plain count.
+				if byteType == nil {
+					if j := bytes.IndexByte(content[index:endPoint], '\n'); j >= 0 {
+						index += j
+					} else {
+						index = endPoint
+					}
+				}
 			case SBlank, SMulticommentBlank:
 				// From blank we can move into comment, move into a multiline comment
 				// or move into code but we can only do one.
