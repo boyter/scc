@@ -394,6 +394,19 @@ func benchmarkCorpus(b *testing.B, language, envVar, extension string, specialis
 // with it on, where the divergences are counted and reported.
 func diffCorpusRegex(t *testing.T, language, envVar, extension string) {
 	t.Helper()
+	diffCorpusToggle(t, language, envVar, extension, &ecmaRegexLiterals, "regex literals")
+}
+
+// diffCorpusToggle is diffCorpus for a counter that carries a deliberate
+// divergence, which is a switch it can be turned off at.
+//
+// The corpus is walked twice. With the divergence off the counter has nothing
+// left to disagree about and exact agreement is required, which is what keeps
+// the differential worth anything. With it on the disagreements are counted and
+// reported rather than failed, every one of them having been read by hand and
+// found to be the generic loop being wrong.
+func diffCorpusToggle(t *testing.T, language, envVar, extension string, toggle *bool, name string) {
+	t.Helper()
 	ProcessConstants()
 
 	if testing.Short() {
@@ -412,9 +425,9 @@ func diffCorpusRegex(t *testing.T, language, envVar, extension string) {
 		limit, _ = strconv.Atoi(v)
 	}
 
-	for _, regexLiterals := range []bool{false, true} {
-		previous := ecmaRegexLiterals
-		ecmaRegexLiterals = regexLiterals
+	for _, on := range []bool{false, true} {
+		previous := *toggle
+		*toggle = on
 
 		checked := 0
 		disagreed := 0
@@ -436,7 +449,7 @@ func diffCorpusRegex(t *testing.T, language, envVar, extension string) {
 			checked++
 			if countsDiffer(fast, generic) {
 				disagreed++
-				if !regexLiterals && disagreed <= 5 {
+				if !on && disagreed <= 5 {
 					compareCounts(t, language, path, fast, generic)
 				}
 			}
@@ -444,18 +457,18 @@ func diffCorpusRegex(t *testing.T, language, envVar, extension string) {
 			return nil
 		})
 
-		ecmaRegexLiterals = previous
+		*toggle = previous
 
 		if checked == 0 {
 			t.Skipf("no %s found in the corpus", language)
 		}
 
-		if regexLiterals {
-			t.Logf("with regex literals on: checked %d files, %d diverged", checked, disagreed)
+		if on {
+			t.Logf("with %s on: checked %d files, %d diverged", name, checked, disagreed)
 		} else {
-			t.Logf("with regex literals off: checked %d files, %d disagreed", checked, disagreed)
+			t.Logf("with %s off: checked %d files, %d disagreed", name, checked, disagreed)
 			if disagreed != 0 {
-				t.Errorf("%d files disagree with the generic loop for a reason that is not the regex fix", disagreed)
+				t.Errorf("%d files disagree with the generic loop for a reason that is not the %s fix", disagreed, name)
 			}
 		}
 	}

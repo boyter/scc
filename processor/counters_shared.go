@@ -818,6 +818,19 @@ func counterSpecs() []counterSpec {
 			StopNoComplexity: &scalaStopNoComplexity,
 		},
 		{
+			Language:         "Rust",
+			Count:            countLoopRust,
+			Extension:        ".rs",
+			Anchors:          rustComplexityAnchors,
+			QuoteAnchors:     rustQuoteAnchors,
+			LineComments:     cComments,
+			BlockComments:    cBlocks,
+			Quotes:           rustQuotes(),
+			Stop:             &rustStop,
+			StopNoComplexity: &rustStopNoComplexity,
+			Collisions:       "r",
+		},
+		{
 			Language:         "Swift",
 			Count:            countLoopSwift,
 			Extension:        ".swift",
@@ -877,6 +890,18 @@ func counterDivergences() []counterDivergence {
 			Case:     "7020-regex_holding_a_comment_opener",
 			Fixture:  "examples/linejudge/7020-regex_holding_a_comment_opener.js",
 			Reason:   "a slash pair inside a regular expression literal opens no comment, where the generic loop reads it as opening a line comment",
+		},
+		{
+			Language: "Rust",
+			Case:     "4010-char_literal_holding_a_quote",
+			Fixture:  "examples/linejudge/4010-char_literal_holding_a_quote.rs",
+			Reason:   "a quote inside a character literal opens no string, where the generic loop reads it as opening one that never closes",
+		},
+		{
+			Language: "Rust",
+			Case:     "4020-two_char_literals_holding_escapes",
+			Fixture:  "examples/linejudge/4020-two_char_literals_holding_escapes.rs",
+			Reason:   "an escaped quote and a quote inside character literals open no string, where the generic loop reads the second as opening one",
 		},
 		{
 			Language: "TypeScript",

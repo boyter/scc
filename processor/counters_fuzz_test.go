@@ -112,6 +112,29 @@ func FuzzSpecialisedCounter(f *testing.F) {
 		`R" (`,
 		`R")"`,
 		"const char *s = R\"(a\\\n b)\";\n",
+		// Rust. The raw string delimiter is a run of hashes read out of the
+		// file and bounded only by maxRustRawHashes, the character literal is
+		// told from a lifetime by what follows it, and a lone quote on a line
+		// puts a newline where the character should be.
+		"r\"",
+		"r#\"",
+		"r#########\"x\"#########",
+		"br##\"a \" b\"##",
+		"r\"\n\n\"",
+		"for\"a\"",
+		"'",
+		"''",
+		"'\n'\n",
+		"'hello'\n''\n'\n'\n",
+		"'\\''",
+		"'\\u{1F600}'",
+		"'\\x41'",
+		"'\"'\n// c\n",
+		"b'\"'\n// c\n",
+		"&'a str",
+		"fn f<T: ?Sized>() {}",
+		"let x = f()?;",
+		"/* a /* b */ c */",
 	} {
 		f.Add([]byte(seed))
 	}
@@ -125,6 +148,12 @@ func FuzzSpecialisedCounter(f *testing.F) {
 	previousRegexLiterals := ecmaRegexLiterals
 	ecmaRegexLiterals = false
 	f.Cleanup(func() { ecmaRegexLiterals = previousRegexLiterals })
+
+	// The same for Rust's character literal fix, which is the other deliberate
+	// divergence. A seeded '"' would otherwise fail the fuzzer on purpose.
+	previousCharLiterals := rustCharLiterals
+	rustCharLiterals = false
+	f.Cleanup(func() { rustCharLiterals = previousCharLiterals })
 
 	f.Fuzz(func(t *testing.T, content []byte) {
 		// A file scc would never reach: the loops are bounded by fileJob.Bytes
@@ -163,6 +192,12 @@ func FuzzSpecialisedCounterNoComplexity(f *testing.F) {
 	previousRegexLiterals := ecmaRegexLiterals
 	ecmaRegexLiterals = false
 	f.Cleanup(func() { ecmaRegexLiterals = previousRegexLiterals })
+
+	// The same for Rust's character literal fix, which is the other deliberate
+	// divergence. A seeded '"' would otherwise fail the fuzzer on purpose.
+	previousCharLiterals := rustCharLiterals
+	rustCharLiterals = false
+	f.Cleanup(func() { rustCharLiterals = previousCharLiterals })
 
 	f.Fuzz(func(t *testing.T, content []byte) {
 		if len(content) > 1<<20 {
