@@ -1444,6 +1444,15 @@ func countLoopGeneric(fileJob *FileJob, langFeatures LanguageFeature, bomSkip, e
 					if j := bytes.IndexByte(content[index:endPoint], '\n'); j >= 0 {
 						index += j
 					} else {
+						// endPoint is Bytes-1, so landing on it lands on the
+						// last byte of the file and the line-end test below
+						// takes it. This is only here to save the iterations
+						// between here and there - dropping it answers the
+						// same, a byte at a time - but it is the one line that
+						// puts index somewhere the walk did not. Were endPoint
+						// ever to become len(content), it would jump the loop
+						// past its own bound and the count would stop early
+						// with no error, so the two have to move together.
 						index = endPoint
 					}
 				}
