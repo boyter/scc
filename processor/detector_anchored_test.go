@@ -89,6 +89,14 @@ func TestAnchoredFormAgreesWithTheSearch(t *testing.T) {
 		[]byte("private"), []byte("protected"), []byte("@interface"), []byte("@end"),
 		[]byte("#import"), []byte(".h"), []byte("\""), []byte(">"), []byte("<"),
 		[]byte("x"), []byte("("),
+		// The bytes the walk steps over but a lead may not accept. Without
+		// these the corpus cannot tell an over-skip from a legal one, and the
+		// walk settling a heuristic at a position its pattern could not have
+		// started at goes unnoticed: a lone carriage return, a form feed and a
+		// vertical tab in front of a keyword each reclassified a C header as a
+		// C++ one. A vertical tab is in neither lead, since Go's \s leaves it
+		// out; a carriage return and a form feed are in \s but not in [ \t].
+		[]byte("\r"), []byte("\n\r"), []byte("\f"), []byte("\v"),
 	}
 	for i := 0; i < 400; i++ {
 		var b []byte
@@ -145,7 +153,7 @@ func TestAnchoredFormOnlyFiresOnShapesItUnderstands(t *testing.T) {
 		`(?m)^[ ]*class`,    // a lead shape that is not one of the two written
 		`(?m)^\s*(unclosed`, // does not compile once rewritten
 	} {
-		if re := anchoredForm(pat); re != nil {
+		if re, _ := anchoredForm(pat); re != nil {
 			t.Errorf("anchoredForm(%q) returned %q, want nil", pat, re)
 		}
 	}
@@ -154,7 +162,7 @@ func TestAnchoredFormOnlyFiresOnShapesItUnderstands(t *testing.T) {
 		`(?m)^\s*template\s*<`,
 		`(?m)^[ \t]*(private|public|protected):$`,
 	} {
-		if anchoredForm(pat) == nil {
+		if re, _ := anchoredForm(pat); re == nil {
 			t.Errorf("anchoredForm(%q) returned nil, want a rewrite", pat)
 		}
 	}

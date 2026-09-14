@@ -39,11 +39,17 @@ import (
 const planGroupMin = 3
 
 // isAnchorSkip reports whether a byte is one the line walk steps over before
-// looking for an anchored literal. The keyword patterns write their prefix as
-// [ \t]* and the rest write it as \s*, so the walk skips the whole of \s bar
-// the newline that ends the line. Skipping more than a pattern would only ever
-// makes the prefilter say "possible" where the regex will say no, which costs a
-// regex run and never a wrong answer.
+// looking for an anchored literal. It is the union of what both leads accept
+// plus the vertical tab, which neither does, so it is only ever the first of
+// two tests: scanLineStarts records what it actually stepped over and the slot
+// gate below decides whether that was legal for the lead in hand.
+//
+// It was one test when the walk only proposed a candidate for the regex to
+// confirm, where skipping more than a lead accepts cost a regex run and never
+// an answer. The anchored form made the walk the thing that decides, and an
+// over-skip became a match at a position the pattern could not have started
+// at. Three headers of the corpus in TestAnchorSkipMatchesTheLead are what that
+// looked like.
 func isAnchorSkip(b byte) bool {
 	return anchorSkip[b]
 }
@@ -83,15 +89,18 @@ var anchoredLead = regexp.MustCompile(`^\(\?m\)\^(?:\\s\*|\[ \\t\]\*)`)
 // It only fires on a pattern whose shape it recognises, and returns nil
 // otherwise, so a hand written pattern that does something cleverer is left to
 // the ordinary search.
-func anchoredForm(pattern string) *regexp.Regexp {
+// The second return says the lead was [ \t]*, which accepts a narrower run of
+// indentation than \s* does and so gates the walk more tightly.
+func anchoredForm(pattern string) (*regexp.Regexp, bool) {
 	lead := anchoredLead.FindString(pattern)
 	if lead == "" {
-		return nil
+		return nil, false
 	}
+	tabOnly := strings.HasSuffix(lead, `[ \t]*`)
 
 	rest := pattern[len(lead):]
 	if rest == "" {
-		return nil
+		return nil, false
 	}
 
 	// A pattern that begins by asking about the text before it means something
@@ -99,7 +108,7 @@ func anchoredForm(pattern string) *regexp.Regexp {
 	// go the same way: the rewrite supplies its own \A.
 	for _, bad := range []string{`\b`, `\B`, `\A`, `\z`, `\Z`} {
 		if strings.HasPrefix(rest, bad) {
-			return nil
+			return nil, false
 		}
 	}
 
@@ -107,10 +116,10 @@ func anchoredForm(pattern string) *regexp.Regexp {
 	// pins the whole thing to where it is tried.
 	re, err := regexp.Compile(`(?m)\A(?:` + rest + `)`)
 	if err != nil {
-		return nil
+		return nil, false
 	}
 
-	return re
+	return re, tabOnly
 }
 
 // anchoredLiterals reports whether a heuristic's literals can stand in for
@@ -175,8 +184,12 @@ type heuristicPlan struct {
 	// Heuristics settled by the line walk, in place of a search of the file.
 	// anchRe is indexed by a heuristic's slot, and litSlots says which of them a
 	// literal being found at a line start is worth trying.
-	anchRe   []*regexp.Regexp
-	litSlots [][]int32
+	anchRe []*regexp.Regexp
+	// anchTabOnly is indexed like anchRe and says the slot's lead was [ \t]*,
+	// so the walk may only settle it where the indentation it stepped over was
+	// spaces and tabs alone.
+	anchTabOnly []bool
+	litSlots    [][]int32
 
 	// What the keyword count falls back to when no heuristic matched.
 	fallbacks []planFallback
@@ -284,9 +297,10 @@ func buildHeuristicPlan(possibleLanguages []string) *heuristicPlan {
 			// the line walk, which tries it only where its literals sit rather
 			// than searching the file for it.
 			if h.Anchored && anchoredLiterals(h.Literals) {
-				if anch := anchoredForm(h.Re.String()); anch != nil {
+				if anch, tabOnly := anchoredForm(h.Re.String()); anch != nil {
 					ph.slot = int32(len(plan.anchRe))
 					plan.anchRe = append(plan.anchRe, anch)
+					plan.anchTabOnly = append(plan.anchTabOnly, tabOnly)
 					for _, lit := range h.Literals {
 						id := intern(lit, true)
 						litSlots[id] = append(litSlots[id], ph.slot)
@@ -475,7 +489,19 @@ func (plan *heuristicPlan) scanLineStarts(content []byte, found, hit []bool) {
 	pos := 0
 	for pos < len(content) {
 		j := pos
+		// What was stepped over decides which slots may be settled here. [ \t]*
+		// accepts spaces and tabs, \s* accepts those plus a carriage return and
+		// a form feed, and neither accepts a vertical tab, which Go's \s leaves
+		// out.
+		tabOnly, goSpace := true, true
 		for j < len(content) && isAnchorSkip(content[j]) {
+			switch content[j] {
+			case ' ', '\t':
+			case '\v':
+				tabOnly, goSpace = false, false
+			default:
+				tabOnly = false
+			}
 			j++
 		}
 		if j >= len(content) {
@@ -499,6 +525,13 @@ func (plan *heuristicPlan) scanLineStarts(content []byte, found, hit []bool) {
 				}
 				found[id] = true
 				for _, s := range slots {
+					if plan.anchTabOnly[s] {
+						if !tabOnly {
+							continue
+						}
+					} else if !goSpace {
+						continue
+					}
 					if !hit[s] && plan.anchRe[s].Match(content[j:]) {
 						hit[s] = true
 					}
