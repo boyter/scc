@@ -264,7 +264,7 @@ func bulkLines(tally *counterTally, state counterState, n int64) counterState {
 		tally.Comment++
 	}
 
-	state = resetState(state)
+	state = resetCounterState(state)
 	if n--; n > 0 {
 		if isCodeLineState(state) {
 			tally.Code += n
@@ -274,6 +274,22 @@ func bulkLines(tally *counterTally, state counterState, n int64) counterState {
 	}
 
 	return state
+}
+
+// resetCounterState is resetState with the docstring added.
+//
+// The generic loop never resets a docstring. SDocString is not in resetState's
+// switch, and the end of line case that counts one does not call it, so the
+// state simply persists into the next line and the whole docstring counts as
+// comment. Handing SDocString to resetState would fall through its default and
+// turn the rest of the docstring into blank lines, so every counter resets
+// through here instead.
+func resetCounterState(state counterState) counterState {
+	if state == SDocString {
+		return SDocString
+	}
+
+	return resetState(state)
 }
 
 // isCodeLineState reports whether a line ending in this state counts as code,
@@ -565,6 +581,13 @@ func countLoopShared(fileJob *FileJob, tally *counterTally, bomSkip, endPoint in
 			case SComment, SMulticomment, SMulticommentBlank:
 				tally.Comment++
 				state = resetCounterLineState(content, index, state, splice)
+			case SDocString:
+				// A docstring is the one state that is never reset. It runs to
+				// its closer however many lines that takes, and every one of
+				// them counts as comment, which is the whole of what makes a
+				// Python docstring a comment and a triple quoted string opened
+				// after code on the line not one.
+				tally.Comment++
 			case SBlank:
 				tally.Blank++
 			}
@@ -600,7 +623,7 @@ type spliceRule struct {
 // it. See spliceRule, and spec 07 03-architecture §7.1.
 func resetCounterLineState(content []byte, index int, state counterState, splice spliceRule) counterState {
 	if !splice.Splices {
-		return resetState(state)
+		return resetCounterState(state)
 	}
 
 	ignoreEscape := false
@@ -736,6 +759,19 @@ func counterSpecs() []counterSpec {
 			Quotes:           []string{`"`, `"`, `'`, `'`},
 			Stop:             &phpStop,
 			StopNoComplexity: &phpStopNoComplexity,
+		},
+		{
+			Language:         "Python",
+			Count:            countLoopPython,
+			Extension:        ".py",
+			Anchors:          pythonComplexityAnchors,
+			QuoteAnchors:     pythonQuoteAnchors,
+			LineComments:     []string{"#"},
+			BlockComments:    nil,
+			Quotes:           pythonQuotes(),
+			Stop:             &pythonStop,
+			StopNoComplexity: &pythonStopNoComplexity,
+			Collisions:       "fr",
 		},
 		{
 			Language:         "Ruby",
