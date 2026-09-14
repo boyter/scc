@@ -52,11 +52,28 @@ func TestReadFileShortReadsAreNotTheEnd(t *testing.T) {
 		// told is what the reader is told the file holds, standing in for what
 		// a stat returned.
 		told func(n int) int
+		// mayTruncate marks the input where a short read genuinely cannot be
+		// told from the end of the file, so a prefix is all that is promised.
+		mayTruncate bool
 	}{
-		{"stats as zero, the way a fifo and /proc do", func(int) int { return 0 }},
-		{"stats truthfully, but the reads are chopped up", func(n int) int { return n }},
-		{"stats short, the file grew and the reads are chopped", func(n int) int { return n / 2 }},
-		{"stats long, the file shrank and the reads are chopped", func(n int) int { return n * 2 }},
+		{name: "stats as zero, the way a fifo and /proc do", told: func(int) int { return 0 }},
+		{name: "stats truthfully, but the reads are chopped up", told: func(n int) int { return n }},
+		{name: "stats long, the file shrank and the reads are chopped", told: func(n int) int { return n * 2 }},
+		{
+			// The one input the first-read rule cannot cover. A source that
+			// reports a nonzero size and also chops its reads can hand back a
+			// chop landing anywhere at or past that size, and nothing in the
+			// read says whether the file ended there or merely reached the size
+			// it used to be. Telling the two apart costs the second read the
+			// whole change exists to avoid, so what is asserted here is what is
+			// actually promised: whatever comes back is a correct prefix, never
+			// wrong bytes. scc cannot reach this - a fifo stats as zero, and
+			// size > 0 gates the shortcut - so the case is here to pin the
+			// limit down, not to describe a file scc will meet.
+			name:        "stats short, the file grew and the reads are chopped",
+			told:        func(n int) int { return n / 2 },
+			mayTruncate: true,
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			path := filepath.Join(t.TempDir(), "chunked.go")
@@ -87,6 +104,14 @@ func TestReadFileShortReadsAreNotTheEnd(t *testing.T) {
 			case got := <-done:
 				if got == nil {
 					t.Fatal("reading the fifo failed")
+				}
+				if test.mayTruncate {
+					if !bytes.HasPrefix(want, got) {
+						t.Fatalf("read %d bytes of a %d byte fifo and they are not a prefix of it",
+							len(got), len(want))
+					}
+
+					return
 				}
 				if !bytes.Equal(got, want) {
 					t.Fatalf("read %d bytes of a %d byte fifo, so a short read was taken for the end",

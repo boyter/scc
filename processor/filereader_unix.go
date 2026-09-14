@@ -68,16 +68,30 @@ func (reader *FileReader) readFileInto(path string, buf []byte, size int) ([]byt
 		if n > 0 {
 			total += n
 
-			// The buffer is always larger than the size by readSlack, so a
-			// first read that came up short of what was asked for and still met
-			// the stat's promise has reached the end of the file.
+			// A first read that came up short of what was asked for and still
+			// met the stat's promise has reached the end of the file, because
+			// a regular file only ever returns less than was asked for at the
+			// end of it. That is the whole of the argument, and it rests on the
+			// file being regular rather than on any arithmetic about the
+			// buffer: ReadFile hands us a pooled buffer rounded up to a power
+			// of two, so len(buf) can be close to twice the size and n < wanted
+			// is a far weaker statement than "short of size + readSlack".
 			//
-			// Only the first read gets that treatment. A second short read
-			// means the reads are being chopped up, and once that is happening
-			// nothing short of a zero-length read proves anything: the chop can
-			// land exactly on the size of a file that has since grown, which is
-			// the one case this would otherwise truncate.
-			// TestReadFileShortReadsAreNotTheEnd holds it to that.
+			// Only the first read gets that treatment. Once a read has been
+			// chopped the reads are being chopped, and after that nothing short
+			// of a zero-length read proves anything.
+			//
+			// What this does NOT cover is a source that both reports a nonzero
+			// size and chops its reads, where a chop can land anywhere at or
+			// past the size of a file that has since grown and is then taken
+			// for the end. No read can tell that apart from the file simply
+			// having ended, so no arrangement of this test can; confirming it
+			// costs the second read the whole change exists to avoid. scc does
+			// not meet it, because size comes from a stat of a regular file and
+			// anything that chops - a fifo, /proc, sysfs - stats as zero and is
+			// excluded by size > 0 below. A network filesystem serving a file
+			// that is growing is the case that would.
+			// TestReadFileShortReadsAreNotTheEnd holds it to all of that.
 			if first && n < wanted && size > 0 && total >= size {
 				break
 			}
