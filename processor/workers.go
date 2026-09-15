@@ -1236,11 +1236,19 @@ func (ctx processorContext) processFile(job *FileJob) bool {
 		// code and different comments hashed alike without counting alike.
 		// Which of them survived was then whichever worker got here first, and
 		// the totals moved from run to run: the same tree answered ten
-		// different line counts in ten runs. Hashing the file itself makes a
-		// duplicate set a set of identical files, which count identically, so
-		// it no longer matters which one is kept.
+		// different line counts in ten runs.
+		//
+		// The language goes in with the bytes because the bytes alone do not
+		// say what they count as. examples/language holds test.tf and
+		// test.tofu, which are byte for byte the same file, and Terraform reads
+		// 23 branches in it where OpenTofu reads 25. Hashing content alone made
+		// them duplicates of each other and kept whichever arrived first, so
+		// one run in ten reported the other one's complexity. With the language
+		// in the digest a duplicate set is a set of files that count
+		// identically, which is what lets it not matter which one is kept.
 		sum := blake2b.Sum256(job.Content)
-		jobHash := sum[:]
+		keyed := blake2b.Sum256(append([]byte(job.Language+"\x00"), sum[:]...))
+		jobHash := keyed[:]
 
 		duplicates.mux.Lock()
 		if duplicates.Check(job.Bytes, jobHash) {

@@ -611,6 +611,28 @@ func TestDuplicates(t *testing.T) {
 	}
 }
 
+// -d removes duplicates, and what made that worth fixing was not the removing
+// but that two runs over the same tree did not agree on what was left. The
+// count alone, which is what TestDuplicates asserts, cannot see that: it is the
+// same number whichever of the duplicates survived. Pin the whole of the output
+// instead, over a tree with enough in it that the workers race for real.
+func TestDuplicatesAreDeterministic(t *testing.T) {
+	first, err := runSCC("-f", "json", "-d", "./examples/language/")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for range 10 {
+		again, err := runSCC("-f", "json", "-d", "./examples/language/")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if first != again {
+			t.Fatalf("-d gave two different answers for the same tree\nfirst:\n%s\nagain:\n%s", first, again)
+		}
+	}
+}
+
 func TestCountAs(t *testing.T) {
 	testCases := []struct {
 		countAs  string
