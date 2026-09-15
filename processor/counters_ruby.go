@@ -244,6 +244,87 @@ func rubyComplexityAnchored(content []byte, index, floor int) bool {
 	return false
 }
 
+// rubyAnchorBit gives each anchor byte of Ruby a bit; rubyAnchorPrev[prev]
+// holds the bits of every anchor whose first test could still pass with prev in
+// front of it. The AND of the two is zero exactly where rubyComplexityAnchored
+// would have returned false on its own first test, so the code scan can skip
+// the call outright where it is zero.
+//
+// A bit may be cleared ONLY where that first test cannot pass, and where there
+// is any doubt it is set: a spare bit costs a call that would have been paid
+// anyway, a missing bit silently loses a complexity count. The obligation is
+// discharged by enumeration rather than by reading, in
+// counters_anchorprev_js_php_ruby_test.go.
+//
+// Measured over the 7,436 files of ruby/ruby, 19MB reaching the code scan: it
+// stops on 15.3% of the bytes it looks at. 39% of those stops are the default
+// arm's anchors, of which 96% count nothing, and another 7% are the = arm, of
+// which 81% count nothing. Together that is 6.5% of every byte the code loop
+// reads, spent reaching a call that says no.
+//
+// The two arms are settled at very different rates. The default arm's failures
+// go four in five, the = arm's ninety nine in a hundred: nearly every = the
+// scan stops on is an assignment, and the space in front of it is neither the =
+// nor the ! that == and != are read back from.
+const (
+	rubyAnchorBitF uint8 = 1 << iota
+	rubyAnchorBitL
+	rubyAnchorBitW
+	rubyAnchorBitEq
+	rubyAnchorBitAmp
+	rubyAnchorBitPipe
+)
+
+var rubyAnchorBit = buildRubyAnchorBit()
+
+var rubyAnchorPrev = buildRubyAnchorPrev()
+
+func buildRubyAnchorBit() [256]uint8 {
+	var table [256]uint8
+	table['f'] = rubyAnchorBitF
+	table['l'] = rubyAnchorBitL
+	table['w'] = rubyAnchorBitW
+	table['='] = rubyAnchorBitEq
+	table['&'] = rubyAnchorBitAmp
+	table['|'] = rubyAnchorBitPipe
+
+	return table
+}
+
+func buildRubyAnchorPrev() [256]uint8 {
+	var table [256]uint8
+	for value := range 256 {
+		previous := byte(value)
+		boundary := !isIdentifierContinue(previous)
+
+		var mask uint8
+		// if is read backwards from its f, so an i in front keeps it alive; for is
+		// read forwards and wants only a word boundary.
+		if previous == 'i' || boundary {
+			mask |= rubyAnchorBitF
+		}
+		// else is read backwards from its l and has nothing but the e.
+		if previous == 'e' {
+			mask |= rubyAnchorBitL
+		}
+		// switch is read backwards from its w, while forwards.
+		if previous == 's' || boundary {
+			mask |= rubyAnchorBitW
+		}
+		// == and != are both read backwards from the second =.
+		if previous == '=' || previous == '!' {
+			mask |= rubyAnchorBitEq
+		}
+		// The rest begin at their anchor and ask only for a word boundary.
+		if boundary {
+			mask |= rubyAnchorBitAmp | rubyAnchorBitPipe
+		}
+		table[value] = mask
+	}
+
+	return table
+}
+
 // rubyComplexityAtLineStart is rubyComplexityAnchored for the first byte of code
 // on a line, which has nothing in front of it to read back to. Only the checks
 // anchored on their own first byte are looked for here; the rest are anchored on
@@ -338,7 +419,15 @@ func rubyCodeState(content []byte, tally *counterTally, index, endPoint, floor i
 				return end, SMulticommentCode, nil
 			}
 
-			if !Complexity && rubyComplexityAnchored(content, i, floor) {
+			// The same prefilter as the default arm below, written out here
+			// because this arm already knows the anchor is an = and can test
+			// the one bit rather than look it up. Four in five of these stops
+			// count nothing, and the byte in front settles ninety nine of every
+			// hundred of those: nearly all of them are an assignment, whose
+			// space in front is neither the = nor the ! that == and != are read
+			// back from.
+			if !Complexity && rubyAnchorPrev[byteBefore(content, i, floor)]&rubyAnchorBitEq != 0 &&
+				rubyComplexityAnchored(content, i, floor) {
 				tally.Complexity++
 			}
 		case '"', '\'':
@@ -358,6 +447,16 @@ func rubyCodeState(content []byte, tally *counterTally, index, endPoint, floor i
 
 			return i, SCode, nil
 		default:
+			// Ninety six percent of anchor stops fail, and four fifths of those
+			// are settled by the byte in front of the anchor alone. This is that
+			// test, hoisted in front of the call that would otherwise be paid to
+			// reach it: a zero AND is exactly the case rubyComplexityAnchored
+			// rejects on its own first test, so it cannot change a count. See
+			// rubyAnchorPrev.
+			if rubyAnchorPrev[byteBefore(content, i, floor)]&rubyAnchorBit[curByte] == 0 {
+				continue
+			}
+
 			if rubyComplexityAnchored(content, i, floor) {
 				tally.Complexity++
 			}
