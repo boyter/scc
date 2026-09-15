@@ -633,6 +633,25 @@ func TestDuplicatesAreDeterministic(t *testing.T) {
 	}
 }
 
+// --list-counters is how somebody finds out which languages have a scanner of
+// their own now that the flag turns them off rather than on, and nothing has
+// run it until now.
+func TestListCounters(t *testing.T) {
+	output, err := runSCC("--list-counters")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(output, "--no-per-language-counters") {
+		t.Errorf("--list-counters does not say how to turn them off, output:\n%s", output)
+	}
+	for _, language := range []string{"C", "Go", "Java", "Python", "Rust"} {
+		if !strings.Contains(output, "\n  "+language+"\n") {
+			t.Errorf("--list-counters does not list %s, output:\n%s", language, output)
+		}
+	}
+}
+
 func TestCountAs(t *testing.T) {
 	testCases := []struct {
 		countAs  string
