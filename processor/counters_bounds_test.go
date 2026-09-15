@@ -27,17 +27,33 @@ func countWithoutPanic(t *testing.T, language string, content []byte) {
 	CountStats(fileJob)
 }
 
-var countersBoundsLanguages = []string{"C", "C Header", "Java"}
+var countersBoundsLanguages = counterLanguages()
 
 // TestSpecialisedCountersShortContent walks every string of up to three bytes
 // over the bytes that mean something to these counters, with and without a byte
 // order mark, since the mark moves the index the loop starts from.
 func TestSpecialisedCountersShortContent(t *testing.T) {
 	ProcessConstants()
+	previous := SpecialisedCounters
+	t.Cleanup(func() { SpecialisedCounters = previous })
 	SpecialisedCounters = true
-	defer func() { SpecialisedCounters = false }()
 
-	alphabet := []byte{'"', '\'', '\\', '/', '*', '\n', '\r', ' ', '\t', 0, 'a', '{', '#'}
+	// h and y are the anchors Java and Kotlin read furthest back from: four
+	// bytes for the catch behind an h, two for the try behind a y. A string of
+	// three bytes cannot hold either keyword, which is the point: it puts the
+	// anchor where the read runs off the front of the file.
+	//
+	// ? is Swift's whole complexity check and JavaScript's postfix three, and
+	// < and > are Scala's four bracket checks. Each is a stop byte that is not
+	// a letter, so a short string of them reaches the matcher with nothing in
+	// front of it and nothing behind.
+	// R and ( are C++: a raw string is recognised by reading R back from its
+	// quote and its closer is read out of the file between the two, so a bare
+	// R" or R"( at the end of a file is where that read can run off the end.
+	// k and m are the anchors LLVM IR reads furthest back from, invoke and
+	// llvm.loop, and the dot belongs to llvm.loop as well; without them the
+	// walk never puts those arms where the read runs off the front of a file.
+	alphabet := []byte{'"', '\'', '\\', '/', '*', '\n', '\r', ' ', '\t', 0, 'a', '{', '#', 'h', 'y', '?', '<', '>', '@', '`', 'R', '(', '=', 'b', 'e', 'r', 'f', 'k', 'm', '.'}
 
 	var contents [][]byte
 	for _, a := range alphabet {
@@ -68,10 +84,14 @@ func TestSpecialisedCountersShortContent(t *testing.T) {
 // backslashes.
 func TestSpecialisedCountersRandomContent(t *testing.T) {
 	ProcessConstants()
+	previous := SpecialisedCounters
+	t.Cleanup(func() { SpecialisedCounters = previous })
 	SpecialisedCounters = true
-	defer func() { SpecialisedCounters = false }()
 
-	alphabet := []byte(`"'\/*` + "\n\r\t {}#abc=!|&")
+	// Every letter the complexity checks of these languages are spelled with, so
+	// a random string can assemble a keyword, a near miss of one, and an anchor
+	// with nothing behind it.
+	alphabet := []byte(`"'\/*()` + "\n\r\t {}#=!|&?<>@`" + "abcdefghilnopRrstuUwxyL8" + "km.v%")
 	random := rand.New(rand.NewSource(1))
 
 	for _, language := range countersBoundsLanguages {

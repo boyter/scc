@@ -173,13 +173,30 @@ func guessByHeuristics(filename string, plan *heuristicPlan, toCheck []byte) (st
 	} else {
 		found = make([]bool, plan.nlits)
 	}
-	plan.present(toCheck, found)
+	var hitStack [planFoundStack]bool
+	var hit []bool
+	if len(plan.anchRe) <= planFoundStack {
+		hit = hitStack[:len(plan.anchRe)]
+	} else {
+		hit = make([]bool, len(plan.anchRe))
+	}
+	plan.present(toCheck, found, hit)
 
 	var best languageGuess
 
 	for i, lan := range plan.langs {
 		count := 0
 		for _, h := range lan.heuristics {
+			// An anchored heuristic was settled by the line walk, which tried
+			// its pattern where the pattern could begin rather than searching
+			// the file for it.
+			if h.slot >= 0 {
+				if hit[h.slot] {
+					count++
+				}
+				continue
+			}
+
 			// Cheap necessary-literal pre-check so the expensive regex only runs
 			// on the rare files that could actually match it.
 			canMatch := len(h.ids) == 0

@@ -4,7 +4,6 @@ package processor
 
 import (
 	"bytes"
-	"hash"
 	"os"
 	"regexp"
 	"runtime/debug"
@@ -447,7 +446,6 @@ func codeState(
 	endString []byte,
 	endComments [][]byte,
 	langFeatures LanguageFeature,
-	digest *hash.Hash,
 ) (int, int64, []byte, [][]byte, bool) {
 	// Hacky fix to https://github.com/boyter/scc/issues/181
 	if endPoint > len(fileJob.Content) {
@@ -458,7 +456,7 @@ func codeState(
 	// rather than only the ones it stopped on, so they keep the byte at a time
 	// scan. Neither is on in a normal count.
 	if Duplicates || fileJob.ContentByteType != nil {
-		return codeStateSlow(fileJob, index, endPoint, currentState, endString, endComments, langFeatures, digest)
+		return codeStateSlow(fileJob, index, endPoint, currentState, endString, endComments, langFeatures)
 	}
 
 	content := fileJob.Content
@@ -518,7 +516,14 @@ func codeState(
 			if langFeatures.Nested || len(endComments) == 0 {
 				endComments = append(endComments, endString)
 				currentState = SMulticommentCode
-				i += offsetJump - 1
+				// max(offsetJump, 1) because Trie.Match reports the depth its
+				// walk reached, which is one short when the token runs to the
+				// very end of the slice it was handed: there is no byte left to
+				// stop on. For a token of a single byte that is zero, and the
+				// step back by one drove the index to -1 and crashed the count
+				// on a file ending in one. prepareString already clamps the same
+				// way for the same reason.
+				i += max(offsetJump, 1) - 1
 
 				return i, currentState, endString, endComments, false
 			}
@@ -538,7 +543,7 @@ func codeState(
 			if i+offsetJump >= endPoint {
 				return index, currentState, endString, endComments, false
 			}
-			i += offsetJump - 1
+			i += max(offsetJump, 1) - 1
 
 		case TComplexityPostfix:
 			countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
@@ -566,7 +571,6 @@ func codeStateSlow(
 	endString []byte,
 	endComments [][]byte,
 	langFeatures LanguageFeature,
-	digest *hash.Hash,
 ) (int, int64, []byte, [][]byte, bool) {
 	for i := index; i < endPoint; i++ {
 		curByte := fileJob.Content[i]
@@ -586,14 +590,6 @@ func codeStateSlow(
 		}
 
 		if shouldProcess(curByte, langFeatures.ProcessMask) {
-			if Duplicates {
-				// Technically this is wrong because we skip bytes, so this is not a true
-				// hash of the file contents, but for duplicate files it shouldn't matter
-				// as both will skip the same way
-				digestible := []byte{fileJob.Content[index]}
-				(*digest).Write(digestible)
-			}
-
 			switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[i:]); tokenType {
 			case TString:
 				// If we are in string state then check what sort of string so we know if docstring OR ignoreescape string
@@ -621,7 +617,7 @@ func codeStateSlow(
 				if langFeatures.Nested || len(endComments) == 0 {
 					endComments = append(endComments, endString)
 					currentState = SMulticommentCode
-					i += offsetJump - 1
+					i += max(offsetJump, 1) - 1
 
 					return i, currentState, endString, endComments, false
 				}
@@ -634,7 +630,7 @@ func codeStateSlow(
 				}
 				// Skip past the matched token so a shorter token overlapping it
 				// (e.g. 為是 inside 恆為是) is not also counted. See #466.
-				i += offsetJump - 1
+				i += max(offsetJump, 1) - 1
 
 			case TComplexityPostfix:
 				countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
@@ -674,7 +670,7 @@ func commentState(fileJob *FileJob, index int, endPoint int, currentState int64,
 				}
 			}
 
-			i += offsetJump - 1
+			i += max(offsetJump, 1) - 1
 			return i, currentState, endString, endComments
 		}
 		// Check if we are entering another multiline comment
@@ -682,7 +678,7 @@ func commentState(fileJob *FileJob, index int, endPoint int, currentState int64,
 		if langFeatures.Nested || len(endComments) == 0 {
 			if ok, offsetJump, endString := langFeatures.MultiLineComments.Match(fileJob.Content[i:]); ok != 0 {
 				endComments = append(endComments, endString)
-				i += offsetJump - 1
+				i += max(offsetJump, 1) - 1
 
 				return i, currentState, endString, endComments
 			}
@@ -719,7 +715,7 @@ func blankState(
 		if langFeatures.Nested || len(endComments) == 0 {
 			endComments = append(endComments, endString)
 			currentState = SMulticomment
-			index += offsetJump - 1
+			index += max(offsetJump, 1) - 1
 			if fileJob.ContentByteType != nil {
 				fileJob.ContentByteType[index] = ByteTypeComment
 			}
@@ -769,7 +765,7 @@ func blankState(
 		}
 		// Skip past the matched token so a shorter token overlapping it
 		// (e.g. 為是 inside 恆為是) is not also counted. See #466.
-		index += offsetJump - 1
+		index += max(offsetJump, 1) - 1
 
 	case TComplexityPostfix:
 		currentState = SCode
@@ -896,7 +892,6 @@ func CountStats(fileJob *FileJob) {
 	// crypto secure here either so no need to eat the performance cost of a better
 	// hash method
 	if Duplicates {
-		fileJob.Hash, _ = blake2b.New256(nil)
 	}
 
 	// If the file has a length of 0 it is empty then we say it has no lines
@@ -953,19 +948,16 @@ func CountStats(fileJob *FileJob) {
 	// reports whether it ran to the end of the file: a binary marker, a large
 	// file cut short or a callback asking to stop all end the count there and
 	// the work below is not wanted.
-	switch {
-	case useJavaCounter(fileJob):
-		if !countLoopJava(fileJob, bomSkip, endPoint) {
+	if count := counterFor(fileJob); count != nil {
+		if !count(fileJob, bomSkip, endPoint) {
 			return
 		}
-	case useCCounter(fileJob):
-		if !countLoopC(fileJob, bomSkip, endPoint, fileJob.Language == "C Header") {
+	} else if noTokensAtAll(langFeatures) && specialisedCounterEligible(fileJob) {
+		if !countLoopNoTokens(fileJob, bomSkip, endPoint) {
 			return
 		}
-	default:
-		if !countLoopGeneric(fileJob, langFeatures, bomSkip, endPoint, currentState, endString, endComments, ignoreEscape) {
-			return
-		}
+	} else if !countLoopGeneric(fileJob, langFeatures, bomSkip, endPoint, currentState, endString, endComments, ignoreEscape) {
+		return
 	}
 
 	if UlocMode {
@@ -1238,8 +1230,19 @@ func (ctx processorContext) processFile(job *FileJob) bool {
 	CountStats(job)
 
 	if Duplicates {
+		// Over the whole of the file, not the bytes the counter happened to
+		// look at. The digest used to be fed a byte at a time from codeState,
+		// which skipped comments and whitespace, so two files with the same
+		// code and different comments hashed alike without counting alike.
+		// Which of them survived was then whichever worker got here first, and
+		// the totals moved from run to run: the same tree answered ten
+		// different line counts in ten runs. Hashing the file itself makes a
+		// duplicate set a set of identical files, which count identically, so
+		// it no longer matters which one is kept.
+		sum := blake2b.Sum256(job.Content)
+		jobHash := sum[:]
+
 		duplicates.mux.Lock()
-		jobHash := job.Hash.Sum(nil)
 		if duplicates.Check(job.Bytes, jobHash) {
 			printWarnF("skipping duplicate file: %s", job.Location)
 			duplicates.mux.Unlock()
@@ -1412,7 +1415,6 @@ func countLoopGeneric(fileJob *FileJob, langFeatures LanguageFeature, bomSkip, e
 					endString,
 					endComments,
 					langFeatures,
-					&fileJob.Hash,
 				)
 			case SString:
 				index, currentState = stringState(fileJob, index, endPoint, endString, currentState, ignoreEscape, langFeatures.Escape)
@@ -1430,6 +1432,32 @@ func countLoopGeneric(fileJob *FileJob, langFeatures LanguageFeature, bomSkip, e
 					endString,
 					langFeatures,
 				)
+			case SComment, SCommentCode:
+				// A line comment runs to the end of the line and nothing in it
+				// can move the state, so the only byte of it the loop has
+				// anything to say about is the newline that ends it. Before
+				// this case existed the switch had none for either comment
+				// state and every byte of a line comment walked the whole loop
+				// body to do nothing at all, which on a tree of LLVM IR was
+				// nine tenths of every iteration the loop ran.
+				// byteType wants a classification written for every byte
+				// of the file, so the skip is only for a plain count.
+				if byteType == nil {
+					if j := bytes.IndexByte(content[index:endPoint], '\n'); j >= 0 {
+						index += j
+					} else {
+						// endPoint is Bytes-1, so landing on it lands on the
+						// last byte of the file and the line-end test below
+						// takes it. This is only here to save the iterations
+						// between here and there - dropping it answers the
+						// same, a byte at a time - but it is the one line that
+						// puts index somewhere the walk did not. Were endPoint
+						// ever to become len(content), it would jump the loop
+						// past its own bound and the count would stop early
+						// with no error, so the two have to move together.
+						index = endPoint
+					}
+				}
 			case SBlank, SMulticommentBlank:
 				// From blank we can move into comment, move into a multiline comment
 				// or move into code but we can only do one.

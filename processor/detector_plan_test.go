@@ -95,7 +95,7 @@ func TestHeuristicPlanNeverMissesALiteral(t *testing.T) {
 
 		for _, content := range corpus {
 			found := make([]bool, plan.nlits)
-			plan.present(content, found)
+			plan.present(content, found, make([]bool, len(plan.anchRe)))
 
 			// Walk the same heuristics the plan was built from and check that
 			// anything the old scan found the plan found too.
@@ -180,7 +180,7 @@ func TestScanShortLiterals(t *testing.T) {
 		"<<<", "<a<ab<b", "the quick brown fox", "<z",
 	} {
 		found := make([]bool, plan.nlits)
-		plan.present([]byte(content), found)
+		plan.present([]byte(content), found, make([]bool, len(plan.anchRe)))
 		for id, lit := range lits {
 			if want := bytes.Contains([]byte(content), lit); want != found[id] {
 				t.Errorf("content %q literal %q: plan said %v, search said %v", content, lit, found[id], want)
@@ -231,7 +231,7 @@ func TestPlanAnswersUnanchoredExactly(t *testing.T) {
 			}
 
 			found := make([]bool, plan.nlits)
-			plan.present(content, found)
+			plan.present(content, found, make([]bool, len(plan.anchRe)))
 
 			for _, pl := range plan.langs {
 				LanguageFeaturesMutex.Lock()

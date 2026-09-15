@@ -9,24 +9,31 @@ import (
 	"sync"
 )
 
-// Used as quick lookup for files with the same name to avoid some processing
-// needs to be sync.Map as it potentially could be called by many GoRoutines
-var extensionCache sync.Map
-
-// Added as a way to track files per run.
+// Added as a way to track files per run. Needs to be a sync.Map as it is read
+// and written by every worker.
 var visitedPaths sync.Map
 
-// A custom version of extracting extensions for a file
-// which also has a case-insensitive cache in order to save
-// some needless processing
+// A custom version of extracting extensions for a file, case insensitive, and
+// carrying the second extension where a name has two.
+// getExtension is not cached, and used to be.
+//
+// The cache was keyed on the whole file name rather than on anything shared
+// between files, so it held one entry per distinct name in the tree and missed
+// four times in five on the trees where it matters: 146,245 distinct names over
+// llvm-project's 184,219 files, 78,049 over the Linux kernel's 99,112. A miss
+// paid for a sync.Map load, the work below, and a sync.Map store, and both map
+// operations boxed a string into an interface on the way, which allocates. It
+// also kept every entry for the life of the process.
+//
+// What it was avoiding is two backwards scans and, for a name carrying two
+// extensions, one small concatenation. A name with one extension returns a slice
+// of itself and allocates nothing at all. On a walk of llvm-project that read as
+// 23% of the run, nearly all of it sync.Map and the boxing rather than the work
+// it stood in front of.
 func getExtension(name string) string {
 	name = strings.ToLower(name)
-	extension, ok := extensionCache.Load(name)
 
-	if ok {
-		return extension.(string)
-	}
-
+	var extension string
 	ext := filepath.Ext(name)
 
 	if ext == "" || strings.LastIndex(name, ".") == 0 {
@@ -40,8 +47,7 @@ func getExtension(name string) string {
 		extension = strings.TrimPrefix(subExt+ext, ".")
 	}
 
-	extensionCache.Store(name, extension)
-	return extension.(string)
+	return extension
 }
 
 func cleanVisitedPaths() {

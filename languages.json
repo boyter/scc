@@ -3850,14 +3850,14 @@
       "switch ",
       "while ",
       "else ",
+      "case ",
+      "case(",
       "|| ",
       "&& ",
       "!= ",
-      "== ",
-      "?.",
-      "?? ",
-      "??= "
+      "== "
     ],
+    "complexitychecks_postfix": ["?.", "??", "??="],
     "extensions": ["js", "cjs", "mjs"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],

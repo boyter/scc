@@ -1969,15 +1969,15 @@ func TestClassifyContentCommentOnly(t *testing.T) {
 		t.Fatal("Expected ContentByteType to be non-nil")
 	}
 
-	// After the first byte that triggers comment state, subsequent bytes should be comment
-	hasComment := false
+	// Every byte of the line, not merely one of them. The two bytes of the //
+	// are classified before the loop reaches the comment state at all, so "at
+	// least one" passed even with the whole body left unclassified, which is
+	// exactly what the SComment skip does when its byteType guard is removed.
 	for i := range fileJob.Content {
-		if fileJob.ContentByteType[i] == ByteTypeComment {
-			hasComment = true
+		if fileJob.ContentByteType[i] != ByteTypeComment {
+			t.Errorf("byte %d (%q) is %v, want ByteTypeComment: the whole of a comment-only line is comment",
+				i, fileJob.Content[i], fileJob.ContentByteType[i])
 		}
-	}
-	if !hasComment {
-		t.Error("Expected at least some ByteTypeComment bytes for a comment-only line")
 	}
 
 	if fileJob.Comment != 1 {
