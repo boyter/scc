@@ -45,8 +45,11 @@ type anchorPrefilter struct {
 	Checks   map[string]byte
 	// CasedEarly are anchor bytes the code scan answers in a case of their own
 	// before it reaches default, so the prefilter never sees them and a bit for
-	// them would mean nothing. Rust's ? is the only one: rustCodeState counts it
-	// where it stands and rustComplexityAnchored has no arm for it at all.
+	// them would mean nothing. Rust's and JavaScript's ?, and TypeScript's ?, =
+	// and !, are all of them: each code scan answers those in a case of its own
+	// and the matcher has no arm for them. The exemption is not taken on trust -
+	// TestAnchorPrefilterKeepsEveryCheck asserts the matcher really does never
+	// count them, so adding an arm fails the build rather than losing counts.
 	CasedEarly []byte
 }
 
@@ -76,6 +79,10 @@ func anchorPrefilters() []anchorPrefilter {
 		{"Python", widen(pythonAnchorBit), widen(pythonAnchorPrev), pythonComplexityAnchored, pythonComplexityAnchors, nil},
 		{"LLVM IR", widen(llvmAnchorBit), widen(llvmAnchorPrev), llvmComplexityAnchored, llvmComplexityAnchors, nil},
 		{"Assembly", widen(asmAnchorBit), widen(asmAnchorPrev), asmComplexityAnchored, asmComplexityAnchors, nil},
+		{"JavaScript", widen(jsAnchorBit), widen(jsAnchorPrev), jsComplexityAnchored, jsComplexityAnchors, []byte{'?'}},
+		{"TypeScript", widen(tsAnchorBit), widen(tsAnchorPrev), tsComplexityAnchored, tsComplexityAnchors, []byte{'?', '=', '!'}},
+		{"PHP", widen(phpAnchorBit), widen(phpAnchorPrev), phpComplexityAnchored, phpComplexityAnchors, nil},
+		{"Ruby", widen(rubyAnchorBit), widen(rubyAnchorPrev), rubyComplexityAnchored, rubyComplexityAnchors, nil},
 	}
 }
 
