@@ -35,10 +35,11 @@ github.com/ProtonMail/go-crypto/openpgp/x448
 # github.com/agnivade/levenshtein v1.2.2-0.20250519083737-420867539855
 ## explicit; go 1.21
 github.com/agnivade/levenshtein
-# github.com/boyter/gocodewalker v1.5.2-0.20260905064325-27ad42ef7a81
+# github.com/boyter/gocodewalker v1.5.2-0.20260915052357-79ea126d5360
 ## explicit; go 1.23.0
 github.com/boyter/gocodewalker
 github.com/boyter/gocodewalker/go-gitignore
+github.com/boyter/gocodewalker/go-gitignore/internal/fnmatch
 # github.com/boyter/simplecache v0.0.0-20260310220729-445661819a53
 ## explicit; go 1.23.3
 github.com/boyter/simplecache
@@ -63,9 +64,6 @@ github.com/cloudflare/circl/sign/ed448
 ## explicit; go 1.18
 github.com/cyphar/filepath-securejoin
 github.com/cyphar/filepath-securejoin/internal/consts
-# github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964
-## explicit
-github.com/danwakefield/fnmatch
 # github.com/emirpasic/gods v1.18.1
 ## explicit; go 1.2
 github.com/emirpasic/gods/containers

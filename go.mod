@@ -6,7 +6,7 @@ ignore ./examples
 
 require (
 	github.com/agnivade/levenshtein v1.2.2-0.20250519083737-420867539855
-	github.com/boyter/gocodewalker v1.5.2-0.20260905064325-27ad42ef7a81
+	github.com/boyter/gocodewalker v1.5.2-0.20260915052357-79ea126d5360
 	github.com/boyter/simplecache v0.0.0-20260310220729-445661819a53
 	github.com/clipperhouse/uax29/v2 v2.7.0
 	github.com/go-git/go-git/v5 v5.19.2
@@ -28,7 +28,6 @@ require (
 	github.com/ProtonMail/go-crypto v1.4.1 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/cyphar/filepath-securejoin v0.6.1 // indirect
-	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.9.0 // indirect

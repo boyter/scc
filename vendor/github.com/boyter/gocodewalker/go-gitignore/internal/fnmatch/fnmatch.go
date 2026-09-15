@@ -1,14 +1,43 @@
-// Provide string-matching based on fnmatch.3
-package fnmatch
-
+// Package fnmatch provides string matching based on fnmatch.3.
+//
+// This is a fork of github.com/danwakefield/fnmatch, which is a clone of
+// kballard's golang fnmatch gist (https://gist.github.com/kballard/272720).
+// See LICENSE for the original copyright, which is retained. Upstream was last
+// changed in 2016 and does not take fixes, and the two defects below are both
+// reachable from an ordinary .gitignore, so it is carried here instead.
+//
+// Changes from upstream:
+//
+//   - rangematch read the byte after a character class member before checking
+//     that there was one, so a pattern ending in "[" plus a single multi byte
+//     rune -- "[中", "[é", "[😀", or "[" followed by any invalid UTF-8, which
+//     the .gitignore lexer turns into U+FFFD -- panicked with an index out of
+//     range. Such a pattern now matches nothing, which is both what this
+//     implementation already returned for the ASCII cases that did not panic
+//     and what git does with an unterminated class.
+//
+//   - Match read the first byte of the subject to apply FNM_PERIOD after a
+//     "*" without checking that there was one, so Match("*", "", FNM_PERIOD)
+//     panicked. An empty subject has no leading period to object to. This one
+//     is not reachable from this package, which never passes FNM_PERIOD, but
+//     it is a trap for anyone who starts.
+//
+//   - Match recursed over every remaining suffix of the subject at each "*",
+//     so a pattern with several of them cost O(len(s)^stars): "*0*0*!*01"
+//     against two thousand characters took nine seconds. Subproblems that have
+//     already failed are now remembered, which bounds the work without
+//     changing any answer, since it only declines to recompute a result it
+//     already has.
+//
 // There are a few issues that I believe to be bugs, but this implementation is
 // based as closely as possible on BSD fnmatch. These bugs are present in the
 // source of BSD fnmatch, and so are replicated here. The issues are as follows:
 //
-// * FNM_PERIOD is no longer observed after the first * in a pattern
-//   This only applies to matches done with FNM_PATHNAME as well
-// * FNM_PERIOD doesn't apply to ranges. According to the documentation,
-//   a period must be matched explicitly, but a range will match it too
+//   - FNM_PERIOD is no longer observed after the first * in a pattern
+//     This only applies to matches done with FNM_PATHNAME as well
+//   - FNM_PERIOD doesn't apply to ranges. According to the documentation,
+//     a period must be matched explicitly, but a range will match it too
+package fnmatch
 
 import (
 	"unicode"
@@ -37,6 +66,73 @@ func unpackRune(str *string) rune {
 // and returns true if the match is successful.
 // This function should match fnmatch.3 as closely as possible.
 func Match(pattern, s string, flags int) bool {
+	return match(pattern, s, flags, &matchState{})
+}
+
+// matchKey identifies a subproblem of one top level Match. Every pattern the
+// recursion below is given is a suffix of the pattern Match was called with,
+// and every subject a suffix of its subject, so the two lengths name the pair
+// exactly. flags is part of the key because the recursion clears FNM_PERIOD.
+type matchKey struct {
+	pattern int32
+	subject int32
+	flags   int32
+} // matchKey{}
+
+// matchState is carried through one top level Match so that the "*" recursion
+// does not solve the same subproblem twice.
+//
+// Left to itself that recursion tries every remaining suffix of the subject at
+// every "*", so a pattern with several of them costs O(len(s)^stars), and
+// "*0*0*!*01" against two thousand characters took nine seconds. Remembering
+// the subproblems that failed bounds it. Only failures are worth recording, as
+// a success returns straight out of the whole recursion.
+//
+// The map is not created until the recursion has done enough work to be worth
+// the allocation, so the ordinary patterns that reach here -- one "*" against a
+// file name, a few hundred steps at most -- still match without allocating.
+type matchState struct {
+	steps  int
+	failed map[matchKey]struct{}
+} // matchState{}
+
+// memoThreshold is how many "*" expansions one Match may do before it starts
+// remembering them. A single "*" against the longest name most filesystems
+// allow is 255 expansions, and nothing that stays under this can blow up, so
+// the common patterns never pay for the map.
+//
+// A variable rather than a constant only so that the tests can run the same
+// inputs either side of it and check the answers do not move.
+var memoThreshold = 1024
+
+// expand runs one branch of the "*" recursion, consulting and recording the
+// memo once there has been enough work to justify it.
+func (m *matchState) expand(pattern, s string, flags int) bool {
+	m.steps++
+
+	if m.failed == nil {
+		if m.steps < memoThreshold {
+			return match(pattern, s, flags, m)
+		}
+
+		m.failed = make(map[matchKey]struct{})
+	}
+
+	_key := matchKey{pattern: int32(len(pattern)), subject: int32(len(s)), flags: int32(flags)}
+	if _, _seen := m.failed[_key]; _seen {
+		return false
+	}
+
+	if match(pattern, s, flags, m) {
+		return true
+	}
+
+	m.failed[_key] = struct{}{}
+
+	return false
+} // expand()
+
+func match(pattern, s string, flags int, state *matchState) bool {
 	// The implementation for this function was patterned after the BSD fnmatch.c
 	// source found at http://src.gnu-darwin.org/src/contrib/csup/fnmatch.c.html
 	noescape := (flags&FNM_NOESCAPE != 0)
@@ -78,7 +174,9 @@ func Match(pattern, s string, flags int) bool {
 			for len(pattern) > 0 && pattern[0] == '*' {
 				pattern = pattern[1:]
 			}
-			if period && s[0] == '.' && (sAtStart || (pathname && sLastUnpacked == '/')) {
+			// an empty subject has no leading period to object to, and reading
+			// s[0] to find that out panicked
+			if period && len(s) > 0 && s[0] == '.' && (sAtStart || (pathname && sLastUnpacked == '/')) {
 				return false
 			}
 			// optimize for patterns with * at end or before /
@@ -88,7 +186,6 @@ func Match(pattern, s string, flags int) bool {
 				} else {
 					return true
 				}
-				return !(pathname && strchr(s, '/') >= 0)
 			} else if pathname && pattern[0] == '/' {
 				offset := strchr(s, '/')
 				if offset == -1 {
@@ -105,7 +202,7 @@ func Match(pattern, s string, flags int) bool {
 			for test := s; len(test) > 0; unpackRune(&test) {
 				// I believe the (flags &^ FNM_PERIOD) is a bug when FNM_PATHNAME is specified
 				// but this follows exactly from how fnmatch.c implements it
-				if Match(pattern, test, (flags &^ FNM_PERIOD)) {
+				if state.expand(pattern, test, (flags &^ FNM_PERIOD)) {
 					return true
 				} else if pathname && test[0] == '/' {
 					break
@@ -172,7 +269,10 @@ func rangematch(pattern *string, test rune, flags int) bool {
 		if casefold {
 			c = unicode.ToLower(c)
 		}
-		if (*pattern)[0] == '-' && len(*pattern) > 1 && (*pattern)[1] != ']' {
+		// the length test has to come first: unpackRune above may have consumed
+		// the whole of the remaining pattern, which happens when a class member
+		// is the last thing in it and is more than one byte long, as in "[中"
+		if len(*pattern) > 1 && (*pattern)[0] == '-' && (*pattern)[1] != ']' {
 			unpackRune(pattern) // skip the -
 			c2 := unpackRune(pattern)
 			if !noescape && c2 == '\\' {
