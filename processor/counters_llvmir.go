@@ -305,12 +305,17 @@ func llvmCodeState(content []byte, tally *counterTally, index, endPoint, floor i
 		endPoint--
 	}
 
-	for i := index; i < endPoint; i++ {
-		curByte := content[i]
+	mask := stopMask(stop)
 
-		if !stop[curByte] {
-			continue
+	for i := index; i < endPoint; i++ {
+		// Eight bytes answered at a time, without a branch between them. See
+		// scanToStop.
+		at := scanToStop(content, i, endPoint, mask)
+		if at < 0 {
+			break
 		}
+		i = at
+		curByte := content[i]
 
 		switch curByte {
 		case '\n':
