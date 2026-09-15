@@ -269,6 +269,90 @@ func cppBlankState(content []byte, tally *counterTally, index, floor int) (int, 
 	return index, SCode, nil, false
 }
 
+// cppAnchorBit gives each anchor byte of C++ a bit; cppAnchorPrev[prev]
+// holds the bits of every anchor whose first test could still pass with prev in
+// front of it. The AND of the two is zero exactly where cppComplexityAnchored
+// would have returned false on its own first test, so a zero skips a call that
+// could only have said no.
+//
+// The table is a conservative superset: a bit that need not be set costs a call
+// that would have been paid anyway, while a bit wrongly cleared loses a count.
+// TestAnchorPrefilterIsConservative holds every cleared pair to being a pair the
+// function really does reject, over all 256 bytes and every anchor.
+const (
+	cppAnchorBitF uint8 = 1 << iota
+	cppAnchorBitW
+	cppAnchorBitL
+	cppAnchorBitY
+	cppAnchorBitH
+	cppAnchorBitEq
+	cppAnchorBitPipe
+	cppAnchorBitAmp
+)
+
+var cppAnchorBit = buildCppAnchorBit()
+
+var cppAnchorPrev = buildCppAnchorPrev()
+
+func buildCppAnchorBit() [256]uint8 {
+	var table [256]uint8
+	table['f'] = cppAnchorBitF
+	table['w'] = cppAnchorBitW
+	table['l'] = cppAnchorBitL
+	table['y'] = cppAnchorBitY
+	table['h'] = cppAnchorBitH
+	table['='] = cppAnchorBitEq
+	table['|'] = cppAnchorBitPipe
+	table['&'] = cppAnchorBitAmp
+
+	return table
+}
+
+func buildCppAnchorPrev() [256]uint8 {
+	var table [256]uint8
+	for value := range 256 {
+		previous := byte(value)
+		boundary := !isIdentifierContinue(previous)
+
+		var mask uint8
+		// if reads its f backwards over the i, so an i in front keeps it; every
+		// other check anchored on f is read forwards from a word boundary.
+		if previous == 'i' || boundary {
+			mask |= cppAnchorBitF
+		}
+		// switch reads its w backwards over the s; while reads forwards from a
+		// word boundary.
+		if previous == 's' || boundary {
+			mask |= cppAnchorBitW
+		}
+		// else, whose l is read back over the e.
+		if previous == 'e' {
+			mask |= cppAnchorBitL
+		}
+		// try, whose y is read back over the r.
+		if previous == 'r' {
+			mask |= cppAnchorBitY
+		}
+		// catch, whose h is read back over catc, so the byte in front of the
+		// anchor is the second c and nothing else.
+		if previous == 'c' {
+			mask |= cppAnchorBitH
+		}
+		// == and != are both read back over their first byte.
+		if previous == '=' || previous == '!' {
+			mask |= cppAnchorBitEq
+		}
+		// || and && begin on the byte they are anchored on, so the word
+		// boundary is the whole of their first test.
+		if boundary {
+			mask |= cppAnchorBitPipe | cppAnchorBitAmp
+		}
+		table[value] = mask
+	}
+
+	return table
+}
+
 // cppCodeState runs to the end of the line or to whatever token takes it out of
 // code.
 func cppCodeState(content []byte, tally *counterTally, index, endPoint, floor int, stop *[256]bool) (int, counterState, []byte, bool) {
@@ -323,6 +407,16 @@ func cppCodeState(content []byte, tally *counterTally, index, endPoint, floor in
 
 			return i, SCode, nil, false
 		default:
+			// The byte in front of the anchor is the first thing
+			// cppComplexityAnchored looks at, and it settles most of the
+			// anchor stops that go on to count nothing. This is that test
+			// hoisted in front of the call that would otherwise be paid to
+			// reach it: a zero AND is exactly the case the function rejects on
+			// its own first test, so skipping it cannot change a count.
+			if cppAnchorPrev[byteBefore(content, i, floor)]&cppAnchorBit[curByte] == 0 {
+				continue
+			}
+
 			if cppComplexityAnchored(content, i, floor) {
 				tally.Complexity++
 			}

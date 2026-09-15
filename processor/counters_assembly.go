@@ -173,6 +173,66 @@ func asmComplexityAnchored(content []byte, index, floor int) bool {
 	return false
 }
 
+// asmAnchorBit gives each anchor byte of Assembly a bit; asmAnchorPrev[prev]
+// holds the bits of every anchor whose first test could still pass with prev in
+// front of it. The AND of the two is zero exactly where asmComplexityAnchored
+// would have returned false on its first test.
+const (
+	asmAnchorBitF uint8 = 1 << iota
+	asmAnchorBitL
+	asmAnchorBitW
+	asmAnchorBitEq
+	asmAnchorBitPipe
+	asmAnchorBitAmp
+)
+
+var asmAnchorBit = buildAsmAnchorBit()
+
+var asmAnchorPrev = buildAsmAnchorPrev()
+
+func buildAsmAnchorBit() [256]uint8 {
+	var table [256]uint8
+	table['f'] = asmAnchorBitF
+	table['l'] = asmAnchorBitL
+	table['w'] = asmAnchorBitW
+	table['='] = asmAnchorBitEq
+	table['|'] = asmAnchorBitPipe
+	table['&'] = asmAnchorBitAmp
+
+	return table
+}
+
+func buildAsmAnchorPrev() [256]uint8 {
+	var table [256]uint8
+	for value := range 256 {
+		previous := byte(value)
+		boundary := !isIdentifierContinue(previous)
+
+		var mask uint8
+		// if reads back over an i, for wants a boundary in front of its own f.
+		if previous == 'i' || boundary {
+			mask |= asmAnchorBitF
+		}
+		// switch reads back over an s, while wants a boundary in front of its
+		// own w.
+		if previous == 's' || boundary {
+			mask |= asmAnchorBitW
+		}
+		if previous == 'e' {
+			mask |= asmAnchorBitL
+		}
+		if previous == '=' || previous == '!' {
+			mask |= asmAnchorBitEq
+		}
+		if boundary {
+			mask |= asmAnchorBitPipe | asmAnchorBitAmp
+		}
+		table[value] = mask
+	}
+
+	return table
+}
+
 // asmComplexityAtLineStart is asmComplexityAnchored for the first byte of code
 // on a line, which has nothing in front of it to read back to. Only the checks
 // anchored on their own first byte are looked for here; the rest are anchored
@@ -300,6 +360,15 @@ func asmCodeState(content []byte, tally *counterTally, index, endPoint, floor in
 
 			return i, SCode, nil
 		default:
+			// The byte in front of the anchor is the first thing
+			// asmComplexityAnchored tests and the last thing the caller knows
+			// before paying for the call. A zero AND is exactly the case that
+			// function rejects on its own first test, so skipping it cannot
+			// change a count.
+			if asmAnchorPrev[byteBefore(content, i, floor)]&asmAnchorBit[curByte] == 0 {
+				continue
+			}
+
 			if asmComplexityAnchored(content, i, floor) {
 				tally.Complexity++
 			}

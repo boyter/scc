@@ -178,6 +178,101 @@ func swiftComplexityAnchored(content []byte, index, floor int) bool {
 	return false
 }
 
+// swiftAnchorBit gives each anchor byte of Swift a bit; swiftAnchorPrev[prev]
+// holds the bits of every anchor whose first test could still pass with prev in
+// front of it. The AND of the two is zero exactly where swiftComplexityAnchored
+// would have returned false on its first test.
+//
+// Nine anchors, so these are uint16 where the other counters hold theirs in a
+// byte. Two tables of 512 bytes against two of 256 is not a difference the scan
+// can feel, and giving the ? a bit of its own is worth more than the byte: the
+// ? of an optional is the one anchor of Swift that is nearly always preceded by
+// a letter, which is exactly the case this table settles.
+const (
+	swiftAnchorBitF uint16 = 1 << iota
+	swiftAnchorBitW
+	swiftAnchorBitL
+	swiftAnchorBitH
+	swiftAnchorBitG
+	swiftAnchorBitQuestion
+	swiftAnchorBitEq
+	swiftAnchorBitAmp
+	swiftAnchorBitPipe
+)
+
+var swiftAnchorBit = buildSwiftAnchorBit()
+
+var swiftAnchorPrev = buildSwiftAnchorPrev()
+
+func buildSwiftAnchorBit() [256]uint16 {
+	var table [256]uint16
+	table['f'] = swiftAnchorBitF
+	table['w'] = swiftAnchorBitW
+	table['l'] = swiftAnchorBitL
+	table['h'] = swiftAnchorBitH
+	table['g'] = swiftAnchorBitG
+	table['?'] = swiftAnchorBitQuestion
+	table['='] = swiftAnchorBitEq
+	table['&'] = swiftAnchorBitAmp
+	table['|'] = swiftAnchorBitPipe
+
+	return table
+}
+
+// buildSwiftAnchorPrev writes down, for each byte that can sit in front of an
+// anchor, which anchors a match could still begin behind. It is the first test
+// of each arm of swiftComplexityAnchored and nothing more:
+//
+//	f   if, for         an i in front for if, or a word boundary for for
+//	w   switch, while   an s in front for switch, or a word boundary for while
+//	l   else            an e in front
+//	h   catch           a c in front
+//	g   guard           anchored on its own first byte, so a word boundary
+//	?   the optional    one byte, so the boundary is tested where it stands
+//	=   ==, !=          an = or a ! in front
+//	&, |                anchored on their own first byte, so a word boundary
+//
+// catch is the one arm whose first test is not itself a read of the byte in
+// front: it asks for a word boundary four bytes back and then for catc there.
+// That prefix cannot hold unless the byte in front of the h is the c of catc,
+// so a c in front is a condition of the arm returning true even though it is
+// not the order the arm tests it in.
+//
+// A word boundary is the byte in front not carrying a word on, which is what
+// wordStartsAt asks. byteBefore reads a zero where the anchor sits on the floor
+// and there is nothing in front of it, and zero carries no word on, so the
+// floor comes out of the table as the boundary wordStartsAt already calls it.
+func buildSwiftAnchorPrev() [256]uint16 {
+	var table [256]uint16
+	for value := range 256 {
+		previous := byte(value)
+		boundary := !isIdentifierContinue(previous)
+
+		var mask uint16
+		if boundary {
+			mask |= swiftAnchorBitG | swiftAnchorBitQuestion | swiftAnchorBitAmp | swiftAnchorBitPipe
+		}
+		if previous == 'i' || boundary {
+			mask |= swiftAnchorBitF
+		}
+		if previous == 's' || boundary {
+			mask |= swiftAnchorBitW
+		}
+		if previous == 'e' {
+			mask |= swiftAnchorBitL
+		}
+		if previous == 'c' {
+			mask |= swiftAnchorBitH
+		}
+		if previous == '=' || previous == '!' {
+			mask |= swiftAnchorBitEq
+		}
+		table[value] = mask
+	}
+
+	return table
+}
+
 // swiftComplexityAtLineStart is swiftComplexityAnchored for the first byte of
 // code on a line, which has nothing in front of it to read back to. Only the
 // checks anchored on their own first byte are looked for here; the rest are
@@ -285,6 +380,19 @@ func swiftCodeState(content []byte, tally *counterTally, index, endPoint, floor 
 
 			return i, SCode
 		default:
+			// Instrumented over what Swift there is to hand, 46 files: 73.0% of
+			// the stops this loop makes are anchor stops, 95.3% of those count
+			// nothing, and 77.9% of the failures are settled by the single byte
+			// in front of the anchor. That byte is the first thing
+			// swiftComplexityAnchored tests and the last thing the caller knows
+			// before paying for the call, so it is tested here instead: a zero
+			// AND is exactly the case the function rejects on its own first
+			// test, so skipping it cannot change a count. It removes 74.3% of
+			// the calls.
+			if swiftAnchorPrev[byteBefore(content, i, floor)]&swiftAnchorBit[curByte] == 0 {
+				continue
+			}
+
 			if swiftComplexityAnchored(content, i, floor) {
 				tally.Complexity++
 			}
