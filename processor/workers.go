@@ -4,7 +4,6 @@ package processor
 
 import (
 	"bytes"
-	"hash"
 	"os"
 	"regexp"
 	"runtime/debug"
@@ -447,7 +446,6 @@ func codeState(
 	endString []byte,
 	endComments [][]byte,
 	langFeatures LanguageFeature,
-	digest *hash.Hash,
 ) (int, int64, []byte, [][]byte, bool) {
 	// Hacky fix to https://github.com/boyter/scc/issues/181
 	if endPoint > len(fileJob.Content) {
@@ -458,7 +456,7 @@ func codeState(
 	// rather than only the ones it stopped on, so they keep the byte at a time
 	// scan. Neither is on in a normal count.
 	if Duplicates || fileJob.ContentByteType != nil {
-		return codeStateSlow(fileJob, index, endPoint, currentState, endString, endComments, langFeatures, digest)
+		return codeStateSlow(fileJob, index, endPoint, currentState, endString, endComments, langFeatures)
 	}
 
 	content := fileJob.Content
@@ -573,7 +571,6 @@ func codeStateSlow(
 	endString []byte,
 	endComments [][]byte,
 	langFeatures LanguageFeature,
-	digest *hash.Hash,
 ) (int, int64, []byte, [][]byte, bool) {
 	for i := index; i < endPoint; i++ {
 		curByte := fileJob.Content[i]
@@ -593,14 +590,6 @@ func codeStateSlow(
 		}
 
 		if shouldProcess(curByte, langFeatures.ProcessMask) {
-			if Duplicates {
-				// Technically this is wrong because we skip bytes, so this is not a true
-				// hash of the file contents, but for duplicate files it shouldn't matter
-				// as both will skip the same way
-				digestible := []byte{fileJob.Content[index]}
-				(*digest).Write(digestible)
-			}
-
 			switch tokenType, offsetJump, endString := langFeatures.Tokens.Match(fileJob.Content[i:]); tokenType {
 			case TString:
 				// If we are in string state then check what sort of string so we know if docstring OR ignoreescape string
@@ -903,7 +892,6 @@ func CountStats(fileJob *FileJob) {
 	// crypto secure here either so no need to eat the performance cost of a better
 	// hash method
 	if Duplicates {
-		fileJob.Hash, _ = blake2b.New256(nil)
 	}
 
 	// If the file has a length of 0 it is empty then we say it has no lines
@@ -1238,8 +1226,19 @@ func (ctx processorContext) processFile(job *FileJob) bool {
 	CountStats(job)
 
 	if Duplicates {
+		// Over the whole of the file, not the bytes the counter happened to
+		// look at. The digest used to be fed a byte at a time from codeState,
+		// which skipped comments and whitespace, so two files with the same
+		// code and different comments hashed alike without counting alike.
+		// Which of them survived was then whichever worker got here first, and
+		// the totals moved from run to run: the same tree answered ten
+		// different line counts in ten runs. Hashing the file itself makes a
+		// duplicate set a set of identical files, which count identically, so
+		// it no longer matters which one is kept.
+		sum := blake2b.Sum256(job.Content)
+		jobHash := sum[:]
+
 		duplicates.mux.Lock()
-		jobHash := job.Hash.Sum(nil)
 		if duplicates.Check(job.Bytes, jobHash) {
 			printWarnF("skipping duplicate file: %s", job.Location)
 			duplicates.mux.Unlock()
@@ -1412,7 +1411,6 @@ func countLoopGeneric(fileJob *FileJob, langFeatures LanguageFeature, bomSkip, e
 					endString,
 					endComments,
 					langFeatures,
-					&fileJob.Hash,
 				)
 			case SString:
 				index, currentState = stringState(fileJob, index, endPoint, endString, currentState, ignoreEscape, langFeatures.Escape)

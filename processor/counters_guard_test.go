@@ -146,13 +146,18 @@ func TestSpecialisedCounterGuardIsHonoured(t *testing.T) {
 			prepare: func(job *FileJob) { Duplicates = true },
 			restore: func() { Duplicates = false },
 			extra: func(t *testing.T, offered, declined FileJob) {
-				got := offered.Hash.Sum(nil)
-				want := declined.Hash.Sum(nil)
-				if len(got) == 0 {
-					t.Error("no file hash was built")
-				}
-				if string(got) != string(want) {
-					t.Errorf("file hash differs: %x with the counters offered, %x without", got, want)
+				// The digest the duplicate check runs on used to be built
+				// inside codeState, a byte at a time, from the bytes the
+				// counter happened to look at, so it was a property of the
+				// counting path and this asserted the two paths agreed on it.
+				// It is taken over the whole of the file now, in processFile
+				// and after the counting is done, so no counting path can
+				// reach it and there is nothing here for the two to disagree
+				// about. What is left to check is what the harness checks for
+				// every case: the counts themselves.
+				if offered.Lines != declined.Lines || offered.Code != declined.Code {
+					t.Errorf("counts differ with duplicates on: %d/%d lines, %d/%d code",
+						offered.Lines, declined.Lines, offered.Code, declined.Code)
 				}
 			},
 		},

@@ -114,7 +114,6 @@ func TestFileJobJSONIgnoreFields(t *testing.T) {
 		Complexity:         1,
 		ComplexityLine:     []int64{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		WeightedComplexity: 1,
-		Hash:               nil,
 		Callback:           &linecounter{},
 		Binary:             false,
 		Minified:           false,

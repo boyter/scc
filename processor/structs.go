@@ -4,7 +4,6 @@ package processor
 
 import (
 	"bytes"
-	"hash"
 	"regexp"
 	"slices"
 	"sync"
@@ -175,7 +174,6 @@ type FileJob struct {
 	ComplexityLine       []int64 `json:"-"`
 	CognitiveLine        []int64 `json:"-"` // per-line cognitive weight; populated only when TrackComplexityLines and Cognitive are both enabled
 	WeightedComplexity   float64
-	Hash                 hash.Hash
 	Callback             FileJobCallback `json:"-"`
 	Binary               bool
 	Minified             bool
