@@ -252,6 +252,80 @@ func llvmComplexityAnchored(content []byte, index, floor int) bool {
 	return false
 }
 
+// llvmAnchorBit gives each anchor byte of LLVM IR a bit; llvmAnchorPrev[prev]
+// holds the bits of every anchor whose first test could still pass with prev in
+// front of it. The AND of the two is zero exactly where llvmComplexityAnchored
+// would have returned false on its first test.
+//
+// It is worth more here than anywhere else in the set. Sixteen checks share
+// seven anchors, a and r alone are two thirds of what the table stops on, and
+// both of those arms reject on the byte behind before they read anything else.
+const (
+	llvmAnchorBitA uint8 = 1 << iota
+	llvmAnchorBitR
+	llvmAnchorBitB
+	llvmAnchorBitH
+	llvmAnchorBitM
+	llvmAnchorBitW
+	llvmAnchorBitK
+)
+
+var llvmAnchorBit = buildLLVMAnchorBit()
+
+var llvmAnchorPrev = buildLLVMAnchorPrev()
+
+func buildLLVMAnchorBit() [256]uint8 {
+	var table [256]uint8
+	table['a'] = llvmAnchorBitA
+	table['r'] = llvmAnchorBitR
+	table['b'] = llvmAnchorBitB
+	table['h'] = llvmAnchorBitH
+	table['m'] = llvmAnchorBitM
+	table['w'] = llvmAnchorBitW
+	table['k'] = llvmAnchorBitK
+
+	return table
+}
+
+func buildLLVMAnchorPrev() [256]uint8 {
+	var table [256]uint8
+	for value := range 256 {
+		previous := byte(value)
+		boundary := !isIdentifierContinue(previous)
+
+		var mask uint8
+		// and is anchored on its own first byte and wants a boundary there.
+		if boundary {
+			mask |= llvmAnchorBitA
+		}
+		// or and xor read back over an o, catchret over an h, cleanupret over
+		// a p. Nothing else reaches past the switch on the byte behind.
+		if previous == 'o' || previous == 'h' || previous == 'p' {
+			mask |= llvmAnchorBitR
+		}
+		// callbr has an l behind its b and indirectbr a t; a bare br wants a
+		// boundary. All three arms are live, so all three are in the mask.
+		if previous == 'l' || previous == 't' || boundary {
+			mask |= llvmAnchorBitB
+		}
+		// shl, lshr and ashr all carry an s behind the h, and switch and
+		// catchswitch both carry an s behind the w.
+		if previous == 's' {
+			mask |= llvmAnchorBitH | llvmAnchorBitW
+		}
+		// llvm.loop reads back over a v, resume over a u.
+		if previous == 'v' || previous == 'u' {
+			mask |= llvmAnchorBitM
+		}
+		if previous == 'o' {
+			mask |= llvmAnchorBitK
+		}
+		table[value] = mask
+	}
+
+	return table
+}
+
 // llvmComplexityAtLineStart is llvmComplexityAnchored for the first byte of code
 // on a line, which has nothing in front of it to read back to. Only the checks
 // anchored on their own first byte are looked for here; the rest are anchored on
@@ -341,6 +415,15 @@ func llvmCodeState(content []byte, tally *counterTally, index, endPoint, floor i
 
 			return i, SString
 		default:
+			// The byte in front of the anchor is the first thing
+			// llvmComplexityAnchored tests and the last thing the caller knows
+			// before paying for the call. A zero AND is exactly the case that
+			// function rejects on its own first test, so skipping it cannot
+			// change a count.
+			if llvmAnchorPrev[byteBefore(content, i, floor)]&llvmAnchorBit[curByte] == 0 {
+				continue
+			}
+
 			if llvmComplexityAnchored(content, i, floor) {
 				tally.Complexity++
 			}
