@@ -746,7 +746,7 @@ func counterSpecs() []counterSpec {
 	return []counterSpec{
 		{
 			Language:         "C",
-			Count:            func(f *FileJob, b, e int) bool { return countLoopC(f, b, e, false) },
+			Count:            func(f *FileJob, b, e int) bool { return countLoopC(f, b, e) },
 			Extension:        ".c",
 			Anchors:          cComplexityAnchors,
 			LineComments:     cComments,
@@ -757,13 +757,13 @@ func counterSpecs() []counterSpec {
 		},
 		{
 			Language:         "C Header",
-			Count:            func(f *FileJob, b, e int) bool { return countLoopC(f, b, e, true) },
+			Count:            func(f *FileJob, b, e int) bool { return countLoopC(f, b, e) },
 			Extension:        ".h",
-			Anchors:          cHeaderComplexityAnchors,
+			Anchors:          cComplexityAnchors,
 			LineComments:     cComments,
 			BlockComments:    cBlocks,
 			Quotes:           []string{`"`, `"`},
-			Stop:             &cHeaderStop,
+			Stop:             &cStop,
 			StopNoComplexity: &cStopNoComplexity,
 		},
 		{
