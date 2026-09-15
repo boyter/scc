@@ -349,11 +349,21 @@ func countLoopJava(fileJob *FileJob, bomSkip, endPoint int) bool {
 // SpecialisedCounters turns on the counters written for one language, which
 // stand in for the generic loop where there is one for the file's language.
 //
-// Off by default, and the flag that sets it is spelled exp- to say that it may
-// change or go away. They are held to producing exactly what the generic loop
-// produces, and a differential test reads every C, C Header and Java file of
-// several real trees both ways to check it, but the generic loop is what every
-// count has been compared against for years and it stays the default until
-// these have some road behind them. It is also what the differential test runs
-// the same file through both ways with.
-var SpecialisedCounters bool
+// On by default as of 4.2.0. They were introduced off, behind a flag spelled
+// exp- to say that they might change or go away, because the generic loop is
+// what every count had been compared against for years. What they have behind
+// them now is a differential test that reads every file of several real trees
+// both ways, a fuzzer that holds each counter against the generic loop, and
+// byte identical output over llvm-project, the Linux kernel, kubernetes,
+// cpython, ruby and lucene: 296,599 files, per file and summary.
+//
+// The flag now turns them off rather than on, which is --no-per-language-counters,
+// and it is there for the same reason the differential test is: the generic loop
+// is the oracle, so being able to ask it directly is worth keeping.
+var SpecialisedCounters = true
+
+// GenericCounterOnly is what --no-per-language-counters sets, and it turns
+// SpecialisedCounters off. Held apart from it so the flag reads as the thing it
+// is named, a negative, while the code that asks the question keeps asking it
+// in the positive.
+var GenericCounterOnly bool

@@ -1020,7 +1020,7 @@ func counterLanguages() []string {
 func PrintCounters(w io.Writer) {
 	languages := counterLanguages()
 
-	fmt.Fprintf(w, "%d of %d languages have a scanner written for them, used with --exp-per-language-counters:\n\n", len(languages), len(languageDatabase))
+	fmt.Fprintf(w, "%d of %d languages have a scanner written for them, used by default and turned off with --no-per-language-counters:\n\n", len(languages), len(languageDatabase))
 	for _, language := range languages {
 		fmt.Fprintf(w, "  %s\n", language)
 	}
