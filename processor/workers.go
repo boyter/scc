@@ -952,6 +952,10 @@ func CountStats(fileJob *FileJob) {
 		if !count(fileJob, bomSkip, endPoint) {
 			return
 		}
+	} else if noTokensAtAll(langFeatures) && specialisedCounterEligible(fileJob) {
+		if !countLoopNoTokens(fileJob, bomSkip, endPoint) {
+			return
+		}
 	} else if !countLoopGeneric(fileJob, langFeatures, bomSkip, endPoint, currentState, endString, endComments, ignoreEscape) {
 		return
 	}
