@@ -235,18 +235,20 @@ func cCodeState(content []byte, tally *counterTally, index, endPoint, floor int,
 		endPoint--
 	}
 
-	for i := index; i < endPoint; i++ {
-		curByte := content[i]
+	mask := stopMask(stop)
 
-		if !stop[curByte] {
-			continue
+	for i := index; i < endPoint; {
+		at := scanToStop(content, i, endPoint, mask)
+		if at < 0 {
+			break
 		}
+		i = at
 
-		switch curByte {
+		switch content[i] {
 		case '\n':
 			return i, SCode
 		case 0:
-			if isBinary(i, curByte) {
+			if isBinary(i, content[i]) {
 				tally.Binary = true
 				return i, SCode
 			}
@@ -275,6 +277,8 @@ func cCodeState(content []byte, tally *counterTally, index, endPoint, floor int,
 				tally.Complexity++
 			}
 		}
+
+		i++
 	}
 
 	// The generic loop leaves the cursor on the last byte it looked at, which is
