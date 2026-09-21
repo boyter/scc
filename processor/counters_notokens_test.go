@@ -68,26 +68,49 @@ func TestNoTokenPathAgreesOnHandWrittenFiles(t *testing.T) {
 	}
 }
 
-// The path is reached on a language declaring nothing, not on a list of names,
-// so what wants pinning is how many languages that is. A language that gains a
-// comment or a quote leaves the path on its own and this notices.
+// The path is reached on a language declaring nothing, so what wants asserting
+// is that ProcessMask being zero means exactly that and nothing else. Checked
+// against languages.json itself rather than against a number: this test first
+// counted the languages and held them to 32, which broke the day Txtar was
+// added, and a count that has to be edited whenever the database grows is a
+// count that will be edited without being thought about.
 func TestNoTokenPathCoversTheLanguagesThatDeclareNothing(t *testing.T) {
 	ProcessConstants()
 
-	var covered []string
-	for name := range languageDatabase {
+	declaring := 0
+	for name, language := range languageDatabase {
 		LoadLanguageFeature(name)
-		if feature, ok := LanguageFeatures[name]; ok && noTokensAtAll(feature) {
-			covered = append(covered, name)
+		feature, ok := LanguageFeatures[name]
+		if !ok {
+			continue
+		}
+
+		declaresNothing := len(language.LineComment) == 0 &&
+			len(language.MultiLine) == 0 &&
+			len(language.Quotes) == 0 &&
+			len(language.ComplexityChecks) == 0 &&
+			len(language.ComplexityChecksPostfix) == 0
+
+		if declaresNothing {
+			declaring++
+		}
+
+		if noTokensAtAll(feature) != declaresNothing {
+			t.Errorf("%s: the no-token path takes it %t, languages.json declares nothing %t "+
+				"(line comments %d, block comments %d, quotes %d, checks %d/%d)",
+				name, noTokensAtAll(feature), declaresNothing,
+				len(language.LineComment), len(language.MultiLine), len(language.Quotes),
+				len(language.ComplexityChecks), len(language.ComplexityChecksPostfix))
 		}
 	}
 
-	if len(covered) != 32 {
-		t.Errorf("%d languages declare no tokens, want 32: %v", len(covered), covered)
+	// A set that has gone empty would satisfy every check above, so hold it to
+	// having found some. The exact number is deliberately not asserted.
+	if declaring < 20 {
+		t.Errorf("only %d languages declare no tokens, which is too few to be right", declaring)
 	}
 
-	// A spot check that the ones this was written for are in there, so a change
-	// that empties the set still fails rather than passing on a new count.
+	// The ones this was written for, so emptying the set still fails here.
 	for _, want := range []string{"Plain Text", "Markdown", "JSON", "CSV", "ReStructuredText"} {
 		feature, ok := LanguageFeatures[want]
 		if !ok || !noTokensAtAll(feature) {

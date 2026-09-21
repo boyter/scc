@@ -19,7 +19,7 @@ import (
 )
 
 // Version indicates the version of the application
-var Version = "4.1.0"
+var Version = "4.2.0"
 
 // Flags set via the CLI which control how the output is displayed
 
@@ -964,6 +964,13 @@ func processFlags() {
 
 	if Dryness {
 		UlocMode = true
+	}
+
+	// The counters answer for their language by default. --no-per-language-counters
+	// puts every file back through the generic loop, which is the oracle they are
+	// written against and tested against.
+	if GenericCounterOnly {
+		SpecialisedCounters = false
 	}
 
 	printDebugF("Path Deny List: %v", PathDenyList)

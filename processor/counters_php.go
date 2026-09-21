@@ -162,6 +162,84 @@ func phpComplexityAnchored(content []byte, index, floor int) bool {
 	return false
 }
 
+// phpAnchorBit gives each anchor byte of PHP a bit; phpAnchorPrev[prev] holds
+// the bits of every anchor whose first test could still pass with prev in front
+// of it. The AND of the two is zero exactly where phpComplexityAnchored would
+// have returned false on its own first test, so the code scan can skip the call
+// outright where it is zero.
+//
+// A bit may be cleared ONLY where that first test cannot pass, and where there
+// is any doubt it is set: a spare bit costs a call that would have been paid
+// anyway, a missing bit silently loses a complexity count. The obligation is
+// discharged by enumeration rather than by reading, in
+// counters_anchorprev_js_php_ruby_test.go.
+//
+// There is no PHP checkout to measure on here, so the figures are this counter
+// run over 21,467 files of JavaScript instead, which it reads from the first
+// byte to the last the way it reads a .php file: it stops on 11.2% of the bytes
+// it looks at, 65% of those stops are complexity anchors, and 90% of the anchor
+// stops count nothing. That is 6.6% of every byte the code loop reads, spent
+// reaching a call that says no. The byte in front settles three quarters of
+// them.
+const (
+	phpAnchorBitF uint8 = 1 << iota
+	phpAnchorBitL
+	phpAnchorBitW
+	phpAnchorBitEq
+	phpAnchorBitAmp
+	phpAnchorBitPipe
+)
+
+var phpAnchorBit = buildPhpAnchorBit()
+
+var phpAnchorPrev = buildPhpAnchorPrev()
+
+func buildPhpAnchorBit() [256]uint8 {
+	var table [256]uint8
+	table['f'] = phpAnchorBitF
+	table['l'] = phpAnchorBitL
+	table['w'] = phpAnchorBitW
+	table['='] = phpAnchorBitEq
+	table['&'] = phpAnchorBitAmp
+	table['|'] = phpAnchorBitPipe
+
+	return table
+}
+
+func buildPhpAnchorPrev() [256]uint8 {
+	var table [256]uint8
+	for value := range 256 {
+		previous := byte(value)
+		boundary := !isIdentifierContinue(previous)
+
+		var mask uint8
+		// if is read backwards from its f, so an i in front keeps it alive; for is
+		// read forwards and wants only a word boundary.
+		if previous == 'i' || boundary {
+			mask |= phpAnchorBitF
+		}
+		// else is read backwards from its l and has nothing but the e.
+		if previous == 'e' {
+			mask |= phpAnchorBitL
+		}
+		// switch is read backwards from its w, while forwards.
+		if previous == 's' || boundary {
+			mask |= phpAnchorBitW
+		}
+		// == and != are both read backwards from the second =.
+		if previous == '=' || previous == '!' {
+			mask |= phpAnchorBitEq
+		}
+		// The rest begin at their anchor and ask only for a word boundary.
+		if boundary {
+			mask |= phpAnchorBitAmp | phpAnchorBitPipe
+		}
+		table[value] = mask
+	}
+
+	return table
+}
+
 // phpComplexityAtLineStart is phpComplexityAnchored for the first byte of code
 // on a line, which has nothing in front of it to read back to. Only the checks
 // anchored on their own first byte are looked for here; the rest are anchored
@@ -228,12 +306,17 @@ func phpCodeState(content []byte, tally *counterTally, index, endPoint, floor in
 		endPoint--
 	}
 
-	for i := index; i < endPoint; i++ {
-		curByte := content[i]
+	mask := stopMask(stop)
 
-		if !stop[curByte] {
-			continue
+	for i := index; i < endPoint; i++ {
+		// Eight bytes answered at a time, without a branch between them. See
+		// scanToStop.
+		at := scanToStop(content, i, endPoint, mask)
+		if at < 0 {
+			break
 		}
+		i = at
+		curByte := content[i]
 
 		switch curByte {
 		case '\n':
@@ -271,6 +354,16 @@ func phpCodeState(content []byte, tally *counterTally, index, endPoint, floor in
 
 			return i, SCode, nil
 		default:
+			// Ninety percent of anchor stops fail, and three quarters of those
+			// are settled by the byte in front of the anchor alone. This is that
+			// test, hoisted in front of the call that would otherwise be paid to
+			// reach it: a zero AND is exactly the case phpComplexityAnchored
+			// rejects on its own first test, so it cannot change a count. See
+			// phpAnchorPrev.
+			if phpAnchorPrev[byteBefore(content, i, floor)]&phpAnchorBit[curByte] == 0 {
+				continue
+			}
+
 			if phpComplexityAnchored(content, i, floor) {
 				tally.Complexity++
 			}

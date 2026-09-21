@@ -248,6 +248,77 @@ func csharpBlankState(content []byte, tally *counterTally, index, floor int) (in
 	return index, SCode, nil, false
 }
 
+// csharpAnchorBit gives each anchor byte of C# a bit; csharpAnchorPrev[prev]
+// holds the bits of every anchor whose first test could still pass with prev in
+// front of it. The AND of the two is zero exactly where csharpComplexityAnchored
+// would have returned false on its own first test, so a zero skips a call that
+// could only have said no.
+//
+// The table is a conservative superset: a bit that need not be set costs a call
+// that would have been paid anyway, while a bit wrongly cleared loses a count.
+// TestAnchorPrefilterIsConservative holds every cleared pair to being a pair the
+// function really does reject, over all 256 bytes and every anchor.
+const (
+	csharpAnchorBitF uint8 = 1 << iota
+	csharpAnchorBitW
+	csharpAnchorBitL
+	csharpAnchorBitEq
+	csharpAnchorBitPipe
+	csharpAnchorBitAmp
+)
+
+var csharpAnchorBit = buildCsharpAnchorBit()
+
+var csharpAnchorPrev = buildCsharpAnchorPrev()
+
+func buildCsharpAnchorBit() [256]uint8 {
+	var table [256]uint8
+	table['f'] = csharpAnchorBitF
+	table['w'] = csharpAnchorBitW
+	table['l'] = csharpAnchorBitL
+	table['='] = csharpAnchorBitEq
+	table['|'] = csharpAnchorBitPipe
+	table['&'] = csharpAnchorBitAmp
+
+	return table
+}
+
+func buildCsharpAnchorPrev() [256]uint8 {
+	var table [256]uint8
+	for value := range 256 {
+		previous := byte(value)
+		boundary := !isIdentifierContinue(previous)
+
+		var mask uint8
+		// if reads its f backwards over the i, so an i in front keeps it; every
+		// other check anchored on f is read forwards from a word boundary.
+		if previous == 'i' || boundary {
+			mask |= csharpAnchorBitF
+		}
+		// switch reads its w backwards over the s; while reads forwards from a
+		// word boundary.
+		if previous == 's' || boundary {
+			mask |= csharpAnchorBitW
+		}
+		// else, whose l is read back over the e.
+		if previous == 'e' {
+			mask |= csharpAnchorBitL
+		}
+		// == and != are both read back over their first byte.
+		if previous == '=' || previous == '!' {
+			mask |= csharpAnchorBitEq
+		}
+		// || and && begin on the byte they are anchored on, so the word
+		// boundary is the whole of their first test.
+		if boundary {
+			mask |= csharpAnchorBitPipe | csharpAnchorBitAmp
+		}
+		table[value] = mask
+	}
+
+	return table
+}
+
 // csharpCodeState runs to the end of the line or to whatever token takes it out
 // of code.
 func csharpCodeState(content []byte, tally *counterTally, index, endPoint, floor int, stop *[256]bool) (int, counterState, []byte, bool) {
@@ -255,12 +326,17 @@ func csharpCodeState(content []byte, tally *counterTally, index, endPoint, floor
 		endPoint--
 	}
 
-	for i := index; i < endPoint; i++ {
-		curByte := content[i]
+	mask := stopMask(stop)
 
-		if !stop[curByte] {
-			continue
+	for i := index; i < endPoint; i++ {
+		// Eight bytes answered at a time, without a branch between them. See
+		// scanToStop.
+		at := scanToStop(content, i, endPoint, mask)
+		if at < 0 {
+			break
 		}
+		i = at
+		curByte := content[i]
 
 		switch curByte {
 		case '\n':
@@ -292,6 +368,16 @@ func csharpCodeState(content []byte, tally *counterTally, index, endPoint, floor
 
 			return i, SCode, nil, false
 		default:
+			// The byte in front of the anchor is the first thing
+			// csharpComplexityAnchored looks at, and it settles most of the
+			// anchor stops that go on to count nothing. This is that test
+			// hoisted in front of the call that would otherwise be paid to
+			// reach it: a zero AND is exactly the case the function rejects on
+			// its own first test, so skipping it cannot change a count.
+			if csharpAnchorPrev[byteBefore(content, i, floor)]&csharpAnchorBit[curByte] == 0 {
+				continue
+			}
+
 			if csharpComplexityAnchored(content, i, floor) {
 				tally.Complexity++
 			}

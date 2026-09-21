@@ -176,6 +176,87 @@ func scalaComplexityAnchored(content []byte, index, floor int) bool {
 	return false
 }
 
+// scalaAnchorBit gives each anchor byte of Scala a bit; scalaAnchorPrev[prev]
+// holds the bits of every anchor whose first test could still pass with prev in
+// front of it. The AND of the two is zero exactly where
+// scalaComplexityAnchored would have returned false on its first test.
+const (
+	scalaAnchorBitF uint8 = 1 << iota
+	scalaAnchorBitW
+	scalaAnchorBitL
+	scalaAnchorBitGt
+	scalaAnchorBitLt
+	scalaAnchorBitEq
+	scalaAnchorBitAmp
+	scalaAnchorBitPipe
+)
+
+var scalaAnchorBit = buildScalaAnchorBit()
+
+var scalaAnchorPrev = buildScalaAnchorPrev()
+
+func buildScalaAnchorBit() [256]uint8 {
+	var table [256]uint8
+	table['f'] = scalaAnchorBitF
+	table['w'] = scalaAnchorBitW
+	table['l'] = scalaAnchorBitL
+	table['>'] = scalaAnchorBitGt
+	table['<'] = scalaAnchorBitLt
+	table['='] = scalaAnchorBitEq
+	table['&'] = scalaAnchorBitAmp
+	table['|'] = scalaAnchorBitPipe
+
+	return table
+}
+
+// buildScalaAnchorPrev writes down, for each byte that can sit in front of an
+// anchor, which anchors a match could still begin behind. It is the first test
+// of each arm of scalaComplexityAnchored and nothing more:
+//
+//	f   if, for         an i in front for if, or a word boundary for for
+//	w   switch, while   an s in front for switch, or a word boundary for while
+//	l   else            an e in front
+//	>   >=, >           anchored on their own first byte, so a word boundary
+//	<   <=, <           the same
+//	=   ==, !=          an = or a ! in front
+//	&, |                anchored on their own first byte, so a word boundary
+//
+// The two bracket anchors carry the same condition and could share a bit. They
+// do not, so that the table reads as one bit per anchor the way the others do
+// and a later change to either arm has somewhere of its own to go.
+//
+// A word boundary is the byte in front not carrying a word on, which is what
+// wordStartsAt asks. byteBefore reads a zero where the anchor sits on the floor
+// and there is nothing in front of it, and zero carries no word on, so the
+// floor comes out of the table as the boundary wordStartsAt already calls it.
+func buildScalaAnchorPrev() [256]uint8 {
+	var table [256]uint8
+	for value := range 256 {
+		previous := byte(value)
+		boundary := !isIdentifierContinue(previous)
+
+		var mask uint8
+		if boundary {
+			mask |= scalaAnchorBitGt | scalaAnchorBitLt | scalaAnchorBitAmp | scalaAnchorBitPipe
+		}
+		if previous == 'i' || boundary {
+			mask |= scalaAnchorBitF
+		}
+		if previous == 's' || boundary {
+			mask |= scalaAnchorBitW
+		}
+		if previous == 'e' {
+			mask |= scalaAnchorBitL
+		}
+		if previous == '=' || previous == '!' {
+			mask |= scalaAnchorBitEq
+		}
+		table[value] = mask
+	}
+
+	return table
+}
+
 // scalaComplexityAtLineStart is scalaComplexityAnchored for the first byte of
 // code on a line, which has nothing in front of it to read back to. Only the
 // checks anchored on their own first byte are looked for here; the rest are
@@ -238,12 +319,17 @@ func scalaCodeState(content []byte, tally *counterTally, index, endPoint, floor 
 		endPoint--
 	}
 
-	for i := index; i < endPoint; i++ {
-		curByte := content[i]
+	mask := stopMask(stop)
 
-		if !stop[curByte] {
-			continue
+	for i := index; i < endPoint; i++ {
+		// Eight bytes answered at a time, without a branch between them. See
+		// scanToStop.
+		at := scanToStop(content, i, endPoint, mask)
+		if at < 0 {
+			break
 		}
+		i = at
+		curByte := content[i]
 
 		switch curByte {
 		case '\n':
@@ -275,6 +361,20 @@ func scalaCodeState(content []byte, tally *counterTally, index, endPoint, floor 
 
 			return i, SCode
 		default:
+			// Instrumented over 48.8MB of Java read as Scala, there being no
+			// Scala on this machine to measure and the two being spelled out of
+			// the same bytes: 64.6% of the stops this loop makes are anchor
+			// stops, 92.7% of those count nothing, and 84.4% of the failures
+			// are settled by the single byte in front of the anchor. That byte
+			// is the first thing scalaComplexityAnchored tests and the last
+			// thing the caller knows before paying for the call, so it is
+			// tested here instead: a zero AND is exactly the case the function
+			// rejects on its own first test, so skipping it cannot change a
+			// count. It removes 78.2% of the calls.
+			if scalaAnchorPrev[byteBefore(content, i, floor)]&scalaAnchorBit[curByte] == 0 {
+				continue
+			}
+
 			if scalaComplexityAnchored(content, i, floor) {
 				tally.Complexity++
 			}

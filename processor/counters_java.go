@@ -228,6 +228,90 @@ func javaBlankState(content []byte, tally *counterTally, index, floor int) (int,
 	return index, SCode, nil
 }
 
+// javaAnchorBit gives each anchor byte of Java a bit; javaAnchorPrev[prev]
+// holds the bits of every anchor whose first test could still pass with prev in
+// front of it. The AND of the two is zero exactly where javaComplexityAnchored
+// would have returned false on its own first test, so a zero skips a call that
+// could only have said no.
+//
+// The table is a conservative superset: a bit that need not be set costs a call
+// that would have been paid anyway, while a bit wrongly cleared loses a count.
+// TestAnchorPrefilterIsConservative holds every cleared pair to being a pair the
+// function really does reject, over all 256 bytes and every anchor.
+const (
+	javaAnchorBitF uint8 = 1 << iota
+	javaAnchorBitW
+	javaAnchorBitL
+	javaAnchorBitY
+	javaAnchorBitH
+	javaAnchorBitEq
+	javaAnchorBitPipe
+	javaAnchorBitAmp
+)
+
+var javaAnchorBit = buildJavaAnchorBit()
+
+var javaAnchorPrev = buildJavaAnchorPrev()
+
+func buildJavaAnchorBit() [256]uint8 {
+	var table [256]uint8
+	table['f'] = javaAnchorBitF
+	table['w'] = javaAnchorBitW
+	table['l'] = javaAnchorBitL
+	table['y'] = javaAnchorBitY
+	table['h'] = javaAnchorBitH
+	table['='] = javaAnchorBitEq
+	table['|'] = javaAnchorBitPipe
+	table['&'] = javaAnchorBitAmp
+
+	return table
+}
+
+func buildJavaAnchorPrev() [256]uint8 {
+	var table [256]uint8
+	for value := range 256 {
+		previous := byte(value)
+		boundary := !isIdentifierContinue(previous)
+
+		var mask uint8
+		// if reads its f backwards over the i, so an i in front keeps it; every
+		// other check anchored on f is read forwards from a word boundary.
+		if previous == 'i' || boundary {
+			mask |= javaAnchorBitF
+		}
+		// switch reads its w backwards over the s; while reads forwards from a
+		// word boundary.
+		if previous == 's' || boundary {
+			mask |= javaAnchorBitW
+		}
+		// else, whose l is read back over the e.
+		if previous == 'e' {
+			mask |= javaAnchorBitL
+		}
+		// try, whose y is read back over the r.
+		if previous == 'r' {
+			mask |= javaAnchorBitY
+		}
+		// catch, whose h is read back over catc, so the byte in front of the
+		// anchor is the second c and nothing else.
+		if previous == 'c' {
+			mask |= javaAnchorBitH
+		}
+		// == and != are both read back over their first byte.
+		if previous == '=' || previous == '!' {
+			mask |= javaAnchorBitEq
+		}
+		// || and && begin on the byte they are anchored on, so the word
+		// boundary is the whole of their first test.
+		if boundary {
+			mask |= javaAnchorBitPipe | javaAnchorBitAmp
+		}
+		table[value] = mask
+	}
+
+	return table
+}
+
 // javaCodeState runs to the end of the line or to whatever token takes it out
 // of code.
 func javaCodeState(content []byte, tally *counterTally, index, endPoint, floor int, stop *[256]bool) (int, counterState, []byte) {
@@ -235,12 +319,17 @@ func javaCodeState(content []byte, tally *counterTally, index, endPoint, floor i
 		endPoint--
 	}
 
-	for i := index; i < endPoint; i++ {
-		curByte := content[i]
+	mask := stopMask(stop)
 
-		if !stop[curByte] {
-			continue
+	for i := index; i < endPoint; i++ {
+		// Eight bytes answered at a time, without a branch between them. See
+		// scanToStop.
+		at := scanToStop(content, i, endPoint, mask)
+		if at < 0 {
+			break
 		}
+		i = at
+		curByte := content[i]
 
 		switch curByte {
 		case '\n':
@@ -276,6 +365,16 @@ func javaCodeState(content []byte, tally *counterTally, index, endPoint, floor i
 
 			return i, SCode, nil
 		default:
+			// The byte in front of the anchor is the first thing
+			// javaComplexityAnchored looks at, and it settles most of the
+			// anchor stops that go on to count nothing. This is that test
+			// hoisted in front of the call that would otherwise be paid to
+			// reach it: a zero AND is exactly the case the function rejects on
+			// its own first test, so skipping it cannot change a count.
+			if javaAnchorPrev[byteBefore(content, i, floor)]&javaAnchorBit[curByte] == 0 {
+				continue
+			}
+
 			if javaComplexityAnchored(content, i, floor) {
 				tally.Complexity++
 			}
@@ -349,11 +448,21 @@ func countLoopJava(fileJob *FileJob, bomSkip, endPoint int) bool {
 // SpecialisedCounters turns on the counters written for one language, which
 // stand in for the generic loop where there is one for the file's language.
 //
-// Off by default, and the flag that sets it is spelled exp- to say that it may
-// change or go away. They are held to producing exactly what the generic loop
-// produces, and a differential test reads every C, C Header and Java file of
-// several real trees both ways to check it, but the generic loop is what every
-// count has been compared against for years and it stays the default until
-// these have some road behind them. It is also what the differential test runs
-// the same file through both ways with.
-var SpecialisedCounters bool
+// On by default as of 4.2.0. They were introduced off, behind a flag spelled
+// exp- to say that they might change or go away, because the generic loop is
+// what every count had been compared against for years. What they have behind
+// them now is a differential test that reads every file of several real trees
+// both ways, a fuzzer that holds each counter against the generic loop, and
+// byte identical output over llvm-project, the Linux kernel, kubernetes,
+// cpython, ruby and lucene: 296,599 files, per file and summary.
+//
+// The flag now turns them off rather than on, which is --no-per-language-counters,
+// and it is there for the same reason the differential test is: the generic loop
+// is the oracle, so being able to ask it directly is worth keeping.
+var SpecialisedCounters = true
+
+// GenericCounterOnly is what --no-per-language-counters sets, and it turns
+// SpecialisedCounters off. Held apart from it so the flag reads as the thing it
+// is named, a negative, while the code that asks the question keeps asking it
+// in the positive.
+var GenericCounterOnly bool

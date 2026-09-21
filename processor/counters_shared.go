@@ -6,7 +6,9 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"math/bits"
 	"sort"
+	"unsafe"
 )
 
 // The half of a specialised counter that does not change from one language to
@@ -99,6 +101,54 @@ func specialisedCounterEligible(fileJob *FileJob) bool {
 		!fileJob.ClassifyContent &&
 		!fileJob.TrackComplexityLines &&
 		fileJob.Callback == nil
+}
+
+// stopMask reads a stop table as bytes so eight of its answers can be folded
+// into one mask without a branch between them.
+//
+// A scan that tests one byte at a time pays an unpredictable branch on every
+// byte of the file, and a stop lands on a few percent of them, scattered. The
+// wide scan below does strictly more work per byte - eight lookups and seven
+// shifts where the byte loop could stop after one lookup - and is faster
+// anyway, because eight mispredictable branches become one that is almost
+// always not taken. That is the whole of why it wins; the loads were never the
+// problem.
+//
+// The conversion is what it looks like. gc lays a bool out as one byte holding
+// 0 or 1, which is what makes the shift below meaningful, and the tables are
+// only ever written by the builders in this package. TestStopMaskMatchesTheTable
+// holds both of those claims.
+func stopMask(stop *[256]bool) *[256]uint8 {
+	return (*[256]uint8)(unsafe.Pointer(stop))
+}
+
+// scanToStop returns the offset of the first byte at or after i that the table
+// stops on, or -1 where the region holds none. Eight bytes are answered at a
+// time and the remainder one at a time.
+func scanToStop(content []byte, i, endPoint int, mask *[256]uint8) int {
+	for i < endPoint {
+		if i+8 <= endPoint {
+			// The three index window gives the compiler a fixed length to work
+			// with, so the eight loads need no bounds check of their own.
+			c := content[i : i+8 : i+8]
+			m := uint(mask[c[0]]) | uint(mask[c[1]])<<1 | uint(mask[c[2]])<<2 | uint(mask[c[3]])<<3 |
+				uint(mask[c[4]])<<4 | uint(mask[c[5]])<<5 | uint(mask[c[6]])<<6 | uint(mask[c[7]])<<7
+			if m == 0 {
+				i += 8
+
+				continue
+			}
+
+			return i + bits.TrailingZeros(m)
+		}
+
+		if mask[content[i]] != 0 {
+			return i
+		}
+		i++
+	}
+
+	return -1
 }
 
 // hasPrefixAt reports whether prefix sits at index, which is the form every
@@ -696,7 +746,7 @@ func counterSpecs() []counterSpec {
 	return []counterSpec{
 		{
 			Language:         "C",
-			Count:            func(f *FileJob, b, e int) bool { return countLoopC(f, b, e, false) },
+			Count:            func(f *FileJob, b, e int) bool { return countLoopC(f, b, e) },
 			Extension:        ".c",
 			Anchors:          cComplexityAnchors,
 			LineComments:     cComments,
@@ -707,13 +757,13 @@ func counterSpecs() []counterSpec {
 		},
 		{
 			Language:         "C Header",
-			Count:            func(f *FileJob, b, e int) bool { return countLoopC(f, b, e, true) },
+			Count:            func(f *FileJob, b, e int) bool { return countLoopC(f, b, e) },
 			Extension:        ".h",
-			Anchors:          cHeaderComplexityAnchors,
+			Anchors:          cComplexityAnchors,
 			LineComments:     cComments,
 			BlockComments:    cBlocks,
 			Quotes:           []string{`"`, `"`},
-			Stop:             &cHeaderStop,
+			Stop:             &cStop,
 			StopNoComplexity: &cStopNoComplexity,
 		},
 		{
@@ -1020,7 +1070,7 @@ func counterLanguages() []string {
 func PrintCounters(w io.Writer) {
 	languages := counterLanguages()
 
-	fmt.Fprintf(w, "%d of %d languages have a scanner written for them, used with --exp-per-language-counters:\n\n", len(languages), len(languageDatabase))
+	fmt.Fprintf(w, "%d of %d languages have a scanner written for them, used by default and turned off with --no-per-language-counters:\n\n", len(languages), len(languageDatabase))
 	for _, language := range languages {
 		fmt.Fprintf(w, "  %s\n", language)
 	}

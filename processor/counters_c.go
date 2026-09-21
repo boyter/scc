@@ -25,11 +25,7 @@ package processor
 // 21.5% of all bytes; stopping on the anchors costs 10.5%. The saving is nearly
 // all of it e, i and s, which open if, switch and else and are three of the
 // five commonest bytes in C.
-var cStop = buildCStop(false)
-
-// cHeaderStop is cStop with the c of case, which C Header counts and C does
-// not.
-var cHeaderStop = buildCStop(true)
+var cStop = buildCStop()
 
 // cStopNoComplexity holds only what changes the state, which is what a file
 // counted with --no-complexity is scanned with.
@@ -42,34 +38,17 @@ var cQuote = []byte{'"'}
 // cComplexityAnchors is the byte each complexity check of C is stopped on. It
 // is what the structural conformance test holds against cStop, and it is the
 // written form of the argument in buildCStop.
-//
-// case is C Header's and not C's. The two counters are one piece of code told
-// apart by withCase, and this is held against C Header, whose check list is C's
-// plus that one.
 var cComplexityAnchors = map[string]byte{
 	"for ": 'f', "for(": 'f',
 	"if ": 'f', "if(": 'f',
 	"switch ": 'w', "switch(": 'w',
+	"case ":  'c',
 	"while ": 'w', "while(": 'w',
 	"else ": 'l', "else{": 'l',
 	"|| ": '|',
 	"&& ": '&',
 	"!= ": '=',
 	"== ": '=',
-}
-
-// cHeaderComplexityAnchors is cComplexityAnchors with the case that C Header
-// counts and C does not.
-var cHeaderComplexityAnchors = buildCHeaderAnchors()
-
-func buildCHeaderAnchors() map[string]byte {
-	anchors := make(map[string]byte, len(cComplexityAnchors)+1)
-	for check, anchor := range cComplexityAnchors {
-		anchors[check] = anchor
-	}
-	anchors["case "] = 'c'
-
-	return anchors
 }
 
 // buildCStop marks the anchor of every complexity check of C.
@@ -81,13 +60,10 @@ func buildCHeaderAnchors() map[string]byte {
 //	|   ||
 //	&   &&
 //	=   ==, and the = of != read backwards, so ! is not needed at all
-func buildCStop(withCase bool) [256]bool {
+func buildCStop() [256]bool {
 	table := buildCStopNoComplexity()
-	for _, b := range []byte{'f', 'w', 'l', '|', '&', '='} {
+	for _, b := range []byte{'f', 'w', 'l', 'c', '|', '&', '='} {
 		table[b] = true
-	}
-	if withCase {
-		table['c'] = true
 	}
 
 	return table
@@ -104,12 +80,9 @@ func buildCStopNoComplexity() [256]bool {
 
 // cStopTable picks the table the scan runs with. The global reads as complexity
 // having been turned off.
-func cStopTable(withCase bool) *[256]bool {
+func cStopTable() *[256]bool {
 	if Complexity {
 		return &cStopNoComplexity
-	}
-	if withCase {
-		return &cHeaderStop
 	}
 
 	return &cStop
@@ -130,7 +103,7 @@ func cStopTable(withCase bool) *[256]bool {
 // the f of if has an i behind it and the f of for cannot, i being a byte that
 // carries a word on, and the same holds of the w of switch against while and
 // the = of != against ==.
-func cComplexityAnchored(content []byte, index, floor int, withCase bool) bool {
+func cComplexityAnchored(content []byte, index, floor int) bool {
 	switch content[index] {
 	case 'f':
 		if byteBefore(content, index, floor) == 'i' {
@@ -166,7 +139,7 @@ func cComplexityAnchored(content []byte, index, floor int, withCase bool) bool {
 	case '&':
 		return wordStartsAt(content, index, floor) && hasPrefixAt(content, index+1, floor, "& ")
 	case 'c':
-		return withCase && wordStartsAt(content, index, floor) &&
+		return wordStartsAt(content, index, floor) &&
 			hasPrefixAt(content, index+1, floor, "ase ")
 	}
 
@@ -174,7 +147,7 @@ func cComplexityAnchored(content []byte, index, floor int, withCase bool) bool {
 }
 
 // cBlankState looks at the first byte of content on a line.
-func cBlankState(content []byte, tally *counterTally, index, floor int, withCase bool) (int, counterState) {
+func cBlankState(content []byte, tally *counterTally, index, floor int) (int, counterState) {
 	switch content[index] {
 	case '/':
 		if index+1 < len(content) {
@@ -189,7 +162,7 @@ func cBlankState(content []byte, tally *counterTally, index, floor int, withCase
 		return index, SString
 	}
 
-	if !Complexity && cComplexityAtLineStart(content, index, floor, withCase) {
+	if !Complexity && cComplexityAtLineStart(content, index, floor) {
 		tally.Complexity++
 	}
 
@@ -211,7 +184,7 @@ func cBlankState(content []byte, tally *counterTally, index, floor int, withCase
 // anchored on their first byte are never found at all, and it is the reason the
 // backwards reads of cComplexityAnchored can be written as reads rather than as
 // searches. The two are one thing.
-func cComplexityAtLineStart(content []byte, index, floor int, withCase bool) bool {
+func cComplexityAtLineStart(content []byte, index, floor int) bool {
 	switch content[index] {
 	case 'f':
 		return hasPrefixAt(content, index+1, floor, "or") && cOpens(content, index+3)
@@ -222,25 +195,89 @@ func cComplexityAtLineStart(content []byte, index, floor int, withCase bool) boo
 	case '&':
 		return hasPrefixAt(content, index+1, floor, "& ")
 	case 'c':
-		return withCase && hasPrefixAt(content, index+1, floor, "ase ")
+		return hasPrefixAt(content, index+1, floor, "ase ")
 	}
 
 	return false
 }
 
+// cAnchorBit gives each anchor byte of C a bit; cAnchorPrev[prev] holds the bits
+// of every anchor whose first test could still pass with prev in front of it.
+// The AND of the two is zero exactly where cComplexityAnchored would have
+// returned false on its first test.
+const (
+	cAnchorBitF uint8 = 1 << iota
+	cAnchorBitL
+	cAnchorBitW
+	cAnchorBitEq
+	cAnchorBitC
+	cAnchorBitAmp
+	cAnchorBitPipe
+)
+
+var cAnchorBit = buildCAnchorBit()
+
+var cAnchorPrev = buildCAnchorPrev()
+
+func buildCAnchorBit() [256]uint8 {
+	var table [256]uint8
+	table['f'] = cAnchorBitF
+	table['l'] = cAnchorBitL
+	table['w'] = cAnchorBitW
+	table['='] = cAnchorBitEq
+	table['c'] = cAnchorBitC
+	table['&'] = cAnchorBitAmp
+	table['|'] = cAnchorBitPipe
+
+	return table
+}
+
+func buildCAnchorPrev() [256]uint8 {
+	var table [256]uint8
+	for value := range 256 {
+		previous := byte(value)
+		boundary := !isIdentifierContinue(previous)
+
+		var mask uint8
+		if previous == 'i' || boundary {
+			mask |= cAnchorBitF
+		}
+		if previous == 'e' {
+			mask |= cAnchorBitL
+		}
+		if previous == 's' || boundary {
+			mask |= cAnchorBitW
+		}
+		if previous == '=' || previous == '!' {
+			mask |= cAnchorBitEq
+		}
+		if boundary {
+			mask |= cAnchorBitC | cAnchorBitAmp | cAnchorBitPipe
+		}
+		table[value] = mask
+	}
+
+	return table
+}
+
 // cCodeState runs to the end of the line or to whatever token takes it out of
 // code.
-func cCodeState(content []byte, tally *counterTally, index, endPoint, floor int, stop *[256]bool, withCase bool) (int, counterState) {
+func cCodeState(content []byte, tally *counterTally, index, endPoint, floor int, stop *[256]bool) (int, counterState) {
 	if endPoint > len(content) {
 		endPoint--
 	}
 
-	for i := index; i < endPoint; i++ {
-		curByte := content[i]
+	mask := stopMask(stop)
 
-		if !stop[curByte] {
-			continue
+	for i := index; i < endPoint; i++ {
+		// Eight bytes answered at a time, without a branch between them. See
+		// scanToStop.
+		at := scanToStop(content, i, endPoint, mask)
+		if at < 0 {
+			break
 		}
+		i = at
+		curByte := content[i]
 
 		switch curByte {
 		case '\n':
@@ -271,7 +308,17 @@ func cCodeState(content []byte, tally *counterTally, index, endPoint, floor int,
 
 			return i, SCode
 		default:
-			if cComplexityAnchored(content, i, floor, withCase) {
+			// 94% of anchor stops fail, and 88% of those are settled by the
+			// byte in front of the anchor alone. This is that test, hoisted in
+			// front of the call that would otherwise be paid to reach it: a
+			// zero AND is exactly the case cComplexityAnchored rejects on its
+			// own first test, so it cannot change a count. It skips four calls
+			// in five over the kernel.
+			if cAnchorPrev[byteBefore(content, i, floor)]&cAnchorBit[curByte] == 0 {
+				continue
+			}
+
+			if cComplexityAnchored(content, i, floor) {
 				tally.Complexity++
 			}
 		}
@@ -289,9 +336,9 @@ func cCodeState(content []byte, tally *counterTally, index, endPoint, floor int,
 // countLoopC stands in for countLoopGeneric where the language is C or C
 // Header. It returns false when it ended the count early, the same way the
 // generic loop does.
-func countLoopC(fileJob *FileJob, bomSkip, endPoint int, withCase bool) bool {
+func countLoopC(fileJob *FileJob, bomSkip, endPoint int) bool {
 	content := fileJob.Content
-	stop := cStopTable(withCase)
+	stop := cStopTable()
 	floor := bomSkip
 	lastByte := int(fileJob.Bytes) - 1
 
@@ -300,7 +347,7 @@ func countLoopC(fileJob *FileJob, bomSkip, endPoint int, withCase bool) bool {
 	step := func(index int, state counterState) (int, counterState) {
 		switch state {
 		case SCode:
-			return cCodeState(content, &tally, index, endPoint, floor, stop, withCase)
+			return cCodeState(content, &tally, index, endPoint, floor, stop)
 		case SString:
 			return counterStringState(content, index, endPoint, floor, cQuote, false)
 		case SComment, SCommentCode:
@@ -316,7 +363,7 @@ func countLoopC(fileJob *FileJob, bomSkip, endPoint int, withCase bool) bool {
 		case SMulticomment, SMulticommentCode:
 			return counterCommentState(content, index, endPoint, state, slashStarClose, &tally)
 		default: // SBlank and SMulticommentBlank
-			return cBlankState(content, &tally, index, floor, withCase)
+			return cBlankState(content, &tally, index, floor)
 		}
 	}
 

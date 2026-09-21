@@ -228,6 +228,87 @@ func kotlinBlankState(content []byte, tally *counterTally, index, floor int) (in
 	return index, SCode
 }
 
+// kotlinAnchorBit gives each anchor byte of Kotlin a bit; kotlinAnchorPrev[prev]
+// holds the bits of every anchor whose first test could still pass with prev in
+// front of it. The AND of the two is zero exactly where kotlinComplexityAnchored
+// would have returned false on its own first test, so a zero skips a call that
+// could only have said no.
+//
+// The table is a conservative superset: a bit that need not be set costs a call
+// that would have been paid anyway, while a bit wrongly cleared loses a count.
+// TestAnchorPrefilterIsConservative holds every cleared pair to being a pair the
+// function really does reject, over all 256 bytes and every anchor.
+const (
+	kotlinAnchorBitF uint8 = 1 << iota
+	kotlinAnchorBitW
+	kotlinAnchorBitL
+	kotlinAnchorBitY
+	kotlinAnchorBitH
+	kotlinAnchorBitEq
+	kotlinAnchorBitPipe
+	kotlinAnchorBitAmp
+)
+
+var kotlinAnchorBit = buildKotlinAnchorBit()
+
+var kotlinAnchorPrev = buildKotlinAnchorPrev()
+
+func buildKotlinAnchorBit() [256]uint8 {
+	var table [256]uint8
+	table['f'] = kotlinAnchorBitF
+	table['w'] = kotlinAnchorBitW
+	table['l'] = kotlinAnchorBitL
+	table['y'] = kotlinAnchorBitY
+	table['h'] = kotlinAnchorBitH
+	table['='] = kotlinAnchorBitEq
+	table['|'] = kotlinAnchorBitPipe
+	table['&'] = kotlinAnchorBitAmp
+
+	return table
+}
+
+func buildKotlinAnchorPrev() [256]uint8 {
+	var table [256]uint8
+	for value := range 256 {
+		previous := byte(value)
+		boundary := !isIdentifierContinue(previous)
+
+		var mask uint8
+		// if reads its f backwards over the i, so an i in front keeps it; every
+		// other check anchored on f is read forwards from a word boundary.
+		if previous == 'i' || boundary {
+			mask |= kotlinAnchorBitF
+		}
+		// else, whose l is read back over the e.
+		if previous == 'e' {
+			mask |= kotlinAnchorBitL
+		}
+		// try, whose y is read back over the r.
+		if previous == 'r' {
+			mask |= kotlinAnchorBitY
+		}
+		// catch, whose h is read back over catc, so the byte in front of the
+		// anchor is the second c and nothing else.
+		if previous == 'c' {
+			mask |= kotlinAnchorBitH
+		}
+		// == and != are both read back over their first byte.
+		if previous == '=' || previous == '!' {
+			mask |= kotlinAnchorBitEq
+		}
+		// when, while, || and && all begin on the byte they are anchored on,
+		// so for all four the word boundary is the whole of the first test.
+		// Kotlin's w is here rather than with the backwards reads because
+		// unlike the rest of the family it carries no switch.
+		if boundary {
+			mask |= kotlinAnchorBitW | kotlinAnchorBitPipe | kotlinAnchorBitAmp
+		}
+		table[value] = mask
+	}
+
+	return table
+}
+
 // kotlinCodeState runs to the end of the line or to whatever token takes it out
 // of code.
 func kotlinCodeState(content []byte, tally *counterTally, index, endPoint, floor int, stop *[256]bool) (int, counterState) {
@@ -235,12 +316,17 @@ func kotlinCodeState(content []byte, tally *counterTally, index, endPoint, floor
 		endPoint--
 	}
 
-	for i := index; i < endPoint; i++ {
-		curByte := content[i]
+	mask := stopMask(stop)
 
-		if !stop[curByte] {
-			continue
+	for i := index; i < endPoint; i++ {
+		// Eight bytes answered at a time, without a branch between them. See
+		// scanToStop.
+		at := scanToStop(content, i, endPoint, mask)
+		if at < 0 {
+			break
 		}
+		i = at
+		curByte := content[i]
 
 		switch curByte {
 		case '\n':
@@ -272,6 +358,16 @@ func kotlinCodeState(content []byte, tally *counterTally, index, endPoint, floor
 
 			return i, SCode
 		default:
+			// The byte in front of the anchor is the first thing
+			// kotlinComplexityAnchored looks at, and it settles most of the
+			// anchor stops that go on to count nothing. This is that test
+			// hoisted in front of the call that would otherwise be paid to
+			// reach it: a zero AND is exactly the case the function rejects on
+			// its own first test, so skipping it cannot change a count.
+			if kotlinAnchorPrev[byteBefore(content, i, floor)]&kotlinAnchorBit[curByte] == 0 {
+				continue
+			}
+
 			if kotlinComplexityAnchored(content, i, floor) {
 				tally.Complexity++
 			}
