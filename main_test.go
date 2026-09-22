@@ -1093,3 +1093,61 @@ func TestReadmeHelpMatchesBinary(t *testing.T) {
 		return
 	}
 }
+
+// reportSkipHelpRe pulls the recognised section names out of the
+// --report-skip line of `scc --help`, and backtickedRe the ones the README
+// table claims.
+var (
+	reportSkipHelpRe = regexp.MustCompile(`--report-skip string\s+[^(\n]+\(([a-z,]+)\)`)
+	backtickedRe     = regexp.MustCompile("`([a-z]+)`")
+)
+
+// TestReadmeReportSkipSections holds the --report-skip row of the report
+// options table against the names the flag itself lists, the two having
+// drifted apart once already.
+func TestReadmeReportSkipSections(t *testing.T) {
+	output, err := runSCC("--help")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	readme, err := os.ReadFile("README.md")
+	if err != nil {
+		t.Skipf("README.md is not readable, nothing to compare against: %v", err)
+	}
+
+	sections := reportSkipHelpRe.FindStringSubmatch(output)
+	if sections == nil {
+		t.Fatal("no --report-skip section list found in `scc --help`")
+	}
+
+	const prefix = "| `--report-skip LIST` |"
+	row := ""
+	for _, line := range strings.Split(string(readme), "\n") {
+		if strings.HasPrefix(line, prefix) {
+			row = line
+			break
+		}
+	}
+	if row == "" {
+		t.Fatalf("README.md has no %q row to check", prefix)
+	}
+
+	recognised := map[string]bool{}
+	for _, name := range strings.Split(sections[1], ",") {
+		recognised[name] = true
+		if !strings.Contains(row, "`"+name+"`") {
+			t.Errorf("the --report-skip row in README.md does not list %q", name)
+		}
+	}
+
+	cells := strings.Split(row, "|")
+	if len(cells) < 4 {
+		t.Fatalf("could not read a description cell out of %q", row)
+	}
+	for _, listed := range backtickedRe.FindAllStringSubmatch(cells[2], -1) {
+		if !recognised[listed[1]] {
+			t.Errorf("the --report-skip row in README.md lists %q, which the flag does not accept", listed[1])
+		}
+	}
+}
