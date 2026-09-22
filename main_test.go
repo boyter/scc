@@ -1019,3 +1019,77 @@ func TestSpecificLanguages(t *testing.T) {
 		}
 	}
 }
+
+// helpDefaultRe matches the numeric flag defaults in `scc --help`. Four of
+// them come from runtime.NumCPU(), so the paste in README.md can only ever
+// match the machine it was taken on.
+var helpDefaultRe = regexp.MustCompile(`\(default \d+\)`)
+
+// normaliseHelp drops the parts of the help output that differ legitimately
+// between machines and releases: the version line and the numeric defaults.
+func normaliseHelp(s string) string {
+	var kept []string
+	for _, line := range strings.Split(strings.ReplaceAll(s, "\r\n", "\n"), "\n") {
+		if strings.HasPrefix(line, "Version ") {
+			continue
+		}
+		kept = append(kept, helpDefaultRe.ReplaceAllString(line, "(default N)"))
+	}
+	return strings.TrimSpace(strings.Join(kept, "\n"))
+}
+
+// readmeHelpBlock returns the `scc -h` paste, which runs from the line after
+// the prompt down to the fence that closes the block.
+func readmeHelpBlock(t *testing.T, readme string) string {
+	t.Helper()
+	const anchor = "$ scc -h\n"
+	readme = strings.ReplaceAll(readme, "\r\n", "\n")
+	start := strings.Index(readme, anchor)
+	if start == -1 {
+		t.Fatal("README.md has no `$ scc -h` line to anchor the help paste to")
+	}
+	block := readme[start+len(anchor):]
+	end := strings.Index(block, "\n```")
+	if end == -1 {
+		t.Fatal("the `$ scc -h` block in README.md is never closed by a fence")
+	}
+	return block[:end]
+}
+
+// TestReadmeHelpMatchesBinary holds the `scc -h` paste against the flags
+// cobra actually registers, so a new or reworded option cannot land with the
+// documented set left behind.
+func TestReadmeHelpMatchesBinary(t *testing.T) {
+	output, err := runSCC("--help")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	readme, err := os.ReadFile("README.md")
+	if err != nil {
+		t.Skipf("README.md is not readable, nothing to compare against: %v", err)
+	}
+
+	want := normaliseHelp(output)
+	got := normaliseHelp(readmeHelpBlock(t, string(readme)))
+	if got == want {
+		return
+	}
+
+	wantLines := strings.Split(want, "\n")
+	gotLines := strings.Split(got, "\n")
+	for i := 0; i < max(len(wantLines), len(gotLines)); i++ {
+		var w, g string
+		if i < len(wantLines) {
+			w = wantLines[i]
+		}
+		if i < len(gotLines) {
+			g = gotLines[i]
+		}
+		if w == g {
+			continue
+		}
+		t.Errorf("the `scc -h` block in README.md is out of date - paste the current `scc --help` output in under `$ scc -h`\nfirst difference at line %d:\n  README: %s\n  binary: %s", i+1, g, w)
+		return
+	}
+}
