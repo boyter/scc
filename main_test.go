@@ -1027,20 +1027,26 @@ func runHelp() (string, error) {
 	return runSCC("--help", "--no-config")
 }
 
-// helpDefaultRe matches the numeric flag defaults in `scc --help`. Four of
-// them come from runtime.NumCPU(), so the paste in README.md can only ever
-// match the machine it was taken on.
-var helpDefaultRe = regexp.MustCompile(`\(default \d+\)`)
+var (
+	// cpuDefaultFlag matches the four flags defaulting to runtime.NumCPU(),
+	// the only ones whose default depends on the machine the paste was taken
+	// on. Every other default is a literal and stays under comparison.
+	cpuDefaultFlag = regexp.MustCompile(`^\s+--(file-list-job-workers|file-list-queue-size|file-process-job-workers|file-summary-job-queue-size) `)
+	helpDefault    = regexp.MustCompile(`\(default \d+\)`)
+)
 
 // normaliseHelp drops the parts of the help output that differ legitimately
-// between machines and releases: the version line and the numeric defaults.
+// between machines and releases: the version line and the CPU-count defaults.
 func normaliseHelp(s string) string {
 	var kept []string
 	for _, line := range strings.Split(strings.ReplaceAll(s, "\r\n", "\n"), "\n") {
 		if strings.HasPrefix(line, "Version ") {
 			continue
 		}
-		kept = append(kept, helpDefaultRe.ReplaceAllString(line, "(default N)"))
+		if cpuDefaultFlag.MatchString(line) {
+			line = helpDefault.ReplaceAllString(line, "(default N)")
+		}
+		kept = append(kept, line)
 	}
 	return strings.TrimSpace(strings.Join(kept, "\n"))
 }
