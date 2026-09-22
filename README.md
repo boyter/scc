@@ -331,7 +331,7 @@ Flags:
       --exclude-dir strings                 directories to exclude (default [.git,.hg,.svn])
   -x, --exclude-ext strings                 ignore file extensions (overrides include-ext) [comma separated list: e.g. go,java,js]
   -n, --exclude-file strings                ignore files with matching names (default [package-lock.json,Cargo.lock,yarn.lock,pubspec.lock,Podfile.lock,pnpm-lock.yaml])
-      --exp-per-language-counters           experimental, may change or be removed: count with the scanner written for the file's language where there is one, currently C, C Header and Java
+      --exp-per-language-counters           experimental, may change or be removed: count with the scanner written for the file's language where there is one, see --list-counters
       --file-gc-count int                   number of files to parse before turning the GC on (default 10000)
       --file-list-job-workers int           number of goroutine workers that turn a walked path into a job to be counted (default 8)
       --file-list-queue-size int            the size of the queue of files found and ready to be read into memory (default 8)
@@ -350,6 +350,7 @@ Flags:
   -l, --languages                           print supported languages and extensions
       --large-byte-count int                number of bytes a file can contain before being removed from output (default 1000000)
       --large-line-count int                number of lines a file can contain before being removed from output (default 40000)
+      --list-counters                       print the languages that have a scanner of their own and exit
       --locomo                              enable LOCOMO (LLM Output COst MOdel) cost estimation
       --locomo-config string                LOCOMO power-user config "tokensPerLine,inputPerLine,complexityWeight,iterations,iterationWeight"
       --locomo-cycles float                 override estimated LLM iteration cycles (default: calculated from complexity)
