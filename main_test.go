@@ -1020,6 +1020,13 @@ func TestSpecificLanguages(t *testing.T) {
 	}
 }
 
+// runHelp returns the `scc --help` text. --no-config keeps a developer's
+// ./.sccconfig out of it: runSCC reports combined output, so a warning from a
+// malformed one would be compared against the README as if it were help.
+func runHelp() (string, error) {
+	return runSCC("--help", "--no-config")
+}
+
 // helpDefaultRe matches the numeric flag defaults in `scc --help`. Four of
 // them come from runtime.NumCPU(), so the paste in README.md can only ever
 // match the machine it was taken on.
@@ -1060,7 +1067,7 @@ func readmeHelpBlock(t *testing.T, readme string) string {
 // cobra actually registers, so a new or reworded option cannot land with the
 // documented set left behind.
 func TestReadmeHelpMatchesBinary(t *testing.T) {
-	output, err := runSCC("--help")
+	output, err := runHelp()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1106,7 +1113,7 @@ var (
 // options table against the names the flag itself lists, the two having
 // drifted apart once already.
 func TestReadmeReportSkipSections(t *testing.T) {
-	output, err := runSCC("--help")
+	output, err := runHelp()
 	if err != nil {
 		t.Fatal(err)
 	}
