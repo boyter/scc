@@ -4,7 +4,7 @@ package processor
 
 import "bytes"
 
-// Thirty-two of the 366 languages declare no comment, no string and no
+// Thirty-three of the 367 languages declare no comment, no string and no
 // complexity check: Plain Text, Markdown, JSON, CSV, ReStructuredText, AsciiDoc,
 // Patch, the lock and manifest formats. Nothing in one of their files can change
 // the state of the scan, so counting one is deciding, for each line, whether it
@@ -14,7 +14,7 @@ import "bytes"
 //
 // This is not a counter in the sense the other eighteen are. There is no
 // language in it and nothing to get wrong per language, so one function answers
-// for all thirty-two and for any language that later declares nothing either.
+// for all thirty-three and for any language that later declares nothing either.
 // It is reached on ProcessMask being zero, which is the same thing said in the
 // form the loop already holds.
 func noTokensAtAll(langFeatures LanguageFeature) bool {
