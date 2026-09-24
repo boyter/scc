@@ -1019,3 +1019,148 @@ func TestSpecificLanguages(t *testing.T) {
 		}
 	}
 }
+
+// runHelp returns the `scc --help` text. --no-config keeps a developer's
+// ./.sccconfig out of it: runSCC reports combined output, so a warning from a
+// malformed one would be compared against the README as if it were help.
+func runHelp() (string, error) {
+	return runSCC("--help", "--no-config")
+}
+
+var (
+	// cpuDefaultFlag matches the four flags defaulting to runtime.NumCPU(),
+	// the only ones whose default depends on the machine the paste was taken
+	// on. Every other default is a literal and stays under comparison.
+	cpuDefaultFlag = regexp.MustCompile(`^\s+--(file-list-job-workers|file-list-queue-size|file-process-job-workers|file-summary-job-queue-size) `)
+	helpDefault    = regexp.MustCompile(`\(default \d+\)`)
+)
+
+// normaliseHelp drops the parts of the help output that differ legitimately
+// between machines and releases: the version line and the CPU-count defaults.
+func normaliseHelp(s string) string {
+	var kept []string
+	for _, line := range strings.Split(strings.ReplaceAll(s, "\r\n", "\n"), "\n") {
+		if strings.HasPrefix(line, "Version ") {
+			continue
+		}
+		if cpuDefaultFlag.MatchString(line) {
+			line = helpDefault.ReplaceAllString(line, "(default N)")
+		}
+		kept = append(kept, line)
+	}
+	return strings.TrimSpace(strings.Join(kept, "\n"))
+}
+
+// readmeHelpBlock returns the `scc -h` paste, which runs from the line after
+// the prompt down to the fence that closes the block.
+func readmeHelpBlock(t *testing.T, readme string) string {
+	t.Helper()
+	const anchor = "$ scc -h\n"
+	readme = strings.ReplaceAll(readme, "\r\n", "\n")
+	start := strings.Index(readme, anchor)
+	if start == -1 {
+		t.Fatal("README.md has no `$ scc -h` line to anchor the help paste to")
+	}
+	block := readme[start+len(anchor):]
+	end := strings.Index(block, "\n```")
+	if end == -1 {
+		t.Fatal("the `$ scc -h` block in README.md is never closed by a fence")
+	}
+	return block[:end]
+}
+
+// TestReadmeHelpMatchesBinary holds the `scc -h` paste against the flags
+// cobra actually registers, so a new or reworded option cannot land with the
+// documented set left behind.
+func TestReadmeHelpMatchesBinary(t *testing.T) {
+	output, err := runHelp()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	readme, err := os.ReadFile("README.md")
+	if err != nil {
+		t.Skipf("README.md is not readable, nothing to compare against: %v", err)
+	}
+
+	want := normaliseHelp(output)
+	got := normaliseHelp(readmeHelpBlock(t, string(readme)))
+	if got == want {
+		return
+	}
+
+	wantLines := strings.Split(want, "\n")
+	gotLines := strings.Split(got, "\n")
+	for i := 0; i < max(len(wantLines), len(gotLines)); i++ {
+		var w, g string
+		if i < len(wantLines) {
+			w = wantLines[i]
+		}
+		if i < len(gotLines) {
+			g = gotLines[i]
+		}
+		if w == g {
+			continue
+		}
+		t.Errorf("the `scc -h` block in README.md is out of date - paste the current `scc --help` output in under `$ scc -h`\nfirst difference at line %d:\n  README: %s\n  binary: %s", i+1, g, w)
+		return
+	}
+}
+
+// reportSkipHelpRe pulls the recognised section names out of the
+// --report-skip line of `scc --help`, and backtickedRe the ones the README
+// table claims.
+var (
+	reportSkipHelpRe = regexp.MustCompile(`--report-skip string\s+[^(\n]+\(([a-z,]+)\)`)
+	backtickedRe     = regexp.MustCompile("`([a-z]+)`")
+)
+
+// TestReadmeReportSkipSections holds the --report-skip row of the report
+// options table against the names the flag itself lists, the two having
+// drifted apart once already.
+func TestReadmeReportSkipSections(t *testing.T) {
+	output, err := runHelp()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	readme, err := os.ReadFile("README.md")
+	if err != nil {
+		t.Skipf("README.md is not readable, nothing to compare against: %v", err)
+	}
+
+	sections := reportSkipHelpRe.FindStringSubmatch(output)
+	if sections == nil {
+		t.Fatal("no --report-skip section list found in `scc --help`")
+	}
+
+	const prefix = "| `--report-skip LIST` |"
+	row := ""
+	for _, line := range strings.Split(string(readme), "\n") {
+		if strings.HasPrefix(line, prefix) {
+			row = line
+			break
+		}
+	}
+	if row == "" {
+		t.Fatalf("README.md has no %q row to check", prefix)
+	}
+
+	recognised := map[string]bool{}
+	for _, name := range strings.Split(sections[1], ",") {
+		recognised[name] = true
+		if !strings.Contains(row, "`"+name+"`") {
+			t.Errorf("the --report-skip row in README.md does not list %q", name)
+		}
+	}
+
+	cells := strings.Split(row, "|")
+	if len(cells) < 4 {
+		t.Fatalf("could not read a description cell out of %q", row)
+	}
+	for _, listed := range backtickedRe.FindAllStringSubmatch(cells[2], -1) {
+		if !recognised[listed[1]] {
+			t.Errorf("the --report-skip row in README.md lists %q, which the flag does not accept", listed[1])
+		}
+	}
+}
