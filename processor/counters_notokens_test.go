@@ -60,7 +60,7 @@ func TestNoTokenPathAgreesOnHandWrittenFiles(t *testing.T) {
 		{"a long line of text", strings.Repeat("x", 4096) + "\n"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			for _, language := range []string{"Plain Text", "Markdown", "JSON", "CSV"} {
+			for _, language := range []string{"Plain Text", "Markdown", "JSON", "CSV", "Txtar"} {
 				fast, generic := countBothWays(t, language, []byte(test.content))
 				compareCounts(t, language, test.name+" ("+language+")", fast, generic)
 			}
@@ -82,13 +82,13 @@ func TestNoTokenPathCoversTheLanguagesThatDeclareNothing(t *testing.T) {
 		}
 	}
 
-	if len(covered) != 32 {
-		t.Errorf("%d languages declare no tokens, want 32: %v", len(covered), covered)
+	if len(covered) != 33 {
+		t.Errorf("%d languages declare no tokens, want 33: %v", len(covered), covered)
 	}
 
 	// A spot check that the ones this was written for are in there, so a change
 	// that empties the set still fails rather than passing on a new count.
-	for _, want := range []string{"Plain Text", "Markdown", "JSON", "CSV", "ReStructuredText"} {
+	for _, want := range []string{"Plain Text", "Markdown", "JSON", "CSV", "ReStructuredText", "Txtar"} {
 		feature, ok := LanguageFeatures[want]
 		if !ok || !noTokensAtAll(feature) {
 			t.Errorf("%s should reach the no-token path", want)
