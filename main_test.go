@@ -929,6 +929,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"Koto",
 		"LALRPOP",
 		"License",
+		"Liquid",
 		"LiveScript",
 		"LLVM IR",
 		"Lua",

@@ -1,0 +1,37 @@
+{% doc %}
+  Renders a product card.
+
+  @param {object} product - The product to render
+{% enddoc %}
+
+{%- comment -%}
+  Whitespace-trimmed block comment
+{%- endcomment -%}
+
+<!-- An HTML comment -->
+<div class="product-card {% if product.featured %}featured{% endif %}">
+  {% # An inline comment %}
+  <h2>{{ product.title }}</h2>
+
+  {% comment %}Single line block comment{% endcomment %}
+  {% if product.available %}
+    <p>{{ product.price | money }}</p>
+  {% elsif product.coming_soon %}
+    <p>Coming soon</p>
+  {% else %}
+    <p>Sold out</p>
+  {% endif %}
+
+  {% unless product.tags contains 'hidden' %}
+    {%- for tag in product.tags -%}
+      <span class="tag">{{ tag }}</span>
+    {%- endfor -%}
+  {% endunless %}
+
+  {% case product.type %}
+    {% when 'Shirt' %}
+      <p>Shirt</p>
+    {% when 'Hat' %}
+      <p>Hat</p>
+  {% endcase %}
+</div>
