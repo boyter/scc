@@ -8199,6 +8199,66 @@ var languageDatabase = map[string]Language{
 		},
 		SheBangs: []string{},
 	},
+	"Liquid": {
+		LineComment: []string{
+			"{% #",
+			"{%- #",
+			"{%#",
+			"{%-#",
+		},
+		ComplexityChecks: []string{
+			"{% if ",
+			"{%- if ",
+			"{% elsif ",
+			"{%- elsif ",
+			"{% else ",
+			"{%- else ",
+			"{% unless ",
+			"{%- unless ",
+			"{% when ",
+			"{%- when ",
+			"{% for ",
+			"{%- for ",
+			"{% tablerow ",
+			"{%- tablerow ",
+		},
+		Extensions: []string{
+			"liquid",
+		},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"{% comment %}",
+				"{% endcomment %}",
+			},
+			{
+				"{%- comment -%}",
+				"{%- endcomment -%}",
+			},
+			{
+				"{% doc %}",
+				"{% enddoc %}",
+			},
+			{
+				"{%- doc -%}",
+				"{%- enddoc -%}",
+			},
+			{
+				"<!--",
+				"-->",
+			},
+		},
+		Quotes:          []Quote{},
+		NestedMultiLine: false,
+		LineSplice:      false,
+		Escape:          "",
+		CaseInsensitive: false,
+		CommentIsWord:   false,
+		Keywords:        []string{},
+		Heuristics:      []Heuristic{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"Lisp": {
 		LineComment: []string{
 			";",

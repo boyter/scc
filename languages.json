@@ -4346,6 +4346,34 @@
     "multi_line": [],
     "quotes": []
   },
+  "Liquid": {
+    "complexitychecks": [
+      "{% if ",
+      "{%- if ",
+      "{% elsif ",
+      "{%- elsif ",
+      "{% else ",
+      "{%- else ",
+      "{% unless ",
+      "{%- unless ",
+      "{% when ",
+      "{%- when ",
+      "{% for ",
+      "{%- for ",
+      "{% tablerow ",
+      "{%- tablerow "
+    ],
+    "extensions": ["liquid"],
+    "line_comment": ["{% #", "{%- #", "{%#", "{%-#"],
+    "multi_line": [
+      ["{% comment %}", "{% endcomment %}"],
+      ["{%- comment -%}", "{%- endcomment -%}"],
+      ["{% doc %}", "{% enddoc %}"],
+      ["{%- doc -%}", "{%- enddoc -%}"],
+      ["<!--", "-->"]
+    ],
+    "quotes": []
+  },
   "Lisp": {
     "complexitychecks": [
       "for ",

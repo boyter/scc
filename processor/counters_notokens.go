@@ -4,7 +4,7 @@ package processor
 
 import "bytes"
 
-// Thirty-three of the 367 languages declare no comment, no string and no
+// Thirty-three of the 368 languages declare no comment, no string and no
 // complexity check: Plain Text, Markdown, JSON, CSV, ReStructuredText, AsciiDoc,
 // Patch, the lock and manifest formats. Nothing in one of their files can change
 // the state of the scan, so counting one is deciding, for each line, whether it
