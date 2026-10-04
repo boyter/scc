@@ -396,7 +396,7 @@ Flags:
   -u, --uloc                                calculate the number of unique lines of code (ULOC) for the project
   -v, --verbose                             verbose output
       --version                             version for scc
-  -w, --wide                                wider output with additional statistics (implies --complexity)
+  -w, --wide                                wider output with additional statistics (overrides --no-complexity)
 ```
 
 Output should look something like the below for the redis project

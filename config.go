@@ -433,7 +433,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.StringVarP(strVar(&processor.SortBy), "sort", "s", "files", "column to sort by [files, name, lines, blanks, code, comments, complexity]")
 	flags.BoolVarP(boolVar(&processor.Trace), "trace", "t", false, "enable trace output (not recommended when processing multiple files)")
 	flags.BoolVarP(boolVar(&processor.Verbose), "verbose", "v", false, "verbose output")
-	flags.BoolVarP(boolVar(&processor.More), "wide", "w", false, "wider output with additional statistics (implies --complexity)")
+	flags.BoolVarP(boolVar(&processor.More), "wide", "w", false, "wider output with additional statistics (overrides --no-complexity)")
 	flags.BoolVar(boolVar(&processor.NoLarge), "no-large", false, "ignore files over certain byte and line size set by large-line-count and large-byte-count")
 	flags.BoolVar(boolVar(&processor.IncludeSymLinks), "include-symlinks", false, "if set will count symlink files")
 	flags.Int64Var(int64Var(&processor.LargeLineCount), "large-line-count", 40000, "number of lines a file can contain before being removed from output")
