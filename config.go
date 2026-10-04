@@ -366,7 +366,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	// ReportOut to processor.DefaultReportName to tell "bare flag" apart from an
 	// explicit path, so the two must stay in sync.
 	flags.Lookup("report").NoOptDefVal = processor.DefaultReportName
-	flags.StringVar(strVar(&processor.ReportSkip), "report-skip", "", "comma-separated sections to omit (cocomo,locomo,hotspots,coupling,authors,timeline,files,uloc,linelength,card)")
+	flags.StringVar(strVar(&processor.ReportSkip), "report-skip", "", "comma-separated sections to omit ("+strings.Join(processor.ReportSkipSections, ",")+")")
 	flags.StringVar(strVar(&processor.ReportTitle), "report-title", "", "override the repo name shown in the report banner")
 	flags.StringSliceVarP(sliceVar(&processor.AllowListExtensions), "include-ext", "i", []string{}, "limit to file extensions [comma separated list: e.g. go,java,js]")
 	flags.StringSliceVarP(sliceVar(&processor.ExcludeListExtensions), "exclude-ext", "x", []string{}, "ignore file extensions (overrides include-ext) [comma separated list: e.g. go,java,js]")
