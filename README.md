@@ -176,10 +176,13 @@ Other similar projects,
 - [gocloc](https://github.com/hhatto/gocloc) a sloc counter in Go inspired by tokei
 - [loc](https://github.com/cgag/loc) rust implementation similar to tokei but often faster
 - [loccount](https://gitlab.com/esr/loccount) Go implementation written and maintained by ESR
+- [mezura](https://github.com/subamanis/mezura) fast code counter in C++
 - [polyglot](https://github.com/vmchale/polyglot) ATS sloc counter
 - [tokei](https://github.com/XAMPPRocky/tokei) fast, accurate and written in rust
 - [sloc](https://github.com/flosse/sloc) coffeescript code counter
 - [stto](https://github.com/mainak55512/stto) new Go code counter with a focus on performance
+- [linejudge](https://github.com/loc-conformance/linejudge) conformance and differential testing suite for line counters
+- [linebench](https://github.com/loc-conformance/linebench) multi-counter performance and resource benchmark suite
 
 Interesting reading about other code counting projects tokei, loc, polyglot and loccount
 
@@ -1340,6 +1343,21 @@ scc_bytes{language="Go",file="./bbbb.go"} 1000
 Generally `scc` will the fastest code counter compared to any I am aware of and have compared against. The below comparisons are taken from the fastest alternative counters. See `Other similar projects` above to see all of the other code counters compared against. It is designed to scale to as many CPU's cores as you can provide.
 
 However, if you want greater performance and you have RAM to spare you can disable the garbage collector like the following on Linux `GOGC=-1 scc .` which should speed things up considerably. For some repositories turning off the code complexity calculation via `-c` can reduce runtime as well.
+
+#### Benchmark Standardization and Work Equivalence
+
+When comparing line counters, accounting for work equivalence is necessary for objective performance evaluation (as discussed in [LineBench](https://github.com/loc-conformance/linebench) and issue #769). By default, `scc` performs extensive analysis beyond line counting:
+- Computes cyclomatic and cognitive code complexity across all supported languages.
+- Identifies minified and generated code files.
+- Evaluates multi-language heuristics and shebang classification.
+- Computes COCOMO and LOCOMO cost and effort estimates.
+
+In contrast, minimal counters typically measure raw physical lines without complexity calculation or secondary classifications. For apples-to-apples throughput benchmarks ("equal work" runs):
+- Disable complexity analysis with `-c` or `--no-complexity`.
+- Normalize ignore-file handling (standardizing `.gitignore` and hidden file filtering across counters).
+- Align language corpora to evaluate identical file sets and byte volumes.
+
+For correctness and differential validation across counter heuristics, see [LineJudge](https://github.com/loc-conformance/linejudge), which verifies counter output against formal dialect rule specifications.
 
 Benchmarks are run on fresh 32 Core CPU Optimised Vultr Ocean Virtual Machine 2026/03/05 all done using [hyperfine](https://github.com/sharkdp/hyperfine).
 
