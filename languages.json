@@ -1282,10 +1282,10 @@
       "!= ",
       "== "
     ],
-    "extensions": ["cob", "cbl", "ccp", "cobol", "cpy"],
-    "line_comment": ["*"],
+    "extensions": ["cob", "cbl", "ccp", "cobol", "cpy", "cblle"],
+    "line_comment": ["*>"],
     "multi_line": [],
-    "quotes": []
+    "quotes": [{"start": "'", "end": "'", "ignoreEscape": true}, {"start": "\"", "end": "\"", "ignoreEscape": true}]
   },
   "CSS": {
     "complexitychecks": [
@@ -2098,6 +2098,13 @@
     "extensions": ["dot", "gv"],
     "line_comment": ["//", "#"],
     "multi_line": [["/*", "*/"]],
+    "quotes": []
+  },
+  "IBM i DDS": {
+    "complexitychecks": [],
+    "extensions": ["dds", "dspf", "lf", "pf", "prtf", "mnudds", "mnucmd"],
+    "line_comment": [],
+    "multi_line": [],
     "quotes": []
   },
   "Dart": {
@@ -3474,6 +3481,15 @@
         "start": "\""
       }
     ]
+  },
+  "IBM i CL": {
+    "complexitychecks": ["IF", "WHEN", "DOWHILE", "DOUNTIL", "DOFOR", "MONMSG"],
+    "caseinsensitive": true,
+    "extensions": ["clp", "clle", "cmd"],
+    "heuristics": [{"pattern": "(?im)^[ \\t]*(?:CMD|PARM|QUAL|ELEM|DEP)[ \\t]+(?:[A-Z][A-Z0-9_]*[ \\t]*\\(|\\+[ \\t]*$)"}],
+    "line_comment": [],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [{"start": "'", "end": "'", "ignoreEscape": true}]
   },
   "IDL": {
     "complexitychecks": [
@@ -6367,6 +6383,22 @@
     "quotes": [],
     "shebangs": ["Rscript"]
   },
+  "RPG": {
+    "complexitychecks": ["COMP", "IF", "ELSEIF", "WHEN", "DOW", "DOU", "FOR", "IFEQ", "IFNE", "IFLT", "IFLE", "IFGT", "IFGE", "WHENEQ", "WHENNE", "WHENLT", "WHENLE", "WHENGT", "WHENGE", "DOWEQ", "DOWNE", "DOWLT", "DOWLE", "DOWGT", "DOWGE", "DOUEQ", "DOUNE", "DOULT", "DOULE", "DOUGT", "DOUGE", "CABEQ", "CABNE", "CABLT", "CABLE", "CABGT", "CABGE", "CASEQ", "CASNE", "CASLT", "CASLE", "CASGT", "CASGE"],
+    "caseinsensitive": true,
+    "extensions": ["rpg"],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": [{"start": "'", "end": "'", "ignoreEscape": true}]
+  },
+  "RPGLE": {
+    "complexitychecks": ["COMP", "IF", "ELSEIF", "WHEN", "DOW", "DOU", "FOR", "IFEQ", "IFNE", "IFLT", "IFLE", "IFGT", "IFGE", "WHENEQ", "WHENNE", "WHENLT", "WHENLE", "WHENGT", "WHENGE", "DOWEQ", "DOWNE", "DOWLT", "DOWLE", "DOWGT", "DOWGE", "DOUEQ", "DOUNE", "DOULT", "DOULE", "DOUGT", "DOUGE", "CABEQ", "CABNE", "CABLT", "CABLE", "CABGT", "CABGE", "CASEQ", "CASNE", "CASLT", "CASLE", "CASGT", "CASGE"],
+    "caseinsensitive": true,
+    "extensions": ["rpgle"],
+    "line_comment": ["//"],
+    "multi_line": [],
+    "quotes": [{"start": "'", "end": "'", "ignoreEscape": true}]
+  },
   "Racket": {
     "complexitychecks": [
       "(if",
@@ -7026,6 +7058,14 @@
         "start": "'"
       }
     ]
+  },
+  "SQLRPGLE": {
+    "complexitychecks": ["COMP", "IF", "ELSEIF", "WHEN", "DOW", "DOU", "FOR", "IFEQ", "IFNE", "IFLT", "IFLE", "IFGT", "IFGE", "WHENEQ", "WHENNE", "WHENLT", "WHENLE", "WHENGT", "WHENGE", "DOWEQ", "DOWNE", "DOWLT", "DOWLE", "DOWGT", "DOWGE", "DOUEQ", "DOUNE", "DOULT", "DOULE", "DOUGT", "DOUGE", "CABEQ", "CABNE", "CABLT", "CABLE", "CABGT", "CABGE", "CASEQ", "CASNE", "CASLT", "CASLE", "CASGT", "CASGE"],
+    "caseinsensitive": true,
+    "extensions": ["sqlrpgle"],
+    "line_comment": ["//", "--"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [{"start": "'", "end": "'", "ignoreEscape": true}]
   },
   "SRecode Template": {
     "complexitychecks": [

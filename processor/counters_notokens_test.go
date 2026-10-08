@@ -82,8 +82,10 @@ func TestNoTokenPathCoversTheLanguagesThatDeclareNothing(t *testing.T) {
 		}
 	}
 
-	if len(covered) != 33 {
-		t.Errorf("%d languages declare no tokens, want 33: %v", len(covered), covered)
+	// DDS declares no trie tokens, but its column-based comments keep it on
+	// the generic path rather than the no-token fast path.
+	if len(covered) != 34 {
+		t.Errorf("%d languages declare no tokens, want 34: %v", len(covered), covered)
 	}
 
 	// A spot check that the ones this was written for are in there, so a change
