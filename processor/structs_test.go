@@ -97,6 +97,59 @@ func TestMatch(t *testing.T) {
 	}
 }
 
+func TestMatchLineCommentPrefixOfLongerToken(t *testing.T) {
+	trie := &Trie{}
+	trie.Insert(TSlcomment, []byte("--"))
+	trie.InsertClose(TMlcomment, []byte("--[["), []byte("]]"))
+
+	testCases := []struct {
+		token        []byte
+		expectType   int
+		expectDepth  int
+		expectClosed []byte
+	}{
+		{
+			token:       []byte("-- comment"),
+			expectType:  TSlcomment,
+			expectDepth: 2,
+		},
+		{
+			token:       []byte("--[ comment"),
+			expectType:  TSlcomment,
+			expectDepth: 2,
+		},
+		{
+			token:       []byte("--["),
+			expectType:  TSlcomment,
+			expectDepth: 2,
+		},
+		{
+			token:        []byte("--[[ comment"),
+			expectType:   TMlcomment,
+			expectDepth:  4,
+			expectClosed: []byte("]]"),
+		},
+		{
+			token:       []byte("-x"),
+			expectType:  0,
+			expectDepth: 1,
+		},
+	}
+
+	for _, tc := range testCases {
+		typ, depth, closed := trie.Match(tc.token)
+		if typ != tc.expectType {
+			t.Errorf("\"%v\" matched wrong type, want: %v, got: %v", string(tc.token), tc.expectType, typ)
+		}
+		if depth != tc.expectDepth {
+			t.Errorf("\"%v\" matched wrong depth, want: %v, got: %v", string(tc.token), tc.expectDepth, depth)
+		}
+		if !slices.Equal(tc.expectClosed, closed) {
+			t.Errorf("\"%v\" matched wrong closed, want: %v, got: %v", string(tc.token), tc.expectClosed, closed)
+		}
+	}
+}
+
 func TestFileJobJSONIgnoreFields(t *testing.T) {
 	job := FileJob{
 		Language:           "Dockerfile",
