@@ -953,6 +953,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"Plain Text",
 		"POML",
 		"PostScript",
+		"ProGuard",
 		"Proto",
 		"Python",
 		"Q#",

@@ -412,6 +412,24 @@ func TestGuessLanguageQtTranslationSource(t *testing.T) {
 	}
 }
 
+func TestGuessLanguageProGuard(t *testing.T) {
+	ProcessConstants()
+
+	possible, _ := DetectLanguage("proguard-rules.pro")
+
+	content := []byte("# Keep the models\n-keepattributes Signature\n-keep class com.example.model.** { *; }\n-dontwarn okio.**\n")
+	res := DetermineLanguage("proguard-rules.pro", "", possible, content)
+	if res != "ProGuard" {
+		t.Errorf("Expected guessed language to have been ProGuard, got %s", res)
+	}
+
+	content = []byte("% facts\n:- dynamic parent/2.\nparent(tom, bob).\ngrandparent(X, Z) :- parent(X, Y), parent(Y, Z).\n")
+	res = DetermineLanguage("family.pro", "", possible, content)
+	if res != "Prolog" {
+		t.Errorf("Expected guessed language to have been Prolog, got %s", res)
+	}
+}
+
 func TestGuessLanguageSystemVerilog(t *testing.T) {
 	ProcessConstants()
 

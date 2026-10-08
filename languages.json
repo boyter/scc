@@ -6061,6 +6061,29 @@
       }
     ]
   },
+  "ProGuard": {
+    "complexitychecks": [],
+    "extensions": ["pro"],
+    "heuristics": [
+      {
+        "pattern": "(?m)^\\s*-(keep|dont|assume|optimizations|repackageclasses|flattenpackagehierarchy|renamesourcefileattribute|allowaccessmodification|ignorewarnings|printmapping|applymapping|include|injars|outjars|libraryjars)",
+        "literals": ["-keep", "-dont", "-assume", "-optimizations", "-repackageclasses", "-flattenpackagehierarchy", "-renamesourcefileattribute", "-allowaccessmodification", "-ignorewarnings", "-printmapping", "-applymapping", "-include", "-injars", "-outjars", "-libraryjars"],
+        "anchored": true
+      }
+    ],
+    "line_comment": ["#"],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
   "Prolog": {
     "complexitychecks": [
       "for ",
