@@ -9909,7 +9909,16 @@ var languageDatabase = map[string]Language{
 			"nim",
 		},
 		ExtensionFile: false,
-		MultiLine:     [][]string{},
+		MultiLine: [][]string{
+			{
+				"##[",
+				"]##",
+			},
+			{
+				"#[",
+				"]#",
+			},
+		},
 		Quotes: []Quote{
 			{
 				Start:        "\"",
@@ -9926,7 +9935,7 @@ var languageDatabase = map[string]Language{
 				Delimited:    false,
 			},
 		},
-		NestedMultiLine: false,
+		NestedMultiLine: true,
 		LineSplice:      false,
 		Escape:          "",
 		CaseInsensitive: false,

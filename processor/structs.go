@@ -357,6 +357,7 @@ func (root *Trie) Match(token []byte) (int, int, []byte) {
 	node = root
 	var prevClosedNode *Trie
 	var prevClosedDepth int
+	var lineCommentEnd int
 	for depth, c = range token {
 		if node.Table[c] == nil {
 			break
@@ -366,9 +367,19 @@ func (root *Trie) Match(token []byte) (int, int, []byte) {
 			prevClosedNode = node
 			prevClosedDepth = depth
 		}
+		if node.Type == TSlcomment {
+			lineCommentEnd = depth + 1
+		}
 	}
 	if len(node.Close) == 0 && prevClosedNode != nil {
 		return prevClosedNode.Type, prevClosedDepth, prevClosedNode.Close
+	}
+	// A line comment that begins a longer token, such as Lua's -- in front of
+	// --[[ or Nim's # in front of ##[, still opens a comment when the rest of
+	// that token does not follow. Its length is reported the way a break just
+	// past it would be.
+	if node.Type == 0 && lineCommentEnd > 0 {
+		return TSlcomment, lineCommentEnd, nil
 	}
 	return node.Type, depth, node.Close
 }

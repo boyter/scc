@@ -5324,7 +5324,8 @@
     ],
     "extensions": ["nim"],
     "line_comment": ["#"],
-    "multi_line": [],
+    "multi_line": [["##[", "]##"], ["#[", "]#"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
