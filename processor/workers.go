@@ -1528,6 +1528,12 @@ func countLoopGeneric(fileJob *FileJob, langFeatures LanguageFeature, bomSkip, e
 				} else {
 					currentState = resetState(currentState)
 				}
+				// A string that the newline closes, such as a Zig \\ line, ends
+				// with its line. stringState stops on every newline before it
+				// looks for a closer, so it never closes one itself.
+				if currentState == SString && len(endString) == 1 && endString[0] == '\n' {
+					currentState = SBlank
+				}
 				if fileJob.Callback != nil {
 					if !fileJob.Callback.ProcessLine(fileJob, fileJob.Lines, LINE_CODE) {
 						return false
