@@ -16838,6 +16838,13 @@ var languageDatabase = map[string]Language{
 				Delimited:    false,
 			},
 			{
+				Start:        "'",
+				End:          "'",
+				IgnoreEscape: false,
+				DocString:    false,
+				Delimited:    false,
+			},
+			{
 				Start:        "\\\\",
 				End:          "\n",
 				IgnoreEscape: false,
