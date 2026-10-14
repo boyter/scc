@@ -41,7 +41,14 @@ func TestKotlinCounterAgreesOnHandWrittenFiles(t *testing.T) {
 		{"string holding a block opener", "val s = \"/* not a comment\"\nval x = 1\n"},
 		{"escaped quote in a string", "val s = \"a \\\" b\"\n// a comment\n"},
 		{"escaped backslash then quote", "val s = \"a \\\\\"\n// a comment\n"},
+		{"char literal holding a quote", "val c = '\"'\n// a comment\n"},
+		{"escaped char literal", "val c = '\\''\n// a comment\n"},
+		{"char literal opening a line", "'\"'\n// a comment\n"},
+		{"string holding an apostrophe", "val s = \"it's\"\n// a comment\n"},
+		{"backtick name holding an apostrophe", "fun `it doesn't crash`() {\n// a comment\n}\n"},
+		{"backtick name opening a line", "`it's`()\n// a comment\n"},
 		{"unterminated string", "val s = \"never closed\nval x = 1\n"},
+		{"unterminated char literal", "val c = '\nval x = 1\n"},
 		{"unterminated block comment", "/* never closed\nval x = 1\n"},
 
 		// when is Kotlin's multi-way branch, where Java writes switch, and it

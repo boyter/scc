@@ -11,18 +11,20 @@ package processor
 // still runs until a second closer. The nesting is the shared comment state's
 // job; this file is the stop table and the matcher.
 //
-// One quote, the plain ", with the ordinary backslash escape. The raw string of
-// three quotes is not in languages.json and so is not modelled here either: a
-// counter that handled it would disagree with the generic loop, which is the
-// one thing a counter may not do.
+// Three quotes, each with the ordinary backslash escape: the plain ", the ' of
+// a character literal, and the backtick that wraps an identifier, which is
+// there so the apostrophe in a name like `it doesn't crash` does not open a
+// character literal. The raw string of three quotes is not in languages.json
+// and so is not modelled here either: a counter that handled it would disagree
+// with the generic loop, which is the one thing a counter may not do.
 //
 // Everything that is not the stop table and the complexity matcher lives in
 // counters_shared.go.
 
 // kotlinStop marks every byte the scan has to stop on: the slash of both
-// comment forms, the one quote, one anchor byte out of every complexity check,
-// and the newline and the null that end a line and a file of bytes rather than
-// text.
+// comment forms, the three quotes, one anchor byte out of every complexity
+// check, and the newline and the null that end a line and a file of bytes
+// rather than text.
 var kotlinStop = buildKotlinStop()
 
 // kotlinStopNoComplexity is kotlinStop without the bytes that only a complexity
@@ -31,8 +33,13 @@ var kotlinStop = buildKotlinStop()
 // same flag.
 var kotlinStopNoComplexity = buildKotlinStopNoComplexity()
 
-// kotlinQuote is the one quote of Kotlin.
-var kotlinQuote = []byte{'"'}
+// The three quotes of Kotlin, held here so the shared string state is handed a
+// slice rather than building one per string.
+var (
+	kotlinDoubleQuote = []byte{'"'}
+	kotlinSingleQuote = []byte{'\''}
+	kotlinBacktick    = []byte{'`'}
+)
 
 // kotlinComplexityAnchors is the byte each complexity check of Kotlin is
 // stopped on. It is what the structural conformance test holds against
@@ -93,7 +100,7 @@ func buildKotlinStop() [256]bool {
 
 func buildKotlinStopNoComplexity() [256]bool {
 	var table [256]bool
-	for _, b := range []byte{'/', '"', '\n', 0} {
+	for _, b := range []byte{'/', '"', '\'', '`', '\n', 0} {
 		table[b] = true
 	}
 
@@ -206,31 +213,35 @@ func kotlinComplexityAtLineStart(content []byte, index, floor int) bool {
 }
 
 // kotlinBlankState looks at the first byte of content on a line.
-func kotlinBlankState(content []byte, tally *counterTally, index, floor int) (int, counterState) {
+func kotlinBlankState(content []byte, tally *counterTally, index, floor int) (int, counterState, []byte) {
 	switch content[index] {
 	case '/':
 		if index+1 < len(content) {
 			switch content[index+1] {
 			case '/':
-				return index, SComment
+				return index, SComment, nil
 			case '*':
-				return index + 1, SMulticomment
+				return index + 1, SMulticomment, nil
 			}
 		}
 	case '"':
-		return index, SString
+		return index, SString, kotlinDoubleQuote
+	case '\'':
+		return index, SString, kotlinSingleQuote
+	case '`':
+		return index, SString, kotlinBacktick
 	}
 
 	if !Complexity && kotlinComplexityAtLineStart(content, index, floor) {
 		tally.Complexity++
 	}
 
-	return index, SCode
+	return index, SCode, nil
 }
 
 // kotlinCodeState runs to the end of the line or to whatever token takes it out
 // of code.
-func kotlinCodeState(content []byte, tally *counterTally, index, endPoint, floor int, stop *[256]bool) (int, counterState) {
+func kotlinCodeState(content []byte, tally *counterTally, index, endPoint, floor int, stop *[256]bool) (int, counterState, []byte) {
 	if endPoint > len(content) {
 		endPoint--
 	}
@@ -244,22 +255,22 @@ func kotlinCodeState(content []byte, tally *counterTally, index, endPoint, floor
 
 		switch curByte {
 		case '\n':
-			return i, SCode
+			return i, SCode, nil
 		case 0:
 			if isBinary(i, curByte) {
 				tally.Binary = true
-				return i, SCode
+				return i, SCode, nil
 			}
 		case '/':
 			if i+1 < len(content) {
 				switch content[i+1] {
 				case '/':
-					return i, SCommentCode
+					return i, SCommentCode, nil
 				case '*':
-					return i + 1, SMulticommentCode
+					return i + 1, SMulticommentCode, nil
 				}
 			}
-		case '"':
+		case '"', '\'', '`':
 			// The generic loop tests the byte in front rather than counting the
 			// run of them, so a quote behind a backslash opens nothing and the
 			// line carries on as code. A quote on the floor has nothing in front
@@ -267,10 +278,17 @@ func kotlinCodeState(content []byte, tally *counterTally, index, endPoint, floor
 			// on it, having started blank, but the check does not depend on that
 			// holding.
 			if byteBefore(content, i, floor) != '\\' {
-				return i, SString
+				switch curByte {
+				case '"':
+					return i, SString, kotlinDoubleQuote
+				case '\'':
+					return i, SString, kotlinSingleQuote
+				}
+
+				return i, SString, kotlinBacktick
 			}
 
-			return i, SCode
+			return i, SCode, nil
 		default:
 			if kotlinComplexityAnchored(content, i, floor) {
 				tally.Complexity++
@@ -281,10 +299,10 @@ func kotlinCodeState(content []byte, tally *counterTally, index, endPoint, floor
 	// The generic loop leaves the cursor on the last byte it looked at, which is
 	// the one before endPoint when it got that far.
 	if index < endPoint {
-		return endPoint - 1, SCode
+		return endPoint - 1, SCode, nil
 	}
 
-	return index, SCode
+	return index, SCode, nil
 }
 
 // countLoopKotlin stands in for countLoopGeneric where the language is Kotlin
@@ -303,17 +321,29 @@ func countLoopKotlin(fileJob *FileJob, bomSkip, endPoint int) bool {
 	// has to know; the generic loop keeps the same count in endComments.
 	commentDepth := 1
 
+	// The quote the string state is looking for. Kotlin has three and the code
+	// and blank states say which one opened, so it is carried across calls. The
+	// states hand back a quote only when they opened a string, and anything else
+	// leaves the last one in place.
+	endQuote := kotlinDoubleQuote
+	openQuote := func(quote []byte) {
+		if quote != nil {
+			endQuote = quote
+		}
+	}
+
 	step := func(index int, state counterState) (int, counterState) {
 		switch state {
 		case SCode:
-			index, state := kotlinCodeState(content, &tally, index, endPoint, floor, stop)
+			index, state, quote := kotlinCodeState(content, &tally, index, endPoint, floor, stop)
+			openQuote(quote)
 			if state == SMulticommentCode {
 				commentDepth = 1
 			}
 
 			return index, state
 		case SString:
-			return counterStringState(content, index, endPoint, floor, kotlinQuote, false)
+			return counterStringState(content, index, endPoint, floor, endQuote, false)
 		case SComment, SCommentCode:
 			// Nothing inside a line comment can change the state, so the rest of
 			// the line is of no interest and IndexByte finds where it ends a
@@ -330,7 +360,8 @@ func countLoopKotlin(fileJob *FileJob, bomSkip, endPoint int) bool {
 
 			return index, state
 		default: // SBlank and SMulticommentBlank
-			index, state := kotlinBlankState(content, &tally, index, floor)
+			index, state, quote := kotlinBlankState(content, &tally, index, floor)
+			openQuote(quote)
 			if state == SMulticomment {
 				commentDepth = 1
 			}

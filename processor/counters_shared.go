@@ -838,7 +838,7 @@ func counterSpecs() []counterSpec {
 			Anchors:          kotlinComplexityAnchors,
 			LineComments:     cComments,
 			BlockComments:    cBlocks,
-			Quotes:           []string{`"`, `"`},
+			Quotes:           []string{`"`, `"`, `'`, `'`, "`", "`"},
 			Stop:             &kotlinStop,
 			StopNoComplexity: &kotlinStopNoComplexity,
 		},
