@@ -10,6 +10,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -329,9 +330,9 @@ func TestParseReportSkipKnownNames(t *testing.T) {
 	withReportSkipReset(t)
 
 	var warn bytes.Buffer
-	parseReportSkipTo("Cocomo, Locomo, hotspots, AUTHORS, timeline, files, uloc, linelength, card", &warn)
+	parseReportSkipTo(strings.ToUpper(strings.Join(ReportSkipSections, ", ")), &warn)
 
-	for _, name := range []string{"cocomo", "locomo", "hotspots", "authors", "timeline", "files", "uloc", "linelength", "card"} {
+	for _, name := range ReportSkipSections {
 		if !ReportSkipped(name) {
 			t.Errorf("ReportSkipped(%q) = false, want true after parseReportSkip", name)
 		}
@@ -528,13 +529,8 @@ func TestReportImplicitlyEnablesULOCAndLineLength(t *testing.T) {
 // add or drop one without updating the spec.
 func TestReportSkipRecognisedListMatchesSpec(t *testing.T) {
 	want := []string{"cocomo", "locomo", "hotspots", "coupling", "authors", "timeline", "files", "uloc", "linelength", "card"}
-	if len(reportSkipRecognised) != len(want) {
-		t.Errorf("reportSkipRecognised size = %d, want %d", len(reportSkipRecognised), len(want))
-	}
-	for _, name := range want {
-		if !reportSkipRecognised[name] {
-			t.Errorf("reportSkipRecognised missing %q", name)
-		}
+	if !slices.Equal(ReportSkipSections, want) {
+		t.Errorf("ReportSkipSections = %v, want %v", ReportSkipSections, want)
 	}
 }
 

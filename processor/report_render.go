@@ -12,6 +12,7 @@ import (
 	"math"
 	"net/url"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -65,8 +66,8 @@ func parseReportSkipTo(raw string, warnW io.Writer) {
 		if name == "" {
 			continue
 		}
-		if !reportSkipRecognised[name] {
-			_, _ = fmt.Fprintf(warnW, "warning: --report-skip: unknown section %q (recognised: cocomo, locomo, hotspots, coupling, authors, timeline, files, uloc, linelength, card)\n", name)
+		if !slices.Contains(ReportSkipSections, name) {
+			_, _ = fmt.Fprintf(warnW, "warning: --report-skip: unknown section %q (recognised: %s)\n", name, strings.Join(ReportSkipSections, ", "))
 		}
 		ReportSkipNames[name] = true
 	}
