@@ -10872,6 +10872,22 @@ var languageDatabase = map[string]Language{
 				"=pod",
 				"=cut",
 			},
+			{
+				"=head1",
+				"=cut",
+			},
+			{
+				"=head2",
+				"=cut",
+			},
+			{
+				"=head3",
+				"=cut",
+			},
+			{
+				"=head4",
+				"=cut",
+			},
 		},
 		Quotes: []Quote{
 			{
