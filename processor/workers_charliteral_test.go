@@ -106,3 +106,57 @@ func TestCountStatsByteCharLiteralRust(t *testing.T) {
 		t.Errorf("Expected complexity 1 got %d", fileJob.Complexity)
 	}
 }
+
+func TestCountStatsCharLiteralKotlin(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{Language: "Kotlin"}
+	fileJob.SetContent("fun isQuote(c: Char): Boolean {\n" +
+		"    if (c == '\"') {\n" +
+		"        return true\n" +
+		"    }\n" +
+		"    // a comment\n" +
+		"    return c == '\\''\n" +
+		"}\n" +
+		"\n" +
+		"/* block\n" +
+		"   comment */")
+
+	CountStats(&fileJob)
+
+	if fileJob.Code != 6 {
+		t.Errorf("Expected 6 code got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 3 {
+		t.Errorf("Expected 3 comments got %d", fileJob.Comment)
+	}
+	if fileJob.Blank != 1 {
+		t.Errorf("Expected 1 blank got %d", fileJob.Blank)
+	}
+}
+
+// Kotlin names a function in backticks to give it spaces, so ' must not open a
+// character literal inside one.
+func TestCountStatsBacktickNameKotlin(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{Language: "Kotlin"}
+	fileJob.SetContent("class FooTest {\n" +
+		"    @Test\n" +
+		"    fun `it doesn't crash`() {\n" +
+		"        // a comment\n" +
+		"\n" +
+		"        assertTrue(true)\n" +
+		"    }\n" +
+		"}")
+
+	CountStats(&fileJob)
+
+	if fileJob.Code != 6 {
+		t.Errorf("Expected 6 code got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 comment got %d", fileJob.Comment)
+	}
+	if fileJob.Blank != 1 {
+		t.Errorf("Expected 1 blank got %d", fileJob.Blank)
+	}
+}
