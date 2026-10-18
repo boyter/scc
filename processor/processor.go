@@ -812,7 +812,7 @@ func processLanguageFeature(name string, value Language) {
 	stringMask := byte(0)
 	processMask := byte(0)
 
-	for _, v := range value.ComplexityChecks {
+	for _, v := range caseSpellings(value.ComplexityChecks, value.CaseInsensitive) {
 		complexityMask |= v[0]
 		complexityTrie.Insert(TComplexity, []byte(v))
 		if !Complexity {

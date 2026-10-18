@@ -1706,6 +1706,41 @@ Results are returned as JSON with the history window walked. With `file`, each p
 
 To add or modify a language you will need to edit the `languages.json` file in the root of the project, and then run `go generate` to build it into the application. You can then `go install` or `go build` as normal to produce the binary with your modifications.
 
+IBM i source is recognized as RPG (`.rpg`), RPGLE (`.rpgle`), SQLRPGLE
+(`.sqlrpgle`), and IBM i CL (`.clp`, `.clle`, `.cmd`). Command-source declarations
+distinguish IBM i `.cmd` files from Windows Batch files. RPG uses fixed-format rules:
+columns 1-5 are sequence numbers and an asterisk in column 7 marks a comment.
+RPGLE and SQLRPGLE use those column rules unless the first line contains
+`**FREE` beginning in column 1. They also recognize `//` comments; SQLRPGLE
+additionally recognizes `--` and `/* ... */` comments. CL recognizes
+`/* ... */` comments. Source must be exported as text in an encoding scc can read, such
+as UTF-8, with source columns preserved rather than prefixed with record metadata.
+
+DDS (`.dds`, `.dspf`, `.pf`, `.lf`, `.prtf`, `.mnudds`, `.mnucmd`) also uses
+fixed-format rules, with the form type (normally `A`) in column 6 and an asterisk
+in column 7 marking a comment. Sequence-only lines count as blank for both DDS
+and fixed-format RPG. RPG compile-time data beginning with a `**` record is
+counted as source data, without interpreting comment or string markers.
+DDS complexity counting is not defined.
+
+IBM i complexity counts decision opcodes, including conditional loops. RPGLE
+counts `IF`, `ELSEIF`, `WHEN`, `DOW`, `DOU`, and `FOR`. Fixed-format RPG also
+counts `COMP` and comparison variants of `IF`, `WHEN`, `DOW`, `DOU`, `CAB`, and `CAS`, using
+the calculation opcode field (columns 26-35 for RPGLE, 28-32 for legacy RPG).
+CL counts `IF`, `WHEN`, `DOWHILE`, `DOUNTIL`, `DOFOR`, and `MONMSG` exception
+branches. Matching is case-insensitive. Plain `DO`, closing opcodes, comments,
+strings, operands, and RPG compile-time data add nothing. Embedded SQL decisions
+are not added to the RPG count, and DDS retains zero complexity. These counts
+are decision-token estimates rather than a full control-flow analysis.
+
+COBOL defaults to fixed-format source: columns 1-6 are sequence metadata,
+column 7 is the indicator area (`*` and `/` mark comment records), and columns
+8-72 contain source. Text beyond column 72 does not contribute code lines.
+The `*>` inline comment marker is recognized outside quoted literals.
+`>>SOURCE FORMAT [IS] FREE` and `>>SOURCE FORMAT [IS] FIXED` directives switch
+the format for subsequent records. COBOL source containing NUL bytes is skipped
+by normal binary detection; use `--binary` to include it deliberately.
+
 ### Issues
 
 Its possible that you may see the counts vary between runs. This usually means one of two things. Either something is changing or locking the files under scc, or that you are hitting ulimit restrictions. To change the ulimit see the following links.

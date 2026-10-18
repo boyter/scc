@@ -1,0 +1,4 @@
+      * DDS display-file definition
+     A          R SCREEN
+     A            MESSAGE       20A  O  2  2
+     A                                  TEXT('It''s /* text */')
