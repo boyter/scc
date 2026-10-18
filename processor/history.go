@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
 	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
@@ -122,11 +121,6 @@ type MailmapObserver interface {
 	SetMailmap(*mailmap)
 }
 
-// errStopIter is a local sentinel used to terminate iter.ForEach once we've
-// collected --depth commits. iter.ForEach surfaces whatever the callback
-// returns, so we can compare it back at the call site directly.
-var errStopIter = errors.New("history: stop iteration")
-
 // Bucketing divides [From, To] into N equal time slices. Used by the timeline
 // reports (plans 04 and 05) to map per-commit timestamps to a fixed-resolution
 // per-bucket series independent of terminal width.
@@ -229,31 +223,42 @@ func runHistory(repoPath string, observer CommitObserver) (HistoryWindow, error)
 		return HistoryWindow{}, fmt.Errorf("read HEAD: %w", err)
 	}
 
-	iter, err := repo.Log(&git.LogOptions{
-		From:  head.Hash(),
-		Order: git.LogOrderCommitterTime,
-	})
+	// Walk the first-parent chain only. repo.Log visits every commit reachable
+	// from HEAD, but commitChanges diffs each commit against its first parent,
+	// so a merged branch's work was observed once on the branch and again
+	// through the merge's first-parent diff (issue #783). Following
+	// ParentHashes[0] matches the README's `git log --first-parent` semantics
+	// and keeps every diff applied to the state it was computed against.
+	collected := make([]*object.Commit, 0)
+	commit, err := repo.CommitObject(head.Hash())
 	if err != nil {
 		return HistoryWindow{}, fmt.Errorf("walk log: %w", err)
 	}
-
-	collected := make([]*object.Commit, 0)
-	walkErr := iter.ForEach(func(c *object.Commit) error {
-		collected = append(collected, c)
-		if HistoryDepth > 0 && len(collected) >= HistoryDepth {
-			return errStopIter
+	for {
+		var parent *object.Commit
+		if commit.NumParents() > 0 {
+			parent, err = commit.Parent(0)
+			// A shallow clone (e.g. CI's default `git checkout --depth 1`)
+			// stores a parent hash for its oldest commit but not the parent
+			// object itself. That boundary commit cannot be diffed against its
+			// missing parent, so stop before observing it and keep what we
+			// walked. This is the same "no more history to walk" endpoint as a
+			// root commit's zero parents, reached via a missing object instead.
+			if errors.Is(err, plumbing.ErrObjectNotFound) {
+				break
+			}
+			if err != nil {
+				return HistoryWindow{}, fmt.Errorf("collect commits: %w", err)
+			}
 		}
-		return nil
-	})
-	// A shallow clone (e.g. CI's default `git checkout --depth 1`) stores a
-	// parent hash for its oldest commit but not the parent object itself.
-	// go-git's commit walker resolves each commit's parents as it advances, so
-	// it surfaces that absent object as ErrObjectNotFound — exactly the same
-	// "no more history to walk" situation as the root commit reaching zero
-	// parents, just reached via a missing-object error instead of a count.
-	// Treat it as end-of-history and keep what we walked, rather than aborting.
-	if walkErr != nil && !errors.Is(walkErr, errStopIter) && !errors.Is(walkErr, plumbing.ErrObjectNotFound) {
-		return HistoryWindow{}, fmt.Errorf("collect commits: %w", walkErr)
+		collected = append(collected, commit)
+		if HistoryDepth > 0 && len(collected) >= HistoryDepth {
+			break
+		}
+		if parent == nil {
+			break
+		}
+		commit = parent
 	}
 
 	if len(collected) == 0 {
