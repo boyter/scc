@@ -366,7 +366,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	// ReportOut to processor.DefaultReportName to tell "bare flag" apart from an
 	// explicit path, so the two must stay in sync.
 	flags.Lookup("report").NoOptDefVal = processor.DefaultReportName
-	flags.StringVar(strVar(&processor.ReportSkip), "report-skip", "", "comma-separated sections to omit (cocomo,locomo,hotspots,coupling,authors,timeline,files,uloc,linelength,card)")
+	flags.StringVar(strVar(&processor.ReportSkip), "report-skip", "", "comma-separated sections to omit ("+strings.Join(processor.ReportSkipSections, ",")+")")
 	flags.StringVar(strVar(&processor.ReportTitle), "report-title", "", "override the repo name shown in the report banner")
 	flags.StringSliceVarP(sliceVar(&processor.AllowListExtensions), "include-ext", "i", []string{}, "limit to file extensions [comma separated list: e.g. go,java,js]")
 	flags.StringSliceVarP(sliceVar(&processor.ExcludeListExtensions), "exclude-ext", "x", []string{}, "ignore file extensions (overrides include-ext) [comma separated list: e.g. go,java,js]")
@@ -433,7 +433,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.StringVarP(strVar(&processor.SortBy), "sort", "s", "files", "column to sort by [files, name, lines, blanks, code, comments, complexity]")
 	flags.BoolVarP(boolVar(&processor.Trace), "trace", "t", false, "enable trace output (not recommended when processing multiple files)")
 	flags.BoolVarP(boolVar(&processor.Verbose), "verbose", "v", false, "verbose output")
-	flags.BoolVarP(boolVar(&processor.More), "wide", "w", false, "wider output with additional statistics (implies --complexity)")
+	flags.BoolVarP(boolVar(&processor.More), "wide", "w", false, "wider output with additional statistics (overrides --no-complexity)")
 	flags.BoolVar(boolVar(&processor.NoLarge), "no-large", false, "ignore files over certain byte and line size set by large-line-count and large-byte-count")
 	flags.BoolVar(boolVar(&processor.IncludeSymLinks), "include-symlinks", false, "if set will count symlink files")
 	flags.Int64Var(int64Var(&processor.LargeLineCount), "large-line-count", 40000, "number of lines a file can contain before being removed from output")

@@ -42,22 +42,11 @@ var ReportSkipNames = map[string]bool{}
 // (spec 05). Empty means "auto-detect".
 var ReportTitle = ""
 
-// reportSkipRecognised is the set of section names --report-skip accepts.
+// ReportSkipSections is the list of section names --report-skip accepts.
 // Kept here (next to ReportSkipped) so future template authors can find the
 // authoritative list in one place. Names must match what the report template
 // and CollectReportData branch on. Spec 05 fixes this set.
-var reportSkipRecognised = map[string]bool{
-	"cocomo":     true,
-	"locomo":     true,
-	"hotspots":   true,
-	"coupling":   true,
-	"authors":    true,
-	"timeline":   true,
-	"files":      true,
-	"uloc":       true,
-	"linelength": true,
-	"card":       true,
-}
+var ReportSkipSections = []string{"cocomo", "locomo", "hotspots", "coupling", "authors", "timeline", "files", "uloc", "linelength", "card"}
 
 // ReportSkipped reports whether the given section name was listed in
 // --report-skip. Section names are case-insensitive — callers can pass
