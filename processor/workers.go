@@ -385,6 +385,10 @@ func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, cu
 		// If we are in a literal string we want to ignore escapes OR we aren't checking for special ones
 		if ignoreEscape || !is_escaped {
 			if checkForMatchSingle(fileJob.Content[i], index, endPoint, endString, fileJob) {
+				if ignoreEscape && closerRunsOn(fileJob.Content, i, endPoint, endString) {
+					continue
+				}
+
 				// Skip past the whole end delimiter. For multi byte terminators such
 				// as the C++ raw string )" the trailing byte is itself a quote start,
 				// so leaving the cursor on it would re-open a new string. See #175.
@@ -394,6 +398,31 @@ func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, cu
 	}
 
 	return index, currentState
+}
+
+// closerRunsOn reports whether the closer that matched at index has one more of
+// its own byte straight after it, for a closer that is three or more of the same
+// byte, such as the """ of a Kotlin raw string. A string like that has no
+// escape, so the only way it can end in a quote is a run of quotes longer than
+// the closer, and it is the end of the run that closes it: """a"""" holds a".
+// Closing at the start of the run would leave the extra quote to open a string
+// that runs on to the next one in the file. The caller steps on a byte and
+// matches again, which lands it on the end of the run.
+func closerRunsOn(content []byte, index, endPoint int, closer []byte) bool {
+	if len(closer) < 3 {
+		return false
+	}
+
+	last := closer[len(closer)-1]
+	for _, b := range closer {
+		if b != last {
+			return false
+		}
+	}
+
+	next := index + len(closer)
+
+	return next < endPoint && content[next] == last
 }
 
 // This is a special state check pretty much only ever used by Python codebases

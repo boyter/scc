@@ -4149,6 +4149,11 @@
       {
         "end": "`",
         "start": "`"
+      },
+      {
+        "end": "\"\"\"",
+        "ignoreEscape": true,
+        "start": "\"\"\""
       }
     ]
   },

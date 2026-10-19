@@ -7879,6 +7879,13 @@ var languageDatabase = map[string]Language{
 				DocString:    false,
 				Delimited:    false,
 			},
+			{
+				Start:        "\"\"\"",
+				End:          "\"\"\"",
+				IgnoreEscape: true,
+				DocString:    false,
+				Delimited:    false,
+			},
 		},
 		NestedMultiLine: true,
 		LineSplice:      false,
