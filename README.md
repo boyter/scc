@@ -20,6 +20,8 @@ If you don't like sloc cloc and code feel free to use the name `Succinct Code Co
 
 Licensed under MIT licence.
 
+[![Live demo by Demoshell](https://build.demoshell.com/v1/embed/badge.svg)](https://build.demoshell.com/launch?snapshot=demoshell%2Ftui%3Ascc&utm_source=badge)
+
 ## Table of Contents
 
 - [Install](#install)
