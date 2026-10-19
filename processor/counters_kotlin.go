@@ -11,18 +11,18 @@ package processor
 // still runs until a second closer. The nesting is the shared comment state's
 // job; this file is the stop table and the matcher.
 //
-// Three quotes, each with the ordinary backslash escape: the plain ", the ' of
-// a character literal, and the backtick that wraps an identifier, which is
-// there so the apostrophe in a name like `it doesn't crash` does not open a
-// character literal. The raw string of three quotes is not in languages.json
-// and so is not modelled here either: a counter that handled it would disagree
-// with the generic loop, which is the one thing a counter may not do.
+// Three quotes with the ordinary backslash escape: the plain ", the ' of a
+// character literal, and the backtick that wraps an identifier, which is there
+// so the apostrophe in a name like `it doesn't crash` does not open a character
+// literal. And the raw string, which opens and closes with three of the plain
+// quote and has no escape at all, so a backslash in front of its closer does not
+// carry it on and a run of more than three quotes closes on the last three.
 //
 // Everything that is not the stop table and the complexity matcher lives in
 // counters_shared.go.
 
 // kotlinStop marks every byte the scan has to stop on: the slash of both
-// comment forms, the three quotes, one anchor byte out of every complexity
+// comment forms, the three quote bytes, one anchor byte out of every complexity
 // check, and the newline and the null that end a line and a file of bytes
 // rather than text.
 var kotlinStop = buildKotlinStop()
@@ -33,12 +33,13 @@ var kotlinStop = buildKotlinStop()
 // same flag.
 var kotlinStopNoComplexity = buildKotlinStopNoComplexity()
 
-// The three quotes of Kotlin, held here so the shared string state is handed a
-// slice rather than building one per string.
+// The quotes of Kotlin, held here so the shared string state is handed a slice
+// rather than building one per string.
 var (
 	kotlinDoubleQuote = []byte{'"'}
 	kotlinSingleQuote = []byte{'\''}
 	kotlinBacktick    = []byte{'`'}
+	kotlinRawQuote    = []byte(`"""`)
 )
 
 // kotlinComplexityAnchors is the byte each complexity check of Kotlin is
@@ -212,6 +213,14 @@ func kotlinComplexityAtLineStart(content []byte, index, floor int) bool {
 	return false
 }
 
+// kotlinRawAt reports whether the quote at index opens a raw string, which is
+// three of them in a row. The generic loop takes the longest quote it can match,
+// and does not test what sits in front of one of three bytes for an escape,
+// since the byte it tests is the second quote of the three.
+func kotlinRawAt(content []byte, index int) bool {
+	return index+2 < len(content) && content[index+1] == '"' && content[index+2] == '"'
+}
+
 // kotlinBlankState looks at the first byte of content on a line.
 func kotlinBlankState(content []byte, tally *counterTally, index, floor int) (int, counterState, []byte) {
 	switch content[index] {
@@ -225,6 +234,12 @@ func kotlinBlankState(content []byte, tally *counterTally, index, floor int) (in
 			}
 		}
 	case '"':
+		// The cursor is left on the last quote of the three, so the scan begins
+		// after them rather than reading the second as closing an empty string.
+		if kotlinRawAt(content, index) {
+			return index + 2, SString, kotlinRawQuote
+		}
+
 		return index, SString, kotlinDoubleQuote
 	case '\'':
 		return index, SString, kotlinSingleQuote
@@ -271,6 +286,10 @@ func kotlinCodeState(content []byte, tally *counterTally, index, endPoint, floor
 				}
 			}
 		case '"', '\'', '`':
+			if curByte == '"' && kotlinRawAt(content, i) {
+				return i + 2, SString, kotlinRawQuote
+			}
+
 			// The generic loop tests the byte in front rather than counting the
 			// run of them, so a quote behind a backslash opens nothing and the
 			// line carries on as code. A quote on the floor has nothing in front
@@ -321,14 +340,17 @@ func countLoopKotlin(fileJob *FileJob, bomSkip, endPoint int) bool {
 	// has to know; the generic loop keeps the same count in endComments.
 	commentDepth := 1
 
-	// The quote the string state is looking for. Kotlin has three and the code
-	// and blank states say which one opened, so it is carried across calls. The
-	// states hand back a quote only when they opened a string, and anything else
-	// leaves the last one in place.
+	// The quote the string state is looking for, and whether it is the raw one,
+	// which has no escape. Kotlin has four and the code and blank states say
+	// which one opened, so both are carried across calls. The states hand back a
+	// quote only when they opened a string, and anything else leaves the last
+	// one in place.
 	endQuote := kotlinDoubleQuote
+	rawString := false
 	openQuote := func(quote []byte) {
 		if quote != nil {
 			endQuote = quote
+			rawString = len(quote) == len(kotlinRawQuote)
 		}
 	}
 
@@ -343,7 +365,7 @@ func countLoopKotlin(fileJob *FileJob, bomSkip, endPoint int) bool {
 
 			return index, state
 		case SString:
-			return counterStringState(content, index, endPoint, floor, endQuote, false)
+			return counterStringState(content, index, endPoint, floor, endQuote, rawString)
 		case SComment, SCommentCode:
 			// Nothing inside a line comment can change the state, so the rest of
 			// the line is of no interest and IndexByte finds where it ends a

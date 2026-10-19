@@ -337,6 +337,12 @@ func counterStringState(content []byte, index, endPoint, floor int, endQuote []b
 		}
 
 		if i+len(endQuote) <= endPoint && string(content[i:i+len(endQuote)]) == string(endQuote) {
+			// A raw """ closes on the last three quotes of a run, the same as
+			// the generic loop; see closerRunsOn.
+			if ignoreEscape && closerRunsOn(content, i, endPoint, endQuote) {
+				continue
+			}
+
 			// Step past the whole terminator. For a multi byte one such as the
 			// C++ raw string )" the trailing byte is itself a quote start, so
 			// leaving the cursor on it would open a new string. See #175.
@@ -838,7 +844,7 @@ func counterSpecs() []counterSpec {
 			Anchors:          kotlinComplexityAnchors,
 			LineComments:     cComments,
 			BlockComments:    cBlocks,
-			Quotes:           []string{`"`, `"`, `'`, `'`, "`", "`"},
+			Quotes:           []string{`"`, `"`, `'`, `'`, "`", "`", `"""`, `"""`},
 			Stop:             &kotlinStop,
 			StopNoComplexity: &kotlinStopNoComplexity,
 		},
