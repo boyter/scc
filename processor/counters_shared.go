@@ -855,7 +855,7 @@ func counterSpecs() []counterSpec {
 			Anchors:          scalaComplexityAnchors,
 			LineComments:     cComments,
 			BlockComments:    cBlocks,
-			Quotes:           []string{`"`, `"`},
+			Quotes:           []string{`"`, `"`, `"""`, `"""`, `'"`, `'`},
 			Stop:             &scalaStop,
 			StopNoComplexity: &scalaStopNoComplexity,
 		},
