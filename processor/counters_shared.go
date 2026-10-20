@@ -901,7 +901,7 @@ func counterSpecs() []counterSpec {
 			Anchors:          swiftComplexityAnchors,
 			LineComments:     cComments,
 			BlockComments:    cBlocks,
-			Quotes:           []string{`"`, `"`},
+			Quotes:           swiftQuotes(),
 			Stop:             &swiftStop,
 			StopNoComplexity: &swiftStopNoComplexity,
 		},
