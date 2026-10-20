@@ -32,6 +32,37 @@ func TestScalaCounterAgreesOnHandWrittenFiles(t *testing.T) {
 
 		{"string holding a comment", "val s = \"// not a comment\"\nval x = 1\n"},
 		{"escaped quote in a string", "val s = \"a \\\" b\"\n// a comment\n"},
+
+		// Three quotes open a multi-line string, which has no escape, and a run
+		// of more than three quotes closes on the last three of it.
+		{"multi-line string over lines", "val s = \"\"\"\n  // not a comment\n  a lone \" quote\n\"\"\"\n// a comment\n"},
+		{"multi-line string opening a line", "\"\"\"\n/* not a comment */\n\"\"\".stripMargin\n// a comment\n"},
+		{"multi-line string ending in a backslash", "val s = \"\"\"C:\\\"\"\"\n// a comment\n"},
+		{"multi-line string ending in a quote", "val s = \"\"\"say \"hi\"\"\"\"\n// a comment\n"},
+		{"multi-line string ending in two quotes", "val s = \"\"\"a\"\"\"\"\"\n// a comment\n"},
+		{"multi-line string opening with a quote", "val s = \"\"\"\"a\" is quoted\"\"\"\n// a comment\n"},
+		{"interpolated multi-line string", "val s = s\"\"\"$a \"b\"\"\"\"\n// a comment\n"},
+		{"empty multi-line string", "val s = \"\"\"\"\"\"\n// a comment\n"},
+		{"empty string then a quote", "val s = \"\" + \"a\"\n// a comment\n"},
+		{"multi-line string behind a backslash", "x\\\"\"\"a\"\"\"\n// a comment\n"},
+		{"multi-line string never closed", "val s = \"\"\"never closed\nval x = 1\n"},
+		{"multi-line string at end of file", "val s = \"\"\""},
+		{"multi-line string closed at end of file", "val s = \"\"\"a\"\"\""},
+		{"run of quotes at end of file", "val s = \"\"\"a\"\"\"\""},
+
+		// '" opens the character literal '"'. An apostrophe on its own opens a
+		// symbol literal or a Scala 3 quote, which are not closed, and is code.
+		{"char literal holding a quote", "val c = '\"'\n// a comment\n"},
+		{"char literal opening a line", "'\"' == c\n// a comment\n"},
+		{"char literal behind a backslash", "x\\'\"'\n// a comment\n"},
+		{"char literal next to a string", "val s = '\"' + \"'\"\n// a comment\n"},
+		{"char literal holding an escaped quote", "val c = '\\\"'\n// a comment\n"},
+		{"char literal holding an apostrophe", "val c = '\\''\n// a comment\n"},
+		{"symbol literal", "val s = 'name\n// a comment\n"},
+		{"scala 3 quote", "val e = '{ x + 1 }\n// a comment\n"},
+		{"apostrophe at end of file", "val s = '"},
+		{"char literal at end of file", "val c = '\""},
+
 		{"unterminated string", "val s = \"never closed\nval x = 1\n"},
 		{"unterminated block comment", "/* never closed\nval x = 1\n"},
 
