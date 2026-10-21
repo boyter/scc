@@ -567,6 +567,7 @@
     "quotes": []
   },
   "BASH": {
+    "heredoc": true,
     "complexitychecks": [
       "for ",
       "for(",
@@ -937,6 +938,7 @@
     ]
   },
   "C3": {
+    "codetokens": ["[<"],
     "complexitychecks": [
       "for ",
       "for(",
@@ -4082,6 +4084,7 @@
     ]
   },
   "Korn Shell": {
+    "heredoc": true,
     "complexitychecks": [
       "for ",
       "for(",
@@ -7337,6 +7340,7 @@
     ]
   },
   "Shell": {
+    "heredoc": true,
     "complexitychecks": [
       "for ",
       "for(",
@@ -9212,6 +9216,7 @@
     "multi_line": [["/*", "*/"]]
   },
   "Zsh": {
+    "heredoc": true,
     "complexitychecks": [
       "for ",
       "for(",

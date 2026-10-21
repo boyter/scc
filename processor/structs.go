@@ -23,6 +23,13 @@ const (
 	TMlcomment
 	TComplexity
 	TComplexityPostfix
+	// TCode is a run of bytes the language reads as one token of code, so
+	// nothing inside it opens a comment or a string. C3 reads [< as one token,
+	// and the <* inside int[<*>] would otherwise open a comment.
+	TCode
+	// THeredoc is the << of a shell heredoc, whose closer is a word read out
+	// of the file. See heredocCloser.
+	THeredoc
 )
 
 // ByteType constants for per-byte content classification.
@@ -102,6 +109,15 @@ type Language struct {
 	// comment and "\x" is not. Distinct from the boundary that a token ending
 	// in a letter gets for free, which is worked out from the token itself.
 	CommentIsWord bool `json:"commentisword"`
+	// CodeTokens are runs of bytes the language reads as one token of code,
+	// so a comment or string opener inside one opens nothing. C3 writes a
+	// vector of unknown length as int[<*>] and its lexer reads [< as one
+	// token, so the <* there is not the <* that opens a doc comment.
+	CodeTokens []string `json:"codetokens"`
+	// Heredoc marks a shell that reads << as the start of a heredoc. The
+	// body runs to a line holding nothing but the word named after the <<,
+	// which no fixed closer could hold, so it is read out of the file.
+	Heredoc bool `json:"heredoc"`
 }
 
 // LanguageFeature is a struct which represents the conversion from Language into what is used for matching

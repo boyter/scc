@@ -348,6 +348,12 @@ func resetLineState(currentState int64, spliced bool, ignoreEscape bool) int64 {
 }
 
 func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, currentState int64, ignoreEscape bool, escape byte) (int, int64) {
+	// A closer that starts with a newline is a heredoc's, which only a whole
+	// line can match. The newline alone is the Zig line string, and is not.
+	if len(endString) > 1 && endString[0] == '\n' {
+		return heredocState(fileJob, index, endPoint, endString)
+	}
+
 	// It's not possible to enter this state without checking at least 1 byte so it is safe to check -1 here
 	// without checking if it is out of bounds first
 	for i := index; i < endPoint; i++ {
@@ -576,6 +582,18 @@ func codeState(
 
 		case TComplexityPostfix:
 			countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
+
+		case TCode:
+			if i+offsetJump >= endPoint {
+				return index, currentState, endString, endComments, false
+			}
+			i += max(offsetJump, 1) - 1
+
+		case THeredoc:
+			if closer, last := heredocCloser(content, i+len(heredocOpener)); closer != nil {
+				return last, SString, closer, endComments, true
+			}
+			i += len(heredocOpener) - 1
 		}
 	}
 
@@ -663,6 +681,15 @@ func codeStateSlow(
 
 			case TComplexityPostfix:
 				countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
+
+			case TCode:
+				i += max(offsetJump, 1) - 1
+
+			case THeredoc:
+				if closer, last := heredocCloser(fileJob.Content, i+len(heredocOpener)); closer != nil {
+					return last, SString, closer, endComments, true
+				}
+				i += len(heredocOpener) - 1
 			}
 		}
 	}
@@ -803,6 +830,27 @@ func blankState(
 		}
 		countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
 
+	case TCode:
+		currentState = SCode
+		if fileJob.ContentByteType != nil {
+			fileJob.ContentByteType[index] = ByteTypeCode
+		}
+		index += max(offsetJump, 1) - 1
+
+	case THeredoc:
+		if closer, last := heredocCloser(fileJob.Content, index+len(heredocOpener)); closer != nil {
+			currentState = SString
+			if fileJob.ContentByteType != nil {
+				fileJob.ContentByteType[index] = ByteTypeString
+			}
+			return last, currentState, closer, endComments, true
+		}
+		currentState = SCode
+		if fileJob.ContentByteType != nil {
+			fileJob.ContentByteType[index] = ByteTypeCode
+		}
+		index += len(heredocOpener) - 1
+
 	default:
 		currentState = SCode
 		if fileJob.ContentByteType != nil {
@@ -849,6 +897,157 @@ func rawStringEnd(content []byte, index int, terminator byte) ([]byte, int) {
 	}
 
 	return nil, -1
+}
+
+const heredocOpener = "<<"
+
+// heredocCloser reads the word a heredoc names for its closer. after is the
+// first byte past the <<. The closer that comes back is the word behind a
+// newline, or behind a newline and a tab for the <<- form that lets the closer
+// be indented with tabs, and stringState hands a closer of that shape to
+// heredocState. The second return is the last byte of the word as written,
+// quote included, or -1 when there is no heredoc here.
+//
+// A << with no word after it is a shift in an arithmetic expansion, and a third
+// < makes a here-string, so neither is one. A word with no line anywhere below
+// it to close it is not taken either: $((1 << n)) reads like a heredoc named n,
+// and opening one there would count the rest of the file as a string.
+func heredocCloser(content []byte, after int) ([]byte, int) {
+	if after >= len(content) || content[after] == '<' {
+		return nil, -1
+	}
+
+	tabs := false
+	if content[after] == '-' {
+		tabs = true
+		after++
+	}
+
+	for after < len(content) && (content[after] == ' ' || content[after] == '\t') {
+		after++
+	}
+
+	if after >= len(content) {
+		return nil, -1
+	}
+
+	var word []byte
+	last := -1
+	switch content[after] {
+	case '\'', '"':
+		quote := content[after]
+		for i := after + 1; i < len(content) && content[i] != '\n'; i++ {
+			if content[i] == quote {
+				word, last = content[after+1:i], i
+				break
+			}
+		}
+	default:
+		start := after
+		if content[start] == '\\' {
+			start++
+		}
+		// A word that opens with a digit is a shift by a number, as in 1<<2.
+		if start < len(content) && isIdentifierContinue(content[start]) && (content[start] < '0' || content[start] > '9') {
+			i := start
+			for i < len(content) && isIdentifierContinue(content[i]) {
+				i++
+			}
+			word, last = content[start:i], i-1
+		}
+	}
+
+	if len(word) == 0 || !heredocClosedBelow(content, last+1, word, tabs) {
+		return nil, -1
+	}
+
+	closer := make([]byte, 0, len(word)+2)
+	closer = append(closer, '\n')
+	if tabs {
+		closer = append(closer, '\t')
+	}
+
+	return append(closer, word...), last
+}
+
+// heredocClosedBelow reports whether a line from index on holds the closer
+// word and nothing else.
+func heredocClosedBelow(content []byte, index int, word []byte, tabs bool) bool {
+	for index < len(content) {
+		found := bytes.Index(content[index:], word)
+		if found == -1 {
+			return false
+		}
+
+		index += found
+		if heredocClosesAt(content, index, word, tabs) {
+			return true
+		}
+		index++
+	}
+
+	return false
+}
+
+// heredocClosesAt reports whether the word at index is a heredoc closer: alone
+// on its line, with nothing before it, or only tabs for the <<- form, and
+// nothing after it but the line ending.
+func heredocClosesAt(content []byte, index int, word []byte, tabs bool) bool {
+	if !bytes.HasPrefix(content[index:], word) {
+		return false
+	}
+
+	before := index - 1
+	for tabs && before >= 0 && content[before] == '\t' {
+		before--
+	}
+	if before >= 0 && content[before] != '\n' {
+		return false
+	}
+
+	end := index + len(word)
+	if end < len(content) && content[end] == '\r' {
+		end++
+	}
+
+	return end >= len(content) || content[end] == '\n'
+}
+
+// heredocState is stringState for the body of a heredoc, whose closer can only
+// be a whole line. A line that is not the closer is all string, so the scan
+// runs to its newline in one step, stopping where stringState would.
+func heredocState(fileJob *FileJob, index int, endPoint int, closer []byte) (int, int64) {
+	word, tabs := closer[1:], false
+	if word[0] == '\t' {
+		word, tabs = word[1:], true
+	}
+
+	closes := heredocClosesAt(fileJob.Content, index, word, tabs)
+
+	// Where stringState would stop: on the last byte of the closer, on the
+	// newline, or on the byte before endPoint when the line runs to it.
+	stop := index
+	switch {
+	case closes:
+		stop = index + len(word) - 1
+	case index < endPoint:
+		stop = endPoint - 1
+		if j := bytes.IndexByte(fileJob.Content[index:endPoint], '\n'); j >= 0 {
+			stop = index + j
+		}
+	}
+
+	if fileJob.ContentByteType != nil {
+		for i := index; i <= stop; i++ {
+			fileJob.ContentByteType[i] = ByteTypeString
+		}
+	}
+
+	if closes {
+		return stop, SCode
+	}
+
+	return stop, SString
 }
 
 // Advance over a string prefix and report whether escapes are literal. The
