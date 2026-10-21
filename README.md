@@ -336,7 +336,6 @@ Flags:
       --exclude-dir strings                 directories to exclude (default [.git,.hg,.svn])
   -x, --exclude-ext strings                 ignore file extensions (overrides include-ext) [comma separated list: e.g. go,java,js]
   -n, --exclude-file strings                ignore files with matching names (default [package-lock.json,Cargo.lock,yarn.lock,pubspec.lock,Podfile.lock,pnpm-lock.yaml])
-      --exp-per-language-counters           experimental, may change or be removed: count with the scanner written for the file's language where there is one, see --list-counters
       --file-gc-count int                   number of files to parse before turning the GC on (default 10000)
       --file-list-job-workers int           number of goroutine workers that turn a walked path into a job to be counted (default 8)
       --file-list-queue-size int            the size of the queue of files found and ready to be read into memory (default 8)
@@ -381,6 +380,7 @@ Flags:
       --no-large                            ignore files over certain byte and line size set by large-line-count and large-byte-count
       --no-min                              ignore minified files in output (implies --min)
       --no-min-gen                          ignore minified or generated files in output (implies --min-gen)
+      --no-per-language-counters            count every language with the generic loop, rather than the scanner written for it, see --list-counters
       --no-scc-ignore                       disables .sccignore file logic
       --no-size                             remove size calculation output
   -M, --not-match stringArray               ignore files and directories matching regular expression

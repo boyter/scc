@@ -249,6 +249,74 @@ func pythonComplexityAnchored(content []byte, index, floor int) bool {
 	return false
 }
 
+// pythonAnchorBit gives each anchor byte of Python a bit; pythonAnchorPrev[prev]
+// holds the bits of every anchor whose first test could still pass with prev in
+// front of it. The AND of the two is zero exactly where pythonComplexityAnchored
+// would have returned false on its first test.
+const (
+	pythonAnchorBitF uint8 = 1 << iota
+	pythonAnchorBitW
+	pythonAnchorBitL
+	pythonAnchorBitH
+	pythonAnchorBitY
+	pythonAnchorBitX
+	pythonAnchorBitD
+	pythonAnchorBitO
+)
+
+var pythonAnchorBit = buildPythonAnchorBit()
+
+var pythonAnchorPrev = buildPythonAnchorPrev()
+
+func buildPythonAnchorBit() [256]uint8 {
+	var table [256]uint8
+	table['f'] = pythonAnchorBitF
+	table['w'] = pythonAnchorBitW
+	table['l'] = pythonAnchorBitL
+	table['h'] = pythonAnchorBitH
+	table['y'] = pythonAnchorBitY
+	table['x'] = pythonAnchorBitX
+	table['d'] = pythonAnchorBitD
+	table['o'] = pythonAnchorBitO
+
+	return table
+}
+
+func buildPythonAnchorPrev() [256]uint8 {
+	var table [256]uint8
+	for value := range 256 {
+		previous := byte(value)
+		boundary := !isIdentifierContinue(previous)
+
+		var mask uint8
+		// elif and if both take the i path; for wants the boundary. Both arms
+		// of the f are live, so both are in the mask.
+		if previous == 'i' || boundary {
+			mask |= pythonAnchorBitF
+		}
+		// while and with are anchored on their own first byte.
+		if boundary {
+			mask |= pythonAnchorBitW | pythonAnchorBitO
+		}
+		if previous == 'e' {
+			mask |= pythonAnchorBitL | pythonAnchorBitX
+		}
+		if previous == 'c' {
+			mask |= pythonAnchorBitH
+		}
+		// try reads back over an r, finally over an l.
+		if previous == 'r' || previous == 'l' {
+			mask |= pythonAnchorBitY
+		}
+		if previous == 'n' {
+			mask |= pythonAnchorBitD
+		}
+		table[value] = mask
+	}
+
+	return table
+}
+
 // pythonComplexityAtLineStart is pythonComplexityAnchored for the first byte of
 // code on a line, which has nothing in front of it to read back to. Only the
 // checks anchored on their own first byte are looked for here; the rest are
@@ -526,12 +594,17 @@ func pythonCodeState(content []byte, tally *counterTally, index, endPoint, floor
 		endPoint--
 	}
 
-	for i := index; i < endPoint; i++ {
-		curByte := content[i]
+	mask := stopMask(stop)
 
-		if !stop[curByte] {
-			continue
+	for i := index; i < endPoint; i++ {
+		// Eight bytes answered at a time, without a branch between them. See
+		// scanToStop.
+		at := scanToStop(content, i, endPoint, mask)
+		if at < 0 {
+			break
 		}
+		i = at
+		curByte := content[i]
 
 		switch curByte {
 		case '\n':
@@ -558,6 +631,15 @@ func pythonCodeState(content []byte, tally *counterTally, index, endPoint, floor
 
 			return at, SString, closer, ignoreEscape
 		default:
+			// The byte in front of the anchor is the first thing
+			// pythonComplexityAnchored tests and the last thing the caller knows
+			// before paying for the call. A zero AND is exactly the case that
+			// function rejects on its own first test, so skipping it cannot
+			// change a count.
+			if pythonAnchorPrev[byteBefore(content, i, floor)]&pythonAnchorBit[curByte] == 0 {
+				continue
+			}
+
 			if pythonComplexityAnchored(content, i, floor) {
 				tally.Complexity++
 			}

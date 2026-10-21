@@ -611,6 +611,47 @@ func TestDuplicates(t *testing.T) {
 	}
 }
 
+// -d removes duplicates, and what made that worth fixing was not the removing
+// but that two runs over the same tree did not agree on what was left. The
+// count alone, which is what TestDuplicates asserts, cannot see that: it is the
+// same number whichever of the duplicates survived. Pin the whole of the output
+// instead, over a tree with enough in it that the workers race for real.
+func TestDuplicatesAreDeterministic(t *testing.T) {
+	first, err := runSCC("-f", "json", "-d", "./examples/language/")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for range 10 {
+		again, err := runSCC("-f", "json", "-d", "./examples/language/")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if first != again {
+			t.Fatalf("-d gave two different answers for the same tree\nfirst:\n%s\nagain:\n%s", first, again)
+		}
+	}
+}
+
+// --list-counters is how somebody finds out which languages have a scanner of
+// their own now that the flag turns them off rather than on, and nothing has
+// run it until now.
+func TestListCounters(t *testing.T) {
+	output, err := runSCC("--list-counters")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(output, "--no-per-language-counters") {
+		t.Errorf("--list-counters does not say how to turn them off, output:\n%s", output)
+	}
+	for _, language := range []string{"C", "Go", "Java", "Python", "Rust"} {
+		if !strings.Contains(output, "\n  "+language+"\n") {
+			t.Errorf("--list-counters does not list %s, output:\n%s", language, output)
+		}
+	}
+}
+
 func TestCountAs(t *testing.T) {
 	testCases := []struct {
 		countAs  string

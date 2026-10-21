@@ -1756,6 +1756,7 @@ var languageDatabase = map[string]Language{
 			"if(",
 			"switch ",
 			"switch(",
+			"case ",
 			"while ",
 			"while(",
 			"else ",
