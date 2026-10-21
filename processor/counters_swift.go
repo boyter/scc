@@ -2,6 +2,8 @@
 
 package processor
 
+import "strings"
+
 // A counter written for Swift, on the same terms as the others: it must agree
 // with the generic loop to the line, and where the two differ the generic one
 // is right by definition.
@@ -25,12 +27,21 @@ package processor
 //
 // Block comments nest, which is the shared comment state's job.
 //
+// The plain " and the """ of a multi-line string both have the ordinary
+// backslash escape. A raw string opens with up to three hashes in front of
+// either and closes with the same number behind it, #"…"# or #"""…"""#, and a
+// backslash in front of its closer does not carry it on. And #"""# is not the
+// opener of a multi-line raw string but a one-line one holding a quote, which
+// Swift tells apart by its closer being on the same line, and languages.json
+// spells as a quote of its own.
+//
 // Everything that is not the stop table and the complexity matcher lives in
 // counters_shared.go.
 
 // swiftStop marks every byte the scan has to stop on: the slash of both comment
-// forms, the one quote, one anchor byte out of every complexity check, and the
-// newline and the null that end a line and a file of bytes rather than text.
+// forms, the quote and the hash a raw string opens with, one anchor byte out of
+// every complexity check, and the newline and the null that end a line and a
+// file of bytes rather than text.
 var swiftStop = buildSwiftStop()
 
 // swiftStopNoComplexity is swiftStop without the bytes that only a complexity
@@ -39,8 +50,52 @@ var swiftStop = buildSwiftStop()
 // same flag.
 var swiftStopNoComplexity = buildSwiftStopNoComplexity()
 
-// swiftQuote is the one quote of Swift.
-var swiftQuote = []byte{'"'}
+// The closers of the plain and the multi-line string, held here so the shared
+// string state is handed a slice rather than building one per string.
+var (
+	swiftQuote      = []byte{'"'}
+	swiftMultiQuote = []byte(`"""`)
+)
+
+// maxSwiftRawHashes is the longest run of hashes languages.json gives a raw
+// string. A run longer than this opens no raw string at its first hash in
+// either loop, the generic loop's trie having no node for it, and both go on to
+// open one on its last three.
+const maxSwiftRawHashes = 3
+
+// swiftRawEnds and swiftRawMultiEnds are what a raw string closes with, indexed
+// by how many hashes its opening token carried. Built once rather than assembled
+// per string.
+var swiftRawEnds, swiftRawMultiEnds = buildSwiftRawEnds()
+
+func buildSwiftRawEnds() ([maxSwiftRawHashes + 1][]byte, [maxSwiftRawHashes + 1][]byte) {
+	var ends, multiEnds [maxSwiftRawHashes + 1][]byte
+	for hashes := 1; hashes <= maxSwiftRawHashes; hashes++ {
+		pound := strings.Repeat("#", hashes)
+		ends[hashes] = []byte(`"` + pound)
+		multiEnds[hashes] = []byte(`"""` + pound)
+	}
+
+	return ends, multiEnds
+}
+
+// swiftQuotes is every quote of Swift as languages.json spells it, start and end
+// in turn, which the structural conformance test holds the database to. Built
+// rather than written out, since nine of the eleven differ only in how many
+// hashes they carry.
+func swiftQuotes() []string {
+	quotes := []string{`"`, `"`, `"""`, `"""`}
+	for hashes := 1; hashes <= maxSwiftRawHashes; hashes++ {
+		pound := strings.Repeat("#", hashes)
+		quotes = append(quotes,
+			pound+`"`, `"`+pound,
+			pound+`"""`, `"""`+pound,
+			pound+`"""`+pound, `"`+pound,
+		)
+	}
+
+	return quotes
+}
 
 // swiftComplexityAnchors is the byte each complexity check of Swift is stopped
 // on. It is what the structural conformance test holds against swiftStop, and
@@ -101,7 +156,7 @@ func buildSwiftStop() [256]bool {
 
 func buildSwiftStopNoComplexity() [256]bool {
 	var table [256]bool
-	for _, b := range []byte{'/', '"', '\n', 0} {
+	for _, b := range []byte{'/', '"', '#', '\n', 0} {
 		table[b] = true
 	}
 
@@ -308,32 +363,90 @@ func swiftComplexityAtLineStart(content []byte, index, floor int) bool {
 	return false
 }
 
-// swiftBlankState looks at the first byte of content on a line.
-func swiftBlankState(content []byte, tally *counterTally, index, floor int) (int, counterState) {
+// swiftMultiLineAt reports whether the quote at index opens a multi-line
+// string, which is three of them in a row. The generic loop takes the longest
+// quote it can match, and does not test what sits in front of one of three bytes
+// for an escape, since the byte it tests is the second quote of the three.
+func swiftMultiLineAt(content []byte, index int) bool {
+	return index+2 < len(content) && content[index+1] == '"' && content[index+2] == '"'
+}
+
+// swiftRawStringAt reports whether a raw string opens on the hash at index, and
+// if so the quote its opening token is read up to and what closes it.
+//
+// The generic loop finds these forwards from its trie, which takes the longest
+// token at the earliest byte, so a run of more hashes than any token carries
+// opens nothing on its first hash and is tried again on the next. Whichever of
+// the three tokens it matched, the cursor is left on the quote after the
+// hashes: prepareString steps to the end of the first quote in languages.json
+// whose start is there, and #" is listed ahead of #""" and #"""#. That is what
+// lets #"""# close on its own last two bytes. The token decides only the
+// closer.
+func swiftRawStringAt(content []byte, index, floor int) (int, []byte, bool) {
+	hashes := 0
+	for index+hashes < len(content) && content[index+hashes] == '#' {
+		hashes++
+		if hashes > maxSwiftRawHashes {
+			return index, nil, false
+		}
+	}
+
+	quote := index + hashes
+	if quote >= len(content) || content[quote] != '"' {
+		return index, nil, false
+	}
+
+	if !swiftMultiLineAt(content, quote) {
+		return quote, swiftRawEnds[hashes], true
+	}
+
+	// The hashes straight after the three quotes make it #"""#, a raw string of
+	// one line holding a quote, rather than the opener of a multi-line one.
+	if hasPrefixAt(content, quote+3, floor, string(swiftRawEnds[hashes][1:])) {
+		return quote, swiftRawEnds[hashes], true
+	}
+
+	return quote, swiftRawMultiEnds[hashes], true
+}
+
+// swiftBlankState looks at the first byte of content on a line. When it opens a
+// string it hands back the closer and whether the string is a raw one, which
+// has no escape.
+func swiftBlankState(content []byte, tally *counterTally, index, floor int) (int, counterState, []byte, bool) {
 	switch content[index] {
 	case '/':
 		if index+1 < len(content) {
 			switch content[index+1] {
 			case '/':
-				return index, SComment
+				return index, SComment, nil, false
 			case '*':
-				return index + 1, SMulticomment
+				return index + 1, SMulticomment, nil, false
 			}
 		}
 	case '"':
-		return index, SString
+		// The cursor is left on the last quote of the three, so the scan begins
+		// after them rather than reading the second as closing an empty string.
+		if swiftMultiLineAt(content, index) {
+			return index + 2, SString, swiftMultiQuote, false
+		}
+
+		return index, SString, swiftQuote, false
+	case '#':
+		if quote, endQuote, ok := swiftRawStringAt(content, index, floor); ok {
+			return quote, SString, endQuote, true
+		}
 	}
 
 	if !Complexity && swiftComplexityAtLineStart(content, index, floor) {
 		tally.Complexity++
 	}
 
-	return index, SCode
+	return index, SCode, nil, false
 }
 
 // swiftCodeState runs to the end of the line or to whatever token takes it out
 // of code.
-func swiftCodeState(content []byte, tally *counterTally, index, endPoint, floor int, stop *[256]bool) (int, counterState) {
+func swiftCodeState(content []byte, tally *counterTally, index, endPoint, floor int, stop *[256]bool) (int, counterState, []byte, bool) {
 	if endPoint > len(content) {
 		endPoint--
 	}
@@ -352,22 +465,26 @@ func swiftCodeState(content []byte, tally *counterTally, index, endPoint, floor 
 
 		switch curByte {
 		case '\n':
-			return i, SCode
+			return i, SCode, nil, false
 		case 0:
 			if isBinary(i, curByte) {
 				tally.Binary = true
-				return i, SCode
+				return i, SCode, nil, false
 			}
 		case '/':
 			if i+1 < len(content) {
 				switch content[i+1] {
 				case '/':
-					return i, SCommentCode
+					return i, SCommentCode, nil, false
 				case '*':
-					return i + 1, SMulticommentCode
+					return i + 1, SMulticommentCode, nil, false
 				}
 			}
 		case '"':
+			if swiftMultiLineAt(content, i) {
+				return i + 2, SString, swiftMultiQuote, false
+			}
+
 			// The generic loop tests the byte in front rather than counting the
 			// run of them, so a quote behind a backslash opens nothing and the
 			// line carries on as code. A quote on the floor has nothing in front
@@ -375,10 +492,16 @@ func swiftCodeState(content []byte, tally *counterTally, index, endPoint, floor 
 			// on it, having started blank, but the check does not depend on that
 			// holding.
 			if byteBefore(content, i, floor) != '\\' {
-				return i, SString
+				return i, SString, swiftQuote, false
 			}
 
-			return i, SCode
+			return i, SCode, nil, false
+		case '#':
+			// A raw string opens whatever is in front of it, the byte the generic
+			// loop tests for an escape being the hash in front of the quote.
+			if quote, endQuote, ok := swiftRawStringAt(content, i, floor); ok {
+				return quote, SString, endQuote, true
+			}
 		default:
 			// Instrumented over what Swift there is to hand, 46 files: 73.0% of
 			// the stops this loop makes are anchor stops, 95.3% of those count
@@ -402,10 +525,10 @@ func swiftCodeState(content []byte, tally *counterTally, index, endPoint, floor 
 	// The generic loop leaves the cursor on the last byte it looked at, which is
 	// the one before endPoint when it got that far.
 	if index < endPoint {
-		return endPoint - 1, SCode
+		return endPoint - 1, SCode, nil, false
 	}
 
-	return index, SCode
+	return index, SCode, nil, false
 }
 
 // countLoopSwift stands in for countLoopGeneric where the language is Swift and
@@ -424,17 +547,31 @@ func countLoopSwift(fileJob *FileJob, bomSkip, endPoint int) bool {
 	// has to know; the generic loop keeps the same count in endComments.
 	commentDepth := 1
 
+	// The quote the string state is looking for, and whether it is a raw one,
+	// which has no escape. The code and blank states say which one opened, so
+	// both are carried across calls. The states hand back a quote only when they
+	// opened a string, and anything else leaves the last one in place.
+	endQuote := swiftQuote
+	rawString := false
+	openQuote := func(quote []byte, raw bool) {
+		if quote != nil {
+			endQuote = quote
+			rawString = raw
+		}
+	}
+
 	step := func(index int, state counterState) (int, counterState) {
 		switch state {
 		case SCode:
-			index, state := swiftCodeState(content, &tally, index, endPoint, floor, stop)
+			index, state, quote, raw := swiftCodeState(content, &tally, index, endPoint, floor, stop)
+			openQuote(quote, raw)
 			if state == SMulticommentCode {
 				commentDepth = 1
 			}
 
 			return index, state
 		case SString:
-			return counterStringState(content, index, endPoint, floor, swiftQuote, false)
+			return counterStringState(content, index, endPoint, floor, endQuote, rawString)
 		case SComment, SCommentCode:
 			// Nothing inside a line comment can change the state, so the rest of
 			// the line is of no interest and IndexByte finds where it ends a
@@ -451,7 +588,8 @@ func countLoopSwift(fileJob *FileJob, bomSkip, endPoint int) bool {
 
 			return index, state
 		default: // SBlank and SMulticommentBlank
-			index, state := swiftBlankState(content, &tally, index, floor)
+			index, state, quote, raw := swiftBlankState(content, &tally, index, floor)
+			openQuote(quote, raw)
 			if state == SMulticomment {
 				commentDepth = 1
 			}

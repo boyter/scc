@@ -33,6 +33,41 @@ func TestSwiftCounterAgreesOnHandWrittenFiles(t *testing.T) {
 
 		{"string holding a comment", "let s = \"// not a comment\"\nlet x = 1\n"},
 		{"escaped quote in a string", "let s = \"a \\\" b\"\n// a comment\n"},
+
+		// Three quotes open a multi-line string, which keeps the backslash
+		// escape.
+		{"multi-line string over lines", "let s = \"\"\"\n  // not a comment\n  a lone \" quote\n  \"\"\"\n// a comment\n"},
+		{"multi-line string opening a line", "\"\"\"\n/* not a comment */\n\"\"\"\n// a comment\n"},
+		{"escaped closer in a multi-line string", "let s = \"\"\"\n  a \\\"\"\" b\n  \"\"\"\n// a comment\n"},
+		{"empty string then a quote", "let s = \"\" + \"a\"\n// a comment\n"},
+		{"multi-line string behind a backslash", "x\\\"\"\"a\"\"\"\n// a comment\n"},
+		{"multi-line string never closed", "let s = \"\"\"\nnever closed\nlet x = 1\n"},
+		{"multi-line string at end of file", "let s = \"\"\""},
+		{"multi-line string closed at end of file", "let s = \"\"\"\na\n\"\"\""},
+
+		// A raw string opens with up to three hashes and closes on a quote with
+		// as many behind it. It has no escape, and #"""# holds one quote.
+		{"raw string ending in a backslash", "let s = #\"C:\\\"#\n// a comment\n"},
+		{"raw string holding quotes", "let s = #\"say \"hi\"\"#\n// a comment\n"},
+		{"raw string opening a line", "#\"a\"#.count\n// a comment\n"},
+		{"raw string of two hashes", "let s = ##\"a \"# b\"##\n// a comment\n"},
+		{"raw string of three hashes", "let s = ###\"a \"## b\"###\n// a comment\n"},
+		{"raw string of more hashes", "let s = ####\"a \"### b\"####\n// a comment\n"},
+		{"empty raw string", "let s = #\"\"#\n// a comment\n"},
+		{"multi-line raw string", "let s = #\"\"\"\n  a \" b \"\"\" c\n  \"\"\"#\n// a comment\n"},
+		{"multi-line raw string opening a line", "#\"\"\"\n/* not a comment */\n\"\"\"#\n// a comment\n"},
+		{"multi-line raw string of two hashes", "let s = ##\"\"\"\n  \"\"\"#\n  \"\"\"##\n// a comment\n"},
+		{"raw string of one quote", "let q = #\"\"\"#\n// a comment\n"},
+		{"raw string of one quote and two hashes", "let q = ##\"\"\"##\n// a comment\n"},
+		{"raw string of two quotes", "let q = #\"\"\"\"#\n// a comment\n"},
+		{"raw string behind a backslash", "x\\#\"a\"#\n// a comment\n"},
+		{"raw string never closed", "let s = #\"never closed\nlet x = 1\n"},
+		{"directives are not strings", "#if DEBUG\nlet a = #selector(f)\n#endif\n// a comment\n"},
+		{"hash at end of file", "let s = #"},
+		{"raw string at end of file", "let s = #\""},
+		{"multi-line raw string at end of file", "let s = #\"\"\""},
+		{"raw string of one quote at end of file", "let s = #\"\"\"#"},
+
 		{"unterminated string", "let s = \"never closed\nlet x = 1\n"},
 		{"unterminated block comment", "/* never closed\nlet x = 1\n"},
 
