@@ -60,6 +60,12 @@ var languageDatabase = map[string]Language{
 		Escape: {{quote $value.Escape}},
 		CaseInsensitive: {{$value.CaseInsensitive}},
 		CommentIsWord: {{$value.CommentIsWord}},
+		CodeTokens: []string{
+			{{- range $value.CodeTokens}}
+			{{quote .}},
+			{{- end}}
+		},
+		Heredoc: {{$value.Heredoc}},
 		Keywords: []string{
 			{{- range $value.Keywords}}
 			{{quote .}},

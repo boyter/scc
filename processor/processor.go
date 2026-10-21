@@ -855,6 +855,16 @@ func processLanguageFeature(name string, value Language) {
 	}
 	processMask |= stringMask
 
+	for _, v := range value.CodeTokens {
+		tokenTrie.Insert(TCode, []byte(v))
+		processMask |= v[0]
+	}
+
+	if value.Heredoc {
+		tokenTrie.Insert(THeredoc, []byte(heredocOpener))
+		processMask |= heredocOpener[0]
+	}
+
 	for _, v := range value.Keywords {
 		keywordBytes = append(keywordBytes, []byte(v))
 	}
