@@ -8231,7 +8231,7 @@
     "complexitychecks": ["{% for ", "{% if ", "{% else ", "{% elseif "],
     "extensions": ["twig"],
     "line_comment": [],
-    "multi_line": [],
+    "multi_line": [["{#", "#}"]],
     "quotes": []
   },
   "Txtar": {
