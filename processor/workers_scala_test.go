@@ -141,3 +141,61 @@ val c = '"'
 		t.Errorf("Expected 3 comments got %d", fileJob.Comment)
 	}
 }
+
+// A backquoted identifier can hold any character but a backtick, and http4s
+// names its media ranges `*/*` and `text/*`. The /* in them opened a block
+// comment that ran on to the end of the file, so the code under it was counted
+// as comments.
+func TestCountStatsScalaBackquotedIdentifier(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Scala",
+	}
+
+	fileJob.SetContent(`object Ranges {
+  val any = MediaRange.` + "`*/*`" + `
+
+  // matches every text type
+  val text = MediaRange.` + "`text/*`" + `
+}`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Code != 4 {
+		t.Errorf("Expected 4 code got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 comment got %d", fileJob.Comment)
+	}
+	if fileJob.Blank != 1 {
+		t.Errorf("Expected 1 blank got %d", fileJob.Blank)
+	}
+}
+
+// The backtick in the character literal '`' opens no identifier. Were it to,
+// it would run on to the next backtick in the file and carry everything in
+// between with it.
+func TestCountStatsScalaCharLiteralBacktick(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Scala",
+	}
+
+	fileJob.SetContent(`def isBacktick(c: Char): Boolean = c == '` + "`" + `'
+// a comment
+
+val any = MediaRange.` + "`*/*`" + `
+val text = MediaRange.` + "`text/*`")
+
+	CountStats(&fileJob)
+
+	if fileJob.Code != 3 {
+		t.Errorf("Expected 3 code got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 comment got %d", fileJob.Comment)
+	}
+	if fileJob.Blank != 1 {
+		t.Errorf("Expected 1 blank got %d", fileJob.Blank)
+	}
+}
