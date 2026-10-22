@@ -63,6 +63,21 @@ func TestScalaCounterAgreesOnHandWrittenFiles(t *testing.T) {
 		{"apostrophe at end of file", "val s = '"},
 		{"char literal at end of file", "val c = '\""},
 
+		// A backtick wraps an identifier, which can hold the slashes of a
+		// comment, and '` opens the character literal '`'.
+		{"backquoted identifier holding a block comment opener", "val r = MediaRange.`text/*`\nval x = 1\n"},
+		{"backquoted identifier holding a line comment opener", "val `a//b` = 1\n// a comment\n"},
+		{"backquoted identifier holding a quote", "val t = Record.`\"a\" -> Int`.T\n// a comment\n"},
+		{"backquoted identifier opening a line", "`text/*`.satisfiedBy(x)\n// a comment\n"},
+		{"backquoted identifier behind a backslash", "x\\`a/*`\nval x = 1\n"},
+		{"backquoted identifier holding an escaped backtick", "val `a\\`b` = 1\n// a comment\n"},
+		{"backquoted identifier never closed", "val `a = 1\n// not a comment\n"},
+		{"char literal holding a backtick", "val c = '`'\n// a comment\n"},
+		{"char literal holding a backtick opening a line", "'`' == c\n// a comment\n"},
+		{"char literal holding a backtick next to an identifier", "c == '`' || `type` == c\n// a comment\n"},
+		{"backtick at end of file", "val s = `"},
+		{"char literal backtick at end of file", "val c = '`"},
+
 		{"unterminated string", "val s = \"never closed\nval x = 1\n"},
 		{"unterminated block comment", "/* never closed\nval x = 1\n"},
 

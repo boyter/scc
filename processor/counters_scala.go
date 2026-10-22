@@ -21,20 +21,21 @@ package processor
 //
 // Block comments nest, which is the shared comment state's job.
 //
-// Three quotes. The plain " has the ordinary backslash escape. Three of them
+// Five quotes. The plain " has the ordinary backslash escape. Three of them
 // open a multi-line string, which has no escape at all, so a backslash in front
 // of its closer does not carry it on and a run of more than three quotes closes
-// on the last three. And '" opens the character literal '"', which the
-// apostrophe after it closes. An apostrophe on its own is not a quote: it also
-// opens a symbol literal such as 'name and a Scala 3 quote such as '{ x }, and
-// neither of those has a closer, so as a quote it would run on to the next
-// apostrophe in the file.
+// on the last three. The backtick wraps an identifier, so the slashes in a name
+// like `text/*` do not open a comment. And '" and '` open the character
+// literals '"' and '`', which the apostrophe after them closes. An apostrophe on
+// its own is not a quote: it also opens a symbol literal such as 'name and a
+// Scala 3 quote such as '{ x }, and neither of those has a closer, so as a quote
+// it would run on to the next apostrophe in the file.
 //
 // Everything that is not the stop table and the complexity matcher lives in
 // counters_shared.go.
 
 // scalaStop marks every byte the scan has to stop on: the slash of both comment
-// forms, the two bytes a quote opens with, one anchor byte out of every
+// forms, the three bytes a quote opens with, one anchor byte out of every
 // complexity check, and the newline and the null that end a line and a file of
 // bytes rather than text.
 var scalaStop = buildScalaStop()
@@ -51,6 +52,7 @@ var (
 	scalaDoubleQuote = []byte{'"'}
 	scalaTripleQuote = []byte(`"""`)
 	scalaApostrophe  = []byte{'\''}
+	scalaBacktick    = []byte{'`'}
 )
 
 // scalaComplexityAnchors is the byte each complexity check of Scala is stopped
@@ -111,7 +113,7 @@ func buildScalaStop() [256]bool {
 
 func buildScalaStopNoComplexity() [256]bool {
 	var table [256]bool
-	for _, b := range []byte{'/', '"', '\'', '\n', 0} {
+	for _, b := range []byte{'/', '"', '\'', '`', '\n', 0} {
 		table[b] = true
 	}
 
@@ -313,11 +315,11 @@ func scalaTripleQuoteAt(content []byte, index int) bool {
 }
 
 // scalaCharQuoteAt reports whether the apostrophe at index opens the character
-// literal '"'. The generic loop tests the byte in front of the quote that ends
-// the opener for an escape, which here is the apostrophe, so nothing in front
-// of the apostrophe keeps it from opening.
+// literal '"' or '`'. The generic loop tests the byte in front of the quote that
+// ends the opener for an escape, which here is the apostrophe, so nothing in
+// front of the apostrophe keeps it from opening.
 func scalaCharQuoteAt(content []byte, index int) bool {
-	return index+1 < len(content) && content[index+1] == '"'
+	return index+1 < len(content) && (content[index+1] == '"' || content[index+1] == '`')
 }
 
 // scalaBlankState looks at the first byte of content on a line.
@@ -345,6 +347,8 @@ func scalaBlankState(content []byte, tally *counterTally, index, floor int) (int
 		if scalaCharQuoteAt(content, index) {
 			return index + 1, SString, scalaApostrophe
 		}
+	case '`':
+		return index, SString, scalaBacktick
 	}
 
 	if !Complexity && scalaComplexityAtLineStart(content, index, floor) {
@@ -390,8 +394,8 @@ func scalaCodeState(content []byte, tally *counterTally, index, endPoint, floor 
 					return i + 1, SMulticommentCode, nil
 				}
 			}
-		case '"':
-			if scalaTripleQuoteAt(content, i) {
+		case '"', '`':
+			if curByte == '"' && scalaTripleQuoteAt(content, i) {
 				return i + 2, SString, scalaTripleQuote
 			}
 
@@ -402,6 +406,10 @@ func scalaCodeState(content []byte, tally *counterTally, index, endPoint, floor 
 			// on it, having started blank, but the check does not depend on that
 			// holding.
 			if byteBefore(content, i, floor) != '\\' {
+				if curByte == '`' {
+					return i, SString, scalaBacktick
+				}
+
 				return i, SString, scalaDoubleQuote
 			}
 
