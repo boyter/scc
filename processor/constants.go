@@ -16180,8 +16180,13 @@ var languageDatabase = map[string]Language{
 		Extensions: []string{
 			"twig",
 		},
-		ExtensionFile:   false,
-		MultiLine:       [][]string{},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"{#",
+				"#}",
+			},
+		},
 		Quotes:          []Quote{},
 		NestedMultiLine: false,
 		LineSplice:      false,
