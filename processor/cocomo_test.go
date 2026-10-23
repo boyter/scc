@@ -233,6 +233,8 @@ func TestCocomoCoefficientsGuard(t *testing.T) {
 // type and an unknown type must both render without panicking, emitting the
 // organic coefficients via the cocomoCoefficients guard.
 func TestCalculateCocomoSLOCCountProjectType(t *testing.T) {
+	pinLocale(t)
+
 	savedType := cloneProjectTypeMap(projectType)
 	savedCocomo := CocomoProjectType
 	defer func() {

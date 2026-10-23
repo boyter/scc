@@ -25,6 +25,13 @@ func TestMain(m *testing.M) {
 		return
 	}
 
+	// Pin the locale: scc formats numbers with golang.org/x/text/message using
+	// $LANG, while the expectations here hardcode English formatting (e.g.
+	// "0.000 megabytes"). Without this the suite fails on locales such as
+	// es_ES.UTF-8 or de_DE.UTF-8. A TestMain is needed because most tests in
+	// this package call t.Parallel(), which rules out t.Setenv.
+	os.Setenv("LANG", "en_US.UTF-8")
+
 	os.Exit(m.Run())
 }
 
