@@ -387,7 +387,11 @@ func (root *Trie) Match(token []byte) (int, int, []byte) {
 			lineCommentEnd = depth + 1
 		}
 	}
-	if len(node.Close) == 0 && prevClosedNode != nil {
+	// A string or comment opener that begins a longer token, such as the " in
+	// front of a """, still opens when the rest of that token does not follow.
+	// When it does follow, the longer token wins even if it has no closer of
+	// its own, which is how F#'s (*) is code and not the (* of a comment.
+	if node.Type == 0 && prevClosedNode != nil {
 		return prevClosedNode.Type, prevClosedDepth, prevClosedNode.Close
 	}
 	// A line comment that begins a longer token, such as Lua's -- in front of
