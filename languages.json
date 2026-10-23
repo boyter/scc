@@ -2448,6 +2448,7 @@
     "quotes": []
   },
   "F#": {
+    "codetokens": ["(*)"],
     "complexitychecks": [
       "for ",
       "for(",
@@ -2479,6 +2480,10 @@
         "end": "\"\"\"",
         "ignoreEscape": true,
         "start": "\"\"\""
+      },
+      {
+        "end": "'",
+        "start": "'\""
       }
     ]
   },
