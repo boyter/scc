@@ -14,6 +14,8 @@ import (
 // category reports 0.0% instead.
 
 func TestPercentNoNaNOnZeroCategory(t *testing.T) {
+	pinLocale(t)
+
 	job := func() chan *FileJob {
 		c := make(chan *FileJob, 1)
 		c <- &FileJob{

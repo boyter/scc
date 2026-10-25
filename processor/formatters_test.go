@@ -15,6 +15,8 @@ import (
 )
 
 func TestCalculateCocomo(t *testing.T) {
+	pinLocale(t)
+
 	var str strings.Builder
 	calculateCocomo(1, &str)
 
@@ -1405,6 +1407,8 @@ func TestFileSummarizeLong(t *testing.T) {
 // language and total Complexity/Lines columns summed each file's ratio instead of recomputing
 // from the aggregated complexity and code totals.
 func TestFileSummarizeLongWeightedComplexity(t *testing.T) {
+	pinLocale(t)
+
 	Files = false
 
 	inputChan := make(chan *FileJob, 1000)
