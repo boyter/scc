@@ -2136,6 +2136,34 @@
       {
         "end": "'",
         "start": "'"
+      },
+      {
+        "end": "\"\"\"",
+        "start": "\"\"\""
+      },
+      {
+        "end": "'''",
+        "start": "'''"
+      },
+      {
+        "end": "\"\"\"",
+        "ignoreEscape": true,
+        "start": "r\"\"\""
+      },
+      {
+        "end": "'''",
+        "ignoreEscape": true,
+        "start": "r'''"
+      },
+      {
+        "end": "\"",
+        "ignoreEscape": true,
+        "start": "r\""
+      },
+      {
+        "end": "'",
+        "ignoreEscape": true,
+        "start": "r'"
       }
     ]
   },
