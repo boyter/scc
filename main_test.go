@@ -944,6 +944,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"FSL",
 		"Futhark",
 		"FXML",
+		"G#",
 		"Gemfile",
 		"Gleam",
 		"Go",

@@ -2874,6 +2874,53 @@
     "multi_line": [],
     "quotes": []
   },
+  "G#": {
+    "complexitychecks": [
+      "go ",
+      "for ",
+      "for(",
+      "for{",
+      "while ",
+      "while{",
+      "if ",
+      "if(",
+      "switch ",
+      "switch(",
+      "switch{",
+      "select ",
+      "select{",
+      "try ",
+      "try{",
+      "catch ",
+      "catch(",
+      "catch{",
+      "else ",
+      "else{",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "complexitychecks_postfix": ["?.", "??"],
+    "extensions": ["gs"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "`",
+        "ignoreEscape": true,
+        "start": "`"
+      },
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
   "GDScript": {
     "complexitychecks": [
       "for ",
