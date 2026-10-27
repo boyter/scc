@@ -98,6 +98,11 @@ type Language struct {
 	// being the one that escapes with a backtick and reads a backslash as an
 	// ordinary character of a Windows path.
 	Escape string `json:"escape"`
+	// DoubledQuote marks a language whose strings with no backslash escape hold
+	// their own quote by writing it twice, which is the C# verbatim string
+	// @"say ""hi""". Only a closer of one byte is read this way; a raw """
+	// closes on a run of quotes instead, see closerRunsOn.
+	DoubledQuote bool `json:"doubledquote"`
 	// CaseInsensitive marks a language that reads its own keywords in any case,
 	// so REM, rem and rEm all open a comment. The tokens are expanded into
 	// every spelling when the language is compiled rather than the match being
@@ -137,6 +142,7 @@ type LanguageFeature struct {
 	// letter and so gets no boundary from WordComments. See Language.
 	CommentIsWord         bool
 	Escape                byte
+	DoubledQuote          bool
 	PostfixExcludes       [][]byte
 	ComplexityCheckMask   byte
 	SingleLineCommentMask byte

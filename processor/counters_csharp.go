@@ -2,6 +2,8 @@
 
 package processor
 
+import "strings"
+
 // A counter written for C#, on the same terms as the others: it must agree with
 // the generic loop to the line, and where the two differ the generic one is
 // right by definition.
@@ -11,6 +13,11 @@ package processor
 // so a backslash inside it is an ordinary byte of a Windows path. That is the
 // multi-byte quote start and the ignoreEscape flag together, which is most of
 // what Go, Python, Rust and C++ will want later.
+//
+// A verbatim string holds a quote by writing it twice, @"say ""hi""", and
+// @$" opens one as well as $@". A raw string opens on three or more quotes and
+// closes on as many, with no escape either, so """ holds a lone " and """"
+// holds a """. languages.json lists three, four and five quotes.
 //
 // Everything that is not the stop table and the complexity matcher lives in
 // counters_shared.go.
@@ -33,6 +40,38 @@ var (
 	csharpQuote     = []byte{'"'}
 	csharpCharQuote = []byte{'\''}
 )
+
+// The fewest and the most quotes languages.json opens a raw string with. A run
+// of more than the most opens on the most in both loops, the generic loop's
+// trie having no longer token to match.
+const (
+	minCsharpRawQuotes = 3
+	maxCsharpRawQuotes = 5
+)
+
+// csharpRawEnds is what a raw string closes with, indexed by how many quotes it
+// opened with. Built once rather than per string.
+var csharpRawEnds = buildCsharpRawEnds()
+
+func buildCsharpRawEnds() [maxCsharpRawQuotes + 1][]byte {
+	var ends [maxCsharpRawQuotes + 1][]byte
+	for quotes := minCsharpRawQuotes; quotes <= maxCsharpRawQuotes; quotes++ {
+		ends[quotes] = []byte(strings.Repeat(`"`, quotes))
+	}
+
+	return ends
+}
+
+// csharpQuotes is every quote of C# as languages.json spells it, start and end
+// in turn, which the structural conformance test holds the database to.
+func csharpQuotes() []string {
+	quotes := []string{`@"`, `"`, `@$"`, `"`, `"`, `"`, `'`, `'`}
+	for _, end := range csharpRawEnds[minCsharpRawQuotes:] {
+		quotes = append(quotes, string(end), string(end))
+	}
+
+	return quotes
+}
 
 // csharpComplexityAnchors is the byte each complexity check of C# is stopped
 // on. It is what the structural conformance test holds against csharpStop, and
@@ -199,16 +238,27 @@ func csharpComplexityAtLineStart(content []byte, index, floor int) bool {
 //
 // The generic loop opens a verbatim string without testing what sits in front
 // of the @ , since the byte it tests is the @ itself, so a backslash in front of
-// one opens a string there too. Reproduced rather than argued with.
+// one opens a string there too. Reproduced rather than argued with. The same
+// goes for @$" and for a raw string, where the byte tested is the $ or a quote.
+//
+// A raw string leaves the cursor on the last quote of its opener, which is the
+// longest raw quote the run of them matches, so the string is read from the
+// byte after it.
 func csharpString(content []byte, index, floor int) (int, []byte, bool, bool) {
 	switch content[index] {
 	case '@':
 		if index+1 < len(content) && content[index+1] == '"' {
 			return index + 1, csharpQuote, true, true
 		}
+		if index+2 < len(content) && content[index+1] == '$' && content[index+2] == '"' {
+			return index + 2, csharpQuote, true, true
+		}
 
 		return index, nil, false, false
 	case '"':
+		if quotes := csharpRawQuotesAt(content, index); quotes != 0 {
+			return index + quotes - 1, csharpRawEnds[quotes], true, true
+		}
 		if byteBefore(content, index, floor) != '\\' {
 			return index, csharpQuote, false, true
 		}
@@ -219,6 +269,48 @@ func csharpString(content []byte, index, floor int) (int, []byte, bool, bool) {
 	}
 
 	return index, nil, false, false
+}
+
+// csharpRawQuotesAt reports how many quotes the raw string opening at index
+// opens with, or zero where the run of quotes there is too short to open one.
+// A run longer than the most languages.json lists opens on that many.
+func csharpRawQuotesAt(content []byte, index int) int {
+	quotes := 0
+	for index+quotes < len(content) && content[index+quotes] == '"' && quotes < maxCsharpRawQuotes {
+		quotes++
+	}
+
+	if quotes < minCsharpRawQuotes {
+		return 0
+	}
+
+	return quotes
+}
+
+// csharpVerbatimState is the string state for a verbatim string, which closes
+// on a single quote unless it is written twice. A pair is one quote of the
+// string and is stepped over whole, the same as the generic loop does for a
+// language that doubles its quotes; see doubledCloserAt.
+func csharpVerbatimState(content []byte, index, endPoint int) (int, counterState) {
+	for i := index; i < endPoint; i++ {
+		index = i
+
+		switch content[i] {
+		case '\n':
+			return i, SString
+		case '"':
+			if doubledCloserAt(content, i, endPoint, csharpQuote) {
+				i++
+				index = i
+
+				continue
+			}
+
+			return i, SCode
+		}
+	}
+
+	return index, SString
 }
 
 // csharpBlankState looks at the first byte of content on a line.
@@ -405,10 +497,10 @@ func countLoopCsharp(fileJob *FileJob, bomSkip, endPoint int) bool {
 	var tally counterTally
 
 	// The quote the string state is looking for and whether it can be escaped.
-	// C# has three and the code and blank states say which one opened, so both
-	// are carried across calls. Neither is ever read before a state has set it:
-	// the states below hand a quote back only when they opened a string, and
-	// anything else leaves the last one in place rather than clearing it.
+	// The code and blank states say which one opened, so both are carried across
+	// calls. Neither is ever read before a state has set it: the states below
+	// hand a quote back only when they opened a string, and anything else leaves
+	// the last one in place rather than clearing it.
 	endQuote := csharpQuote
 	ignoreEscape := false
 	openString := func(quote []byte, raw bool) {
@@ -425,6 +517,12 @@ func countLoopCsharp(fileJob *FileJob, bomSkip, endPoint int) bool {
 
 			return index, state
 		case SString:
+			// A closer of one byte with no escape is the verbatim string's, the
+			// one that doubles its quote.
+			if ignoreEscape && len(endQuote) == 1 {
+				return csharpVerbatimState(content, index, endPoint)
+			}
+
 			return counterStringState(content, index, endPoint, floor, endQuote, ignoreEscape)
 		case SComment, SCommentCode:
 			// Nothing inside a line comment can change the state, so the rest of

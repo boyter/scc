@@ -50,11 +50,15 @@ func TestCsharpCounterAgreesOnHandWrittenFiles(t *testing.T) {
 		{"verbatim holding a block opener", "var s = @\"/* not a comment\";\nint x = 1;\n"},
 		{"verbatim over lines", "var s = @\"line1\nline2\";\nint x = 1;\n"},
 		{"verbatim over lines holding a comment", "var s = @\"line1\n// still the string\nline3\";\nint x = 1;\n"},
-		// The generic loop closes at the first quote of a doubled pair and the
-		// second one opens a new string, so the two happen to balance. It does
-		// not understand the doubling, and neither does the counter.
+		// A quote written twice is one quote of the string.
 		{"verbatim with a doubled quote", "var s = @\"a\"\"b\";\n// a comment\n"},
 		{"verbatim with three doubled quotes", "var s = @\"a\"\"b\"\"c\"\"d\";\nint x = 1;\n"},
+		{"verbatim of one quote", "var s = @\"\"\"\";\n// a comment\n"},
+		{"verbatim of two quotes", "var s = @\"\"\"\"\"\";\n// a comment\n"},
+		{"verbatim doubled quote then backslash", "var s = @\"a \"\"b\"\" C:\\\";\n// a comment\n"},
+		{"verbatim doubled quote over lines", "var s = @\"a \"\"\n// still the string\n\"\";\n// a comment\n"},
+		{"verbatim doubled quote at end of file", "var s = @\"a\"\""},
+		{"verbatim quote at end of file", "var s = @\"a\""},
 		{"verbatim unterminated", "var s = @\"never closed\nint x = 1;\n"},
 		{"verbatim empty", "var s = @\"\";\n// a comment\n"},
 		{"verbatim opening a line", "@\"a\";\nint x = 1;\n"},
@@ -62,9 +66,30 @@ func TestCsharpCounterAgreesOnHandWrittenFiles(t *testing.T) {
 		{"at at end of file", "var s = @"},
 		{"at quote at end of file", "var s = @\""},
 		{"interpolated verbatim", "var s = $@\"a{b}c\";\n// a comment\n"},
+		{"interpolated verbatim the other way round", "var s = @$\"a{b}c\\\";\n// a comment\n"},
+		{"at dollar with no quote", "var s = @$x;\n// a comment\n"},
+		{"at dollar at end of file", "var s = @$"},
 		{"verbatim after an identifier", "var s = x@\"a\";\n// a comment\n"},
 		{"at inside a line comment", "// @\" not a string\nint x = 1;\n"},
 		{"at inside a string", "var s = \"@\\\" still the string\";\nint x = 1;\n"},
+
+		// A raw string opens on three quotes or more and closes on as many,
+		// with no escape. languages.json lists up to five.
+		{"raw string holding a quote", "var s = \"\"\"\nUse a \" to quote.\n\"\"\";\n// a comment\n"},
+		{"raw string on one line", "var s = \"\"\"a \" b\"\"\";\n// a comment\n"},
+		{"raw string ending in a backslash", "var s = \"\"\"C:\\\"\"\";\n// a comment\n"},
+		{"raw string opening a line", "\"\"\"\n/* not a comment */\n\"\"\"\n// a comment\n"},
+		{"raw string of four quotes", "var s = \"\"\"\"\n\"\"\" b\n\"\"\"\";\n// a comment\n"},
+		{"raw string of five quotes", "var s = \"\"\"\"\"a \"\"\"\" b\"\"\"\"\";\n// a comment\n"},
+		{"raw string of six quotes", "var s = \"\"\"\"\"\"a \"\"\"\"\" b\"\"\"\"\"\";\n// a comment\n"},
+		{"raw string closed on a longer run", "var s = \"\"\"a\"\"\"\";\n// a comment\n"},
+		{"interpolated raw string", "var s = $$\"\"\"\n{\"a\": {{b}}}\n\"\"\";\n// a comment\n"},
+		{"raw string behind a backslash", "x\\\"\"\"a\"\"\"\n// a comment\n"},
+		{"empty string then a quote", "var s = \"\" + \"a\";\n// a comment\n"},
+		{"raw string never closed", "var s = \"\"\"\nnever closed\nint x = 1;\n"},
+		{"raw string at end of file", "var s = \"\"\""},
+		{"raw string of four quotes at end of file", "var s = \"\"\"\""},
+		{"raw string closed at end of file", "var s = \"\"\"\na\n\"\"\""},
 
 		// C# spells switch, while and else with a space and nothing else, where
 		// it spells for, if and foreach twice.

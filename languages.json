@@ -1011,6 +1011,7 @@
       "!= ",
       "== "
     ],
+    "doubledquote": true,
     "extensions": ["cs", "csx"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
@@ -1019,6 +1020,26 @@
         "end": "\"",
         "ignoreEscape": true,
         "start": "@\""
+      },
+      {
+        "end": "\"",
+        "ignoreEscape": true,
+        "start": "@$\""
+      },
+      {
+        "end": "\"\"\"\"\"",
+        "ignoreEscape": true,
+        "start": "\"\"\"\"\""
+      },
+      {
+        "end": "\"\"\"\"",
+        "ignoreEscape": true,
+        "start": "\"\"\"\""
+      },
+      {
+        "end": "\"\"\"",
+        "ignoreEscape": true,
+        "start": "\"\"\""
       },
       {
         "end": "\"",
