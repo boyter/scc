@@ -930,6 +930,7 @@ func processLanguageFeature(name string, value Language) {
 		WordComments:          wordComments,
 		CommentIsWord:         value.CommentIsWord,
 		Escape:                escape,
+		DoubledQuote:          value.DoubledQuote,
 		PostfixExcludes:       postfixExcludes,
 		ComplexityCheckMask:   complexityMask,
 		MultiLineCommentMask:  multiLineCommentMask,

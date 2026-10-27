@@ -347,7 +347,7 @@ func resetLineState(currentState int64, spliced bool, ignoreEscape bool) int64 {
 	return resetState(currentState)
 }
 
-func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, currentState int64, ignoreEscape bool, escape byte) (int, int64) {
+func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, currentState int64, ignoreEscape bool, escape byte, doubledQuote bool) (int, int64) {
 	// A closer that starts with a newline is a heredoc's, which only a whole
 	// line can match. The newline alone is the Zig line string, and is not.
 	if len(endString) > 1 && endString[0] == '\n' {
@@ -395,6 +395,18 @@ func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, cu
 					continue
 				}
 
+				// A quote written twice is one quote of the string, so step over
+				// the pair rather than closing on the first of them and opening a
+				// new string on the second.
+				if ignoreEscape && doubledQuote && doubledCloserAt(fileJob.Content, i, endPoint, endString) {
+					i++
+					index = i
+					if fileJob.ContentByteType != nil {
+						fileJob.ContentByteType[i] = ByteTypeString
+					}
+					continue
+				}
+
 				// Skip past the whole end delimiter. For multi byte terminators such
 				// as the C++ raw string )" the trailing byte is itself a quote start,
 				// so leaving the cursor on it would re-open a new string. See #175.
@@ -429,6 +441,15 @@ func closerRunsOn(content []byte, index, endPoint int, closer []byte) bool {
 	next := index + len(closer)
 
 	return next < endPoint && content[next] == last
+}
+
+// doubledCloserAt reports whether the closer of one byte that matched at index
+// has a second one straight after it, which in a language that doubles its
+// quotes is a quote inside the string rather than its end: @"say ""hi""" holds
+// say "hi". A closer of more than one byte is never doubled, so the """ of a C#
+// raw string still closes on a run of quotes. See closerRunsOn.
+func doubledCloserAt(content []byte, index, endPoint int, closer []byte) bool {
+	return len(closer) == 1 && index+1 < endPoint && content[index+1] == closer[0]
 }
 
 // This is a special state check pretty much only ever used by Python codebases
@@ -1686,7 +1707,7 @@ func countLoopGeneric(fileJob *FileJob, langFeatures LanguageFeature, bomSkip, e
 					langFeatures,
 				)
 			case SString:
-				index, currentState = stringState(fileJob, index, endPoint, endString, currentState, ignoreEscape, langFeatures.Escape)
+				index, currentState = stringState(fileJob, index, endPoint, endString, currentState, ignoreEscape, langFeatures.Escape, langFeatures.DoubledQuote)
 			case SDocString:
 				// For a docstring we can either move into blank in which case we count it as a docstring
 				// or back into code in which case it should be counted as code

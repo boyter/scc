@@ -790,7 +790,7 @@ func counterSpecs() []counterSpec {
 			Anchors:          csharpComplexityAnchors,
 			LineComments:     cComments,
 			BlockComments:    cBlocks,
-			Quotes:           []string{`@"`, `"`, `"`, `"`, `'`, `'`},
+			Quotes:           csharpQuotes(),
 			Stop:             &csharpStop,
 			StopNoComplexity: &csharpStopNoComplexity,
 		},
