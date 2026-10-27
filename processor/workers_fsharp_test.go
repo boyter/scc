@@ -125,3 +125,91 @@ let quote = "\""`)
 		t.Errorf("Expected 3 blank got %d", fileJob.Blank)
 	}
 }
+
+// A verbatim string holds a quote by writing it twice, so @"""" is one quote
+// and @"""""" is two. Closing on the first quote of a pair left the rest of
+// the run to open a triple-quoted string that ran on to the next """ in the
+// file, which turned the comment in between into code.
+func TestCountStatsFSharpVerbatimDoubledQuotes(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "F#",
+	}
+
+	fileJob.SetContent(`let csv (s: string) = s.Replace(@"""", @"""""")
+// a comment
+
+let attr = @"<book author=""Milton, John"">"
+// another comment
+let x = """a "quoted" word"""
+`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 6 {
+		t.Errorf("Expected 6 lines got %d", fileJob.Lines)
+	}
+	if fileJob.Code != 3 {
+		t.Errorf("Expected 3 code got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 2 {
+		t.Errorf("Expected 2 comments got %d", fileJob.Comment)
+	}
+	if fileJob.Blank != 1 {
+		t.Errorf("Expected 1 blank got %d", fileJob.Blank)
+	}
+}
+
+// A doubled quote inside a verbatim string does not end it, so the backslash
+// in front of its real closer is not read as escaping that.
+func TestCountStatsFSharpVerbatimDoubledQuoteThenBackslash(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "F#",
+	}
+
+	fileJob.SetContent(`let s = @"say ""hi"" from C:\"
+// a comment
+let t = 1
+`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Code != 2 {
+		t.Errorf("Expected 2 code got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 comments got %d", fileJob.Comment)
+	}
+}
+
+// @$" opens an interpolated verbatim string the same as $@", so a backslash in
+// front of its closing quote does not escape it.
+func TestCountStatsFSharpInterpolatedVerbatimString(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "F#",
+	}
+
+	fileJob.SetContent(`let a = @$"{root}\"
+// a comment
+let b = $@"{root}\"
+
+(* a comment *)
+`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Lines != 5 {
+		t.Errorf("Expected 5 lines got %d", fileJob.Lines)
+	}
+	if fileJob.Code != 2 {
+		t.Errorf("Expected 2 code got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 2 {
+		t.Errorf("Expected 2 comments got %d", fileJob.Comment)
+	}
+	if fileJob.Blank != 1 {
+		t.Errorf("Expected 1 blank got %d", fileJob.Blank)
+	}
+}

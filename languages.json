@@ -2511,6 +2511,7 @@
       "!= ",
       "== "
     ],
+    "doubledquote": true,
     "extensions": ["fs", "fsi", "fsx", "fsscript"],
     "line_comment": ["//"],
     "multi_line": [["(*", "*)"]],
@@ -2524,6 +2525,11 @@
         "end": "\"",
         "ignoreEscape": true,
         "start": "@\""
+      },
+      {
+        "end": "\"",
+        "ignoreEscape": true,
+        "start": "@$\""
       },
       {
         "end": "\"\"\"",
