@@ -4916,6 +4916,13 @@ var languageDatabase = map[string]Language{
 				Delimited:    false,
 			},
 			{
+				Start:        "@$\"",
+				End:          "\"",
+				IgnoreEscape: true,
+				DocString:    false,
+				Delimited:    false,
+			},
+			{
 				Start:        "\"\"\"",
 				End:          "\"\"\"",
 				IgnoreEscape: true,
@@ -4933,6 +4940,7 @@ var languageDatabase = map[string]Language{
 		NestedMultiLine: true,
 		LineSplice:      false,
 		Escape:          "",
+		DoubledQuote:    true,
 		CaseInsensitive: false,
 		CommentIsWord:   false,
 		CodeTokens: []string{
