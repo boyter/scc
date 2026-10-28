@@ -618,13 +618,19 @@
       "!= ",
       "== "
     ],
+    "doubledquote": true,
     "extensions": ["bas"],
     "line_comment": ["'"],
     "multi_line": [],
     "quotes": [
       {
         "end": "\"",
+        "ignoreEscape": true,
         "start": "\""
+      },
+      {
+        "end": "\"",
+        "start": "!\""
       }
     ]
   },
@@ -8897,12 +8903,14 @@
       "!= ",
       "== "
     ],
+    "doubledquote": true,
     "extensions": ["vb"],
     "line_comment": ["'"],
     "multi_line": [],
     "quotes": [
       {
         "end": "\"",
+        "ignoreEscape": true,
         "start": "\""
       }
     ]
@@ -8922,12 +8930,14 @@
       "!= ",
       "== "
     ],
+    "doubledquote": true,
     "extensions": ["cls"],
     "line_comment": ["'"],
     "multi_line": [],
     "quotes": [
       {
         "end": "\"",
+        "ignoreEscape": true,
         "start": "\""
       }
     ]
