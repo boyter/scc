@@ -1261,6 +1261,9 @@ var languageDatabase = map[string]Language{
 	"Basic": {
 		LineComment: []string{
 			"'",
+			"REM",
+			"Rem",
+			"rem",
 		},
 		ComplexityChecks: []string{
 			"for ",
@@ -17328,6 +17331,9 @@ var languageDatabase = map[string]Language{
 	"Visual Basic": {
 		LineComment: []string{
 			"'",
+			"REM",
+			"Rem",
+			"rem",
 		},
 		ComplexityChecks: []string{
 			"for ",
@@ -17373,6 +17379,9 @@ var languageDatabase = map[string]Language{
 	"Visual Basic for Applications": {
 		LineComment: []string{
 			"'",
+			"REM",
+			"Rem",
+			"rem",
 		},
 		ComplexityChecks: []string{
 			"for ",
