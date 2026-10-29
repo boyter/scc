@@ -115,3 +115,57 @@ print !"\""
 		t.Errorf("Expected 2 comments got %d", fileJob.Comment)
 	}
 }
+
+// REM opens a comment as well as the apostrophe, in the spellings it is
+// written in: the VB editors case it as Rem and older code has it as REM or
+// rem. It has to be the whole word, so REMARK and Remove are code.
+func TestCountStatsVisualBasicRemComment(t *testing.T) {
+	ProcessConstants()
+
+	for _, language := range []string{"Visual Basic", "Visual Basic for Applications", "Basic"} {
+		fileJob := FileJob{
+			Language: language,
+		}
+
+		fileJob.SetContent(`Rem a comment
+REM another comment
+rem and another
+Rem
+REMARK = 1
+Remove()
+x = 1 : Rem code first
+`)
+
+		CountStats(&fileJob)
+
+		if fileJob.Code != 3 {
+			t.Errorf("%s: Expected 3 code got %d", language, fileJob.Code)
+		}
+		if fileJob.Comment != 4 {
+			t.Errorf("%s: Expected 4 comments got %d", language, fileJob.Comment)
+		}
+	}
+}
+
+// A quote in a REM comment is part of the comment, so it does not open a
+// string that runs on and turns the comment under it into code.
+func TestCountStatsVisualBasicRemCommentWithQuote(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Visual Basic",
+	}
+
+	fileJob.SetContent(`Rem the path ends in "
+' a comment
+Dim s = "x"
+`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Code != 1 {
+		t.Errorf("Expected 1 code got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 2 {
+		t.Errorf("Expected 2 comments got %d", fileJob.Comment)
+	}
+}

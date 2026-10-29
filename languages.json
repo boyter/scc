@@ -620,7 +620,7 @@
     ],
     "doubledquote": true,
     "extensions": ["bas"],
-    "line_comment": ["'"],
+    "line_comment": ["'", "REM", "Rem", "rem"],
     "multi_line": [],
     "quotes": [
       {
@@ -8905,7 +8905,7 @@
     ],
     "doubledquote": true,
     "extensions": ["vb"],
-    "line_comment": ["'"],
+    "line_comment": ["'", "REM", "Rem", "rem"],
     "multi_line": [],
     "quotes": [
       {
@@ -8932,7 +8932,7 @@
     ],
     "doubledquote": true,
     "extensions": ["cls"],
-    "line_comment": ["'"],
+    "line_comment": ["'", "REM", "Rem", "rem"],
     "multi_line": [],
     "quotes": [
       {
