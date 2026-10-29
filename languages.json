@@ -8889,6 +8889,15 @@
     ]
   },
   "Visual Basic": {
+    "codetokens": [
+      "End If",
+      "Exit For",
+      "Continue For",
+      "End While",
+      "Exit While",
+      "Continue While",
+      "Select Case"
+    ],
     "complexitychecks": [
       "for ",
       "for(",
@@ -8901,7 +8910,16 @@
       "|| ",
       "&& ",
       "!= ",
-      "== "
+      "== ",
+      "For ",
+      "If ",
+      "If(",
+      "ElseIf ",
+      "While ",
+      "Until ",
+      "Case ",
+      "AndAlso ",
+      "OrElse "
     ],
     "doubledquote": true,
     "extensions": ["vb"],
@@ -8916,6 +8934,7 @@
     ]
   },
   "Visual Basic for Applications": {
+    "codetokens": ["End If", "Exit For", "Select Case"],
     "complexitychecks": [
       "for ",
       "for(",
@@ -8928,7 +8947,16 @@
       "|| ",
       "&& ",
       "!= ",
-      "== "
+      "== ",
+      "For ",
+      "If ",
+      "If(",
+      "ElseIf ",
+      "While ",
+      "Until ",
+      "Case ",
+      "And ",
+      "Or "
     ],
     "doubledquote": true,
     "extensions": ["cls"],
