@@ -233,3 +233,37 @@ End Select
 		t.Errorf("Expected complexity 9 got %d", fileJob.Complexity)
 	}
 }
+
+// The Rem inside x.Remove(0) is not a comment, so the rest of the line is
+// still read: the string opened after it runs on to the next line, and the
+// OrElse after it counts. Classifying the content takes the slower scan, which
+// has to agree.
+func TestCountStatsVisualBasicRemInsideWord(t *testing.T) {
+	ProcessConstants()
+
+	for _, classify := range []bool{false, true} {
+		fileJob := FileJob{
+			Language:        "Visual Basic",
+			ClassifyContent: classify,
+		}
+
+		fileJob.SetContent(`Dim s = x.Remove(0) & "first
+' still in the string"
+' a comment
+If x.Remove(1) OrElse y Then
+End If
+`)
+
+		CountStats(&fileJob)
+
+		if fileJob.Code != 4 {
+			t.Errorf("classify %v: Expected 4 code got %d", classify, fileJob.Code)
+		}
+		if fileJob.Comment != 1 {
+			t.Errorf("classify %v: Expected 1 comments got %d", classify, fileJob.Comment)
+		}
+		if fileJob.Complexity != 2 {
+			t.Errorf("classify %v: Expected complexity 2 got %d", classify, fileJob.Complexity)
+		}
+	}
+}

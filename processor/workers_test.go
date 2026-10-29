@@ -650,6 +650,25 @@ func TestCountStatsWordCommentNeedsAWordBreak(t *testing.T) {
 	}
 }
 
+// The same word break applies after code on the line, so the REM inside
+// %REMOTE% opens no comment and the if after it still counts.
+func TestCountStatsWordCommentNeedsAWordBreakAfterCode(t *testing.T) {
+	ProcessConstants()
+
+	fileJob := FileJob{Language: "Batch"}
+	fileJob.SetContent("echo %REMOTE% & if exist a echo b\n")
+
+	CountStats(&fileJob)
+
+	if fileJob.Code != 1 {
+		t.Errorf("expected 1 code got %d", fileJob.Code)
+	}
+
+	if fileJob.Complexity != 1 {
+		t.Errorf("expected complexity 1 got %d", fileJob.Complexity)
+	}
+}
+
 // A word break is wanted after a word, not after a symbol, so :: and // and #
 // keep opening a comment with whatever behind them. FORTRAN Legacy is the one
 // that would break: a C in the first column opens a comment there whatever

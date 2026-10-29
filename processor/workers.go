@@ -561,10 +561,18 @@ func codeState(
 			return i, currentState, stringEnd, endComments, ignoreEscape
 
 		case TSlcomment:
-			// No word break check here, unlike blankState. A line that already
-			// holds code counts as code whether the token opened a comment on
-			// it or not, so the check buys nothing a line count can see, and
-			// this is the hottest switch in the program.
+			// A line that already holds code counts as code whether the token
+			// opened a comment on it or not, but a token spelled as a word still
+			// needs its word boundary. Otherwise the REM in x.Remove(0) would
+			// hide the rest of the line, its complexity and any string opened
+			// there that runs on to the next line.
+			if langFeatures.WordComments && !commentOpensHere(content, index, offsetJump) {
+				if i+offsetJump >= endPoint {
+					return index, currentState, endString, endComments, false
+				}
+				i += max(offsetJump, 1) - 1
+				continue
+			}
 			currentState = SCommentCode
 			return i, currentState, endString, endComments, false
 
@@ -674,10 +682,11 @@ func codeStateSlow(
 				return i, currentState, stringEnd, endComments, ignoreEscape
 
 			case TSlcomment:
-				// No word break check here, unlike blankState. A line that already
-				// holds code counts as code whether the token opened a comment on
-				// it or not, so the check buys nothing a line count can see, and
-				// this is the hottest switch in the program.
+				// The same word boundary as codeState, see there.
+				if langFeatures.WordComments && !commentOpensHere(fileJob.Content, index, offsetJump) {
+					i += max(offsetJump, 1) - 1
+					continue
+				}
 				currentState = SCommentCode
 				return i, currentState, endString, endComments, false
 
