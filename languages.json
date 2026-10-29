@@ -4520,6 +4520,14 @@
     ],
     "quotes": []
   },
+  "Lispex": {
+    "complexitychecks": ["if ", "cond ", "when ", "unless ", "guard "],
+    "extensions": ["lspx"],
+    "line_comment": [";"],
+    "multi_line": [["#|", "|#"]],
+    "nestedmultiline": true,
+    "quotes": [{"start": "\"", "end": "\""}]
+  },
   "Lisp": {
     "complexitychecks": [
       "for ",
@@ -8332,6 +8340,16 @@
         "end": "\"",
         "start": "\""
       }
+    ]
+  },
+  "Topaz": {
+    "complexitychecks": ["if ", "if(", "for ", "for(", "while ", "while(", "case ", "&&", "||"],
+    "extensions": ["tpz"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [
+      {"start": "\"\"\"", "end": "\"\"\""},
+      {"start": "\"", "end": "\""}
     ]
   },
   "Treetop": {
