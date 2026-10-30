@@ -130,7 +130,42 @@ loop:
 
 	switch {
 	case candidate1 == "env":
-		return candidate2, nil
+		// env's split-string option makes the interpreter the first word of
+		// its argument, rather than the option itself. Keep complex quoted or
+		// escaped words unknown instead of guessing their shell-like meaning.
+		var args []byte
+		switch {
+		case strings.HasPrefix(candidate2, "-S"):
+			args = content[lastSlash+2:]
+		case strings.HasPrefix(candidate2, "--split-string="):
+			args = content[lastSlash+len("--split-string="):]
+		default:
+			return candidate2, nil
+		}
+		for len(args) > 0 {
+			// GNU env splits on ASCII whitespace, not Unicode whitespace.
+			isSpace := func(b byte) bool { return b == ' ' || (b >= '\t' && b <= '\r') }
+			for len(args) > 0 && isSpace(args[0]) {
+				args = args[1:]
+			}
+			end := 0
+			for end < len(args) && !isSpace(args[end]) {
+				end++
+			}
+			if end == 0 {
+				break
+			}
+			arg := args[:end]
+			args = args[end:]
+			if bytes.ContainsAny(arg, "\\\"'") {
+				return "", nil
+			}
+			if bytes.IndexByte(arg, '=') >= 0 && arg[0] != '-' {
+				continue
+			}
+			return string(arg), nil
+		}
+		return "", nil
 	case candidate1 != "":
 		return candidate1, nil
 	}
