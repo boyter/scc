@@ -5,6 +5,7 @@ package processor
 import (
 	"bytes"
 	"os"
+	"path/filepath"
 	"regexp"
 	"runtime/debug"
 	"strings"
@@ -1363,7 +1364,7 @@ func startFileJobProducer(potentialFilesQueue chan []*gocodewalker.File, filePat
 				continue
 			}
 
-			if fileJob := newFileJob(f, f, fileInfo); fileJob != nil {
+			if fileJob := newFileJob(f, filepath.Base(f), fileInfo); fileJob != nil {
 				fileListQueue <- fileJob
 			}
 		}
