@@ -10652,6 +10652,13 @@ var languageDatabase = map[string]Language{
 				DocString:    false,
 				Delimited:    false,
 			},
+			{
+				Start:        "'\"",
+				End:          "'",
+				IgnoreEscape: false,
+				DocString:    false,
+				Delimited:    false,
+			},
 		},
 		NestedMultiLine: true,
 		LineSplice:      false,
@@ -10792,6 +10799,13 @@ var languageDatabase = map[string]Language{
 			{
 				Start:        "\"",
 				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+				Delimited:    false,
+			},
+			{
+				Start:        "'\"",
+				End:          "'",
 				IgnoreEscape: false,
 				DocString:    false,
 				Delimited:    false,
