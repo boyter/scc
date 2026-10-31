@@ -4528,12 +4528,16 @@ var languageDatabase = map[string]Language{
 		Escape:          "",
 		CaseInsensitive: false,
 		CommentIsWord:   false,
-		CodeTokens:      []string{},
-		Heredoc:         false,
-		Keywords:        []string{},
-		Heuristics:      []Heuristic{},
-		FileNames:       []string{},
-		SheBangs:        []string{},
+		CodeTokens: []string{
+			"?\"",
+			"?\\\"",
+			"?'",
+		},
+		Heredoc:    false,
+		Keywords:   []string{},
+		Heuristics: []Heuristic{},
+		FileNames:  []string{},
+		SheBangs:   []string{},
 	},
 	"Elixir Template": {
 		LineComment: []string{
