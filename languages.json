@@ -6216,6 +6216,16 @@
       {
         "end": "\"",
         "start": "\""
+      },
+      {
+        "end": "'",
+        "ignoreEscape": true,
+        "start": "'"
+      },
+      {
+        "end": "'@",
+        "ignoreEscape": true,
+        "start": "@'"
       }
     ]
   },
