@@ -161,6 +161,27 @@ func TestCountStatsBacktickNameKotlin(t *testing.T) {
 	}
 }
 
+
+// Elixir writes a character's code point as ?c, so ?" and ?' are code. Their
+// quote opened a string that ran on to the next one and swallowed the
+// comments in between.
+func TestCountStatsCharLiteralQuoteElixir(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{Language: "Elixir"}
+	fileJob.SetContent("def quote?(c), do: c == ?\" or c == ?\\\"\n" +
+		"# a comment\n" +
+		"def tick?(c), do: c == ?'\n" +
+		"# another\n" +
+		"def s, do: \"#{1}\"\n")
+
+	CountStats(&fileJob)
+
+	if fileJob.Code != 3 {
+		t.Errorf("Expected 3 code got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 2 {
+		t.Errorf("Expected 2 comments got %d", fileJob.Comment)
+
 // OCaml and Nim write a double quote character as '"'. Its quote
 // opened a string that ran on to the next one and swallowed the comments in
 // between. A lone ' stays code: it also starts OCaml type variables ('a) and

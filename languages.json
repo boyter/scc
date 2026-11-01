@@ -2275,6 +2275,7 @@
     "quotes": []
   },
   "Elixir": {
+    "codetokens": ["?\"", "?\\\"", "?'"],
     "complexitychecks": [
       "case ",
       "cond ",
