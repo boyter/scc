@@ -8956,6 +8956,48 @@ var languageDatabase = map[string]Language{
 			"sbcl",
 		},
 	},
+	"Lispex": {
+		LineComment: []string{
+			";",
+		},
+		ComplexityChecks: []string{
+			"if ",
+			"cond ",
+			"when ",
+			"unless ",
+			"guard ",
+		},
+		Extensions: []string{
+			"lspx",
+		},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"#|",
+				"|#",
+			},
+		},
+		Quotes: []Quote{
+			{
+				Start:        "\"",
+				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+				Delimited:    false,
+			},
+		},
+		NestedMultiLine: true,
+		LineSplice:      false,
+		Escape:          "",
+		CaseInsensitive: false,
+		CommentIsWord:   false,
+		CodeTokens:      []string{},
+		Heredoc:         false,
+		Keywords:        []string{},
+		Heuristics:      []Heuristic{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"LiveScript": {
 		LineComment: []string{
 			"#",
@@ -16307,6 +16349,59 @@ var languageDatabase = map[string]Language{
 			{
 				Start:        "'",
 				End:          "'",
+				IgnoreEscape: false,
+				DocString:    false,
+				Delimited:    false,
+			},
+		},
+		NestedMultiLine: false,
+		LineSplice:      false,
+		Escape:          "",
+		CaseInsensitive: false,
+		CommentIsWord:   false,
+		CodeTokens:      []string{},
+		Heredoc:         false,
+		Keywords:        []string{},
+		Heuristics:      []Heuristic{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
+	"Topaz": {
+		LineComment: []string{
+			"//",
+		},
+		ComplexityChecks: []string{
+			"if ",
+			"if(",
+			"for ",
+			"for(",
+			"while ",
+			"while(",
+			"case ",
+			"&&",
+			"||",
+		},
+		Extensions: []string{
+			"tpz",
+		},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"/*",
+				"*/",
+			},
+		},
+		Quotes: []Quote{
+			{
+				Start:        "\"\"\"",
+				End:          "\"\"\"",
+				IgnoreEscape: false,
+				DocString:    false,
+				Delimited:    false,
+			},
+			{
+				Start:        "\"",
+				End:          "\"",
 				IgnoreEscape: false,
 				DocString:    false,
 				Delimited:    false,
