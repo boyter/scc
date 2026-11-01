@@ -743,6 +743,53 @@ func TestCountStatsPowershellEscape(t *testing.T) {
 	}
 }
 
+// PowerShell's single-quoted strings are literal, so a " or <# inside one
+// starts nothing. Without them the " in .Trim('"') opened a string and the
+// <# opened a block comment, swallowing the comment and code under them.
+func TestCountStatsPowershellSingleQuotedStrings(t *testing.T) {
+	ProcessConstants()
+
+	for _, test := range []struct {
+		name    string
+		content string
+		code    int64
+	}{
+		{
+			name:    "a double quote inside single quotes",
+			content: "$v = $s.Trim('\"')\n# a real comment\n$x = 1\n",
+			code:    2,
+		},
+		{
+			name:    "a block comment opener inside single quotes",
+			content: "$v = '<#'\n# a real comment\n$x = 1\n",
+			code:    2,
+		},
+		{
+			name:    "a backtick before the closing quote is literal",
+			content: "$v = 'C:\\temp`'\n# a real comment\n$x = 1\n",
+			code:    2,
+		},
+		{
+			name:    "a single-quoted here-string holding quotes and a #",
+			content: "$h = @'\nit's \"#\"\n'@\n# a real comment\n",
+			code:    3,
+		},
+	} {
+		fileJob := FileJob{Language: "Powershell"}
+		fileJob.SetContent(test.content)
+
+		CountStats(&fileJob)
+
+		if fileJob.Code != test.code {
+			t.Errorf("%s: expected %d code got %d", test.name, test.code, fileJob.Code)
+		}
+
+		if fileJob.Comment != 1 {
+			t.Errorf("%s: expected 1 comment got %d", test.name, fileJob.Comment)
+		}
+	}
+}
+
 // Every other language keeps the backslash, so a quote escaped with one still
 // does not close the string it is in.
 func TestCountStatsBackslashStillEscapesElsewhere(t *testing.T) {
