@@ -1134,6 +1134,36 @@ func TestCountStatsComplexityTypeScriptPostfixOperators(t *testing.T) {
 	}
 }
 
+// A check that begins a longer one still counts when the rest of the longer
+// one does not follow: Clojure's (if in (if-let next to (if-not, Algol 68's IS
+// in IS NIL next to IS NOT, and APL's : in :ElseIf next to :Else. APL's :End
+// is code, so the : in :EndIf does not count.
+func TestCountStatsComplexityCheckBeginningALongerOne(t *testing.T) {
+	ProcessConstants()
+
+	checks := []struct {
+		language string
+		content  string
+		want     int64
+	}{
+		{"Clojure", "(if-let [x (f)] x (if-some [y (g)] y (if-not z 1 2)))", 3},
+		{"Clojure", "(if-not z 1 2)", 1},
+		{"Algol 68", "IF p IS NIL THEN SKIP FI", 2},
+		{"Algol 68", "IF p IS NOT q THEN SKIP FI", 2},
+		{"APL", ":If x\n    y←1\n:ElseIf z\n    y←2\n:EndIf\n", 2},
+		{"APL", ":While x\n:EndWhile\n", 1},
+	}
+
+	for _, c := range checks {
+		fileJob := FileJob{Language: c.language}
+		fileJob.SetContent(c.content)
+		CountStats(&fileJob)
+		if fileJob.Complexity != c.want {
+			t.Errorf("%s: expected complexity of %d got %d for %q", c.language, c.want, fileJob.Complexity, c.content)
+		}
+	}
+}
+
 type linecounter struct {
 	blanks   int
 	comments int

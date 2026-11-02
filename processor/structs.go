@@ -379,7 +379,7 @@ func (root *Trie) Match(token []byte) (int, int, []byte) {
 	node = root
 	var prevClosedNode *Trie
 	var prevClosedDepth int
-	var lineCommentEnd int
+	var prevType, prevEnd int
 	for depth, c = range token {
 		if node.Table[c] == nil {
 			break
@@ -388,9 +388,9 @@ func (root *Trie) Match(token []byte) (int, int, []byte) {
 		if len(node.Close) > 0 {
 			prevClosedNode = node
 			prevClosedDepth = depth
-		}
-		if node.Type == TSlcomment {
-			lineCommentEnd = depth + 1
+		} else if node.Type != 0 {
+			prevType = node.Type
+			prevEnd = depth + 1
 		}
 	}
 	// A string or comment opener that begins a longer token, such as the " in
@@ -402,10 +402,12 @@ func (root *Trie) Match(token []byte) (int, int, []byte) {
 	}
 	// A line comment that begins a longer token, such as Lua's -- in front of
 	// --[[ or Nim's # in front of ##[, still opens a comment when the rest of
-	// that token does not follow. Its length is reported the way a break just
-	// past it would be.
-	if node.Type == 0 && lineCommentEnd > 0 {
-		return TSlcomment, lineCommentEnd, nil
+	// that token does not follow. The same goes for a complexity check, so
+	// Clojure's (if still counts in (if-let although (if-not is a check too,
+	// and Algol 68's IS in IS NIL although IS NOT is. Its length is reported
+	// the way a break just past it would be.
+	if node.Type == 0 && prevEnd > 0 {
+		return prevType, prevEnd, nil
 	}
 	return node.Type, depth, node.Close
 }

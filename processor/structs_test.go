@@ -150,6 +150,58 @@ func TestMatchLineCommentPrefixOfLongerToken(t *testing.T) {
 	}
 }
 
+func TestMatchComplexityPrefixOfLongerToken(t *testing.T) {
+	trie := &Trie{}
+	trie.Insert(TComplexity, []byte("(if"))
+	trie.Insert(TComplexity, []byte("(if-not "))
+
+	testCases := []struct {
+		token        []byte
+		expectType   int
+		expectDepth  int
+		expectClosed []byte
+	}{
+		{
+			token:       []byte("(if x"),
+			expectType:  TComplexity,
+			expectDepth: 3,
+		},
+		{
+			token:       []byte("(if-not x"),
+			expectType:  TComplexity,
+			expectDepth: 8,
+		},
+		{
+			token:       []byte("(if-let [x"),
+			expectType:  TComplexity,
+			expectDepth: 3,
+		},
+		{
+			token:       []byte("(if-no"),
+			expectType:  TComplexity,
+			expectDepth: 3,
+		},
+		{
+			token:       []byte("(i"),
+			expectType:  0,
+			expectDepth: 1,
+		},
+	}
+
+	for _, tc := range testCases {
+		typ, depth, closed := trie.Match(tc.token)
+		if typ != tc.expectType {
+			t.Errorf("\"%v\" matched wrong type, want: %v, got: %v", string(tc.token), tc.expectType, typ)
+		}
+		if depth != tc.expectDepth {
+			t.Errorf("\"%v\" matched wrong depth, want: %v, got: %v", string(tc.token), tc.expectDepth, depth)
+		}
+		if !slices.Equal(tc.expectClosed, closed) {
+			t.Errorf("\"%v\" matched wrong closed, want: %v, got: %v", string(tc.token), tc.expectClosed, closed)
+		}
+	}
+}
+
 func TestMatchCodeTokenExtendingCommentOpener(t *testing.T) {
 	trie := &Trie{}
 	trie.InsertClose(TMlcomment, []byte("(*"), []byte("*)"))

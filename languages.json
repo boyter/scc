@@ -82,6 +82,7 @@
       "=",
       ":"
     ],
+    "codetokens": [":End"],
     "extensions": ["apl", "aplf", "apln", "aplc", "dyalog"],
     "line_comment": ["⍝"],
     "multi_line": [],
