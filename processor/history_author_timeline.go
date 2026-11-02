@@ -20,7 +20,11 @@ import (
 // downsampled to this many cells.
 const authorTimelineSparkCells = 24
 
-// authorTimelineTopN caps tabular rows. CSV/JSON are uncapped.
+// authorTimelineTopN is the number of authors shown individually before the
+// rest are folded into a single "others (N)" row whose sparkline sums their
+// activity — mirroring the --by-author rollup rather than either hard-capping
+// (hides the tail) or listing every author (a wall of sparklines). CSV/JSON
+// stay uncapped.
 const authorTimelineTopN = 15
 
 // authorTimelineBucket is one bucket's worth of accumulator state for one
@@ -221,6 +225,10 @@ func renderAuthorTimeline(o *historyAuthorTimelineObserver) (string, error) {
 // Tabular column format. 24+1+24+1+8+1+9+1+10 = 79.
 var tabularShortAuthorTimelineFormatHead = "%-24s %-24s %8s %9s %-10s\n"
 
+// Wide tabular: same columns, Author widened to fill the 109-col rule so long
+// names show in full. 54+1+24+1+8+1+9+1+10 = 109.
+var tabularWideAuthorTimelineFormatHead = "%-54s %-24s %8s %9s %-10s\n"
+
 func renderAuthorTimelineTabular(o *historyAuthorTimelineObserver) string {
 	wide := More || strings.EqualFold(Format, "wide")
 	brk := tabularBreakFor(wide)
@@ -230,26 +238,57 @@ func renderAuthorTimelineTabular(o *historyAuthorTimelineObserver) string {
 
 	p := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
 
-	_, _ = fmt.Fprintf(&sb, tabularShortAuthorTimelineFormatHead,
+	nameTrim, nameWidth, format := 23, 24, tabularShortAuthorTimelineFormatHead
+	if wide {
+		nameTrim, nameWidth, format = 53, 54, tabularWideAuthorTimelineFormatHead
+	}
+
+	_, _ = fmt.Fprintf(&sb, format,
 		"Author", "Activity", "Commits", "Code±", "")
 	sb.WriteString(brk)
 
-	limit := min(len(o.rows), authorTimelineTopN)
-
-	for i := range limit {
-		r := o.rows[i]
-		nameCol := unicodeAwareTrim(r.Name, 23)
-		nameCol = unicodeAwareRightPad(nameCol, 24)
+	writeRow := func(r authorTimelineRow) {
+		nameCol := unicodeAwareTrim(r.Name, nameTrim)
+		nameCol = unicodeAwareRightPad(nameCol, nameWidth)
 		spark := renderAuthorTimelineSparkline(r.Series, authorTimelineSparkCells)
 		tag := authorTimelineTag(r.Series, o.bucket.Width)
 		commitsStr := formatWithCommas(p, int64(r.TotalCommits))
 		codeStr := formatCodeDelta(p, r.CodeDelta)
-		_, _ = fmt.Fprintf(&sb, tabularShortAuthorTimelineFormatHead,
+		_, _ = fmt.Fprintf(&sb, format,
 			nameCol, spark, commitsStr, codeStr, tag)
+	}
+
+	limit := min(len(o.rows), authorTimelineTopN)
+	for _, r := range o.rows[:limit] {
+		writeRow(r)
+	}
+	if len(o.rows) > limit {
+		writeRow(aggregateOthersTimelineRow(o.rows[limit:]))
 	}
 
 	sb.WriteString(brk)
 	return sb.String()
+}
+
+// aggregateOthersTimelineRow folds the tail authors into one synthetic row: the
+// sparkline sums their per-bucket commit counts, so the combined activity trend
+// of everyone below the cut is still visible rather than dropped.
+func aggregateOthersTimelineRow(tail []authorTimelineRow) authorTimelineRow {
+	others := authorTimelineRow{Name: fmt.Sprintf("others (%d)", len(tail))}
+	if len(tail) == 0 {
+		return others
+	}
+	n := len(tail[0].Series)
+	others.Series = make([]authorTimelineBucket, n)
+	for _, r := range tail {
+		others.TotalCommits += r.TotalCommits
+		others.CodeDelta += r.CodeDelta
+		for i := 0; i < n && i < len(r.Series); i++ {
+			others.Series[i].Commits += r.Series[i].Commits
+			others.Series[i].CodeDelta += r.Series[i].CodeDelta
+		}
+	}
+	return others
 }
 
 // renderAuthorTimelineSparkline projects per-bucket commit counts to a

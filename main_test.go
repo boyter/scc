@@ -25,6 +25,13 @@ func TestMain(m *testing.M) {
 		return
 	}
 
+	// Pin the locale: scc formats numbers with golang.org/x/text/message using
+	// $LANG, while the expectations here hardcode English formatting (e.g.
+	// "0.000 megabytes"). Without this the suite fails on locales such as
+	// es_ES.UTF-8 or de_DE.UTF-8. A TestMain is needed because most tests in
+	// this package call t.Parallel(), which rules out t.Setenv.
+	os.Setenv("LANG", "en_US.UTF-8")
+
 	os.Exit(m.Run())
 }
 
@@ -449,6 +456,25 @@ func TestMultipleFormatWriteFile(t *testing.T) {
 	}
 }
 
+// TestMultipleFormatWriteFileColonPath is a regression test for
+// https://github.com/boyter/scc/issues/290 where --format-multi silently
+// discarded any target containing a colon, such as a Windows absolute path
+// like csv:C:\folder\out.csv, because the format:target pair was split on
+// every colon rather than only the first one.
+func TestMultipleFormatWriteFileColonPath(t *testing.T) {
+	tmpDir := t.TempDir()
+	outputCSV := filepath.Join(tmpDir, "C:output.csv")
+
+	_, err := runSCC("--format-multi", "csv:"+outputCSV)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if info, err := os.Stat(outputCSV); err != nil || info.Size() <= 0 {
+		t.Fatalf("csv write to colon containing path failed for %s", outputCSV)
+	}
+}
+
 func TestRecursivelyIgnore(t *testing.T) {
 	tmpDir := t.TempDir()
 	err := os.WriteFile(filepath.Join(tmpDir, ".gitignore"), []byte("ignore-git.txt\n"), 0644)
@@ -588,6 +614,47 @@ func TestDuplicates(t *testing.T) {
 		}
 		if !strings.Contains(output, `"Count":1`) {
 			t.Fatalf("duplicates check failed, output:\n%s", output)
+		}
+	}
+}
+
+// -d removes duplicates, and what made that worth fixing was not the removing
+// but that two runs over the same tree did not agree on what was left. The
+// count alone, which is what TestDuplicates asserts, cannot see that: it is the
+// same number whichever of the duplicates survived. Pin the whole of the output
+// instead, over a tree with enough in it that the workers race for real.
+func TestDuplicatesAreDeterministic(t *testing.T) {
+	first, err := runSCC("-f", "json", "-d", "./examples/language/")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for range 10 {
+		again, err := runSCC("-f", "json", "-d", "./examples/language/")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if first != again {
+			t.Fatalf("-d gave two different answers for the same tree\nfirst:\n%s\nagain:\n%s", first, again)
+		}
+	}
+}
+
+// --list-counters is how somebody finds out which languages have a scanner of
+// their own now that the flag turns them off rather than on, and nothing has
+// run it until now.
+func TestListCounters(t *testing.T) {
+	output, err := runSCC("--list-counters")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(output, "--no-per-language-counters") {
+		t.Errorf("--list-counters does not say how to turn them off, output:\n%s", output)
+	}
+	for _, language := range []string{"C", "Go", "Java", "Python", "Rust"} {
+		if !strings.Contains(output, "\n  "+language+"\n") {
+			t.Errorf("--list-counters does not list %s, output:\n%s", language, output)
 		}
 	}
 }
@@ -835,6 +902,7 @@ func TestLanguageNameTruncate(t *testing.T) {
 func TestSpecificLanguages(t *testing.T) {
 	languages := [...]string{
 		"ABNF",
+		"AL",
 		"Alchemist",
 		"Algol 68",
 		"Alloy",
@@ -883,6 +951,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"FSL",
 		"Futhark",
 		"FXML",
+		"G#",
 		"Gemfile",
 		"Gleam",
 		"Go",
@@ -905,9 +974,11 @@ func TestSpecificLanguages(t *testing.T) {
 		"JSONC",
 		"jq",
 		"Korn Shell",
+		"Kotlin",
 		"Koto",
 		"LALRPOP",
 		"License",
+		"Liquid",
 		"LiveScript",
 		"LLVM IR",
 		"Lua",
@@ -926,13 +997,16 @@ func TestSpecificLanguages(t *testing.T) {
 		"OpenTofu",
 		"Patch",
 		"Perl",
+		"PHP",
 		"Pkl",
 		"Plain Text",
 		"POML",
 		"PostScript",
+		"ProGuard",
 		"Proto",
 		"Python",
 		"Q#",
+		"Qt Translation Source",
 		"R",
 		"Racket",
 		"Rakefile",
@@ -940,6 +1014,9 @@ func TestSpecificLanguages(t *testing.T) {
 		"Rebol",
 		"Redscript",
 		"Rich Text Format",
+		"Ruby",
+		"Rust",
+		"Scala",
 		"Scallop",
 		"Seed7",
 		"Shell",
@@ -949,6 +1026,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"Smalltalk",
 		"Snakemake",
 		"Stan",
+		"Swift",
 		"Systemd",
 		"Tact",
 		"Teal",
@@ -958,6 +1036,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"TOML",
 		"TOON",
 		"TTCN-3",
+		"Txtar",
 		"TypeScript",
 		"TypeSpec",
 		"Typst",
@@ -966,6 +1045,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"Vim Script",
 		"Web Services Description Language",
 		"WebGPU Enhanced Shading Language",
+		"WebGPU Shading Language",
 		"wenyan",
 		"Wren",
 		"XHTML",
@@ -987,6 +1067,151 @@ func TestSpecificLanguages(t *testing.T) {
 	for _, language := range languages {
 		if !strings.Contains(output, language+",") {
 			t.Errorf("language not found in output: %v", language)
+		}
+	}
+}
+
+// runHelp returns the `scc --help` text. --no-config keeps a developer's
+// ./.sccconfig out of it: runSCC reports combined output, so a warning from a
+// malformed one would be compared against the README as if it were help.
+func runHelp() (string, error) {
+	return runSCC("--help", "--no-config")
+}
+
+var (
+	// cpuDefaultFlag matches the four flags defaulting to runtime.NumCPU(),
+	// the only ones whose default depends on the machine the paste was taken
+	// on. Every other default is a literal and stays under comparison.
+	cpuDefaultFlag = regexp.MustCompile(`^\s+--(file-list-job-workers|file-list-queue-size|file-process-job-workers|file-summary-job-queue-size) `)
+	helpDefault    = regexp.MustCompile(`\(default \d+\)`)
+)
+
+// normaliseHelp drops the parts of the help output that differ legitimately
+// between machines and releases: the version line and the CPU-count defaults.
+func normaliseHelp(s string) string {
+	var kept []string
+	for _, line := range strings.Split(strings.ReplaceAll(s, "\r\n", "\n"), "\n") {
+		if strings.HasPrefix(line, "Version ") {
+			continue
+		}
+		if cpuDefaultFlag.MatchString(line) {
+			line = helpDefault.ReplaceAllString(line, "(default N)")
+		}
+		kept = append(kept, line)
+	}
+	return strings.TrimSpace(strings.Join(kept, "\n"))
+}
+
+// readmeHelpBlock returns the `scc -h` paste, which runs from the line after
+// the prompt down to the fence that closes the block.
+func readmeHelpBlock(t *testing.T, readme string) string {
+	t.Helper()
+	const anchor = "$ scc -h\n"
+	readme = strings.ReplaceAll(readme, "\r\n", "\n")
+	start := strings.Index(readme, anchor)
+	if start == -1 {
+		t.Fatal("README.md has no `$ scc -h` line to anchor the help paste to")
+	}
+	block := readme[start+len(anchor):]
+	end := strings.Index(block, "\n```")
+	if end == -1 {
+		t.Fatal("the `$ scc -h` block in README.md is never closed by a fence")
+	}
+	return block[:end]
+}
+
+// TestReadmeHelpMatchesBinary holds the `scc -h` paste against the flags
+// cobra actually registers, so a new or reworded option cannot land with the
+// documented set left behind.
+func TestReadmeHelpMatchesBinary(t *testing.T) {
+	output, err := runHelp()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	readme, err := os.ReadFile("README.md")
+	if err != nil {
+		t.Skipf("README.md is not readable, nothing to compare against: %v", err)
+	}
+
+	want := normaliseHelp(output)
+	got := normaliseHelp(readmeHelpBlock(t, string(readme)))
+	if got == want {
+		return
+	}
+
+	wantLines := strings.Split(want, "\n")
+	gotLines := strings.Split(got, "\n")
+	for i := 0; i < max(len(wantLines), len(gotLines)); i++ {
+		var w, g string
+		if i < len(wantLines) {
+			w = wantLines[i]
+		}
+		if i < len(gotLines) {
+			g = gotLines[i]
+		}
+		if w == g {
+			continue
+		}
+		t.Errorf("the `scc -h` block in README.md is out of date - paste the current `scc --help` output in under `$ scc -h`\nfirst difference at line %d:\n  README: %s\n  binary: %s", i+1, g, w)
+		return
+	}
+}
+
+// reportSkipHelpRe pulls the recognised section names out of the
+// --report-skip line of `scc --help`, and backtickedRe the ones the README
+// table claims.
+var (
+	reportSkipHelpRe = regexp.MustCompile(`--report-skip string\s+[^(\n]+\(([a-z,]+)\)`)
+	backtickedRe     = regexp.MustCompile("`([a-z]+)`")
+)
+
+// TestReadmeReportSkipSections holds the --report-skip row of the report
+// options table against the names the flag itself lists, the two having
+// drifted apart once already.
+func TestReadmeReportSkipSections(t *testing.T) {
+	output, err := runHelp()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	readme, err := os.ReadFile("README.md")
+	if err != nil {
+		t.Skipf("README.md is not readable, nothing to compare against: %v", err)
+	}
+
+	sections := reportSkipHelpRe.FindStringSubmatch(output)
+	if sections == nil {
+		t.Fatal("no --report-skip section list found in `scc --help`")
+	}
+
+	const prefix = "| `--report-skip LIST` |"
+	row := ""
+	for _, line := range strings.Split(string(readme), "\n") {
+		if strings.HasPrefix(line, prefix) {
+			row = line
+			break
+		}
+	}
+	if row == "" {
+		t.Fatalf("README.md has no %q row to check", prefix)
+	}
+
+	recognised := map[string]bool{}
+	for _, name := range strings.Split(sections[1], ",") {
+		recognised[name] = true
+		if !strings.Contains(row, "`"+name+"`") {
+			t.Errorf("the --report-skip row in README.md does not list %q", name)
+		}
+	}
+
+	cells := strings.Split(row, "|")
+	if len(cells) < 4 {
+		t.Fatalf("could not read a description cell out of %q", row)
+	}
+	for _, listed := range backtickedRe.FindAllStringSubmatch(cells[2], -1) {
+		if !recognised[listed[1]] {
+			t.Errorf("the --report-skip row in README.md lists %q, which the flag does not accept", listed[1])
 		}
 	}
 }

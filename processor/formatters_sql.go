@@ -58,7 +58,7 @@ func toSqlInsert(input chan *FileJob) string {
 	str.WriteString("\nbegin transaction;")
 	_, _ = fmt.Fprintf(str, "\ninsert into metadata values('%s', '%s', %f, %f, %f, %f);",
 		currentTime.Format("2006-01-02 15:04:05"),
-		projectName,
+		escapeSQLString(projectName),
 		es,
 		cost,
 		schedule,
@@ -71,7 +71,7 @@ func toSqlInsert(input chan *FileJob) string {
 		str.WriteString("\nbegin transaction;")
 		_, _ = fmt.Fprintf(str, "\ninsert into locomo_metadata values('%s', '%s', %f, %f, %f, %f, %f, '%s', %f);",
 			currentTime.Format("2006-01-02 15:04:05"),
-			projectName,
+			escapeSQLString(projectName),
 			result.Cost,
 			result.InputTokens,
 			result.OutputTokens,
@@ -135,6 +135,22 @@ create table t        (
 	}
 	str.WriteString(`
 );`)
+
+	// toSqlInsert writes into locomo_metadata when --locomo is set, so the table has to
+	// be created here too or the generated script fails with "no such table".
+	if Locomo {
+		str.WriteString(`
+create table locomo_metadata (
+             timestamp text,
+             Project   text,
+             estimated_llm_cost real,
+             estimated_llm_input_tokens real,
+             estimated_llm_output_tokens real,
+             estimated_llm_generation_seconds real,
+             estimated_llm_review_hours real,
+             estimated_llm_preset text,
+             estimated_llm_cycles real);`)
+	}
 
 	str.WriteString(toSqlInsert(input))
 	return str.String()

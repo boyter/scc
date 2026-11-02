@@ -12,6 +12,7 @@ import (
 	"math"
 	"net/url"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -65,8 +66,8 @@ func parseReportSkipTo(raw string, warnW io.Writer) {
 		if name == "" {
 			continue
 		}
-		if !reportSkipRecognised[name] {
-			_, _ = fmt.Fprintf(warnW, "warning: --report-skip: unknown section %q (recognised: cocomo, locomo, hotspots, authors, timeline, files, uloc, linelength, card)\n", name)
+		if !slices.Contains(ReportSkipSections, name) {
+			_, _ = fmt.Fprintf(warnW, "warning: --report-skip: unknown section %q (recognised: %s)\n", name, strings.Join(ReportSkipSections, ", "))
 		}
 		ReportSkipNames[name] = true
 	}
@@ -332,6 +333,11 @@ var reportFuncs = template.FuncMap{
 				return s[:n]
 			}
 			return s
+		case []CouplingPairRow:
+			if len(s) > n {
+				return s[:n]
+			}
+			return s
 		case []AuthorRow:
 			if len(s) > n {
 				return s[:n]
@@ -365,6 +371,8 @@ var reportFuncs = template.FuncMap{
 		case []LanguageSummary:
 			return len(s)
 		case []HotspotRow:
+			return len(s)
+		case []CouplingPairRow:
 			return len(s)
 		case []AuthorRow:
 			return len(s)
@@ -486,7 +494,7 @@ func donutArcs(summary []LanguageSummary) []DonutArc {
 		seg := frac * circ
 		arcs = append(arcs, DonutArc{
 			Color:      langColor(s.Name),
-			Dasharray:  fmt.Sprintf("%.3f %.3f", seg, circ-seg),
+			Dasharray:  fmt.Sprintf("%.3f %.3f", seg, normZero(circ-seg)),
 			Dashoffset: -offset,
 		})
 		offset += seg
@@ -520,6 +528,20 @@ func intsTo64(in []int) []int64 {
 	return out
 }
 
+// normZero maps negative zero onto positive zero, leaving every other value
+// alone. Go permits fusing `a - b*c` into a single multiply-add, and the
+// loong64 backend spells that FNMSUBD, which computes -((b*c) - a). An
+// exactly-zero result therefore comes back as -0.0 there where amd64 and
+// arm64 produce +0.0, and formats as "-0.0" in the rendered SVG. The
+// coordinates are cosmetic, so normalise before formatting to keep the
+// report byte-identical on every architecture. See issue #767.
+func normZero(v float64) float64 {
+	if v == 0 {
+		return 0
+	}
+	return v
+}
+
 func sparklinePathInternal(values []int64, w, h int, closed bool) string {
 	if len(values) == 0 || w <= 0 || h <= 0 {
 		return ""
@@ -544,8 +566,9 @@ func sparklinePathInternal(values []int64, w, h int, closed bool) string {
 	var b strings.Builder
 	for i, v := range values {
 		x := float64(i) * stepX
-		// Invert Y so larger values are higher.
-		y := float64(h) - (float64(v-minV)/span)*float64(h)
+		// Invert Y so larger values are higher. The top of the box lands on
+		// an exact zero, so normalise the sign before formatting.
+		y := normZero(float64(h) - (float64(v-minV)/span)*float64(h))
 		if i == 0 {
 			fmt.Fprintf(&b, "M%.1f,%.1f", x, y)
 		} else {

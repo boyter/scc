@@ -15,7 +15,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/boyter/scc/v3/processor"
+	"github.com/boyter/scc/v4/processor"
 	jsoniter "github.com/json-iterator/go"
 )
 

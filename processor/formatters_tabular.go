@@ -4,6 +4,7 @@ package processor
 
 import (
 	"fmt"
+	"github.com/clipperhouse/uax29/v2/graphemes"
 	"os"
 	"slices"
 	"strings"
@@ -33,21 +34,27 @@ var longNameTruncate = 22
 var tabularShortUlocLanguageFormatBodyNoComplexity = "(ULOC) %38d\n"
 var tabularShortPercentLanguageFormatBodyNoComplexity = "Percentage %21.1f%% %10.1f%% %9.1f%% %10.1f%% %9.1f%%\n"
 
-var tabularWideFormatHead = "%-33s %9s %9s %8s %9s %8s %10s %16s\n"
-var tabularWideFormatBody = "%-33s %9d %9d %8d %9d %8d %10d %16.2f\n"
-var tabularWideFormatFile = "%s %9d %8d %9d %8d %10d %16.2f\n"
+// The wide layout is fixed-width and totals 109 columns (120 with the extra
+// Cognitive column) so every row aligns under the ─── break lines. The Language
+// column is deliberately narrow (24) so the numeric columns can hold large,
+// comma-grouped counts (tens of millions) without overflowing on big trees such
+// as the Linux kernel. Any width change here must keep the totals at 109/120 and
+// be mirrored across the file/MaxMean/ULOC/Percentage/DRYness rows below.
+var tabularWideFormatHead = "%-24s %8s %12s %10s %10s %12s %10s %16s\n"
+var tabularWideFormatBody = "%-24s %8d %12d %10d %10d %12d %10d %16.2f\n"
+var tabularWideFormatFile = "%s %12d %10d %10d %12d %10d %16.2f\n"
 
 // Cognitive variants add a right-aligned "Cognitive" column after Complexity.
 // Selected only when processor.Cognitive is set so the default layout is untouched.
-var tabularWideFormatHeadCognitive = "%-33s %9s %9s %8s %9s %8s %10s %10s %16s\n"
-var tabularWideFormatBodyCognitive = "%-33s %9d %9d %8d %9d %8d %10d %10d %16.2f\n"
-var tabularWideFormatFileCognitive = "%s %9d %8d %9d %8d %10d %10d %16.2f\n"
-var tabularWideFormatFileMaxMean = "MaxLine / MeanLine %24d %9d\n"
-var wideFormatFileTruncate = 42
-var tabularWideUlocLanguageFormatBody = "(ULOC) %46d\n"
-var tabularWideUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %25d\n"
-var tabularWideFormatBodyPercent = "Percentage %31.1f%% %8.1f%% %7.1f%% %8.1f%% %7.1f%% %9.1f%%\n"
-var tabularWideDrynessFormatBody = "DRYness %% %43.2f\n"
+var tabularWideFormatHeadCognitive = "%-24s %8s %12s %10s %10s %12s %10s %10s %16s\n"
+var tabularWideFormatBodyCognitive = "%-24s %8d %12d %10d %10d %12d %10d %10d %16.2f\n"
+var tabularWideFormatFileCognitive = "%s %12d %10d %10d %12d %10d %10d %16.2f\n"
+var tabularWideFormatFileMaxMean = "MaxLine / MeanLine %14d %12d\n"
+var wideFormatFileTruncate = 32
+var tabularWideUlocLanguageFormatBody = "(ULOC) %39d\n"
+var tabularWideUlocGlobalFormatBody = "Unique Lines of Code (ULOC) %18d\n"
+var tabularWideFormatBodyPercent = "Percentage %21.1f%% %11.1f%% %9.1f%% %9.1f%% %11.1f%% %9.1f%%\n"
+var tabularWideDrynessFormatBody = "DRYness %% %36.2f\n"
 
 func fileSummarizeLong(input chan *FileJob) string {
 	str := &strings.Builder{}
@@ -63,69 +70,19 @@ func fileSummarizeLong(input chan *FileJob) string {
 		str.WriteString(getTabularWideBreak())
 	}
 
-	langs := map[string]LanguageSummary{}
-	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumCognitive, sumBytes int64 = 0, 0, 0, 0, 0, 0, 0, 0
+	p := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
 
-	for res := range input {
-		sumFiles++
-		sumLines += res.Lines
-		sumCode += res.Code
-		sumComment += res.Comment
-		sumBlank += res.Blank
-		sumComplexity += res.Complexity
-		sumCognitive += res.Cognitive
-		sumBytes += res.Bytes
+	totals := collectSummaryTotals(input, Files, MaxMean, Files)
+	sumFiles := totals.sumFiles
+	sumLines := totals.sumLines
+	sumCode := totals.sumCode
+	sumComment := totals.sumComment
+	sumBlank := totals.sumBlank
+	sumComplexity := totals.sumComplexity
+	sumCognitive := totals.sumCognitive
+	sumBytes := totals.sumBytes
 
-		var weightedComplexity float64
-		if res.Code != 0 {
-			weightedComplexity = (float64(res.Complexity) / float64(res.Code)) * 100
-		}
-		res.WeightedComplexity = weightedComplexity
-
-		_, ok := langs[res.Language]
-
-		if !ok {
-			files := []*FileJob{}
-			files = append(files, res)
-
-			langs[res.Language] = LanguageSummary{
-				Name:       res.Language,
-				Lines:      res.Lines,
-				Code:       res.Code,
-				Comment:    res.Comment,
-				Blank:      res.Blank,
-				Complexity: res.Complexity,
-				Cognitive:  res.Cognitive,
-				Count:      1,
-				Files:      files,
-				LineLength: res.LineLength,
-			}
-		} else {
-			tmp := langs[res.Language]
-			files := append(tmp.Files, res)
-			lineLength := append(tmp.LineLength, res.LineLength...)
-
-			langs[res.Language] = LanguageSummary{
-				Name:       res.Language,
-				Lines:      tmp.Lines + res.Lines,
-				Code:       tmp.Code + res.Code,
-				Comment:    tmp.Comment + res.Comment,
-				Blank:      tmp.Blank + res.Blank,
-				Complexity: tmp.Complexity + res.Complexity,
-				Cognitive:  tmp.Cognitive + res.Cognitive,
-				Count:      tmp.Count + 1,
-				Files:      files,
-				LineLength: lineLength,
-			}
-		}
-	}
-
-	language := make([]LanguageSummary, 0, len(langs))
-	for _, summary := range langs {
-		language = append(language, summary)
-	}
-
-	language = sortLanguageSummary(language)
+	language := totals.sorted()
 
 	startTime := makeTimestampMilli()
 	for _, summary := range language {
@@ -144,20 +101,20 @@ func fileSummarizeLong(input chan *FileJob) string {
 		}
 
 		if Cognitive {
-			_, _ = fmt.Fprintf(str, tabularWideFormatBodyCognitive, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summary.Cognitive, summaryWeightedComplexity)
+			_, _ = p.Fprintf(str, tabularWideFormatBodyCognitive, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summary.Cognitive, summaryWeightedComplexity)
 		} else {
-			_, _ = fmt.Fprintf(str, tabularWideFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summaryWeightedComplexity)
+			_, _ = p.Fprintf(str, tabularWideFormatBody, trimmedName, summary.Count, summary.Lines, summary.Blank, summary.Comment, summary.Code, summary.Complexity, summaryWeightedComplexity)
 		}
 
 		if Percent {
-			_, _ = fmt.Fprintf(str,
+			_, _ = p.Fprintf(str,
 				tabularWideFormatBodyPercent,
-				float64(len(summary.Files))/float64(sumFiles)*100,
-				float64(summary.Lines)/float64(sumLines)*100,
-				float64(summary.Blank)/float64(sumBlank)*100,
-				float64(summary.Comment)/float64(sumComment)*100,
-				float64(summary.Code)/float64(sumCode)*100,
-				float64(summary.Complexity)/float64(sumComplexity)*100,
+				pct(summary.Count, sumFiles),
+				pct(summary.Lines, sumLines),
+				pct(summary.Blank, sumBlank),
+				pct(summary.Comment, sumComment),
+				pct(summary.Code, sumCode),
+				pct(summary.Complexity, sumComplexity),
 			)
 
 			if !UlocMode {
@@ -168,11 +125,11 @@ func fileSummarizeLong(input chan *FileJob) string {
 		}
 
 		if MaxMean {
-			_, _ = fmt.Fprintf(str, tabularWideFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength))
+			_, _ = p.Fprintf(str, tabularWideFormatFileMaxMean, maxIn(summary.LineLength), meanIn(summary.LineLength))
 		}
 
 		if UlocMode {
-			_, _ = fmt.Fprintf(str, tabularWideUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name]))
+			_, _ = p.Fprintf(str, tabularWideUlocLanguageFormatBody, len(ulocLanguageCount[summary.Name]))
 			if !Files && summary.Name != language[len(language)-1].Name {
 				str.WriteString(tabularWideBreakCi)
 			}
@@ -184,12 +141,12 @@ func fileSummarizeLong(input chan *FileJob) string {
 
 			for _, res := range summary.Files {
 				tmp := unicodeAwareTrim(res.Location, wideFormatFileTruncate)
-				tmp = unicodeAwareRightPad(tmp, 43)
+				tmp = unicodeAwareRightPad(tmp, 33)
 
 				if Cognitive {
-					_, _ = fmt.Fprintf(str, tabularWideFormatFileCognitive, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.Cognitive, res.WeightedComplexity)
+					_, _ = p.Fprintf(str, tabularWideFormatFileCognitive, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.Cognitive, res.WeightedComplexity)
 				} else {
-					_, _ = fmt.Fprintf(str, tabularWideFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.WeightedComplexity)
+					_, _ = p.Fprintf(str, tabularWideFormatFile, tmp, res.Lines, res.Blank, res.Comment, res.Code, res.Complexity, res.WeightedComplexity)
 				}
 			}
 		}
@@ -204,17 +161,23 @@ func fileSummarizeLong(input chan *FileJob) string {
 
 	str.WriteString(getTabularWideBreak())
 	if Cognitive {
-		_, _ = fmt.Fprintf(str, tabularWideFormatBodyCognitive, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumCognitive, totalWeightedComplexity)
+		_, _ = p.Fprintf(str, tabularWideFormatBodyCognitive, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, sumCognitive, totalWeightedComplexity)
 	} else {
-		_, _ = fmt.Fprintf(str, tabularWideFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, totalWeightedComplexity)
+		_, _ = p.Fprintf(str, tabularWideFormatBody, "Total", sumFiles, sumLines, sumBlank, sumComment, sumCode, sumComplexity, totalWeightedComplexity)
 	}
 	str.WriteString(getTabularWideBreak())
 
 	if UlocMode {
-		_, _ = fmt.Fprintf(str, tabularWideUlocGlobalFormatBody, len(ulocGlobalCount))
+		_, _ = p.Fprintf(str, tabularWideUlocGlobalFormatBody, len(ulocGlobalCount))
 		if Dryness {
-			dryness := float64(len(ulocGlobalCount)) / float64(sumLines)
-			_, _ = fmt.Fprintf(str, tabularWideDrynessFormatBody, dryness)
+			// Guard the divide: a tree of only empty files has zero lines, and an
+			// unguarded float division prints DRYness as ∞. Matches the guard
+			// snapshotULOC already applies to the same calculation.
+			dryness := 0.0
+			if sumLines > 0 {
+				dryness = float64(len(ulocGlobalCount)) / float64(sumLines)
+			}
+			_, _ = p.Fprintf(str, tabularWideDrynessFormatBody, dryness)
 		}
 		str.WriteString(getTabularWideBreak())
 	}
@@ -239,21 +202,64 @@ func fileSummarizeLong(input chan *FileJob) string {
 // We need to trim the file display for tabular output formats which this does in a unicode aware way
 // to avoid cutting bytes... note that it needs to be expanded to deal with longer display characters at some
 // point in the future
+//
+// What is wanted is the longest tail of the string that fits the width, with a
+// ~ in front of it to say something was cut. Removing one rune at a time and
+// asking the width again after each is the obvious way to find it and costs a
+// fresh string and a fresh walk of that string for every rune removed, which on
+// a --by-file run over a tree of long paths was two thirds of the whole run.
+// Walking back from the end and adding up the widths finds the same place in
+// one pass, StringWidth being the sum of RuneWidth over the string.
 func unicodeAwareTrim(tmp string, size int) string {
-	// iterate all the runes so we can cut off correctly and get the correct length
-	r := []rune(tmp)
-
-	if len(r) > size {
-		for runewidth.StringWidth(tmp) > size {
-			// remove character one at a time till we get the length we want
-			r = r[1:]
-			tmp = string(r)
-		}
-
-		tmp = "~" + strings.TrimSpace(tmp)
+	// A string of size bytes or fewer cannot hold more than size runes, and a
+	// rune is never narrower than nothing, so there is nothing to cut. This is
+	// the answer for nearly every name.
+	if len(tmp) <= size {
+		return tmp
 	}
 
-	return tmp
+	r := []rune(tmp)
+	if len(r) <= size {
+		return tmp
+	}
+
+	// Width is asked per grapheme cluster, not per rune, because that is what
+	// StringWidth answers and the two disagree: a family emoji is four runes
+	// joined by zero width joiners and is two cells wide, where the runes add
+	// up to eight. Summing runes cut a name that already fitted, and cut it
+	// through the middle of a cluster, leaving a dangling joiner.
+	//
+	// Two walks rather than one so nothing is allocated: the first asks how
+	// wide the whole name is, the second drops clusters off the front until
+	// what is left fits.
+	total := 0
+	forward := graphemes.FromString(tmp)
+	for forward.Next() {
+		total += graphemeWidth(forward.Value())
+	}
+
+	dropped := 0
+	offset := 0
+	trim := graphemes.FromString(tmp)
+	for total-dropped > size && trim.Next() {
+		cluster := trim.Value()
+		dropped += graphemeWidth(cluster)
+		offset += len(cluster)
+	}
+
+	return "~" + strings.TrimSpace(tmp[offset:])
+}
+
+// graphemeWidth is the width of one grapheme cluster, which runewidth takes to
+// be the width of the first rune in it that has one.
+func graphemeWidth(cluster string) int {
+	for _, r := range cluster {
+		if w := runewidth.RuneWidth(r); w > 0 {
+			return w
+		}
+	}
+
+	return 0
 }
 
 // Using %-30s in string format does not appear to be unicode aware with characters such as
@@ -277,65 +283,19 @@ func fileSummarizeShort(input chan *FileJob) string {
 		str.WriteString(getTabularShortBreak())
 	}
 
-	lang := map[string]LanguageSummary{}
-	var sumFiles, sumLines, sumCode, sumComment, sumBlank, sumComplexity, sumCognitive, sumBytes int64 = 0, 0, 0, 0, 0, 0, 0, 0
-
 	p := gmessage.NewPrinter(glanguage.Make(os.Getenv("LANG")))
 
-	for res := range input {
-		sumFiles++
-		sumLines += res.Lines
-		sumCode += res.Code
-		sumComment += res.Comment
-		sumBlank += res.Blank
-		sumComplexity += res.Complexity
-		sumCognitive += res.Cognitive
-		sumBytes += res.Bytes
+	totals := collectSummaryTotals(input, Files, MaxMean, false)
+	sumFiles := totals.sumFiles
+	sumLines := totals.sumLines
+	sumCode := totals.sumCode
+	sumComment := totals.sumComment
+	sumBlank := totals.sumBlank
+	sumComplexity := totals.sumComplexity
+	sumCognitive := totals.sumCognitive
+	sumBytes := totals.sumBytes
 
-		_, ok := lang[res.Language]
-
-		if !ok {
-			files := []*FileJob{}
-			files = append(files, res)
-
-			lang[res.Language] = LanguageSummary{
-				Name:       res.Language,
-				Lines:      res.Lines,
-				Code:       res.Code,
-				Comment:    res.Comment,
-				Blank:      res.Blank,
-				Complexity: res.Complexity,
-				Cognitive:  res.Cognitive,
-				Count:      1,
-				Files:      files,
-				LineLength: res.LineLength,
-			}
-		} else {
-			tmp := lang[res.Language]
-			files := append(tmp.Files, res)
-			lineLength := append(tmp.LineLength, res.LineLength...)
-
-			lang[res.Language] = LanguageSummary{
-				Name:       res.Language,
-				Lines:      tmp.Lines + res.Lines,
-				Code:       tmp.Code + res.Code,
-				Comment:    tmp.Comment + res.Comment,
-				Blank:      tmp.Blank + res.Blank,
-				Complexity: tmp.Complexity + res.Complexity,
-				Cognitive:  tmp.Cognitive + res.Cognitive,
-				Count:      tmp.Count + 1,
-				Files:      files,
-				LineLength: lineLength,
-			}
-		}
-	}
-
-	language := make([]LanguageSummary, 0, len(lang))
-	for _, summary := range lang {
-		language = append(language, summary)
-	}
-
-	language = sortLanguageSummary(language)
+	language := totals.sorted()
 
 	startTime := makeTimestampMilli()
 	for _, summary := range language {
@@ -357,21 +317,21 @@ func fileSummarizeShort(input chan *FileJob) string {
 			if !Complexity {
 				_, _ = p.Fprintf(str,
 					tabularShortPercentLanguageFormatBody,
-					float64(len(summary.Files))/float64(sumFiles)*100,
-					float64(summary.Lines)/float64(sumLines)*100,
-					float64(summary.Blank)/float64(sumBlank)*100,
-					float64(summary.Comment)/float64(sumComment)*100,
-					float64(summary.Code)/float64(sumCode)*100,
-					float64(activeComplexity(summary.Complexity, summary.Cognitive))/float64(activeComplexity(sumComplexity, sumCognitive))*100,
+					pct(summary.Count, sumFiles),
+					pct(summary.Lines, sumLines),
+					pct(summary.Blank, sumBlank),
+					pct(summary.Comment, sumComment),
+					pct(summary.Code, sumCode),
+					pct(activeComplexity(summary.Complexity, summary.Cognitive), activeComplexity(sumComplexity, sumCognitive)),
 				)
 			} else {
 				_, _ = p.Fprintf(str,
 					tabularShortPercentLanguageFormatBodyNoComplexity,
-					float64(len(summary.Files))/float64(sumFiles)*100,
-					float64(summary.Lines)/float64(sumLines)*100,
-					float64(summary.Blank)/float64(sumBlank)*100,
-					float64(summary.Comment)/float64(sumComment)*100,
-					float64(summary.Code)/float64(sumCode)*100,
+					pct(summary.Count, sumFiles),
+					pct(summary.Lines, sumLines),
+					pct(summary.Blank, sumBlank),
+					pct(summary.Comment, sumComment),
+					pct(summary.Code, sumCode),
 				)
 			}
 
@@ -435,7 +395,13 @@ func fileSummarizeShort(input chan *FileJob) string {
 	if UlocMode {
 		_, _ = p.Fprintf(str, tabularShortUlocGlobalFormatBody, len(ulocGlobalCount))
 		if Dryness {
-			dryness := float64(len(ulocGlobalCount)) / float64(sumLines)
+			// Guard the divide: a tree of only empty files has zero lines, and an
+			// unguarded float division prints DRYness as ∞. Matches the guard
+			// snapshotULOC already applies to the same calculation.
+			dryness := 0.0
+			if sumLines > 0 {
+				dryness = float64(len(ulocGlobalCount)) / float64(sumLines)
+			}
 			_, _ = p.Fprintf(str, tabularShortDrynessFormatBody, dryness)
 		}
 		str.WriteString(getTabularShortBreak())
@@ -458,6 +424,17 @@ func fileSummarizeShort(input chan *FileJob) string {
 		str.WriteString(getTabularShortBreak())
 	}
 	return str.String()
+}
+
+// pct returns value as a percentage of total, guarding the total==0 case so
+// the tabular --percent output never prints NaN% for a category that has no
+// lines (e.g. a project whose files have zero blank/comment/complexity lines).
+// Mirrors the total!=0 guard already used by addLanguagePercentages for JSON.
+func pct(value, total int64) float64 {
+	if total == 0 {
+		return 0
+	}
+	return float64(value) / float64(total) * 100
 }
 
 func maxIn(i []int) int {

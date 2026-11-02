@@ -25,6 +25,13 @@
     "multi_line": [],
     "quotes": []
   },
+  "AL": {
+    "complexitychecks": ["if ", "if(", "IF ", "IF(", "case ", "CASE ", "while ", "WHILE ", "for ", "FOR ", "foreach ", "FOREACH ", "until ", "UNTIL ", "else ", "ELSE ", "and ", "AND ", "or ", "OR ", "xor ", "XOR ", "not ", "NOT "],
+    "extensions": ["al"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [{"end": "'", "start": "'"}]
+  },
   "Apex": {
     "complexitychecks": [
       "for ",
@@ -101,6 +108,7 @@
     ],
     "extensions": ["asa", "asp"],
     "line_comment": ["'", "REM"],
+    "caseinsensitive": true,
     "multi_line": [],
     "quotes": []
   },
@@ -128,7 +136,7 @@
       "webinfo"
     ],
     "line_comment": [],
-    "multi_line": [["<!--", "-->"], ["<%--", "-->"]],
+    "multi_line": [["<!--", "-->"], ["<%--", "--%>"]],
     "quotes": []
   },
   "ATS": {
@@ -243,6 +251,7 @@
     "extensions": ["agda"],
     "line_comment": ["--"],
     "multi_line": [["{-", "-}"]],
+    "nestedmultiline": true,
     "quotes": []
   },
   "Alchemist": {
@@ -443,8 +452,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -478,8 +487,8 @@
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -509,10 +518,6 @@
       {
         "end": "\"",
         "start": "\""
-      },
-      {
-        "end": "'",
-        "start": "'"
       }
     ]
   },
@@ -562,6 +567,7 @@
     "quotes": []
   },
   "BASH": {
+    "heredoc": true,
     "complexitychecks": [
       "for ",
       "for(",
@@ -587,8 +593,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -612,13 +618,19 @@
       "!= ",
       "== "
     ],
+    "doubledquote": true,
     "extensions": ["bas"],
-    "line_comment": ["'"],
+    "line_comment": ["'", "REM", "Rem", "rem"],
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "ignoreEscape": true,
+        "start": "\""
+      },
+      {
+        "end": "\"",
+        "start": "!\""
       }
     ]
   },
@@ -638,6 +650,7 @@
     ],
     "extensions": ["bat", "btm", "cmd"],
     "line_comment": ["REM", "::"],
+    "caseinsensitive": true,
     "multi_line": [],
     "quotes": []
   },
@@ -880,6 +893,7 @@
       "if(",
       "switch ",
       "switch(",
+      "case ",
       "while ",
       "while(",
       "else ",
@@ -891,6 +905,7 @@
     ],
     "extensions": ["c", "ec", "pgc"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -919,6 +934,7 @@
     ],
     "extensions": ["h"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -928,6 +944,7 @@
     ]
   },
   "C3": {
+    "codetokens": ["[<"],
     "complexitychecks": [
       "for ",
       "for(",
@@ -1000,6 +1017,7 @@
       "!= ",
       "== "
     ],
+    "doubledquote": true,
     "extensions": ["cs", "csx"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
@@ -1008,6 +1026,26 @@
         "end": "\"",
         "ignoreEscape": true,
         "start": "@\""
+      },
+      {
+        "end": "\"",
+        "ignoreEscape": true,
+        "start": "@$\""
+      },
+      {
+        "end": "\"\"\"\"\"",
+        "ignoreEscape": true,
+        "start": "\"\"\"\"\""
+      },
+      {
+        "end": "\"\"\"\"",
+        "ignoreEscape": true,
+        "start": "\"\"\"\""
+      },
+      {
+        "end": "\"\"\"",
+        "ignoreEscape": true,
+        "start": "\"\"\""
       },
       {
         "end": "\"",
@@ -1043,32 +1081,38 @@
     ],
     "extensions": ["cc", "cpp", "cxx", "c++", "pcc", "ino", "ccm", "cppm", "cxxm", "c++m", "mxx"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "R\"("
+        "start": "R\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "u8R\"("
+        "start": "u8R\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "uR\"("
+        "start": "uR\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "UR\"("
+        "start": "UR\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "LR\"("
+        "start": "LR\""
       },
       {
         "end": "\"",
@@ -1107,7 +1151,7 @@
       {
         "pattern": "(?m)^\\s*template\\s*<",
         "literals": ["template"],
-        "anchored": false
+        "anchored": true
       },
       {
         "pattern": "(?m)^[ \\t]*(try|constexpr)",
@@ -1141,32 +1185,38 @@
       }
     ],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "R\"("
+        "start": "R\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "u8R\"("
+        "start": "u8R\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "uR\"("
+        "start": "uR\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "UR\"("
+        "start": "UR\""
       },
       {
+        "delimited": true,
         "ignoreEscape": true,
         "end": ")\"",
-        "start": "LR\"("
+        "start": "LR\""
       },
       {
         "end": "\"",
@@ -1195,8 +1245,53 @@
     ],
     "extensions": ["cmake", "cmakelists.txt"],
     "line_comment": ["#"],
-    "multi_line": [["#[[", "]]"]],
+    "multi_line": [["#[[", "]]"], ["#[=[", "]=]"], ["#[==[", "]==]"], ["#[===[", "]===]"], ["#[====[", "]====]"], ["#[=====[", "]=====]"], ["#[======[", "]======]"], ["#[=======[", "]=======]"], ["#[========[", "]========]"]],
     "quotes": [
+      {
+        "ignoreEscape": true,
+        "end": "]]",
+        "start": "[["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]=]",
+        "start": "[=["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]==]",
+        "start": "[==["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]===]",
+        "start": "[===["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]====]",
+        "start": "[====["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]=====]",
+        "start": "[=====["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]======]",
+        "start": "[======["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]=======]",
+        "start": "[=======["
+      },
+      {
+        "ignoreEscape": true,
+        "end": "]========]",
+        "start": "[========["
+      },
       {
         "end": "\"",
         "start": "\""
@@ -1217,10 +1312,10 @@
       "!= ",
       "== "
     ],
-    "extensions": ["cob", "cbl", "ccp", "cobol", "cpy"],
-    "line_comment": ["*"],
+    "extensions": ["cob", "cbl", "ccp", "cobol", "cpy", "cblle"],
+    "line_comment": ["*>"],
     "multi_line": [],
-    "quotes": []
+    "quotes": [{"start": "'", "end": "'", "ignoreEscape": true}, {"start": "\"", "end": "\"", "ignoreEscape": true}]
   },
   "CSS": {
     "complexitychecks": [
@@ -1717,8 +1812,8 @@
     "multi_line": [["###", "###"]],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -1764,8 +1859,8 @@
     "multi_line": [["<!---", "--->"]],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -1833,6 +1928,7 @@
     ],
     "line_comment": [],
     "multi_line": [["(*", "*)"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
@@ -1866,8 +1962,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -1894,6 +1990,7 @@
     ],
     "extensions": ["cu", "cuh"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -1921,16 +2018,16 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
         "start": "'"
       },
       {
-        "end": "\\\"\\\"\\\"",
-        "start": "\\\"\\\"\\\""
+        "end": "\"\"\"",
+        "start": "\"\"\""
       },
       {
         "end": "'''",
@@ -2033,6 +2130,13 @@
     "multi_line": [["/*", "*/"]],
     "quotes": []
   },
+  "IBM i DDS": {
+    "complexitychecks": [],
+    "extensions": ["dds", "dspf", "lf", "pf", "prtf", "mnudds", "mnucmd"],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": []
+  },
   "Dart": {
     "complexitychecks": [
       "for ",
@@ -2050,10 +2154,43 @@
     "extensions": ["dart"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
         "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      },
+      {
+        "end": "\"\"\"",
+        "start": "\"\"\""
+      },
+      {
+        "end": "'''",
+        "start": "'''"
+      },
+      {
+        "end": "\"\"\"",
+        "ignoreEscape": true,
+        "start": "r\"\"\""
+      },
+      {
+        "end": "'''",
+        "ignoreEscape": true,
+        "start": "r'''"
+      },
+      {
+        "end": "\"",
+        "ignoreEscape": true,
+        "start": "r\""
+      },
+      {
+        "end": "'",
+        "ignoreEscape": true,
+        "start": "r'"
       }
     ]
   },
@@ -2121,8 +2258,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -2138,6 +2275,7 @@
     "quotes": []
   },
   "Elixir": {
+    "codetokens": ["?\"", "?\\\"", "?'"],
     "complexitychecks": [
       "case ",
       "cond ",
@@ -2241,6 +2379,7 @@
     "extensions": ["elm"],
     "line_comment": ["--"],
     "multi_line": [["{-", "-}"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
@@ -2348,8 +2487,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -2365,6 +2504,7 @@
     "quotes": []
   },
   "F#": {
+    "codetokens": ["(*)"],
     "complexitychecks": [
       "for ",
       "for(",
@@ -2378,10 +2518,36 @@
       "!= ",
       "== "
     ],
+    "doubledquote": true,
     "extensions": ["fs", "fsi", "fsx", "fsscript"],
     "line_comment": ["//"],
     "multi_line": [["(*", "*)"]],
-    "quotes": []
+    "nestedmultiline": true,
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "\"",
+        "ignoreEscape": true,
+        "start": "@\""
+      },
+      {
+        "end": "\"",
+        "ignoreEscape": true,
+        "start": "@$\""
+      },
+      {
+        "end": "\"\"\"",
+        "ignoreEscape": true,
+        "start": "\"\"\""
+      },
+      {
+        "end": "'",
+        "start": "'\""
+      }
+    ]
   },
   "F*": {
     "complexitychecks": [
@@ -2450,8 +2616,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -2618,8 +2784,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -2683,7 +2849,8 @@
       "rx",
       "ft"
     ],
-    "line_comment": ["\\\\"],
+    "line_comment": ["\\"],
+    "commentisword": true,
     "multi_line": [["( ", ")"]],
     "quotes": []
   },
@@ -2706,8 +2873,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       }
     ]
   },
@@ -2774,6 +2941,53 @@
     "multi_line": [],
     "quotes": []
   },
+  "G#": {
+    "complexitychecks": [
+      "go ",
+      "for ",
+      "for(",
+      "for{",
+      "while ",
+      "while{",
+      "if ",
+      "if(",
+      "switch ",
+      "switch(",
+      "switch{",
+      "select ",
+      "select{",
+      "try ",
+      "try{",
+      "catch ",
+      "catch(",
+      "catch{",
+      "else ",
+      "else{",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "complexitychecks_postfix": ["?.", "??"],
+    "extensions": ["gs"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "`",
+        "ignoreEscape": true,
+        "start": "`"
+      },
+      {
+        "end": "'",
+        "start": "'"
+      }
+    ]
+  },
   "GDScript": {
     "complexitychecks": [
       "for ",
@@ -2822,6 +3036,7 @@
     ],
     "extensions": ["vert", "tesc", "tese", "geom", "frag", "comp", "glsl"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -2896,8 +3111,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -3077,15 +3292,23 @@
     "complexitychecks": [],
     "extensions": ["gradle"],
     "line_comment": ["//"],
-    "multi_line": [],
+    "multi_line": [["/*", "*/"]],
     "quotes": [
       {
-        "end": "'",
-        "start": "'"
+        "end": "\"\"\"",
+        "start": "\"\"\""
+      },
+      {
+        "end": "'''",
+        "start": "'''"
       },
       {
         "end": "\"",
         "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
       }
     ]
   },
@@ -3137,8 +3360,20 @@
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
+        "end": "\"\"\"",
+        "start": "\"\"\""
+      },
+      {
+        "end": "'''",
+        "start": "'''"
+      },
+      {
         "end": "\"",
         "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
       }
     ]
   },
@@ -3283,12 +3518,8 @@
     "multi_line": [["<!--", "-->"], ["{{!", "}}"]],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
-      },
-      {
-        "end": "'",
-        "start": "'"
+        "end": "\"",
+        "start": "\""
       }
     ]
   },
@@ -3341,6 +3572,7 @@
     "extensions": ["hs"],
     "line_comment": ["--"],
     "multi_line": [["{-", "-}"]],
+    "nestedmultiline": true,
     "quotes": []
   },
   "Haxe": {
@@ -3366,6 +3598,15 @@
         "start": "\""
       }
     ]
+  },
+  "IBM i CL": {
+    "complexitychecks": ["IF", "WHEN", "DOWHILE", "DOUNTIL", "DOFOR", "MONMSG"],
+    "caseinsensitive": true,
+    "extensions": ["clp", "clle", "cmd"],
+    "heuristics": [{"pattern": "(?im)^[ \\t]*(?:CMD|PARM|QUAL|ELEM|DEP)[ \\t]+(?:[A-Z][A-Z0-9_]*[ \\t]*\\(|\\+[ \\t]*$)"}],
+    "line_comment": [],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [{"start": "'", "end": "'", "ignoreEscape": true}]
   },
   "IDL": {
     "complexitychecks": [
@@ -3501,12 +3742,12 @@
     "nestedmultiline": true,
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
-        "end": "\\\"\\\"\\\"",
-        "start": "\\\"\\\"\\\""
+        "end": "\"\"\"",
+        "start": "\"\"\""
       }
     ]
   },
@@ -3742,14 +3983,14 @@
       "switch ",
       "while ",
       "else ",
+      "case ",
+      "case(",
       "|| ",
       "&& ",
       "!= ",
-      "== ",
-      "?.",
-      "?? ",
-      "??= "
+      "== "
     ],
+    "complexitychecks_postfix": ["?.", "??", "??="],
     "extensions": ["js", "cjs", "mjs"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
@@ -3881,12 +4122,12 @@
     "nestedmultiline": true,
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
-        "end": "\\\"\\\"\\\"",
-        "start": "\\\"\\\"\\\""
+        "end": "\"\"\"",
+        "start": "\"\"\""
       }
     ]
   },
@@ -3940,8 +4181,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       }
     ]
   },
@@ -3957,6 +4198,7 @@
     ]
   },
   "Korn Shell": {
+    "heredoc": true,
     "complexitychecks": [
       "for ",
       "for(",
@@ -3976,8 +4218,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -4017,6 +4259,19 @@
       {
         "end": "\"",
         "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      },
+      {
+        "end": "`",
+        "start": "`"
+      },
+      {
+        "end": "\"\"\"",
+        "ignoreEscape": true,
+        "start": "\"\"\""
       }
     ]
   },
@@ -4077,24 +4332,23 @@
     "nestedmultiline": true,
     "quotes": [
       {
+        "ignoreEscape": true,
+        "end": "\"",
+        "start": "r\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"#",
+        "start": "r#\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"##",
+        "start": "r##\""
+      },
+      {
         "end": "\"",
         "start": "\""
-      },
-      {
-        "end": "\\\"",
-        "start": "\\\""
-      },
-      {
-        "end": "#\\\"",
-        "start": "\\\"#"
-      },
-      {
-        "end": "r##\\\"",
-        "start": "\\\"##"
-      },
-      {
-        "end": "r#\\\"",
-        "start": "\\\"#"
       }
     ]
   },
@@ -4239,6 +4493,42 @@
     "multi_line": [],
     "quotes": []
   },
+  "Liquid": {
+    "complexitychecks": [
+      "{% if ",
+      "{%- if ",
+      "{% elsif ",
+      "{%- elsif ",
+      "{% else ",
+      "{%- else ",
+      "{% unless ",
+      "{%- unless ",
+      "{% when ",
+      "{%- when ",
+      "{% for ",
+      "{%- for ",
+      "{% tablerow ",
+      "{%- tablerow "
+    ],
+    "extensions": ["liquid"],
+    "line_comment": ["{% #", "{%- #", "{%#", "{%-#"],
+    "multi_line": [
+      ["{% comment %}", "{% endcomment %}"],
+      ["{%- comment -%}", "{%- endcomment -%}"],
+      ["{% doc %}", "{% enddoc %}"],
+      ["{%- doc -%}", "{%- enddoc -%}"],
+      ["<!--", "-->"]
+    ],
+    "quotes": []
+  },
+  "Lispex": {
+    "complexitychecks": ["if ", "cond ", "when ", "unless ", "guard "],
+    "extensions": ["lspx"],
+    "line_comment": [";"],
+    "multi_line": [["#|", "|#"]],
+    "nestedmultiline": true,
+    "quotes": [{"start": "\"", "end": "\""}]
+  },
   "Lisp": {
     "complexitychecks": [
       "for ",
@@ -4338,8 +4628,8 @@
         "start": "'"
       },
       {
-        "end": "[[",
-        "start": "]]",
+        "end": "]]",
+        "start": "[[",
         "ignoreEscape": true
       }
     ],
@@ -4388,8 +4678,8 @@
         "start": "`"
       },
       {
-        "end": "[[",
-        "start": "]]",
+        "end": "]]",
+        "start": "[[",
         "ignoreEscape": true
       }
     ],
@@ -4426,8 +4716,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -4473,7 +4763,7 @@
       "fprintf("
     ],
     "line_comment": ["%"],
-    "multi_line": [["%{", "}%"]],
+    "multi_line": [["%{", "%}"]],
     "quotes": [
       {
         "end": "'",
@@ -4752,6 +5042,7 @@
     ],
     "extensions": ["metal"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -4883,7 +5174,7 @@
       "== ",
       "!= "
     ],
-    "extensions": ["mojo"],
+    "extensions": ["mojo", "🔥"],
     "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
@@ -4897,8 +5188,23 @@
       },
       {
         "ignoreEscape": true,
+        "end": "'",
+        "start": "r'"
+      },
+      {
+        "ignoreEscape": true,
         "end": "\"",
         "start": "r\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "'",
+        "start": "R'"
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"",
+        "start": "R\""
       },
       {
         "end": "\"",
@@ -4908,6 +5214,21 @@
         "ignoreEscape": true,
         "end": "\"",
         "start": "rt\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"",
+        "start": "tr\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"",
+        "start": "rT\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"",
+        "start": "tR\""
       },
       {
         "docString": true,
@@ -4933,8 +5254,44 @@
       },
       {
         "docString": true,
+        "ignoreEscape": true,
+        "end": "\"\"\"",
+        "start": "R\"\"\""
+      },
+      {
+        "docString": true,
+        "ignoreEscape": true,
+        "end": "'''",
+        "start": "R'''"
+      },
+      {
+        "docString": true,
         "end": "\"\"\"",
         "start": "t\"\"\""
+      },
+      {
+        "docString": true,
+        "ignoreEscape": true,
+        "end": "\"\"\"",
+        "start": "rt\"\"\""
+      },
+      {
+        "docString": true,
+        "ignoreEscape": true,
+        "end": "\"\"\"",
+        "start": "tr\"\"\""
+      },
+      {
+        "docString": true,
+        "ignoreEscape": true,
+        "end": "\"\"\"",
+        "start": "rT\"\"\""
+      },
+      {
+        "docString": true,
+        "ignoreEscape": true,
+        "end": "\"\"\"",
+        "start": "tR\"\"\""
       }
     ]
   },
@@ -5037,12 +5394,8 @@
     "multi_line": [["{{!", "}}"]],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
-      },
-      {
-        "end": "'",
-        "start": "'"
+        "end": "\"",
+        "start": "\""
       }
     ]
   },
@@ -5126,15 +5479,20 @@
     ],
     "extensions": ["nim"],
     "line_comment": ["#"],
-    "multi_line": [],
+    "multi_line": [["##[", "]##"], ["#[", "]#"]],
+    "nestedmultiline": true,
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
-        "end": "\\\"\\\"\\\"",
-        "start": "\\\"\\\"\\\""
+        "end": "\"\"\"",
+        "start": "\"\"\""
+      },
+      {
+        "end": "'",
+        "start": "'\""
       }
     ]
   },
@@ -5205,10 +5563,15 @@
     "extensions": ["ml", "mli"],
     "line_comment": [],
     "multi_line": [["(*", "*)"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
         "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'\""
       }
     ]
   },
@@ -5231,7 +5594,7 @@
       {
         "pattern": "(?m)^\\s*(@(interface|class|protocol|property|end|synchronised|selector|implementation)\\b|#import\\s+.+\\.h[\">])",
         "literals": ["@interface", "@class", "@protocol", "@property", "@end", "@synchronised", "@selector", "@implementation", "#import"],
-        "anchored": false
+        "anchored": true
       }
     ],
     "keywords": [
@@ -5252,6 +5615,7 @@
       "//"
     ],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -5276,6 +5640,7 @@
     ],
     "extensions": ["mm"],
     "line_comment": ["//"],
+    "linesplice": true,
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
@@ -5302,6 +5667,7 @@
     "extensions": ["odin"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
@@ -5443,8 +5809,8 @@
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -5485,6 +5851,7 @@
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
+        "ignoreEscape": true,
         "end": "'",
         "start": "'"
       }
@@ -5619,7 +5986,13 @@
     ],
     "extensions": ["pl", "plx", "pm"],
     "line_comment": ["#"],
-    "multi_line": [["=pod", "=cut"]],
+    "multi_line": [
+      ["=pod", "=cut"],
+      ["=head1", "=cut"],
+      ["=head2", "=cut"],
+      ["=head3", "=cut"],
+      ["=head4", "=cut"]
+    ],
     "quotes": [
       {
         "end": "\"",
@@ -5680,17 +6053,38 @@
         "start": "\""
       },
       {
-        "end": "#\"",
-        "start": "\"#"
-      },
-      {
-        "end": "##\"",
-        "start": "\"##"
-      },
-      {
         "end": "\"\"\"",
-        "ignoreEscape": true,
         "start": "\"\"\""
+      },
+      {
+        "end": "\"\"\"#",
+        "ignoreEscape": true,
+        "start": "#\"\"\""
+      },
+      {
+        "end": "\"#",
+        "ignoreEscape": true,
+        "start": "#\""
+      },
+      {
+        "end": "\"\"\"##",
+        "ignoreEscape": true,
+        "start": "##\"\"\""
+      },
+      {
+        "end": "\"##",
+        "ignoreEscape": true,
+        "start": "##\""
+      },
+      {
+        "end": "\"\"\"###",
+        "ignoreEscape": true,
+        "start": "###\"\"\""
+      },
+      {
+        "end": "\"###",
+        "ignoreEscape": true,
+        "start": "###\""
       }
     ]
   },
@@ -5760,8 +6154,8 @@
         "start": "\""
       },
       {
-        "end": "\\\"\\\"\\\"",
-        "start": "\\\"\\\"\\\""
+        "end": "\"\"\"",
+        "start": "\"\"\""
       }
     ]
   },
@@ -5823,6 +6217,7 @@
       "-contains",
       "-notcontains"
     ],
+    "escape": "`",
     "extensions": ["ps1", "psm1"],
     "line_comment": ["#"],
     "multi_line": [["<#", "#>"]],
@@ -5830,6 +6225,16 @@
       {
         "end": "\"",
         "start": "\""
+      },
+      {
+        "end": "'",
+        "ignoreEscape": true,
+        "start": "'"
+      },
+      {
+        "end": "'@",
+        "ignoreEscape": true,
+        "start": "@'"
       }
     ]
   },
@@ -5854,6 +6259,29 @@
       {
         "end": "\"",
         "start": "\""
+      }
+    ]
+  },
+  "ProGuard": {
+    "complexitychecks": [],
+    "extensions": ["pro"],
+    "heuristics": [
+      {
+        "pattern": "(?m)^\\s*-(keep|dont|assume|optimizations|repackageclasses|flattenpackagehierarchy|renamesourcefileattribute|allowaccessmodification|ignorewarnings|printmapping|applymapping|include|injars|outjars|libraryjars)",
+        "literals": ["-keep", "-dont", "-assume", "-optimizations", "-repackageclasses", "-flattenpackagehierarchy", "-renamesourcefileattribute", "-allowaccessmodification", "-ignorewarnings", "-printmapping", "-applymapping", "-include", "-injars", "-outjars", "-libraryjars"],
+        "anchored": true
+      }
+    ],
+    "line_comment": ["#"],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
       }
     ]
   },
@@ -5905,7 +6333,12 @@
     "extensions": ["proto"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
-    "quotes": []
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
   },
   "Puppet": {
     "complexitychecks": [
@@ -5926,8 +6359,8 @@
     "multi_line": [["=begin", "=end"]],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -5952,6 +6385,7 @@
     "extensions": ["purs"],
     "line_comment": ["--"],
     "multi_line": [["{-", "-}"]],
+    "nestedmultiline": true,
     "quotes": []
   },
   "Python": {
@@ -6119,6 +6553,24 @@
       }
     ]
   },
+  "Qt Translation Source": {
+    "extensions": ["ts"],
+    "heuristics": [
+      {
+        "pattern": "<\\?xml",
+        "literals": ["<?xml", "<!DOCTYPE TS>", "<TS version="],
+        "anchored": false
+      }
+    ],
+    "line_comment": [],
+    "multi_line": [["<!--", "-->"]],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
+  },
   "R": {
     "complexitychecks": [
       "for ",
@@ -6138,6 +6590,22 @@
     "multi_line": [],
     "quotes": [],
     "shebangs": ["Rscript"]
+  },
+  "RPG": {
+    "complexitychecks": ["COMP", "IF", "ELSEIF", "WHEN", "DOW", "DOU", "FOR", "IFEQ", "IFNE", "IFLT", "IFLE", "IFGT", "IFGE", "WHENEQ", "WHENNE", "WHENLT", "WHENLE", "WHENGT", "WHENGE", "DOWEQ", "DOWNE", "DOWLT", "DOWLE", "DOWGT", "DOWGE", "DOUEQ", "DOUNE", "DOULT", "DOULE", "DOUGT", "DOUGE", "CABEQ", "CABNE", "CABLT", "CABLE", "CABGT", "CABGE", "CASEQ", "CASNE", "CASLT", "CASLE", "CASGT", "CASGE"],
+    "caseinsensitive": true,
+    "extensions": ["rpg"],
+    "line_comment": [],
+    "multi_line": [],
+    "quotes": [{"start": "'", "end": "'", "ignoreEscape": true}]
+  },
+  "RPGLE": {
+    "complexitychecks": ["COMP", "IF", "ELSEIF", "WHEN", "DOW", "DOU", "FOR", "IFEQ", "IFNE", "IFLT", "IFLE", "IFGT", "IFGE", "WHENEQ", "WHENNE", "WHENLT", "WHENLE", "WHENGT", "WHENGE", "DOWEQ", "DOWNE", "DOWLT", "DOWLE", "DOWGT", "DOWGE", "DOUEQ", "DOUNE", "DOULT", "DOULE", "DOUGT", "DOUGE", "CABEQ", "CABNE", "CABLT", "CABLE", "CABGT", "CABGE", "CASEQ", "CASNE", "CASLT", "CASLE", "CASGT", "CASGE"],
+    "caseinsensitive": true,
+    "extensions": ["rpgle"],
+    "line_comment": ["//"],
+    "multi_line": [],
+    "quotes": [{"start": "'", "end": "'", "ignoreEscape": true}]
   },
   "Racket": {
     "complexitychecks": [
@@ -6159,7 +6627,7 @@
     ],
     "extensions": ["rkt"],
     "line_comment": [";"],
-    "multi_line": [["|#", "#|"]],
+    "multi_line": [["#|", "|#"]],
     "nestedmultiline": true,
     "quotes": [
       {
@@ -6189,8 +6657,8 @@
     "multi_line": [["=begin", "=end"]],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -6280,8 +6748,8 @@
     ],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -6496,8 +6964,8 @@
     "multi_line": [["=begin", "=end"]],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -6647,6 +7115,10 @@
         "start": "br########\""
       },
       {
+        "end": "'",
+        "start": "b'"
+      },
+      {
         "end": "\"",
         "start": "\""
       }
@@ -6789,10 +7261,19 @@
     "multi_line": [["/*", "*/"]],
     "quotes": [
       {
+        "ignoreEscape": true,
         "end": "'",
         "start": "'"
       }
     ]
+  },
+  "SQLRPGLE": {
+    "complexitychecks": ["COMP", "IF", "ELSEIF", "WHEN", "DOW", "DOU", "FOR", "IFEQ", "IFNE", "IFLT", "IFLE", "IFGT", "IFGE", "WHENEQ", "WHENNE", "WHENLT", "WHENLE", "WHENGT", "WHENGE", "DOWEQ", "DOWNE", "DOWLT", "DOWLE", "DOWGT", "DOWGE", "DOUEQ", "DOUNE", "DOULT", "DOULE", "DOUGT", "DOUGE", "CABEQ", "CABNE", "CABLT", "CABLE", "CABGT", "CABGE", "CASEQ", "CASNE", "CASLT", "CASLE", "CASGT", "CASGE"],
+    "caseinsensitive": true,
+    "extensions": ["sqlrpgle"],
+    "line_comment": ["//", "--"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [{"start": "'", "end": "'", "ignoreEscape": true}]
   },
   "SRecode Template": {
     "complexitychecks": [
@@ -6882,10 +7363,28 @@
     "extensions": ["sc", "scala"],
     "line_comment": ["//"],
     "multi_line": [["/*", "*/"]],
+    "nestedmultiline": true,
     "quotes": [
       {
         "end": "\"",
         "start": "\""
+      },
+      {
+        "end": "\"\"\"",
+        "ignoreEscape": true,
+        "start": "\"\"\""
+      },
+      {
+        "end": "'",
+        "start": "'\""
+      },
+      {
+        "end": "`",
+        "start": "`"
+      },
+      {
+        "end": "'",
+        "start": "'`"
       }
     ]
   },
@@ -6966,16 +7465,16 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
         "start": "'"
       },
       {
-        "end": "\\\"\\\"\\\"",
-        "start": "\\\"\\\"\\\""
+        "end": "\"\"\"",
+        "start": "\"\"\""
       },
       {
         "end": "'''",
@@ -7010,6 +7509,7 @@
     ]
   },
   "Shell": {
+    "heredoc": true,
     "complexitychecks": [
       "for ",
       "for(",
@@ -7029,8 +7529,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -7240,8 +7740,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       }
     ]
   },
@@ -7444,6 +7944,55 @@
       {
         "end": "\"",
         "start": "\""
+      },
+      {
+        "end": "\"\"\"",
+        "start": "\"\"\""
+      },
+      {
+        "end": "\"#",
+        "ignoreEscape": true,
+        "start": "#\""
+      },
+      {
+        "end": "\"\"\"#",
+        "ignoreEscape": true,
+        "start": "#\"\"\""
+      },
+      {
+        "end": "\"#",
+        "ignoreEscape": true,
+        "start": "#\"\"\"#"
+      },
+      {
+        "end": "\"##",
+        "ignoreEscape": true,
+        "start": "##\""
+      },
+      {
+        "end": "\"\"\"##",
+        "ignoreEscape": true,
+        "start": "##\"\"\""
+      },
+      {
+        "end": "\"##",
+        "ignoreEscape": true,
+        "start": "##\"\"\"##"
+      },
+      {
+        "end": "\"###",
+        "ignoreEscape": true,
+        "start": "###\""
+      },
+      {
+        "end": "\"\"\"###",
+        "ignoreEscape": true,
+        "start": "###\"\"\""
+      },
+      {
+        "end": "\"###",
+        "ignoreEscape": true,
+        "start": "###\"\"\"###"
       }
     ]
   },
@@ -7539,8 +8088,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",
@@ -7557,36 +8106,26 @@
     "quotes": []
   },
   "TOML": {
-    "complexitychecks": [
-      "for ",
-      "for(",
-      "if ",
-      "if(",
-      "switch ",
-      "while ",
-      "else ",
-      "|| ",
-      "&& ",
-      "!= ",
-      "== "
-    ],
+    "complexitychecks": [],
     "extensions": ["toml"],
     "line_comment": ["#"],
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
+        "ignoreEscape": true,
         "end": "'",
         "start": "'"
       },
       {
-        "end": "\\\"\\\"\\\"",
-        "start": "\\\"\\\"\\\""
+        "end": "\"\"\"",
+        "start": "\"\"\""
       },
       {
+        "ignoreEscape": true,
         "end": "'''",
         "start": "'''"
       }
@@ -7780,7 +8319,12 @@
     "extensions": ["tf", "tfvars", "tf.json"],
     "line_comment": ["#", "//"],
     "multi_line": [["/*", "*/"]],
-    "quotes": []
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      }
+    ]
   },
   "Textile": {
     "complexitychecks": [],
@@ -7817,6 +8361,16 @@
       }
     ]
   },
+  "Topaz": {
+    "complexitychecks": ["if ", "if(", "for ", "for(", "while ", "while(", "case ", "&&", "||"],
+    "extensions": ["tpz"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
+    "quotes": [
+      {"start": "\"\"\"", "end": "\"\"\""},
+      {"start": "\"", "end": "\""}
+    ]
+  },
   "Treetop": {
     "complexitychecks": [
       "for ",
@@ -7847,6 +8401,13 @@
   "Twig Template": {
     "complexitychecks": ["{% for ", "{% if ", "{% else ", "{% elseif "],
     "extensions": ["twig"],
+    "line_comment": [],
+    "multi_line": [["{#", "#}"]],
+    "quotes": []
+  },
+  "Txtar": {
+    "complexitychecks": [],
+    "extensions": ["txtar"],
     "line_comment": [],
     "multi_line": [],
     "quotes": []
@@ -7949,8 +8510,8 @@
     "nestedmultiline": true,
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       }
     ]
   },
@@ -8359,16 +8920,21 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
-      },
-      {
         "end": "'",
         "start": "'"
       }
     ]
   },
   "Visual Basic": {
+    "codetokens": [
+      "End If",
+      "Exit For",
+      "Continue For",
+      "End While",
+      "Exit While",
+      "Continue While",
+      "Select Case"
+    ],
     "complexitychecks": [
       "for ",
       "for(",
@@ -8381,19 +8947,31 @@
       "|| ",
       "&& ",
       "!= ",
-      "== "
+      "== ",
+      "For ",
+      "If ",
+      "If(",
+      "ElseIf ",
+      "While ",
+      "Until ",
+      "Case ",
+      "AndAlso ",
+      "OrElse "
     ],
+    "doubledquote": true,
     "extensions": ["vb"],
-    "line_comment": ["'"],
+    "line_comment": ["'", "REM", "Rem", "rem"],
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "ignoreEscape": true,
+        "start": "\""
       }
     ]
   },
   "Visual Basic for Applications": {
+    "codetokens": ["End If", "Exit For", "Select Case"],
     "complexitychecks": [
       "for ",
       "for(",
@@ -8406,15 +8984,26 @@
       "|| ",
       "&& ",
       "!= ",
-      "== "
+      "== ",
+      "For ",
+      "If ",
+      "If(",
+      "ElseIf ",
+      "While ",
+      "Until ",
+      "Case ",
+      "And ",
+      "Or "
     ],
+    "doubledquote": true,
     "extensions": ["cls"],
-    "line_comment": ["'"],
+    "line_comment": ["'", "REM", "Rem", "rem"],
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "ignoreEscape": true,
+        "start": "\""
       }
     ]
   },
@@ -8439,10 +9028,6 @@
       {
         "end": "\"",
         "start": "\""
-      },
-      {
-        "end": "'",
-        "start": "'"
       }
     ]
   },
@@ -8464,9 +9049,13 @@
       "if ",
       "if(",
       "switch ",
+      "switch(",
       "while ",
       "while(",
+      "loop ",
+      "loop{",
       "else ",
+      "else{",
       "@if(",
       "@elif(",
       "|| ",
@@ -8476,7 +9065,8 @@
     ],
     "extensions": ["wesl"],
     "line_comment": ["//"],
-    "multi_line": [["/*", "*/"]]
+    "multi_line": [["/*", "*/"]],
+    "nestedmultiline": true
   },
   "WebGPU Shading Language": {
     "complexitychecks": [
@@ -8485,9 +9075,13 @@
       "if ",
       "if(",
       "switch ",
+      "switch(",
       "while ",
       "while(",
+      "loop ",
+      "loop{",
       "else ",
+      "else{",
       "|| ",
       "&& ",
       "!= ",
@@ -8495,7 +9089,8 @@
     ],
     "extensions": ["wgsl"],
     "line_comment": ["//"],
-    "multi_line": [["/*", "*/"]]
+    "multi_line": [["/*", "*/"]],
+    "nestedmultiline": true
   },
   "Windows Resource-Definition Script": {
     "extensions": ["rc"],
@@ -8667,8 +9262,8 @@
         "start": "\""
       },
       {
-        "end": "[[",
-        "start": "]]",
+        "end": "]]",
+        "start": "[[",
         "ignoreEscape": true
       }
     ]
@@ -8802,8 +9397,12 @@
     "line_comment": ["//"],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
       },
       {
         "end": "\n",
@@ -8828,6 +9427,7 @@
     "multi_line": [["/*", "*/"]]
   },
   "Zsh": {
+    "heredoc": true,
     "complexitychecks": [
       "for ",
       "for(",
@@ -8847,8 +9447,8 @@
     "multi_line": [],
     "quotes": [
       {
-        "end": "\\\"",
-        "start": "\\\""
+        "end": "\"",
+        "start": "\""
       },
       {
         "end": "'",

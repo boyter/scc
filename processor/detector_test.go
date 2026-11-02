@@ -19,6 +19,24 @@ func TestDetectLanguage(t *testing.T) {
 	AllowListExtensions = []string{}
 }
 
+func TestDetectLanguageMojoExtensions(t *testing.T) {
+	ProcessConstants()
+
+	tests := map[string]string{
+		"example.mojo": "mojo",
+		"example.🔥":    "🔥",
+	}
+	for filename, wantExtension := range tests {
+		possible, extension := DetectLanguage(filename)
+		if extension != wantExtension {
+			t.Errorf("DetectLanguage(%q) extension = %q, want %q", filename, extension, wantExtension)
+		}
+		if !slices.Contains(possible, "Mojo") {
+			t.Errorf("DetectLanguage(%q) languages = %v, want Mojo", filename, possible)
+		}
+	}
+}
+
 func TestDetectSheBangEmpty(t *testing.T) {
 	ProcessConstants()
 
@@ -381,6 +399,34 @@ func TestGuessLanguageCoq(t *testing.T) {
 
 	if res != "Coq" {
 		t.Error("Expected guessed language to have been Coq got", res)
+	}
+}
+
+func TestGuessLanguageQtTranslationSource(t *testing.T) {
+	ProcessConstants()
+
+	content := []byte(`<?xml version="1.0" ?><!DOCTYPE TS><TS version="2.1" language="ca">`)
+	res := DetermineLanguage("", "", []string{"Qt Translation Source", "TypeScript"}, content)
+	if res != "Qt Translation Source" {
+		t.Errorf("Expected guessed language to have been Qt Translation Source, got %s", res)
+	}
+}
+
+func TestGuessLanguageProGuard(t *testing.T) {
+	ProcessConstants()
+
+	possible, _ := DetectLanguage("proguard-rules.pro")
+
+	content := []byte("# Keep the models\n-keepattributes Signature\n-keep class com.example.model.** { *; }\n-dontwarn okio.**\n")
+	res := DetermineLanguage("proguard-rules.pro", "", possible, content)
+	if res != "ProGuard" {
+		t.Errorf("Expected guessed language to have been ProGuard, got %s", res)
+	}
+
+	content = []byte("% facts\n:- dynamic parent/2.\nparent(tom, bob).\ngrandparent(X, Z) :- parent(X, Y), parent(Y, Z).\n")
+	res = DetermineLanguage("family.pro", "", possible, content)
+	if res != "Prolog" {
+		t.Errorf("Expected guessed language to have been Prolog, got %s", res)
 	}
 }
 

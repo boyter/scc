@@ -268,6 +268,68 @@ func TestNewFileJobBrokenSymlink(t *testing.T) {
 	}
 }
 
+func TestNewFileJobUnsupportedSkippedByDefault(t *testing.T) {
+	ProcessConstants()
+	cleanVisitedPaths()
+	AllowListExtensions = []string{}
+	CountUnsupported = false
+
+	dir, _ := filepath.EvalSymlinks(t.TempDir())
+	file := filepath.Join(dir, "data.unknownext")
+	if err := os.WriteFile(file, []byte("one\ntwo\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	fi, _ := os.Stat(file)
+	job := newFileJob(file, "data.unknownext", fi)
+
+	if job != nil {
+		t.Error("Expected nil for unsupported file without --count-unsupported, got", job)
+	}
+}
+
+func TestNewFileJobUnsupportedCounted(t *testing.T) {
+	ProcessConstants()
+	cleanVisitedPaths()
+	AllowListExtensions = []string{}
+	CountUnsupported = true
+	defer func() { CountUnsupported = false }()
+
+	dir, _ := filepath.EvalSymlinks(t.TempDir())
+	file := filepath.Join(dir, "data.unknownext")
+	if err := os.WriteFile(file, []byte("one\ntwo\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	fi, _ := os.Stat(file)
+	job := newFileJob(file, "data.unknownext", fi)
+
+	if job == nil {
+		t.Fatal("Expected a FileJob for unsupported file with --count-unsupported, got nil")
+	}
+	if len(job.PossibleLanguages) != 1 || job.PossibleLanguages[0] != UnknownLanguage {
+		t.Errorf("Expected language %q got %v", UnknownLanguage, job.PossibleLanguages)
+	}
+
+	// It should count as plain text: lines and code populated, no comments or
+	// complexity since the Unknown category carries no language features.
+	job.Content = []byte("one\ntwo\n")
+	job.Language = DetermineLanguage(job.Filename, job.Language, job.PossibleLanguages, job.Content)
+	if job.Language != UnknownLanguage {
+		t.Errorf("Expected resolved language %q got %q", UnknownLanguage, job.Language)
+	}
+	CountStats(job)
+	if job.Lines != 2 {
+		t.Errorf("Expected 2 lines got %d", job.Lines)
+	}
+	if job.Code != 2 {
+		t.Errorf("Expected 2 code lines got %d", job.Code)
+	}
+	if job.Comment != 0 || job.Complexity != 0 {
+		t.Errorf("Expected no comments/complexity got comment=%d complexity=%d", job.Comment, job.Complexity)
+	}
+}
+
 func BenchmarkGetExtensionDifferent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 

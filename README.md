@@ -13,13 +13,14 @@ Also it has a very short name which is easy to type `scc`.
 If you don't like sloc cloc and code feel free to use the name `Succinct Code Counter`.
 
 [![Go](https://github.com/boyter/scc/actions/workflows/go.yml/badge.svg)](https://github.com/boyter/scc/actions/workflows/go.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/boyter/scc)](https://goreportcard.com/report/github.com/boyter/scc)
 [![Coverage Status](https://coveralls.io/repos/github/boyter/scc/badge.svg?branch=master)](https://coveralls.io/github/boyter/scc?branch=master)
 [![Scc Count Badge](https://sloc.xyz/github/boyter/scc/)](https://github.com/boyter/scc/)
 ![Scc count downloads](https://img.shields.io/github/downloads/boyter/scc/total?label=downloads%20%28GH%29)
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
 Licensed under MIT licence.
+
+[![Live demo by Demoshell](https://build.demoshell.com/v1/embed/badge.svg)](https://build.demoshell.com/launch?snapshot=demoshell%2Ftui%3Ascc&utm_source=badge)
 
 ## Table of Contents
 
@@ -59,11 +60,11 @@ You can install `scc` by using the standard go toolchain.
 
 To install the latest stable version of scc:
 
-`go install github.com/boyter/scc/v3@latest`
+`go install github.com/boyter/scc/v4@latest`
 
 To install a development version:
 
-`go install github.com/boyter/scc/v3@master`
+`go install github.com/boyter/scc/v4@master`
 
 Note that `scc` needs go version >= 1.25.
 
@@ -177,10 +178,13 @@ Other similar projects,
 - [gocloc](https://github.com/hhatto/gocloc) a sloc counter in Go inspired by tokei
 - [loc](https://github.com/cgag/loc) rust implementation similar to tokei but often faster
 - [loccount](https://gitlab.com/esr/loccount) Go implementation written and maintained by ESR
+- [mezura](https://github.com/subamanis/mezura) fast code counter in C++
 - [polyglot](https://github.com/vmchale/polyglot) ATS sloc counter
 - [tokei](https://github.com/XAMPPRocky/tokei) fast, accurate and written in rust
 - [sloc](https://github.com/flosse/sloc) coffeescript code counter
 - [stto](https://github.com/mainak55512/stto) new Go code counter with a focus on performance
+- [linejudge](https://github.com/loc-conformance/linejudge) conformance and differential testing suite for line counters
+- [linebench](https://github.com/loc-conformance/linebench) multi-counter performance and resource benchmark suite
 
 Interesting reading about other code counting projects tokei, loc, polyglot and loccount
 
@@ -261,8 +265,9 @@ features listed below may be missing from your installation.
 ```text
 $ scc -h
 Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.
-Version 4.0.0 (beta)
+Version 4.1.0
 Ben Boyter <ben@boyter.org> + Contributors
+https://github.com/boyter/scc
 
 Usage:
   scc [flags] [files or directories]
@@ -299,10 +304,14 @@ Examples:
     export SCC_CONFIG_PATH=~/.sccconfig
     scc --config team.sccconfig
 
+  Tune the COCOMO cost estimate, or turn it off (see https://en.wikipedia.org/wiki/COCOMO):
+    scc --avg-wage 75000 --cocomo-project-type semi-detached
+    scc --no-cocomo
+
 Flags:
       --avg-wage int                        average wage value used for basic COCOMO calculation (default 56286)
       --binary                              disable binary file detection
-      --buckets int                         time-bucket resolution for the git timeline reports (default 60) (default 60)
+      --buckets int                         time-bucket resolution for the git timeline reports (default 60)
       --by-author                           render the author rollup report (bus factor and last-toucher attribution over recent git history)
       --by-file                             display output for every file
   -m, --character                           calculate max and mean characters per line
@@ -314,6 +323,10 @@ Flags:
       --count-as string                     count extension as language [e.g. jsp:htm,chead:"C Header" maps extension jsp to html and chead to C Header]
       --count-as-pattern stringArray        count files matching a path pattern as a new named category backed by a base language [repeatable; pattern is glob by default, prefix with re: for regex; e.g. *_spec.rb:"Ruby Spec":Ruby or re:\.test\.js$:"JavaScript Tests":JavaScript]
       --count-ignore                        set to allow .gitignore and .ignore files to be counted
+      --count-unsupported                   count files with an unrecognised language under an "Unknown" category as plain text
+      --coupling                            render the change-coupling report (file pairs that change together over recent git history)
+      --coupling-for string                 blast-radius view: given a file path, show what tends to change with it over recent git history
+      --coupling-weighted                   weight coupling by file complexity so pairs of complex files rank above generated/data-file churn (implies --coupling)
       --currency-symbol string              set currency symbol (default "$")
       --debug                               enable debug output
       --depth int                           commit window size for git history reports; 0 means entire history (large repos may be slow) (default 1000)
@@ -324,6 +337,7 @@ Flags:
   -x, --exclude-ext strings                 ignore file extensions (overrides include-ext) [comma separated list: e.g. go,java,js]
   -n, --exclude-file strings                ignore files with matching names (default [package-lock.json,Cargo.lock,yarn.lock,pubspec.lock,Podfile.lock,pnpm-lock.yaml])
       --file-gc-count int                   number of files to parse before turning the GC on (default 10000)
+      --file-list-job-workers int           number of goroutine workers that turn a walked path into a job to be counted (default 8)
       --file-list-queue-size int            the size of the queue of files found and ready to be read into memory (default 8)
       --file-process-job-workers int        number of goroutine workers that process files collecting stats (default 8)
       --file-summary-job-queue-size int     the size of the queue used to hold processed file statistics before formatting (default 8)
@@ -340,6 +354,7 @@ Flags:
   -l, --languages                           print supported languages and extensions
       --large-byte-count int                number of bytes a file can contain before being removed from output (default 1000000)
       --large-line-count int                number of lines a file can contain before being removed from output (default 40000)
+      --list-counters                       print the languages that have a scanner of their own and exit
       --locomo                              enable LOCOMO (LLM Output COst MOdel) cost estimation
       --locomo-config string                LOCOMO power-user config "tokensPerLine,inputPerLine,complexityWeight,iterations,iterationWeight"
       --locomo-cycles float                 override estimated LLM iteration cycles (default: calculated from complexity)
@@ -365,6 +380,7 @@ Flags:
       --no-large                            ignore files over certain byte and line size set by large-line-count and large-byte-count
       --no-min                              ignore minified files in output (implies --min)
       --no-min-gen                          ignore minified or generated files in output (implies --min-gen)
+      --no-per-language-counters            count every language with the generic loop, rather than the scanner written for it, see --list-counters
       --no-scc-ignore                       disables .sccignore file logic
       --no-size                             remove size calculation output
   -M, --not-match stringArray               ignore files and directories matching regular expression
@@ -374,7 +390,7 @@ Flags:
       --remap-all string                    inspect every file and remap by checking for a string and remapping the language [e.g. "-*- C++ -*-":"C Header"]
       --remap-unknown string                inspect files of unknown type and remap by checking for a string and remapping the language [e.g. "-*- C++ -*-":"C Header"]
       --report string[="scc-report.html"]   write a self-contained HTML report; bare flag writes scc-report.html and prompts before overwriting, --report=path/out.html overwrites silently
-      --report-skip string                  comma-separated sections to omit (cocomo,locomo,hotspots,authors,timeline,files,uloc,linelength,card)
+      --report-skip string                  comma-separated sections to omit (cocomo,locomo,hotspots,coupling,authors,timeline,files,uloc,linelength,card)
       --report-title string                 override the repo name shown in the report banner
       --size-unit string                    set size unit [si, binary, mixed, xkcd-kb, xkcd-kelly, xkcd-imaginary, xkcd-intel, xkcd-drive, xkcd-bakers] (default "si")
       --sloccount-format                    print a more SLOCCount like COCOMO calculation
@@ -385,7 +401,7 @@ Flags:
   -u, --uloc                                calculate the number of unique lines of code (ULOC) for the project
   -v, --verbose                             verbose output
       --version                             version for scc
-  -w, --wide                                wider output with additional statistics (implies --complexity)
+  -w, --wide                                wider output with additional statistics (overrides --no-complexity)
 ```
 
 Output should look something like the below for the redis project
@@ -835,7 +851,7 @@ LOCOMO is a rough estimator with known limitations:
 
 ### Git Insight Reports
 
-In addition to counting the working tree, `scc` can run four git-aware reports over recent commit history. Each is selected by a flag and rendered as `tabular` (default), `csv`, or `json` via `--format`. All four are derived from one in-process walk of the repository - there is no `exec("git")`, so the `git` binary does not need to be on `PATH`.
+In addition to counting the working tree, `scc` can run five git-aware reports over recent commit history. Each is selected by a flag and rendered as `tabular` (default), `csv`, or `json` via `--format`. All are derived from one in-process walk of the repository - there is no `exec("git")`, so the `git` binary does not need to be on `PATH`.
 
 > **Note:** these reports are **slower** than a normal `scc` run. They walk the repository history (one diff per commit using pure-Go Myers diff via [go-git](https://github.com/go-git/go-git)) instead of just counting the current working tree. Runtime scales with `--depth` (the commit window size, default `1000`; `0` means entire history). On large repositories with deep history, expect runtimes measured in seconds to minutes rather than the millisecond-scale you get from a plain `scc` run. Use `--depth` to bound the window.
 
@@ -844,6 +860,7 @@ When no report flag is set, `scc` behaves exactly as today, these flags are stri
 | Flag | Report | Answers |
 |---|---|---|
 | `--hotspots` | Hotspots | Which files are defect-prone - high complexity × high churn. |
+| `--coupling` / `--coupling-for FILE` | Change coupling | Which files change together - hidden dependencies and blast radius. |
 | `--by-author` | Author rollup | Bus factor - who last-touched the surviving code. |
 | `--by-author --timeline` | Author timeline | How each author's activity rises and falls over time. |
 | `--timeline` | Languages over time | How the language mix shifts - rewrites, migrations. |
@@ -857,7 +874,7 @@ Shared flags for these reports:
 | `-w, --wide` | - | 109-column variant of any report (extra columns where applicable). |
 | `--no-fold-authors` | off | Disable the name + email-domain identity folding fallback applied after `.mailmap`. |
 
-`--hotspots` is mutually exclusive with `--by-author` / `--timeline`; combining them is an error. With `--by-author` set, `--timeline` switches from the author rollup to the author timeline. Alone, `--timeline` renders the languages timeline.
+Each report is standalone: `--hotspots`, `--coupling` (or `--coupling-for`), and `--by-author` / `--timeline` are mutually exclusive, and combining them is an error. `--coupling-for FILE` implies `--coupling`. With `--by-author` set, `--timeline` switches from the author rollup to the author timeline. Alone, `--timeline` renders the languages timeline.
 
 #### Hotspots - `--hotspots`
 
@@ -880,6 +897,46 @@ main.go                           Go     180       44    2,510       8     48.2
 ```
 
 Tabular output shows the top files (≈20). `--wide` adds a hotspot bar and an added-lines code-vs-comment split (`+Code%`). `--format csv|json` emits every file with a positive score along with the full per-file detail and window metadata.
+
+#### Change coupling - `--coupling` / `--coupling-for`
+
+Which files tend to change together in the same commit I.E. *temporal* coupling.
+Surfaces the "if you edit A you probably need to edit B" relationships. `Shared Commits` is how
+many commits touched both files; `Coupling` is the share of commits touching *either* file that
+touched *both*, so 100% means they never move apart. Pairs are ranked strongest first,
+and only pairs sharing at least 2 commits are reported.
+
+```text
+$ scc --coupling
+───────────────────────────────────────────────────────────────────────────────
+Change Coupling · last 1000 commits · 2019-07-24 → 2026-07-20
+───────────────────────────────────────────────────────────────────────────────
+File A                      File B                      Shared Commits Coupling
+───────────────────────────────────────────────────────────────────────────────
+languages.json              processor/constants.go                 196    67.6%
+LANGUAGES.md                languages.json                         166    61.3%
+LANGUAGES.md                processor/constants.go                 152    58.2%
+main.go                     processor/processor.go                  65    33.9%
+───────────────────────────────────────────────────────────────────────────────
+top 15 of 492 pairs · sharing ≥2 commits
+───────────────────────────────────────────────────────────────────────────────
+```
+
+`--coupling-for FILE` narrows to a single file's and what history says tends to move with it.
+
+```text
+$ scc --coupling-for processor/workers.go
+───────────────────────────────────────────────────────────────────────────────
+Change Coupling · last 1000 commits · 2019-07-24 → 2026-07-20
+───────────────────────────────────────────────────────────────────────────────
+Related File                                          Shared Commits   Coupling
+───────────────────────────────────────────────────────────────────────────────
+processor/structs.go                                              27      25.2%
+processor/workers_test.go                                         17      17.7%
+processor/processor.go                                            34      15.7%
+main.go                                                           23      13.7%
+───────────────────────────────────────────────────────────────────────────────
+```
 
 #### Author rollup - `--by-author`
 
@@ -956,7 +1013,7 @@ Totals reconcile with a plain `scc` against the current HEAD tree. CSV/JSON incl
 
 ### HTML Report
 
-`scc --report` writes a self-contained, infographic-style HTML page summarising the codebase: overview metrics, language breakdown, line-length histogram, hotspots, author rollup, language and author timelines, COCOMO / LOCOMO cost estimates, and a per-file table. The page bundles its own CSS and inline SVG — no external network requests, no JavaScript runtime dependencies — so it can be opened locally, committed to a repo, attached to a release, or hosted as a static artifact.
+`scc --report` writes a self-contained, infographic-style HTML page summarising the codebase: overview metrics, language breakdown, line-length histogram, hotspots, change coupling, author rollup, language and author timelines, COCOMO / LOCOMO cost estimates, and a per-file table. The page bundles its own CSS and inline SVG — no external network requests, no JavaScript runtime dependencies — so it can be opened locally, committed to a repo, attached to a release, or hosted as a static artifact.
 
 ```text
 $ scc --report                       # writes scc-report.html (prompts before overwriting)
@@ -969,9 +1026,9 @@ A bare `--report` is non-destructive: if `scc-report.html` already exists in the
 |---|---|
 | `--report[=path]` | Write the HTML report. Bare flag writes `scc-report.html`; explicit path overwrites silently. |
 | `--report-title NAME` | Override the repo name shown in the report banner. Defaults to the `origin` remote name or the directory basename. |
-| `--report-skip LIST` | Comma-separated sections to omit: `cocomo`, `locomo`, `hotspots`, `authors`, `timeline`, `files`, `uloc`, `linelength`, `card`. |
+| `--report-skip LIST` | Comma-separated sections to omit: `cocomo`, `locomo`, `hotspots`, `coupling`, `authors`, `timeline`, `files`, `uloc`, `linelength`, `card`. |
 
-The git-history sections (hotspots, authors, timelines) only render when the directory is a git repository; outside a repo they're omitted gracefully. The report embeds an OpenGraph share card as a `data:` URL so links unfurl on most social platforms — pass `--report-skip card` to drop it.
+The git-history sections (hotspots, coupling, authors, timelines) only render when the directory is a git repository; outside a repo they're omitted gracefully. The report embeds an OpenGraph share card as a `data:` URL so links unfurl on most social platforms — pass `--report-skip card` to drop it.
 
 ### Large File Detection
 
@@ -1289,6 +1346,21 @@ Generally `scc` will the fastest code counter compared to any I am aware of and 
 
 However, if you want greater performance and you have RAM to spare you can disable the garbage collector like the following on Linux `GOGC=-1 scc .` which should speed things up considerably. For some repositories turning off the code complexity calculation via `-c` can reduce runtime as well.
 
+#### Benchmark Standardization and Work Equivalence
+
+When comparing line counters, accounting for work equivalence is necessary for objective performance evaluation (as discussed in [LineBench](https://github.com/loc-conformance/linebench) and issue #769). By default, `scc` performs extensive analysis beyond line counting:
+- Computes cyclomatic and cognitive code complexity across all supported languages.
+- Identifies minified and generated code files.
+- Evaluates multi-language heuristics and shebang classification.
+- Computes COCOMO and LOCOMO cost and effort estimates.
+
+In contrast, minimal counters typically measure raw physical lines without complexity calculation or secondary classifications. For apples-to-apples throughput benchmarks ("equal work" runs):
+- Disable complexity analysis with `-c` or `--no-complexity`.
+- Normalize ignore-file handling (standardizing `.gitignore` and hidden file filtering across counters).
+- Align language corpora to evaluate identical file sets and byte volumes.
+
+For correctness and differential validation across counter heuristics, see [LineJudge](https://github.com/loc-conformance/linejudge), which verifies counter output against formal dialect rule specifications.
+
 Benchmarks are run on fresh 32 Core CPU Optimised Vultr Ocean Virtual Machine 2026/03/05 all done using [hyperfine](https://github.com/sharkdp/hyperfine).
 
 See <https://github.com/boyter/scc/blob/master/benchmark.sh> to see how the benchmarks are run.
@@ -1373,7 +1445,7 @@ Summary
 
 #### Sourcegraph <https://github.com/SINTEF/sourcegraph.git>
 
-Sourcegraph has gone dark since I last ran these benchmarks hence using a clone taken before this occured.
+Sourcegraph has gone dark since I last ran these benchmarks hence using a clone taken before this occurred.
 The reason for this is to track what appears to be a performance regression in tokei.
 
 ```shell
@@ -1404,7 +1476,7 @@ If you enable duplicate detection expect performance to fall by about 20% in `sc
 
 Performance is tracked for some releases and presented below.
 
-[![scc perfromance on Linux kernel](./performance-over-time.png)]
+[![scc performance on Linux kernel](./performance-over-time.png)]
 The decrease in performance from the 3.3.0 release was due to accurate .gitignore, .ignore and .gitmodule support.
 Current work is focussed on resolving this.
 
@@ -1454,7 +1526,7 @@ import (
   "fmt"
   "io/ioutil"
 
-  "github.com/boyter/scc/v3/processor"
+  "github.com/boyter/scc/v4/processor"
 )
 
 type statsProcessor struct{}
@@ -1499,7 +1571,7 @@ import (
   "fmt"
   "os"
 
-  "github.com/boyter/scc/v3/processor"
+  "github.com/boyter/scc/v4/processor"
 )
 
 func main() {
@@ -1591,7 +1663,7 @@ Add to your `claude_desktop_config.json`:
 
 #### Exposed Tools
 
-The MCP server exposes two tools:
+The MCP server exposes three tools:
 
 **`analyze`** - Count lines of code, comments, blanks and estimate complexity for a project directory or file.
 
@@ -1600,14 +1672,16 @@ The MCP server exposes two tools:
 | `path` | string | no | Directory or file path to analyze. Defaults to current directory. |
 | `sort` | string | no | Column to sort by: `files`, `name`, `lines`, `blanks`, `code`, `comments`, `complexity`, `bytes`. Default: `files`. |
 | `by_file` | boolean | no | If true, return per-file results instead of per-language summary. |
+| `limit` | number | no | Maximum number of files to return per language when `by_file` is true. Default: `10`. Set to `-1` for unlimited. |
 | `include_ext` | string | no | Comma-separated file extensions to include (e.g. `go,java,js`). |
 | `exclude_ext` | string | no | Comma-separated file extensions to exclude (e.g. `json,xml`). |
 | `no_duplicates` | boolean | no | Remove duplicate files from stats. |
 | `no_min_gen` | boolean | no | Ignore minified or generated files. |
+| `cognitive` | boolean | no | Also compute nesting-weighted cognitive complexity. Off by default, in which case the `cognitive` field is `0`. |
 | `locomo` | boolean | no | Include LOCOMO (LLM cost) estimation in results. |
 | `locomo_preset` | string | no | LOCOMO model preset: `large`, `medium`, `small`, `local`. Default: `medium`. |
 
-Results are returned as JSON with per-language breakdown (files, lines, code, comments, blanks, complexity, bytes), totals, and COCOMO cost/schedule estimates. When `locomo` is enabled, LOCOMO estimates (token counts, cost, generation time, review hours) are also included.
+Results are returned as JSON with per-language breakdown (files, lines, code, comments, blanks, complexity, cognitive, bytes), totals, and COCOMO cost/schedule estimates. When `locomo` is enabled, LOCOMO estimates (token counts, cost, generation time, review hours) are also included.
 
 **`hotspots`** - Rank the files in a git repository by hotspot score (complexity × change-frequency over recent history), surfacing the files most likely to need refactoring or close review.
 
@@ -1619,9 +1693,55 @@ Results are returned as JSON with per-language breakdown (files, lines, code, co
 
 Results are returned as JSON with the history window walked (depth, commit count, date range) and a per-file list (file, language, complexity, commits, lines changed, authors, code/comment churn, and a normalised 0–100 score). Requires `path` to be inside a git repository.
 
+**`coupling`** - Report change coupling from a git repository's history: files that historically change together. Has two modes, selected by whether `file` is set. With `file`, returns that file's blast radius - the other files that change together with it. Without `file`, returns the repo-wide all-pairs overview.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `path` | string | no | Directory inside the git repository to analyze. Defaults to current directory. |
+| `file` | string | no | Target file (as it appears at HEAD). Set it for the per-file blast-radius view; omit it for the repo-wide all-pairs report. |
+| `depth` | number | no | Maximum number of recent commits to walk. Default: `1000`. Set to `0` for unlimited. |
+| `limit` | number | no | Maximum rows to return, strongest first - coupled files in per-file mode, file pairs in all-pairs mode. Default: `50`. Set to `-1` for unlimited. |
+
+Results are returned as JSON with the history window walked. With `file`, each partner carries its shared-commit count and the directional probabilities `couple` (given you changed the target, how often the partner follows) and `reverse` (the other direction). Without `file`, each pair carries its shared-commit count and symmetric coupling degree. Requires `path` to be inside a git repository.
+
 ### Adding/Modifying Languages
 
 To add or modify a language you will need to edit the `languages.json` file in the root of the project, and then run `go generate` to build it into the application. You can then `go install` or `go build` as normal to produce the binary with your modifications.
+
+IBM i source is recognized as RPG (`.rpg`), RPGLE (`.rpgle`), SQLRPGLE
+(`.sqlrpgle`), and IBM i CL (`.clp`, `.clle`, `.cmd`). Command-source declarations
+distinguish IBM i `.cmd` files from Windows Batch files. RPG uses fixed-format rules:
+columns 1-5 are sequence numbers and an asterisk in column 7 marks a comment.
+RPGLE and SQLRPGLE use those column rules unless the first line contains
+`**FREE` beginning in column 1. They also recognize `//` comments; SQLRPGLE
+additionally recognizes `--` and `/* ... */` comments. CL recognizes
+`/* ... */` comments. Source must be exported as text in an encoding scc can read, such
+as UTF-8, with source columns preserved rather than prefixed with record metadata.
+
+DDS (`.dds`, `.dspf`, `.pf`, `.lf`, `.prtf`, `.mnudds`, `.mnucmd`) also uses
+fixed-format rules, with the form type (normally `A`) in column 6 and an asterisk
+in column 7 marking a comment. Sequence-only lines count as blank for both DDS
+and fixed-format RPG. RPG compile-time data beginning with a `**` record is
+counted as source data, without interpreting comment or string markers.
+DDS complexity counting is not defined.
+
+IBM i complexity counts decision opcodes, including conditional loops. RPGLE
+counts `IF`, `ELSEIF`, `WHEN`, `DOW`, `DOU`, and `FOR`. Fixed-format RPG also
+counts `COMP` and comparison variants of `IF`, `WHEN`, `DOW`, `DOU`, `CAB`, and `CAS`, using
+the calculation opcode field (columns 26-35 for RPGLE, 28-32 for legacy RPG).
+CL counts `IF`, `WHEN`, `DOWHILE`, `DOUNTIL`, `DOFOR`, and `MONMSG` exception
+branches. Matching is case-insensitive. Plain `DO`, closing opcodes, comments,
+strings, operands, and RPG compile-time data add nothing. Embedded SQL decisions
+are not added to the RPG count, and DDS retains zero complexity. These counts
+are decision-token estimates rather than a full control-flow analysis.
+
+COBOL defaults to fixed-format source: columns 1-6 are sequence metadata,
+column 7 is the indicator area (`*` and `/` mark comment records), and columns
+8-72 contain source. Text beyond column 72 does not contribute code lines.
+The `*>` inline comment marker is recognized outside quoted literals.
+`>>SOURCE FORMAT [IS] FREE` and `>>SOURCE FORMAT [IS] FIXED` directives switch
+the format for subsequent records. COBOL source containing NUL bytes is skipped
+by normal binary detection; use `--binary` to include it deliberately.
 
 ### Issues
 

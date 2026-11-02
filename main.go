@@ -9,7 +9,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/boyter/scc/v3/processor"
+	"github.com/boyter/scc/v4/processor"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -70,7 +70,7 @@ func main() {
 		filename := strings.TrimPrefix(os.Args[1], "@")
 		b, err := os.ReadFile(filename)
 		if err != nil {
-			fmt.Printf("Error reading flags from a file: %s\n", err)
+			fmt.Fprintf(os.Stderr, "Error reading flags from a file: %s\n", err)
 			os.Exit(1)
 		}
 		os.Args = append([]string{os.Args[0]}, parseConfigArgs(string(b), true)...)
@@ -129,7 +129,7 @@ func main() {
 	rootCmd := &cobra.Command{
 		Use:   "scc [flags] [files or directories]",
 		Short: "scc [files or directories]",
-		Long:  fmt.Sprintf("Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.\nVersion %s\nBen Boyter <ben@boyter.org> + Contributors", processor.Version),
+		Long:  fmt.Sprintf("Sloc, Cloc and Code. Count lines of code in a directory with complexity estimation.\nVersion %s\nBen Boyter <ben@boyter.org> + Contributors\nhttps://github.com/boyter/scc", processor.Version),
 		Example: `  Count the current directory:
     scc
 
@@ -159,7 +159,11 @@ func main() {
 
   Use a project config file (./.sccconfig) or a global one (precedence: global < project < CLI):
     export SCC_CONFIG_PATH=~/.sccconfig
-    scc --config team.sccconfig`,
+    scc --config team.sccconfig
+
+  Tune the COCOMO cost estimate, or turn it off (see https://en.wikipedia.org/wiki/COCOMO):
+    scc --avg-wage 75000 --cocomo-project-type semi-detached
+    scc --no-cocomo`,
 		Version: processor.Version,
 		Run: func(cmd *cobra.Command, args []string) {
 			processor.DirFilePaths = args

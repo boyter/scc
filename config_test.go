@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/boyter/scc/v3/processor"
+	"github.com/boyter/scc/v4/processor"
 	"github.com/spf13/pflag"
 )
 

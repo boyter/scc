@@ -1,0 +1,5 @@
+PGM
+/* A multiline
+   CL comment */
+SNDPGMMSG MSG('It''s /* text */')
+ENDPGM

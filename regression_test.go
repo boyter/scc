@@ -632,3 +632,44 @@ func TestRegressionConfigCannotStartMcpServer(t *testing.T) {
 		t.Errorf("config --mcp must be an inert dummy flag and let the scan run, output:\n%s", string(out))
 	}
 }
+
+// TestRegressionOutputWriteFailureExits pins the reporting contract for a failed
+// output write. -o and --format-multi used to discard the os.WriteFile error and
+// still print "results written to ..." with exit 0, so a CI step that redirected
+// scc into a path it could not create silently produced no file and passed. The
+// sibling paths (--report, --hotspots -o) already exit 1 on a write failure; -o
+// and --format-multi must do the same. runSCCDir runs scc as a subprocess, so
+// this observes the real process exit code, not just the error path.
+func TestRegressionOutputWriteFailureExits(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	// A path under a directory that does not exist: os.WriteFile cannot create it.
+	bad := filepath.Join(dir, "missing", "out.json")
+
+	cases := []struct {
+		name string
+		args []string
+	}{
+		{"output flag", []string{"-f", "json", "-o", bad}},
+		{"format multi", []string{"--format-multi", "json:" + bad}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			out, err := runSCCDir(t, dir, noGlobalConfig, tc.args...)
+			if err == nil {
+				t.Errorf("a failed write must exit non-zero, output:\n%s", out)
+			}
+			if strings.Contains(out, "results written to") {
+				t.Errorf("a failed write must not print a success message, output:\n%s", out)
+			}
+			if !strings.Contains(out, "no such file or directory") {
+				t.Errorf("a failed write must report the reason, output:\n%s", out)
+			}
+			if _, statErr := os.Stat(bad); statErr == nil {
+				t.Errorf("no file should exist at %s", bad)
+			}
+		})
+	}
+}

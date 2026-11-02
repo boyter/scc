@@ -384,7 +384,36 @@
     </table>
   </section>
   <section>
-    <h2><span class="num">05</span> Authors <span class="count">· 3 contributors</span></h2>
+    <h2><span class="num">05</span> Change coupling <span class="count">· top 3 of 3</span></h2>
+    <p class="lede">File pairs that change together in the same commits. High coupling = an implicit dependency git enforces but the code doesn't; editing one usually means editing the other.</p>
+    <table>
+      <thead>
+        <tr><th>File A</th><th>File B</th><th class="num">Shared</th><th class="num">Coupling</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="mono">internal/cache.go</td>
+          <td class="mono">internal/server.go</td>
+          <td class="num">22</td>
+          <td class="num">34.4%</td>
+        </tr>
+        <tr>
+          <td class="mono">internal/server.go</td>
+          <td class="mono">web/app.js</td>
+          <td class="num">9</td>
+          <td class="num">13.0%</td>
+        </tr>
+        <tr>
+          <td class="mono">README.md</td>
+          <td class="mono">internal/server.go</td>
+          <td class="num">6</td>
+          <td class="num">8.1%</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+  <section>
+    <h2><span class="num">06</span> Authors <span class="count">· 3 contributors</span></h2>
     <p class="lede">
       Ownership measured by line-level git blame across the analysis window.
       <span class="tag warn">Bus factor: 1</span>; Alice owns the most code in window.
@@ -429,7 +458,7 @@
     </table>
   </section>
   <section>
-    <h2><span class="num">06</span> Timeline <span class="count">· 4 buckets</span></h2>
+    <h2><span class="num">07</span> Timeline <span class="count">· 4 buckets</span></h2>
     <p class="lede">Code lines by language over the analysed history window. Sparkline trajectory per language and per author.</p>
     <table style="margin-top: 18px;">
       <thead><tr><th>Language</th><th class="num">Start</th><th class="num">Now</th><th class="num">Δ</th><th>Trajectory</th></tr></thead>
@@ -481,7 +510,7 @@
     </table>
   </section>
   <section>
-    <h2><span class="num">07</span> Cost estimate</h2>
+    <h2><span class="num">08</span> Cost estimate</h2>
     <p class="lede">Two ways to value the codebase: human-build effort (COCOMO, Boehm 1981) and machine-rebuild effort (LOCOMO, LLM regeneration model).</p>
     <h3 class="submodel">COCOMO <span class="submodel-meaning">: what it would have cost to write this from scratch with a team of developers</span></h3>
     <div class="metrics">
@@ -497,7 +526,7 @@
     </div>
   </section>
   <section>
-    <h2><span class="num">08</span> Notable files</h2>
+    <h2><span class="num">09</span> Notable files</h2>
     <p class="lede">Per-file detail for the full tree (4 files). Sorted by lines descending; first ten shown, expand to see the rest.</p>
     <table>
       <thead><tr><th>File</th><th class="num">Lines</th><th class="num">Code</th><th class="num">Comment</th><th class="num">Complexity</th><th class="num">Bytes</th><th class="num">ULOC</th></tr></thead>

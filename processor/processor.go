@@ -19,7 +19,7 @@ import (
 )
 
 // Version indicates the version of the application
-var Version = "4.0.0 (beta)"
+var Version = "4.2.0 (beta)"
 
 // Flags set via the CLI which control how the output is displayed
 
@@ -28,6 +28,12 @@ var Files = false
 
 // Languages indicates if the command line should print out the supported languages
 var Languages = false
+
+// ListCounters indicates if the command line should print out the languages that
+// have a scanner written for them rather than being counted by the generic loop.
+// Sixteen names is unreadable in a flag help string, so the flag names the count
+// and this prints the list.
+var ListCounters = false
 
 // Verbose enables verbose logging output
 var Verbose = false
@@ -110,6 +116,10 @@ var SccIgnore = false
 // CountIgnore should we count ignore files?
 var CountIgnore = false
 
+// CountUnsupported when set counts files scc does not recognise under an
+// "Unknown" category, treating them as plain text. See issue #464.
+var CountUnsupported = false
+
 // IgnoreFiles are paths to additional ignore files supplied via --ignore-file.
 // They are applied as a low priority base layer in the order supplied so a later
 // file can override an earlier one, and any in-tree .gitignore/.ignore/.sccignore
@@ -167,6 +177,10 @@ type remapConfig struct {
 
 type processorContext struct {
 	remap remapConfig
+	// summary, when set, tells the counting workers to fold their own results
+	// into it instead of sending every file down the summary channel. Only the
+	// default and wide summaries can use it; see summariseInWorkers.
+	summary *sharedSummaryTotals
 }
 
 func parseRemapRules(value string) []remapRule {
@@ -186,10 +200,25 @@ func parseRemapRules(value string) []remapRule {
 }
 
 func newRemapConfig(remapAll string, remapUnknown string) remapConfig {
-	return remapConfig{
+	c := remapConfig{
 		all:     parseRemapRules(remapAll),
 		unknown: parseRemapRules(remapUnknown),
 	}
+
+	// Load the features for every language a rule can remap to. Remapping only
+	// sets job.Language, and in lazy mode (which is every CLI run) nothing else
+	// guarantees that language was ever loaded — CountStats would then find no
+	// features and count the file as plain text, with no comments and no
+	// complexity. Done once here at setup rather than in the remap functions
+	// themselves, which run per file on the hot path.
+	for _, rule := range c.all {
+		LoadLanguageFeature(rule.language)
+	}
+	for _, rule := range c.unknown {
+		LoadLanguageFeature(rule.language)
+	}
+
+	return c
 }
 
 // MatchEngine selects how a CountRule pattern is interpreted. Glob is the
@@ -245,6 +274,10 @@ var FileListQueueSize = runtime.NumCPU()
 
 // FileProcessJobWorkers is the number of workers that process the file collecting stats
 var FileProcessJobWorkers = runtime.NumCPU() * 4
+
+// FileListJobWorkers is the number of workers that turn a path the walker found
+// into a FileJob, which is a stat and a language lookup each
+var FileListJobWorkers = runtime.NumCPU()
 
 // FileSummaryJobQueueSize is the queue used to hold processed file statistics before formatting
 var FileSummaryJobQueueSize = runtime.NumCPU()
@@ -337,6 +370,21 @@ var LargeByteCount int64 = 1000000
 
 // Hotspots toggles the hotspots git-history report
 var Hotspots = false
+
+// Coupling toggles the change-coupling git-history report (file pairs that
+// change together)
+var Coupling = false
+
+// CouplingFor, when non-empty, switches the coupling report to the
+// file-oriented "blast radius" view for the given path: what tends to change
+// when that file changes.
+var CouplingFor = ""
+
+// CouplingWeighted ranks coupling by degree × the pair's (smaller) file
+// complexity instead of raw co-change, so pairs of genuinely complex files
+// outrank generated/data-file churn. Implies Coupling. Honours the Cognitive
+// global for its complexity source, matching --hotspots.
+var CouplingWeighted = false
 
 // ByAuthor toggles the author-rollup git-history report
 var ByAuthor = false
@@ -440,9 +488,15 @@ func ProcessConstants() {
 		setupCountRules()
 	}
 
-	// Configure COCOMO setting
-	_, ok := projectType[strings.ToLower(CocomoProjectType)]
-	if !ok {
+	// Configure COCOMO setting. projectType is keyed by the canonical
+	// lowercase name, so when the selection matches a built-in type we must
+	// normalize CocomoProjectType to that lowercase key — otherwise the
+	// membership check below passes for "Organic" while the real lookups in
+	// EstimateEffort/EstimateScheduleMonths index projectType["Organic"], hit
+	// a nil slice and panic. See `scc --cocomo-project-type Organic`.
+	if _, ok := projectType[strings.ToLower(CocomoProjectType)]; ok {
+		CocomoProjectType = strings.ToLower(CocomoProjectType)
+	} else {
 		// let's see if we can turn it into a custom one
 		spl := strings.Split(CocomoProjectType, ",")
 		val := []float64{}
@@ -668,18 +722,82 @@ func LoadLanguageFeature(loadName string) {
 		return
 	}
 
-	var name string
-	var value Language
-
-	for name, value = range languageDatabase {
-		if name == loadName {
-			break
-		}
+	// A plain map lookup, not a range-with-break: ranging leaves value set to
+	// whatever the iteration happened to land on last when loadName is absent,
+	// which would register some arbitrary language's comment and complexity
+	// rules under this name. An unknown name has no features to build, so a
+	// miss must be a no-op — CountStats then treats the file as plain text.
+	value, ok := languageDatabase[loadName]
+	if !ok {
+		return
 	}
 
 	startTime := makeTimestampNano()
 	processLanguageFeature(loadName, value)
 	printTraceF("nanoseconds to build language %s features: %d", loadName, makeTimestampNano()-startTime)
+}
+
+// caseSpellings returns the tokens as written, and for a language that reads
+// its keywords in any case, every other spelling of them too. Batch and ASP
+// open a comment with REM, and mean it however it is typed.
+//
+// Expanding here rather than folding case at match time keeps the counting loop
+// exactly as it is: it walks a trie of bytes and knows nothing about letters. A
+// token of n letters becomes 2^n entries, so the expansion is refused past a
+// length that would be silly, which no comment token comes near.
+func caseSpellings(tokens []string, caseInsensitive bool) []string {
+	if !caseInsensitive {
+		return tokens
+	}
+
+	const maxLetters = 8
+
+	spellings := make([]string, 0, len(tokens))
+	for _, token := range tokens {
+		letters := 0
+		for i := 0; i < len(token); i++ {
+			if token[i] != asciiLower(token[i]) || token[i] != asciiUpper(token[i]) {
+				letters++
+			}
+		}
+
+		if letters == 0 || letters > maxLetters {
+			spellings = append(spellings, token)
+			continue
+		}
+
+		variants := []string{""}
+		for i := 0; i < len(token); i++ {
+			lower, upper := asciiLower(token[i]), asciiUpper(token[i])
+			next := make([]string, 0, len(variants)*2)
+			for _, prefix := range variants {
+				next = append(next, prefix+string(lower))
+				if upper != lower {
+					next = append(next, prefix+string(upper))
+				}
+			}
+			variants = next
+		}
+		spellings = append(spellings, variants...)
+	}
+
+	return spellings
+}
+
+func asciiLower(b byte) byte {
+	if b >= 'A' && b <= 'Z' {
+		return b + 'a' - 'A'
+	}
+
+	return b
+}
+
+func asciiUpper(b byte) byte {
+	if b >= 'a' && b <= 'z' {
+		return b - 'a' + 'A'
+	}
+
+	return b
 }
 
 func processLanguageFeature(name string, value Language) {
@@ -697,7 +815,7 @@ func processLanguageFeature(name string, value Language) {
 	stringMask := byte(0)
 	processMask := byte(0)
 
-	for _, v := range value.ComplexityChecks {
+	for _, v := range caseSpellings(value.ComplexityChecks, value.CaseInsensitive) {
 		complexityMask |= v[0]
 		complexityTrie.Insert(TComplexity, []byte(v))
 		if !Complexity {
@@ -719,7 +837,7 @@ func processLanguageFeature(name string, value Language) {
 		postfixExcludes = append(postfixExcludes, []byte(v))
 	}
 
-	for _, v := range value.LineComment {
+	for _, v := range caseSpellings(value.LineComment, value.CaseInsensitive) {
 		singleLineCommentMask |= v[0]
 		slCommentTrie.Insert(TSlcomment, []byte(v))
 		tokenTrie.Insert(TSlcomment, []byte(v))
@@ -739,6 +857,16 @@ func processLanguageFeature(name string, value Language) {
 		tokenTrie.InsertClose(TString, []byte(v.Start), []byte(v.End))
 	}
 	processMask |= stringMask
+
+	for _, v := range value.CodeTokens {
+		tokenTrie.Insert(TCode, []byte(v))
+		processMask |= v[0]
+	}
+
+	if value.Heredoc {
+		tokenTrie.Insert(THeredoc, []byte(heredocOpener))
+		processMask |= heredocOpener[0]
+	}
 
 	for _, v := range value.Keywords {
 		keywordBytes = append(keywordBytes, []byte(v))
@@ -764,6 +892,33 @@ func processLanguageFeature(name string, value Language) {
 		heuristics = append(heuristics, CompiledHeuristic{Re: re, Literals: literals, Anchored: v.Anchored})
 	}
 
+	// A line comment spelled as a word ends where the word does, which costs a
+	// check on every token that matches. Almost no language has one, so work out
+	// here whether this one does and let the hot loop skip the check entirely.
+	escape := byte('\\')
+	if len(value.Escape) != 0 {
+		escape = value.Escape[0]
+	}
+
+	// The exact set of bytes the counting loop has to stop on, which is every
+	// byte that opens a token plus the newline and the nul. Built here once so
+	// the loop pays a single load and branch per byte instead of a mask test
+	// that nearly always passes followed by a failed trie walk.
+	tokenFirst := newTokenFirst()
+	for i := range tokenTrie.Table {
+		if tokenTrie.Table[i] != nil {
+			tokenFirst[i] = true
+		}
+	}
+
+	wordComments := false
+	for _, token := range value.LineComment {
+		if len(token) > 1 && isIdentifierContinue(token[len(token)-1]) {
+			wordComments = true
+			break
+		}
+	}
+
 	LanguageFeaturesMutex.Lock()
 	LanguageFeatures[name] = LanguageFeature{
 		Complexity:            complexityTrie,
@@ -774,12 +929,18 @@ func processLanguageFeature(name string, value Language) {
 		Strings:               stringTrie,
 		Tokens:                tokenTrie,
 		Nested:                value.NestedMultiLine,
+		LineSplice:            value.LineSplice,
+		WordComments:          wordComments,
+		CommentIsWord:         value.CommentIsWord,
+		Escape:                escape,
+		DoubledQuote:          value.DoubledQuote,
 		PostfixExcludes:       postfixExcludes,
 		ComplexityCheckMask:   complexityMask,
 		MultiLineCommentMask:  multiLineCommentMask,
 		SingleLineCommentMask: singleLineCommentMask,
 		StringCheckMask:       stringMask,
 		ProcessMask:           processMask,
+		TokenFirst:            tokenFirst,
 		Keywords:              value.Keywords,
 		KeywordBytes:          keywordBytes,
 		Heuristics:            heuristics,
@@ -817,6 +978,13 @@ func processFlags() {
 
 	if Dryness {
 		UlocMode = true
+	}
+
+	// The counters answer for their language by default. --no-per-language-counters
+	// puts every file back through the generic loop, which is the oracle they are
+	// written against and tested against.
+	if GenericCounterOnly {
+		SpecialisedCounters = false
 	}
 
 	printDebugF("Path Deny List: %v", PathDenyList)
@@ -891,9 +1059,15 @@ func Process() {
 		return
 	}
 
+	if ListCounters {
+		PrintCounters(os.Stdout)
+		return
+	}
+
 	ProcessConstants()
 	processFlags()
 	cleanVisitedPaths()
+	cleanDuplicates()
 
 	// Clean up any invalid arguments before setting everything up
 	if len(DirFilePaths) == 0 {
@@ -915,27 +1089,47 @@ func Process() {
 			fmt.Fprintf(os.Stderr, "warning: --report only analyses the first positional path (%s); other paths ignored\n", DirFilePaths[0])
 		}
 		if err := runReport(DirFilePaths); err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 		return
 	}
 
 	if Hotspots && (ByAuthor || Timeline) {
-		fmt.Println("--hotspots is mutually exclusive with --by-author / --timeline; pick one report")
+		fmt.Fprintln(os.Stderr, "--hotspots is mutually exclusive with --by-author / --timeline; pick one report")
 		os.Exit(1)
 	}
 
-	if Hotspots || ByAuthor || Timeline {
+	// --coupling-for implies the coupling report for a specific file, and
+	// --coupling-weighted is a modifier that implies the report too.
+	if CouplingFor != "" || CouplingWeighted {
+		Coupling = true
+	}
+
+	// Coupling is a standalone report — it doesn't combine with any other.
+	if Coupling && (Hotspots || ByAuthor || Timeline) {
+		fmt.Fprintln(os.Stderr, "--coupling/--coupling-for is mutually exclusive with --hotspots / --by-author / --timeline; pick one report")
+		os.Exit(1)
+	}
+
+	if Hotspots || Coupling || ByAuthor || Timeline {
 		if err := validateHistoryFlags(os.Stderr); err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 	}
 
 	if Hotspots {
 		if err := runHotspotsReport(DirFilePaths[0]); err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
+
+	if Coupling {
+		if err := runCouplingReport(DirFilePaths[0]); err != nil {
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 		return
@@ -943,7 +1137,7 @@ func Process() {
 
 	if ByAuthor && Timeline {
 		if err := runAuthorTimelineReport(DirFilePaths[0]); err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 		return
@@ -951,7 +1145,7 @@ func Process() {
 
 	if ByAuthor {
 		if err := runAuthorsReport(DirFilePaths[0]); err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 		return
@@ -959,7 +1153,7 @@ func Process() {
 
 	if Timeline {
 		if err := runLanguagesTimelineReport(DirFilePaths[0]); err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 		return
@@ -1006,11 +1200,12 @@ func Process() {
 	printDebugF("SortBy: %s", SortBy)
 	printDebugF("PathDenyList: %v", PathDenyList)
 
-	potentialFilesQueue := make(chan *gocodewalker.File, FileListQueueSize) // files that pass the .gitignore checks
-	fileListQueue := make(chan *FileJob, FileListQueueSize)                 // Files ready to be read from disk
-	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)     // Files ready to be summarised
+	potentialFilesQueue := make(chan []*gocodewalker.File, FileListQueueSize) // files that pass the .gitignore checks
+	fileListQueue := make(chan *FileJob, FileListQueueSize)                   // Files ready to be read from disk
+	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)       // Files ready to be summarised
 
-	fileWalker := gocodewalker.NewParallelFileWalker(dirPaths, potentialFilesQueue)
+	fileWalker := gocodewalker.NewParallelFileWalker(dirPaths, nil)
+	fileWalker.SetFileBatchQueue(potentialFilesQueue)
 	fileWalker.SetErrorHandler(func(e error) bool {
 		printError(e.Error())
 		return true
@@ -1046,45 +1241,17 @@ func Process() {
 		}
 	}()
 
-	go func() {
-		for _, f := range filePaths {
-			fileInfo, err := os.Lstat(f)
-			if err != nil {
-				continue
-			}
+	startFileJobProducer(potentialFilesQueue, filePaths, excludePathRegexes, fileListQueue)
 
-			fileJob := newFileJob(f, f, fileInfo)
-			if fileJob != nil {
-				fileListQueue <- fileJob
-			}
-		}
-
-		for fi := range potentialFilesQueue {
-			shouldExclude := false
-			for _, re := range excludePathRegexes {
-				if re.MatchString(fi.Location) {
-					shouldExclude = true
-					break
-				}
-			}
-			if shouldExclude {
-				continue
-			}
-
-			fileInfo, err := os.Lstat(fi.Location)
-			if err != nil {
-				continue
-			}
-
-			if !fileInfo.IsDir() {
-				fileJob := newFileJob(fi.Location, fi.Filename, fileInfo)
-				if fileJob != nil {
-					fileListQueue <- fileJob
-				}
-			}
-		}
-		close(fileListQueue)
-	}()
+	// Where the output is one of the summaries that only ever prints per
+	// language totals, the workers add up their own results and merge once each
+	// at the end. That deletes a channel send and a channel receive per file
+	// from a stage where the receiver is a single goroutine, which is the
+	// difference between 86,000 handovers and one per worker.
+	if summariseInWorkers() {
+		ctx.summary = newSharedSummaryTotals()
+		workerSummary = ctx.summary
+	}
 
 	go ctx.fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
 
@@ -1092,7 +1259,12 @@ func Process() {
 	if FileOutput == "" {
 		fmt.Print(result)
 	} else {
-		_ = os.WriteFile(FileOutput, []byte(result), 0644)
+		// A failed write must not report success: follow the --report path
+		// above and exit non-zero with the reason on stderr.
+		if err := os.WriteFile(FileOutput, []byte(result), 0644); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 		fmt.Println("results written to " + FileOutput)
 	}
 }

@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/boyter/gocodewalker"
-	"github.com/boyter/scc/v3/processor"
+	"github.com/boyter/scc/v4/processor"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -344,6 +344,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.BoolVar(boolVar(&processor.GitIgnore), "no-gitignore", false, "disables .gitignore file logic")
 	flags.BoolVar(boolVar(&processor.GitModuleIgnore), "no-gitmodule", false, "disables .gitmodules file logic")
 	flags.BoolVar(boolVar(&processor.CountIgnore), "count-ignore", false, "set to allow .gitignore and .ignore files to be counted")
+	flags.BoolVar(boolVar(&processor.CountUnsupported), "count-unsupported", false, "count files with an unrecognised language under an \"Unknown\" category as plain text")
 	flags.StringArrayVar(sliceVar(&processor.IgnoreFiles), "ignore-file", nil, "path to an additional gitignore-format ignore file, applied from the scan root; repeat to add more, later files and any in-tree ignore files take precedence")
 	flags.BoolVar(boolVar(&processor.Debug), "debug", false, "enable debug output")
 	// Registered with an empty default; the real default is merged back post-parse.
@@ -351,6 +352,9 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.IntVar(intVar(&processor.GcFileCount), "file-gc-count", 10000, "number of files to parse before turning the GC on")
 	flags.IntVar(intVar(&processor.FileListQueueSize), "file-list-queue-size", runtime.NumCPU(), "the size of the queue of files found and ready to be read into memory")
 	flags.IntVar(intVar(&processor.FileProcessJobWorkers), "file-process-job-workers", runtime.NumCPU(), "number of goroutine workers that process files collecting stats")
+	flags.BoolVar(boolVar(&processor.GenericCounterOnly), "no-per-language-counters", false, "count every language with the generic loop, rather than the scanner written for it, see --list-counters")
+	flags.BoolVar(boolVar(&processor.ListCounters), "list-counters", false, "print the languages that have a scanner of their own and exit")
+	flags.IntVar(intVar(&processor.FileListJobWorkers), "file-list-job-workers", runtime.NumCPU(), "number of goroutine workers that turn a walked path into a job to be counted")
 	flags.IntVar(intVar(&processor.FileSummaryJobQueueSize), "file-summary-job-queue-size", runtime.NumCPU(), "the size of the queue used to hold processed file statistics before formatting")
 	flags.IntVar(intVar(&processor.DirectoryWalkerJobWorkers), "directory-walker-job-workers", 8, "controls the maximum number of workers which will walk the directory tree")
 	flags.StringVarP(strVar(&processor.Format), "format", "f", "tabular", "set output format [tabular, wide, json, json2, csv, csv-stream, cloc-yaml, html, html-table, sql, sql-insert, openmetrics]")
@@ -362,7 +366,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	// ReportOut to processor.DefaultReportName to tell "bare flag" apart from an
 	// explicit path, so the two must stay in sync.
 	flags.Lookup("report").NoOptDefVal = processor.DefaultReportName
-	flags.StringVar(strVar(&processor.ReportSkip), "report-skip", "", "comma-separated sections to omit (cocomo,locomo,hotspots,authors,timeline,files,uloc,linelength,card)")
+	flags.StringVar(strVar(&processor.ReportSkip), "report-skip", "", "comma-separated sections to omit ("+strings.Join(processor.ReportSkipSections, ",")+")")
 	flags.StringVar(strVar(&processor.ReportTitle), "report-title", "", "override the repo name shown in the report banner")
 	flags.StringSliceVarP(sliceVar(&processor.AllowListExtensions), "include-ext", "i", []string{}, "limit to file extensions [comma separated list: e.g. go,java,js]")
 	flags.StringSliceVarP(sliceVar(&processor.ExcludeListExtensions), "exclude-ext", "x", []string{}, "ignore file extensions (overrides include-ext) [comma separated list: e.g. go,java,js]")
@@ -429,7 +433,7 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.StringVarP(strVar(&processor.SortBy), "sort", "s", "files", "column to sort by [files, name, lines, blanks, code, comments, complexity]")
 	flags.BoolVarP(boolVar(&processor.Trace), "trace", "t", false, "enable trace output (not recommended when processing multiple files)")
 	flags.BoolVarP(boolVar(&processor.Verbose), "verbose", "v", false, "verbose output")
-	flags.BoolVarP(boolVar(&processor.More), "wide", "w", false, "wider output with additional statistics (implies --complexity)")
+	flags.BoolVarP(boolVar(&processor.More), "wide", "w", false, "wider output with additional statistics (overrides --no-complexity)")
 	flags.BoolVar(boolVar(&processor.NoLarge), "no-large", false, "ignore files over certain byte and line size set by large-line-count and large-byte-count")
 	flags.BoolVar(boolVar(&processor.IncludeSymLinks), "include-symlinks", false, "if set will count symlink files")
 	flags.Int64Var(int64Var(&processor.LargeLineCount), "large-line-count", 40000, "number of lines a file can contain before being removed from output")
@@ -454,11 +458,15 @@ func registerFlags(flags *pflag.FlagSet, b *flagBindings) {
 	flags.Float64Var(floatVar(&processor.LocomoTPS), "locomo-tps", 0, "LOCOMO output tokens per second (overrides preset)")
 	flags.Float64Var(floatVar(&processor.LocomoCyclesOverride), "locomo-cycles", 0, "override estimated LLM iteration cycles (default: calculated from complexity)")
 	flags.BoolVar(boolVar(&processor.Hotspots), "hotspots", false, "render the hotspots report (files ranked by complexity × change frequency over recent git history)")
+	flags.BoolVar(boolVar(&processor.Coupling), "coupling", false, "render the change-coupling report (file pairs that change together over recent git history)")
+	flags.StringVar(strVar(&processor.CouplingFor), "coupling-for", "", "blast-radius view: given a file path, show what tends to change with it over recent git history")
+	flags.BoolVar(boolVar(&processor.CouplingWeighted), "coupling-weighted", false, "weight coupling by file complexity so pairs of complex files rank above generated/data-file churn (implies --coupling)")
 	flags.BoolVar(boolVar(&processor.ByAuthor), "by-author", false, "render the author rollup report (bus factor and last-toucher attribution over recent git history)")
 	flags.IntVar(intVar(&processor.HistoryDepth), "depth", 1000, "commit window size for git history reports; 0 means entire history (large repos may be slow)")
 	flags.BoolVar(boolVar(&processor.Timeline), "timeline", false, "render an over-time view of recent git history; with --by-author runs the author timeline, alone runs the languages timeline")
 	flags.IntVar(intVar(&processor.HistoryBuckets), "buckets", 60, "time-bucket resolution for the git timeline reports (default 60)")
 	flags.BoolVar(boolVar(&processor.ExpandGlobs), "expand-globs", false, "enable glob expansion on the files or directories")
+  
 	// --no-fold-authors is read back via cmd.PersistentFlags().GetBool in Run, so
 	// its bound var is irrelevant; a throwaway sink is enough in both modes.
 	flags.BoolVar(new(bool), "no-fold-authors", false, "disable the name+email-domain identity folding fallback for git author reports (mailmap still applied)")

@@ -4,10 +4,13 @@ package processor
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -327,9 +330,9 @@ func TestParseReportSkipKnownNames(t *testing.T) {
 	withReportSkipReset(t)
 
 	var warn bytes.Buffer
-	parseReportSkipTo("Cocomo, Locomo, hotspots, AUTHORS, timeline, files, uloc, linelength, card", &warn)
+	parseReportSkipTo(strings.ToUpper(strings.Join(ReportSkipSections, ", ")), &warn)
 
-	for _, name := range []string{"cocomo", "locomo", "hotspots", "authors", "timeline", "files", "uloc", "linelength", "card"} {
+	for _, name := range ReportSkipSections {
 		if !ReportSkipped(name) {
 			t.Errorf("ReportSkipped(%q) = false, want true after parseReportSkip", name)
 		}
@@ -525,14 +528,9 @@ func TestReportImplicitlyEnablesULOCAndLineLength(t *testing.T) {
 // spec 05 enumerates as recognised so a future code change can't silently
 // add or drop one without updating the spec.
 func TestReportSkipRecognisedListMatchesSpec(t *testing.T) {
-	want := []string{"cocomo", "locomo", "hotspots", "authors", "timeline", "files", "uloc", "linelength", "card"}
-	if len(reportSkipRecognised) != len(want) {
-		t.Errorf("reportSkipRecognised size = %d, want %d", len(reportSkipRecognised), len(want))
-	}
-	for _, name := range want {
-		if !reportSkipRecognised[name] {
-			t.Errorf("reportSkipRecognised missing %q", name)
-		}
+	want := []string{"cocomo", "locomo", "hotspots", "coupling", "authors", "timeline", "files", "uloc", "linelength", "card"}
+	if !slices.Equal(ReportSkipSections, want) {
+		t.Errorf("ReportSkipSections = %v, want %v", ReportSkipSections, want)
 	}
 }
 
@@ -695,6 +693,76 @@ func TestSparklinePath(t *testing.T) {
 	}
 }
 
+// TestNormZero covers the negative-zero normalisation that keeps rendered
+// coordinates byte-identical across architectures. Go may fuse `a - b*c`
+// into one multiply-add; the loong64 backend uses FNMSUBD, which computes
+// -((b*c) - a), so an exactly-zero result arrives as -0.0 and formats as
+// "-0.0" where amd64 emits "0.0". See issue #767.
+func TestNormZero(t *testing.T) {
+	negZero := math.Copysign(0, -1)
+	if got := normZero(negZero); math.Signbit(got) {
+		t.Errorf("normZero(-0.0) has the sign bit set, want +0.0")
+	}
+	if got := fmt.Sprintf("%.1f", normZero(negZero)); got != "0.0" {
+		t.Errorf("normZero(-0.0) formatted = %q, want %q", got, "0.0")
+	}
+
+	// Non-zero values pass through untouched.
+	for _, v := range []float64{-22.5, -1, 1, 22.5} {
+		if got := normZero(v); got != v {
+			t.Errorf("normZero(%v) = %v, want unchanged", v, got)
+		}
+	}
+
+	// math.FMA is the fused operation on every platform, so this reproduces
+	// the loong64 encoding of the sparkline Y expression exactly: the top of
+	// the box is -0.0 before normalisation and "0.0" after it.
+	h, span, delta := 20.0, 10.0, 10.0
+	fused := -math.FMA(delta/span, h, -h)
+	if !math.Signbit(fused) {
+		t.Fatalf("fused y = %v, want the negative zero loong64 produces", fused)
+	}
+	if got := fmt.Sprintf("%.1f", normZero(fused)); got != "0.0" {
+		t.Errorf("normZero(fused y) = %q, want %q", got, "0.0")
+	}
+}
+
+// TestSparklinePathNoNegativeZero guards the rendered paths directly: no
+// coordinate may ever format with a negative-zero sign, whatever the
+// compiler does with the multiply-subtract. See issue #767.
+func TestSparklinePathNoNegativeZero(t *testing.T) {
+	cases := [][]int{
+		{0, 10},
+		{4000, 8000},
+		{2200, 2400},
+		{48, 3800, 100, 3800},
+		{0, 0, 1},
+	}
+	for _, values := range cases {
+		for _, got := range []string{
+			sparklinePath(values, 140, 22),
+			sparklineFill(values, 140, 22),
+		} {
+			if strings.Contains(got, "-0.0") {
+				t.Errorf("sparkline path for %v contains a negative zero: %q", values, got)
+			}
+		}
+	}
+}
+
+// TestDonutArcsSingleLanguage covers the 100%% case, where the trailing gap
+// of the dasharray is an exact zero and so hits the same negative-zero
+// hazard as the sparkline coordinates.
+func TestDonutArcsSingleLanguage(t *testing.T) {
+	arcs := donutArcs([]LanguageSummary{{Name: "Go", Code: 1234}})
+	if len(arcs) != 1 {
+		t.Fatalf("donutArcs returned %d arcs, want 1", len(arcs))
+	}
+	if arcs[0].Dasharray != "100.000 0.000" {
+		t.Errorf("arc[0].Dasharray = %q, want %q", arcs[0].Dasharray, "100.000 0.000")
+	}
+}
+
 // TestDataURLCard locks in the og:image data: URL prefix and the space
 // escaping the unfurl scrapers require.
 func TestDataURLCard(t *testing.T) {
@@ -765,6 +833,15 @@ func goldenReportFixture() ReportData {
 				{File: "internal/server.go", Language: "Go", Complexity: 240, Commits: 64, LinesChanged: 1200, Authors: 4, Score: 92.5},
 				{File: "internal/cache.go", Language: "Go", Complexity: 120, Commits: 28, LinesChanged: 420, Authors: 2, Score: 41.2},
 				{File: "web/app.js", Language: "JavaScript", Complexity: 60, Commits: 14, LinesChanged: 180, Authors: 2, Score: 17.8},
+			},
+		},
+		Coupling: &CouplingResult{
+			Available:  true,
+			TotalPairs: 3,
+			Pairs: []CouplingPairRow{
+				{FileA: "internal/cache.go", FileB: "internal/server.go", Shared: 22, Degree: 34.4},
+				{FileA: "internal/server.go", FileB: "web/app.js", Shared: 9, Degree: 13.0},
+				{FileA: "README.md", FileB: "internal/server.go", Shared: 6, Degree: 8.1},
 			},
 		},
 		Authors: &AuthorsResult{

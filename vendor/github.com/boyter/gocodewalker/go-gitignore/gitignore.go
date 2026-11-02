@@ -61,9 +61,34 @@ type GitIgnore interface {
 // ignore is the implementation of a .gitignore file.
 type ignore struct {
 	_base    string
-	_pattern []Pattern
+	_pattern []fastPattern
 	_errors  func(Error) bool
 }
+
+// foreign adapts a Pattern that does not offer the internal precomputed form.
+// Parser returns only the patterns built by this package, all of which do, but
+// Parser is an exported interface and New will take an implementation of it, so
+// this keeps the conversion total.
+type foreign struct{ Pattern }
+
+func (f foreign) matchInfo(info pathInfo, isdir bool) bool {
+	return f.Match(info.path, isdir)
+} // matchInfo()
+
+// fastPatterns converts a parsed pattern list into the internal form, so that
+// Relative can call matchInfo directly rather than type asserting once per
+// pattern per path.
+func fastPatterns(patterns []Pattern) []fastPattern {
+	_fast := make([]fastPattern, len(patterns))
+	for _i, _pattern := range patterns {
+		if _f, _ok := _pattern.(fastPattern); _ok {
+			_fast[_i] = _f
+		} else {
+			_fast[_i] = foreign{_pattern}
+		}
+	}
+	return _fast
+} // fastPatterns()
 
 // NewGitIgnore creates a new GitIgnore instance from the patterns listed in t,
 // representing a .gitignore file in the base directory. If errors is given, it
@@ -77,12 +102,74 @@ func New(r io.Reader, base string, errors func(Error) bool) GitIgnore {
 		_errors = func(e Error) bool { return true }
 	}
 
-	// extract the patterns from the reader
-	_parser := NewParser(r, _errors)
-	_patterns := _parser.Parse()
-
-	return &ignore{_base: base, _pattern: _patterns, _errors: _errors}
+	return NewWithPatterns(Compile(r, _errors), base, _errors)
 } // New()
+
+// Patterns is a set of .gitignore patterns that have been parsed but not yet
+// anchored to any base directory. The zero value holds no patterns.
+//
+// Patterns are read only once built, so one Patterns may be anchored by any
+// number of NewWithPatterns calls, at any bases, and matched against
+// concurrently.
+type Patterns struct {
+	_pattern  []fastPattern
+	_nameOnly bool
+} // Patterns{}
+
+// Compile parses the patterns in r without anchoring them to a base directory.
+// It exists so that one set of patterns can be applied at more than one base
+// without being lexed and parsed again for each: parsing is by far the
+// expensive half of New, while anchoring is a struct literal.
+func Compile(r io.Reader, errors func(Error) bool) Patterns {
+	if errors == nil {
+		errors = func(e Error) bool { return true }
+	}
+
+	_patterns := fastPatterns(NewParser(r, errors).Parse())
+
+	return Patterns{_pattern: _patterns, _nameOnly: nameOnly(_patterns)}
+} // Compile()
+
+// Len returns the number of patterns.
+func (p Patterns) Len() int { return len(p._pattern) }
+
+// NameOnly reports whether every pattern here is matched against the trailing
+// name of a path alone, and so gives the same answer wherever it is anchored.
+//
+// Only an unanchored name pattern qualifies: it looks at nothing but the last
+// component of the path relative to the base, and that component is the same
+// whichever ancestor directory the base happens to be. Anchored, path and "**"
+// patterns are all matched against the whole relative path, so moving the base
+// changes what they match.
+//
+// It lets a caller that would otherwise anchor one set of patterns at every
+// directory it walks anchor it once instead, since the extra copies could only
+// ever return what the one already there returned.
+func (p Patterns) NameOnly() bool { return p._nameOnly }
+
+// nameOnly answers NameOnly once, when the patterns are compiled, rather than
+// rescanning them every time a caller asks.
+func nameOnly(patterns []fastPattern) bool {
+	for _, _pattern := range patterns {
+		_name, _ok := _pattern.(*name)
+		if !_ok || _name._anchored {
+			return false
+		}
+	}
+
+	return true
+} // nameOnly()
+
+// NewWithPatterns returns a GitIgnore that applies already parsed patterns, as
+// returned by Compile, as though they were a .gitignore file in the base
+// directory.
+func NewWithPatterns(patterns Patterns, base string, errors func(Error) bool) GitIgnore {
+	if errors == nil {
+		errors = func(e Error) bool { return true }
+	}
+
+	return &ignore{_base: base, _pattern: patterns._pattern, _errors: errors}
+} // NewWithPatterns()
 
 // NewFromFile creates a GitIgnore instance from the given file. An error
 // will be returned if file cannot be opened or its absolute path determined.
@@ -250,6 +337,20 @@ func (i *ignore) Match(path string) Match {
 func (i *ignore) MatchIsDir(path string, _isdir bool) Match {
 	// ensure we have the absolute path for the given file
 	path = filepath.ToSlash(path) // normalize before cache lookup
+
+	// An absolute path is already the thing the cache exists to produce, so
+	// there is nothing to resolve and nothing worth remembering. Consulting the
+	// cache anyway costs a lookup on every path walked, and populating it costs
+	// a store plus an entry retained for the life of the process, for a value
+	// that is only ever read back if more than one ignore file is in scope for
+	// that exact path. The walker hands us absolute paths whenever it was given
+	// an absolute root, which is the common case.
+	if filepath.IsAbs(path) {
+		return i.Absolute(path, _isdir)
+	}
+
+	// A relative path does have to be resolved against the working directory,
+	// which is a syscall, so those keep using the cache.
 	if v, ok := matchIsDirCache.Load(path); ok {
 		return i.Absolute(v.(string), _isdir)
 	}
@@ -277,7 +378,56 @@ func (i *ignore) Absolute(path string, isdir bool) Match {
 	return i.Relative(_rel, isdir)
 } // Absolute()
 
+// fastRelSupported reports whether relativeToBase may use its prefix strip.
+// runtime.GOOS is a constant, so this is a compile time constant and the fast
+// path is eliminated entirely on Windows.
+//
+// Windows is excluded deliberately rather than for lack of effort. filepath.Rel
+// compares path elements there with strings.EqualFold, so it is case
+// insensitive while a byte prefix test is not; "C:" is a volume name that
+// filepath.IsAbs reports as relative, so base and path can disagree about being
+// rooted in a way the checks below would not catch; and both '/' and '\\'
+// separate elements, so a single separator test is not sufficient. The strip
+// would also almost never fire on Windows anyway, because the bases we are
+// given come from filepath.Abs and are backslash separated while the paths
+// being tested have been through filepath.ToSlash.
+const fastRelSupported = runtime.GOOS != "windows"
+
+// relativeToBase returns path expressed relative to base, and reports whether
+// path is located under base. It is filepath.Rel, with any result that escapes
+// base rejected.
 func relativeToBase(base, path string) (string, bool) {
+	// Fast path. This is the hottest call in a large walk: it runs once per
+	// ignore file per path tested. filepath.Rel cleans both arguments and then
+	// walks them element by element, but an ignore file is only ever tested
+	// against paths beneath the directory it came from, so base is nearly
+	// always a literal prefix of path and the answer is a substring of it.
+	//
+	// The strip is only taken where it is provably identical to filepath.Rel:
+	//
+	//   - base is absolute, so Rel cannot fail on a rooted/unrooted mismatch,
+	//     and path, having base as a prefix, is necessarily absolute too. This
+	//     also rules out base being empty, for which Rel errors but a strip
+	//     would happily return the whole path.
+	//   - path continues with a separator, so base is a whole element prefix
+	//     rather than merely a textual one; this is what separates base
+	//     "/a/foo" from path "/a/foobar", which is not under it.
+	//   - the remainder is already clean, so Clean(path) is Clean(base) joined
+	//     to that remainder and Rel returns exactly the remainder. Note that
+	//     base itself need not be clean for this to hold, since cleaning is
+	//     left to right and a clean remainder cannot consume any part of base.
+	//
+	// A miss costs only the tests themselves and falls through to filepath.Rel,
+	// so being conservative here is cheap.
+	if fastRelSupported &&
+		len(base) != 0 && base[0] == '/' &&
+		len(path) > len(base) && path[len(base)] == '/' &&
+		strings.HasPrefix(path, base) {
+		if _rel := path[len(base)+1:]; isCleanRelative(_rel) {
+			return _rel, true
+		}
+	}
+
 	_rel, _err := filepath.Rel(base, path)
 	if _err != nil {
 		return "", false
@@ -286,6 +436,27 @@ func relativeToBase(base, path string) (string, bool) {
 		return "", false
 	}
 	return _rel, true
+}
+
+// isCleanRelative reports whether p is already in the form filepath.Clean would
+// return it in: non empty, with no empty element from a leading, trailing or
+// doubled separator, and no "." or ".." element.
+func isCleanRelative(p string) bool {
+	for _start := 0; ; {
+		_i := strings.IndexByte(p[_start:], '/')
+		_elem := p[_start:]
+		if _i >= 0 {
+			_elem = p[_start : _start+_i]
+		}
+		switch _elem {
+		case "", ".", "..":
+			return false
+		}
+		if _i < 0 {
+			return true
+		}
+		_start += _i + 1
+	}
 }
 
 // Relative attempts to match a path relative to the GitIgnore base
@@ -299,11 +470,20 @@ func (i *ignore) Relative(path string, isdir bool) Match {
 		_rel = filepath.ToSlash(_rel)
 	}
 
+	// derive the base name of the path (and whether it has a separator at all)
+	// once for the whole pattern list. Every non-anchored name pattern is
+	// matched against the base name and nothing else, so without this each of
+	// them scans back through the path for the last separator to arrive at the
+	// same answer. An ignore file with a few hundred name patterns in it, as
+	// the Linux kernel's root .gitignore has, did that few hundred times per
+	// file walked.
+	_info := newPathInfo(_rel)
+
 	// iterate over the patterns for this ignore file
 	//      - iterate in reverse, since later patterns overwrite earlier
 	for _i := len(i._pattern) - 1; _i >= 0; _i-- {
 		_pattern := i._pattern[_i]
-		if _pattern.Match(_rel, isdir) {
+		if _pattern.matchInfo(_info, isdir) {
 			return _pattern
 		}
 	}

@@ -75,3 +75,137 @@ func TestCountStatsCharLiteralCSharp(t *testing.T) {
 		t.Errorf("Expected 2 comments got %d", fileJob.Comment)
 	}
 }
+
+func TestCountStatsByteCharLiteralRust(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{Language: "Rust"}
+	fileJob.SetContent("fn is_quote(byte: u8) -> bool {\n" +
+		"    matches!(byte, b'\"' | b'\\\\')\n" +
+		"}\n" +
+		"\n" +
+		"// This comment must remain visible.\n" +
+		"fn classify(value: bool) {\n" +
+		"    let _ = b'\\'';\n" +
+		"    if value {\n" +
+		"        println!(\"yes\");\n" +
+		"    }\n" +
+		"}")
+
+	CountStats(&fileJob)
+
+	if fileJob.Code != 9 {
+		t.Errorf("Expected 9 code got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 comment got %d", fileJob.Comment)
+	}
+	if fileJob.Blank != 1 {
+		t.Errorf("Expected 1 blank got %d", fileJob.Blank)
+	}
+	if fileJob.Complexity != 1 {
+		t.Errorf("Expected complexity 1 got %d", fileJob.Complexity)
+	}
+}
+
+func TestCountStatsCharLiteralKotlin(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{Language: "Kotlin"}
+	fileJob.SetContent("fun isQuote(c: Char): Boolean {\n" +
+		"    if (c == '\"') {\n" +
+		"        return true\n" +
+		"    }\n" +
+		"    // a comment\n" +
+		"    return c == '\\''\n" +
+		"}\n" +
+		"\n" +
+		"/* block\n" +
+		"   comment */")
+
+	CountStats(&fileJob)
+
+	if fileJob.Code != 6 {
+		t.Errorf("Expected 6 code got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 3 {
+		t.Errorf("Expected 3 comments got %d", fileJob.Comment)
+	}
+	if fileJob.Blank != 1 {
+		t.Errorf("Expected 1 blank got %d", fileJob.Blank)
+	}
+}
+
+// Kotlin names a function in backticks to give it spaces, so ' must not open a
+// character literal inside one.
+func TestCountStatsBacktickNameKotlin(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{Language: "Kotlin"}
+	fileJob.SetContent("class FooTest {\n" +
+		"    @Test\n" +
+		"    fun `it doesn't crash`() {\n" +
+		"        // a comment\n" +
+		"\n" +
+		"        assertTrue(true)\n" +
+		"    }\n" +
+		"}")
+
+	CountStats(&fileJob)
+
+	if fileJob.Code != 6 {
+		t.Errorf("Expected 6 code got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 1 {
+		t.Errorf("Expected 1 comment got %d", fileJob.Comment)
+	}
+	if fileJob.Blank != 1 {
+		t.Errorf("Expected 1 blank got %d", fileJob.Blank)
+	}
+}
+
+
+// Elixir writes a character's code point as ?c, so ?" and ?' are code. Their
+// quote opened a string that ran on to the next one and swallowed the
+// comments in between.
+func TestCountStatsCharLiteralQuoteElixir(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{Language: "Elixir"}
+	fileJob.SetContent("def quote?(c), do: c == ?\" or c == ?\\\"\n" +
+		"# a comment\n" +
+		"def tick?(c), do: c == ?'\n" +
+		"# another\n" +
+		"def s, do: \"#{1}\"\n")
+
+	CountStats(&fileJob)
+
+	if fileJob.Code != 3 {
+		t.Errorf("Expected 3 code got %d", fileJob.Code)
+	}
+	if fileJob.Comment != 2 {
+		t.Errorf("Expected 2 comments got %d", fileJob.Comment)
+
+// OCaml and Nim write a double quote character as '"'. Its quote
+// opened a string that ran on to the next one and swallowed the comments in
+// between. A lone ' stays code: it also starts OCaml type variables ('a) and
+// Nim literal suffixes (1'u8).
+func TestCountStatsCharLiteralQuoteOCamlNim(t *testing.T) {
+	ProcessConstants()
+
+	for _, test := range []struct {
+		language string
+		content  string
+	}{
+		{"OCaml", "let is_quote c = c = '\"'\n(* a comment *)\nlet id (x : 'a) = x\n(* another *)\nlet y = 2\n"},
+		{"Nim", "let q = '\"'\n# a comment\nlet e = 'e'\n# another\nlet b = 1'u8\n"},
+	} {
+		fileJob := FileJob{Language: test.language}
+		fileJob.SetContent(test.content)
+
+		CountStats(&fileJob)
+
+		if fileJob.Code != 3 {
+			t.Errorf("%s: expected 3 code got %d", test.language, fileJob.Code)
+		}
+		if fileJob.Comment != 2 {
+			t.Errorf("%s: expected 2 comments got %d", test.language, fileJob.Comment)
+		}
+	}
+}

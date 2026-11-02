@@ -22,17 +22,27 @@ import (
 const authorsTopN = 15
 
 // authorNameColWidth / authorNameTrim are the trim/pad widths for the
-// "Author" column in the 79-col tabular report. Both wide and short use the
-// same name column.
+// "Author" column. The 79-col report uses the short pair; the 109-col --wide
+// report uses the wide pair so the table fills the wider rule instead of
+// leaving the break line hanging past the content.
 const (
 	authorNameTrim     = 30
 	authorNameColWidth = 31
+
+	authorNameTrimWide     = 60
+	authorNameColWidthWide = 61
 )
 
 // authorRow is one materialised row in the report. Sentinel is true for the
 // "(before window)" pseudo-author whose lines pre-date the walk window.
 type authorRow struct {
-	Name            string
+	Name string
+	// Display is the name as rendered in the tabular report and bus-factor
+	// footer. It equals Name unless two or more in-window identities share
+	// the same Name, in which case each colliding row is suffixed with a
+	// distinguishing marker (see disambiguateNames) so the reader can tell
+	// the identities apart. CSV/JSON emit Name and Email raw and ignore this.
+	Display         string
 	Email           string
 	Code            int64
 	Comment         int64
@@ -247,6 +257,7 @@ func (o *historyAuthorsObserver) Finalise(window HistoryWindow, head HeadSnapsho
 		}
 		return strings.Compare(a.Name, b.Name)
 	})
+	disambiguateNames(rows)
 	o.rows = rows
 
 	cumPercent := 0.0
@@ -258,13 +269,102 @@ func (o *historyAuthorsObserver) Finalise(window HistoryWindow, head HeadSnapsho
 			break
 		}
 		cumPercent += r.InWindowPercent
-		o.busAuthors = append(o.busAuthors, r.Name)
+		o.busAuthors = append(o.busAuthors, r.Display)
 		if cumPercent > 50 {
 			break
 		}
 	}
 	o.busFactor = len(o.busAuthors)
 	o.busCovered = cumPercent
+}
+
+// disambiguateNames sets Display on every row. When two or more in-window
+// identities share the same display Name (e.g. one contributor committing
+// under both a work and a noreply email — kept as distinct identities because
+// no .mailmap merges them), each colliding row is suffixed with a short
+// marker so the reader — and the bus-factor footer, which reuses Display —
+// can tell them apart. Non-colliding names, the "others" roll-up and the
+// sentinel are left bare.
+func disambiguateNames(rows []authorRow) {
+	groups := map[string][]int{}
+	for i := range rows {
+		if rows[i].Sentinel {
+			continue
+		}
+		groups[rows[i].Name] = append(groups[rows[i].Name], i)
+	}
+	for _, idx := range groups {
+		if len(idx) < 2 {
+			continue
+		}
+		markers := disambiguationMarkers(rows, idx)
+		for k, i := range idx {
+			rows[i].Display = rows[i].Name + " (" + markers[k] + ")"
+		}
+	}
+	for i := range rows {
+		if rows[i].Display == "" {
+			rows[i].Display = rows[i].Name
+		}
+	}
+}
+
+// disambiguationMarkers returns one marker per row in idx (all sharing a
+// display Name), picking the shortest candidate form that is distinct across
+// the whole group: registrable domain first (the tidiest, e.g. "github.com"),
+// then the full domain, then the full email. Because two identities with the
+// same name and same email intern to one authorID, a collision group always
+// has distinct emails, so the final form is guaranteed to separate them.
+func disambiguationMarkers(rows []authorRow, idx []int) []string {
+	forms := []func(string) string{
+		registrableDomain,
+		emailDomain,
+		func(email string) string { return email },
+	}
+	for _, form := range forms {
+		out := make([]string, len(idx))
+		seen := map[string]struct{}{}
+		distinct := true
+		for k, i := range idx {
+			m := form(rows[i].Email)
+			if m == "" {
+				distinct = false
+				break
+			}
+			if _, dup := seen[m]; dup {
+				distinct = false
+				break
+			}
+			seen[m] = struct{}{}
+			out[k] = m
+		}
+		if distinct {
+			return out
+		}
+	}
+	// Unreachable in practice (see doc comment); fall back to raw email.
+	out := make([]string, len(idx))
+	for k, i := range idx {
+		out[k] = rows[i].Email
+	}
+	return out
+}
+
+// registrableDomain returns the last two labels of the email's domain
+// (e.g. "users.noreply.github.com" -> "github.com"), a short human-readable
+// marker for the common single-TLD case. It is a display heuristic, not a
+// public-suffix-correct computation — disambiguationMarkers falls back to the
+// full domain when this form fails to separate a collision group.
+func registrableDomain(email string) string {
+	d := emailDomain(email)
+	if d == "" {
+		return ""
+	}
+	parts := strings.Split(d, ".")
+	if len(parts) <= 2 {
+		return d
+	}
+	return strings.Join(parts[len(parts)-2:], ".")
 }
 
 // runAuthorsReport is the dispatch entry point called from Process() when
@@ -307,8 +407,10 @@ func renderAuthors(o *historyAuthorsObserver) (string, error) {
 // Short tabular: %-31s %9s %9s %7s %8s %10s = 79.
 var tabularShortAuthorsFormatHead = "%-31s %9s %9s %7s %8s %10s\n"
 
-// Wide tabular: inserts the Comment column. %-31s %9s %9s %9s %7s %8s %10s = 88.
-var tabularWideAuthorsFormatHead = "%-31s %9s %9s %9s %7s %8s %10s\n"
+// Wide tabular: identical columns to the short form, with the Author column
+// stretched to fill the 109-col rule so long names show in full.
+// %-61s %9s %9s %7s %8s %10s = 109.
+var tabularWideAuthorsFormatHead = "%-61s %9s %9s %7s %8s %10s\n"
 
 func renderAuthorsTabular(o *historyAuthorsObserver) string {
 	wide := More || strings.EqualFold(Format, "wide")
@@ -321,7 +423,7 @@ func renderAuthorsTabular(o *historyAuthorsObserver) string {
 
 	if wide {
 		_, _ = fmt.Fprintf(&sb, tabularWideAuthorsFormatHead,
-			"Author", "Code", "Comment", "Cmplx", "Files", "Owns", "Last seen")
+			"Author", "Code", "Cmplx", "Files", "Owns", "Last seen")
 	} else {
 		_, _ = fmt.Fprintf(&sb, tabularShortAuthorsFormatHead,
 			"Author", "Code", "Cmplx", "Files", "Owns", "Last seen")
@@ -344,7 +446,7 @@ func renderAuthorsTabular(o *historyAuthorsObserver) string {
 
 	for i := range limit {
 		r := realRows[i]
-		writeAuthorRow(&sb, p, wide, r.Name, r.Code, r.Comment, r.Complexity,
+		writeAuthorRow(&sb, p, wide, r.Display, r.Code, r.Comment, r.Complexity,
 			fmt.Sprintf("%d", r.Files), r.OwnsPercent, lastSeenString(r))
 	}
 
@@ -397,20 +499,20 @@ func writeAuthorRow(sb *strings.Builder, p *gmessage.Printer, wide bool,
 	name string, code, comment, complexity int64,
 	files string, owns float64, lastSeen string) {
 
-	nameCol := unicodeAwareTrim(name, authorNameTrim)
-	nameCol = unicodeAwareRightPad(nameCol, authorNameColWidth)
+	trim, colWidth := authorNameTrim, authorNameColWidth
+	format := tabularShortAuthorsFormatHead
+	if wide {
+		trim, colWidth = authorNameTrimWide, authorNameColWidthWide
+		format = tabularWideAuthorsFormatHead
+	}
+	nameCol := unicodeAwareTrim(name, trim)
+	nameCol = unicodeAwareRightPad(nameCol, colWidth)
 	codeStr := formatWithCommas(p, code)
 	cmplxStr := formatWithCommas(p, complexity)
 	ownsStr := fmt.Sprintf("%6.1f%%", owns)
 
-	if wide {
-		commentStr := formatWithCommas(p, comment)
-		_, _ = fmt.Fprintf(sb, tabularWideAuthorsFormatHead,
-			nameCol, codeStr, commentStr, cmplxStr, files, ownsStr, lastSeen)
-	} else {
-		_, _ = fmt.Fprintf(sb, tabularShortAuthorsFormatHead,
-			nameCol, codeStr, cmplxStr, files, ownsStr, lastSeen)
-	}
+	_, _ = fmt.Fprintf(sb, format,
+		nameCol, codeStr, cmplxStr, files, ownsStr, lastSeen)
 }
 
 func formatAuthorsFooter(o *historyAuthorsObserver, width int) string {

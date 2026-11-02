@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/boyter/gocodewalker"
-	"github.com/go-git/go-git/v5"
 )
 
 // DefaultReportName is the file name used when --report is invoked without
@@ -43,21 +42,11 @@ var ReportSkipNames = map[string]bool{}
 // (spec 05). Empty means "auto-detect".
 var ReportTitle = ""
 
-// reportSkipRecognised is the set of section names --report-skip accepts.
+// ReportSkipSections is the list of section names --report-skip accepts.
 // Kept here (next to ReportSkipped) so future template authors can find the
 // authoritative list in one place. Names must match what the report template
 // and CollectReportData branch on. Spec 05 fixes this set.
-var reportSkipRecognised = map[string]bool{
-	"cocomo":     true,
-	"locomo":     true,
-	"hotspots":   true,
-	"authors":    true,
-	"timeline":   true,
-	"files":      true,
-	"uloc":       true,
-	"linelength": true,
-	"card":       true,
-}
+var ReportSkipSections = []string{"cocomo", "locomo", "hotspots", "coupling", "authors", "timeline", "files", "uloc", "linelength", "card"}
 
 // ReportSkipped reports whether the given section name was listed in
 // --report-skip. Section names are case-insensitive — callers can pass
@@ -144,6 +133,25 @@ type HotspotRow struct {
 	CodeChurn    int64
 	CommentChurn int64
 	Score        float64
+}
+
+// CouplingResult mirrors the all-pairs change-coupling data. Pairs is already
+// sorted strongest-first (raw co-change volume — the report never uses the
+// complexity-weighted ranking).
+type CouplingResult struct {
+	Window     HistoryWindow
+	Pairs      []CouplingPairRow
+	TotalPairs int
+	Available  bool
+}
+
+// CouplingPairRow is one file pair. Public so report consumers don't depend on
+// the private CouplingCount type.
+type CouplingPairRow struct {
+	FileA  string
+	FileB  string
+	Shared int
+	Degree float64
 }
 
 // AuthorsResult mirrors the data the authors tabular formatter consumes. The
@@ -233,6 +241,7 @@ type ReportData struct {
 	ULOC             *ULOCResult
 	LineLength       *LineLengthResult
 	Hotspots         *HotspotsResult
+	Coupling         *CouplingResult
 	Authors          *AuthorsResult
 	LanguageTimeline *LangTimelineResult
 	AuthorTimeline   *AuthorTimelineResult
@@ -255,16 +264,18 @@ type ReportData struct {
 // invocation; we snapshot and restore via defer so panics, errors, or
 // in-process re-entrancy don't leak state into a later scc call.
 type reportFlagState struct {
-	UlocMode bool
-	MaxMean  bool
-	Files    bool
+	UlocMode         bool
+	MaxMean          bool
+	Files            bool
+	CouplingWeighted bool
 }
 
 func saveReportFlags() reportFlagState {
 	return reportFlagState{
-		UlocMode: UlocMode,
-		MaxMean:  MaxMean,
-		Files:    Files,
+		UlocMode:         UlocMode,
+		MaxMean:          MaxMean,
+		Files:            Files,
+		CouplingWeighted: CouplingWeighted,
 	}
 }
 
@@ -272,6 +283,7 @@ func (s reportFlagState) restore() {
 	UlocMode = s.UlocMode
 	MaxMean = s.MaxMean
 	Files = s.Files
+	CouplingWeighted = s.CouplingWeighted
 }
 
 // CollectReportData orchestrates the full scc analysis surface for one
@@ -331,6 +343,10 @@ func CollectReportData(path string) (ReportData, error) {
 		data.LineLength = bucketLineLengths(files)
 	}
 
+	// The report always shows raw co-change coupling, never the opt-in
+	// complexity-weighted ranking. saved.restore() puts the flag back on exit.
+	CouplingWeighted = false
+
 	if gitAvailable {
 		if !ReportSkipped("hotspots") {
 			obs := newHotspotsObserver()
@@ -338,6 +354,14 @@ func CollectReportData(path string) (ReportData, error) {
 				data.Hotspots = hotspotsResultFromObserver(obs, window)
 			} else {
 				printWarnF("report: hotspots observer failed: %s", err)
+			}
+		}
+		if !ReportSkipped("coupling") {
+			obs := newCouplingObserver()
+			if window, err := runHistory(path, obs); err == nil {
+				data.Coupling = couplingResultFromObserver(obs, window)
+			} else {
+				printWarnF("report: coupling observer failed: %s", err)
 			}
 		}
 		if !ReportSkipped("authors") {
@@ -378,11 +402,11 @@ func CollectReportData(path string) (ReportData, error) {
 }
 
 // detectGit returns true if the path (or any parent) contains a git working
-// directory. Uses go-git's PlainOpenWithOptions with DetectDotGit so callers
-// can pass a subdirectory of a repo. Cached behaviour is not needed here —
-// this is called once at the start of CollectReportData.
+// directory. Goes through openRepository so callers can pass a subdirectory of
+// a repo, or a linked worktree. Cached behaviour is not needed here — this is
+// called once at the start of CollectReportData.
 func detectGit(path string) bool {
-	_, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{DetectDotGit: true})
+	_, err := openRepository(path)
 	return err == nil
 }
 
@@ -459,12 +483,13 @@ func walkAndAggregate(path string) ([]*FileJob, []LanguageSummary, Totals, error
 
 	ctx := processorContext{remap: newRemapConfig(RemapAll, RemapUnknown)}
 
-	potentialFilesQueue := make(chan *gocodewalker.File, FileListQueueSize)
+	potentialFilesQueue := make(chan []*gocodewalker.File, FileListQueueSize)
 	fileListQueue := make(chan *FileJob, FileListQueueSize)
 	fileSummaryJobQueue := make(chan *FileJob, FileSummaryJobQueueSize)
 
 	if len(dirPaths) > 0 {
-		fileWalker := gocodewalker.NewParallelFileWalker(dirPaths, potentialFilesQueue)
+		fileWalker := gocodewalker.NewParallelFileWalker(dirPaths, nil)
+		fileWalker.SetFileBatchQueue(potentialFilesQueue)
 		fileWalker.SetErrorHandler(func(e error) bool {
 			printError(e.Error())
 			return true
@@ -498,43 +523,12 @@ func walkAndAggregate(path string) ([]*FileJob, []LanguageSummary, Totals, error
 			}
 		}()
 
-		go func() {
-			for fi := range potentialFilesQueue {
-				shouldExclude := false
-				for _, re := range excludePathRegexes {
-					if re.MatchString(fi.Location) {
-						shouldExclude = true
-						break
-					}
-				}
-				if shouldExclude {
-					continue
-				}
-				fileInfo, err := os.Lstat(fi.Location)
-				if err != nil {
-					continue
-				}
-				if !fileInfo.IsDir() {
-					if job := newFileJob(fi.Location, fi.Filename, fileInfo); job != nil {
-						fileListQueue <- job
-					}
-				}
-			}
-			close(fileListQueue)
-		}()
+		// filePaths are deliberately not passed here: the report path has never
+		// counted loose files alongside directories and picking them up now would
+		// change its output.
+		startFileJobProducer(potentialFilesQueue, nil, excludePathRegexes, fileListQueue)
 	} else {
-		go func() {
-			for _, f := range filePaths {
-				fileInfo, err := os.Lstat(f)
-				if err != nil {
-					continue
-				}
-				if job := newFileJob(f, f, fileInfo); job != nil {
-					fileListQueue <- job
-				}
-			}
-			close(fileListQueue)
-		}()
+		startFileJobProducer(nil, filePaths, nil, fileListQueue)
 	}
 
 	go ctx.fileProcessorWorker(fileListQueue, fileSummaryJobQueue)
@@ -726,6 +720,24 @@ func hotspotsResultFromObserver(o *hotspotsObserver, window HistoryWindow) *Hots
 			CodeChurn:    r.CodeChurn,
 			CommentChurn: r.CommentChurn,
 			Score:        r.Score,
+		})
+	}
+	return res
+}
+
+func couplingResultFromObserver(o *couplingObserver, window HistoryWindow) *CouplingResult {
+	res := &CouplingResult{
+		Window:     window,
+		TotalPairs: o.totalPairs,
+		Available:  true,
+	}
+	res.Pairs = make([]CouplingPairRow, 0, len(o.pairs))
+	for _, p := range o.pairs {
+		res.Pairs = append(res.Pairs, CouplingPairRow{
+			FileA:  p.A,
+			FileB:  p.B,
+			Shared: p.Shared,
+			Degree: p.Degree(),
 		})
 	}
 	return res

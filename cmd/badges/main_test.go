@@ -302,3 +302,14 @@ func Test_parseBadgeSettings(t *testing.T) {
 		})
 	}
 }
+
+func Test_locationString_NilPanic(t *testing.T) {
+	loc := location{
+		Provider: "github",
+		User:     "user",
+		Repo:     "repo\x7fname",
+	}
+
+	// Panics before the fix: runtime error: invalid memory address or nil pointer dereference
+	_ = loc.String()
+}

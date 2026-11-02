@@ -17,7 +17,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/boyter/scc/v3/processor"
+	"github.com/boyter/scc/v4/processor"
 	"github.com/boyter/simplecache"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/rs/zerolog/log"
@@ -63,6 +63,8 @@ func main() {
 
 		if filterBad(loc) {
 			log.Error().Str(uniqueCode, "bfee4bd8").Str("loc", loc.String()).Msg("filter bad")
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte("invalid request"))
 			return
 		}
 
@@ -204,7 +206,11 @@ func (l *location) String() string {
 		ext = ""
 	}
 
-	parse, _ := url.Parse("https://" + l.Provider + loc + l.User + "/" + l.Repo + ext)
+	rawURL := "https://" + l.Provider + loc + l.User + "/" + l.Repo + ext
+	parse, err := url.Parse(rawURL)
+	if err != nil {
+		return rawURL
+	}
 	return parse.String()
 }
 

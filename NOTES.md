@@ -79,6 +79,34 @@ These can change scc's output or behaviour for an identical invocation against
   whether to drop it (fall back to the path basename) or read it via go-git's config
   instead, so scc has no hard dependency on a `git` binary being installed.
 
+## LineJudge Conformance and LineBench Representation (#769)
+
+Reference notes on SCC's representation in the [LineJudge](https://github.com/loc-conformance/linejudge) conformance suite and the [LineBench](https://github.com/loc-conformance/linebench) benchmarking suite.
+
+### Dialect Representation in LineJudge (`dialects/scc/default.toml`)
+
+LineJudge defines counter rules through dialect files declaring how lines map into code, comments, or blanks:
+- **Code**: Any line containing non-whitespace outside strings and comments, or plain string literals.
+- **Comments**: Any line containing a single-line or multi-line comment with no non-whitespace outside the comment, or docstrings (such as Python triple-quoted docstrings) with no surrounding code on that line.
+- **Blanks**: Any line containing only whitespace outside strings and comments.
+- **Embedded Languages**: Rust documentation comments count as comments of the Rust file; Vue `<template>` sections count as part of the Vue file.
+
+### Counting Heuristics and Tradeoffs
+
+1. **Prefix-based comment tokens**:
+   SCC's trie scanner matches comment tokens at line head. In languages with keyword comments (such as Batch `REM`), lines matching the token prefix (e.g., `REM comment` vs commands starting with `REM` like `REMOVE`) are classified based on prefix rules.
+2. **Specialized Counters vs Generic Loop**:
+   Language-specific fast path counters (Go, C, C++, C#, Java, Python, Rust, JavaScript, TypeScript, PHP, Ruby, etc.) optimize token matching and newline scanning while matching generic loop counting semantics.
+3. **Deliberate Divergences**:
+   Specific edge cases are pinned in `counterDivergences`:
+   - JavaScript/TypeScript: Regular expression literals containing quotes or comment openers (`7010-regex_literal_holding_a_quote`, `7020-regex_holding_a_comment_opener`).
+   - Rust: Character literals containing quotes or escape sequences (`4010-char_literal_holding_a_quote`, `4020-two_char_literals_holding_escapes`).
+
+### Benchmark Representation in LineBench (`counters/scc.toml`)
+
+- **Equal Work Invocations**: Standard benchmark runs use `--no-complexity` (`-c`) to establish baseline counting speed against counters that lack complexity analysis.
+- **Ignore Rules**: By default, SCC utilizes `.gitignore`, `.ignore`, and `.sccignore` via `gocodewalker`. Multi-counter comparative tests should normalize ignore options or run against fixed file manifests.
+
 ---
 
 _Generated from the commit history between `v3.7.0` and the 4.0.0 release._

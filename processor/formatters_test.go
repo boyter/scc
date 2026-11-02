@@ -3,16 +3,20 @@
 package processor
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/mattn/go-runewidth"
 )
 
 func TestCalculateCocomo(t *testing.T) {
+	pinLocale(t)
+
 	var str strings.Builder
 	calculateCocomo(1, &str)
 
@@ -22,6 +26,7 @@ func TestCalculateCocomo(t *testing.T) {
 }
 
 func TestCalculateSizeSingleByte(t *testing.T) {
+	t.Setenv("LANG", "en_US.UTF-8")
 	var str strings.Builder
 	calculateSize(1, &str)
 
@@ -31,11 +36,48 @@ func TestCalculateSizeSingleByte(t *testing.T) {
 }
 
 func TestCalculateSize(t *testing.T) {
+	t.Setenv("LANG", "en_US.UTF-8")
 	var str strings.Builder
 	calculateSize(1000000, &str)
 
-	if !strings.Contains(str.String(), "Processed 1000000 bytes, 1.000 megabytes (SI)") {
+	// The byte count is locale-grouped like every other number in the output.
+	if !strings.Contains(str.String(), "Processed 1,000,000 bytes, 1.000 megabytes (SI)") {
 		t.Error("expected to match got", str.String())
+	}
+}
+
+func TestCalculateSizeXkcdKb(t *testing.T) {
+	t.Setenv("LANG", "en_US.UTF-8")
+
+	prevSizeUnit := SizeUnit
+	SizeUnit = "xkcd-kb"
+	t.Cleanup(func() { SizeUnit = prevSizeUnit })
+
+	// The divisor mirrors the case's help text "1000 bytes during leap
+	// years, 1024 otherwise": 1_000_000 (1000-based) in leap years and
+	// 1_048_576 (1024-based) otherwise. Asserting it directly keeps the
+	// expectation year-independent.
+	if got := xkcdKbDivisor(2026); got != float64(1024*1024) {
+		t.Errorf("xkcdKbDivisor(2026) = %v, want %d (non-leap, 1024-based)", got, 1024*1024)
+	}
+	if got := xkcdKbDivisor(2024); got != 1_000_000.0 {
+		t.Errorf("xkcdKbDivisor(2024) = %v, want 1000000 (leap, 1000-based)", got)
+	}
+
+	var str strings.Builder
+	calculateSize(10_000_000, &str)
+
+	// Regression guard: before the fix `size` was left at 0.0 in non-leap
+	// years, so the line read "0.000 megabytes" for any byte count.
+	if strings.Contains(str.String(), "0.000 megabytes") {
+		t.Errorf("expected a non-zero megabyte size for xkcd-kb, got:\n%s", str.String())
+	}
+
+	// The rendered value must equal bytes/divisor for the current year
+	// ("9.537 megabytes" in a non-leap year such as 2026).
+	want := fmt.Sprintf("%.3f megabytes", 10_000_000.0/xkcdKbDivisor(time.Now().Year()))
+	if !strings.Contains(str.String(), want) {
+		t.Errorf("expected output to contain %q, got:\n%s", want, str.String())
 	}
 }
 
@@ -742,30 +784,146 @@ func TestToOpenMetricsMultiple(t *testing.T) {
 
 	var expectedResult = `# TYPE scc_files gauge
 # HELP scc_files Number of sourcecode files.
+scc_files{language="Go"} 2
 # TYPE scc_lines gauge
 # HELP scc_lines Number of lines.
+scc_lines{language="Go"} 2000
 # TYPE scc_code gauge
 # HELP scc_code Number of lines of actual code.
+scc_code{language="Go"} 2000
 # TYPE scc_comments gauge
 # HELP scc_comments Number of comments.
+scc_comments{language="Go"} 2000
 # TYPE scc_blanks gauge
 # HELP scc_blanks Number of blank lines.
+scc_blanks{language="Go"} 2000
 # TYPE scc_complexity gauge
 # HELP scc_complexity Code complexity.
+scc_complexity{language="Go"} 2000
 # TYPE scc_bytes gauge
 # UNIT scc_bytes bytes
 # HELP scc_bytes Size in bytes.
-scc_files{language="Go"} 2
-scc_lines{language="Go"} 2000
-scc_code{language="Go"} 2000
-scc_comments{language="Go"} 2000
-scc_blanks{language="Go"} 2000
-scc_complexity{language="Go"} 2000
 scc_bytes{language="Go"} 2000
+# EOF
 `
 
 	if res != expectedResult {
 		t.Error("Expected OpenMetrics return", res)
+	}
+}
+
+// assertOpenMetricsFamiliesContiguous checks that every sample line of a metric family appears
+// in one unbroken run, which OpenMetrics requires, and that the output ends with the # EOF
+// terminator.
+func assertOpenMetricsFamiliesContiguous(t *testing.T, res string) {
+	t.Helper()
+
+	if !strings.HasSuffix(res, "# EOF\n") {
+		t.Error("Expected output to be terminated by # EOF", res)
+	}
+
+	var order []string
+	seen := map[string]bool{}
+	previous := ""
+
+	for _, line := range strings.Split(res, "\n") {
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		name, _, found := strings.Cut(line, "{")
+		if !found {
+			t.Error("Expected a labelled sample line", line)
+			continue
+		}
+
+		if name != previous {
+			if seen[name] {
+				t.Error("Samples of family are not contiguous: "+name, res)
+			}
+			seen[name] = true
+			order = append(order, name)
+			previous = name
+		}
+	}
+
+	if len(order) == 0 {
+		t.Error("Expected at least one sample", res)
+	}
+}
+
+func TestToOpenMetricsFamiliesContiguous(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	for _, language := range []string{"Go", "Python", "Rust"} {
+		for i := 0; i < 2; i++ {
+			inputChan <- &FileJob{
+				Language:   language,
+				Filename:   fmt.Sprintf("a%d.x", i),
+				Location:   fmt.Sprintf("./a%d.x", i),
+				Bytes:      1000,
+				Lines:      1000,
+				Code:       1000,
+				Comment:    1000,
+				Blank:      1000,
+				Complexity: 1000,
+			}
+		}
+	}
+	close(inputChan)
+
+	Files = false
+	res := toOpenMetrics(inputChan)
+
+	assertOpenMetricsFamiliesContiguous(t, res)
+}
+
+func TestToOpenMetricsFilesFamiliesContiguous(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	for _, language := range []string{"Go", "Python", "Rust"} {
+		for i := 0; i < 2; i++ {
+			inputChan <- &FileJob{
+				Language:   language,
+				Filename:   fmt.Sprintf("a%d.x", i),
+				Location:   fmt.Sprintf("./a%d.x", i),
+				Bytes:      1000,
+				Lines:      1000,
+				Code:       1000,
+				Comment:    1000,
+				Blank:      1000,
+				Complexity: 1000,
+			}
+		}
+	}
+	close(inputChan)
+
+	Files = true
+	res := toOpenMetrics(inputChan)
+	Files = false
+
+	assertOpenMetricsFamiliesContiguous(t, res)
+}
+
+func TestToOpenMetricsFilesEscapesLabelValues(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:   `we"ird`,
+		Filename:   `we"ird.py`,
+		Location:   "./we\"ird\\new\nline.py",
+		Bytes:      1000,
+		Lines:      1000,
+		Code:       1000,
+		Comment:    1000,
+		Blank:      1000,
+		Complexity: 1000,
+	}
+	close(inputChan)
+
+	Files = true
+	res := toOpenMetrics(inputChan)
+	Files = false
+
+	if !strings.Contains(res, `scc_lines{language="we\"ird",file="./we\"ird\\new\nline.py"} 1000`) {
+		t.Error("Expected quote, backslash and newline to be escaped in label values", res)
 	}
 }
 
@@ -810,6 +968,77 @@ func TestToSQLSingle(t *testing.T) {
 
 	if !strings.Contains(res, `insert into metadata values`) {
 		t.Error("Expected insert return", res)
+	}
+}
+
+func TestToSQLSingleEscapesProjectName(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:   "Go",
+		Filename:   "bbbb.go",
+		Extension:  "go",
+		Location:   "./",
+		Bytes:      1000,
+		Lines:      1000,
+		Code:       1000,
+		Comment:    1000,
+		Blank:      1000,
+		Complexity: 1000,
+		Binary:     false,
+		Uloc:       99,
+	}
+	close(inputChan)
+
+	SQLProject = "it's mine"
+	defer func() { SQLProject = "" }()
+
+	res := toSql(inputChan)
+
+	if !strings.Contains(res, `insert into metadata values('`) {
+		t.Error("Expected metadata insert", res)
+	}
+
+	if !strings.Contains(res, `, 'it''s mine', `) {
+		t.Error("Expected escaped project name in metadata insert", res)
+	}
+
+	if strings.Contains(res, `'it's mine'`) {
+		t.Error("Expected no unescaped project name", res)
+	}
+}
+
+func TestToSQLLocomoCreatesLocomoMetadataTable(t *testing.T) {
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language:   "Go",
+		Filename:   "bbbb.go",
+		Extension:  "go",
+		Location:   "./",
+		Bytes:      1000,
+		Lines:      1000,
+		Code:       1000,
+		Comment:    1000,
+		Blank:      1000,
+		Complexity: 1000,
+		Uloc:       99,
+	}
+	close(inputChan)
+
+	Locomo = true
+	defer func() { Locomo = false }()
+
+	res := toSql(inputChan)
+
+	if !strings.Contains(res, `insert into locomo_metadata values(`) {
+		t.Error("Expected locomo_metadata insert", res)
+	}
+
+	if !strings.Contains(res, `create table locomo_metadata`) {
+		t.Error("Expected create table locomo_metadata so the script can be replayed", res)
+	}
+
+	if strings.Index(res, `create table locomo_metadata`) > strings.Index(res, `insert into locomo_metadata`) {
+		t.Error("Expected create table locomo_metadata before its insert", res)
 	}
 }
 
@@ -975,26 +1204,27 @@ func TestFileSummarizeOpenMetrics(t *testing.T) {
 
 	var expectedResult = `# TYPE scc_files gauge
 # HELP scc_files Number of sourcecode files.
+scc_files{language="Go"} 1
 # TYPE scc_lines gauge
 # HELP scc_lines Number of lines.
+scc_lines{language="Go"} 1000
 # TYPE scc_code gauge
 # HELP scc_code Number of lines of actual code.
+scc_code{language="Go"} 1000
 # TYPE scc_comments gauge
 # HELP scc_comments Number of comments.
+scc_comments{language="Go"} 1000
 # TYPE scc_blanks gauge
 # HELP scc_blanks Number of blank lines.
+scc_blanks{language="Go"} 1000
 # TYPE scc_complexity gauge
 # HELP scc_complexity Code complexity.
+scc_complexity{language="Go"} 1000
 # TYPE scc_bytes gauge
 # UNIT scc_bytes bytes
 # HELP scc_bytes Size in bytes.
-scc_files{language="Go"} 1
-scc_lines{language="Go"} 1000
-scc_code{language="Go"} 1000
-scc_comments{language="Go"} 1000
-scc_blanks{language="Go"} 1000
-scc_complexity{language="Go"} 1000
 scc_bytes{language="Go"} 1000
+# EOF
 `
 
 	if res != expectedResult {
@@ -1029,22 +1259,22 @@ func TestFileSummarizeOpenMetricsPerFile(t *testing.T) {
 # HELP scc_files Number of sourcecode files.
 # TYPE scc_lines gauge
 # HELP scc_lines Number of lines.
+scc_lines{language="Go",file="C:\\bbbb.go"} 1000
 # TYPE scc_code gauge
 # HELP scc_code Number of lines of actual code.
+scc_code{language="Go",file="C:\\bbbb.go"} 1000
 # TYPE scc_comments gauge
 # HELP scc_comments Number of comments.
+scc_comments{language="Go",file="C:\\bbbb.go"} 1000
 # TYPE scc_blanks gauge
 # HELP scc_blanks Number of blank lines.
+scc_blanks{language="Go",file="C:\\bbbb.go"} 1000
 # TYPE scc_complexity gauge
 # HELP scc_complexity Code complexity.
+scc_complexity{language="Go",file="C:\\bbbb.go"} 1000
 # TYPE scc_bytes gauge
 # UNIT scc_bytes bytes
 # HELP scc_bytes Size in bytes.
-scc_lines{language="Go",file="C:\\bbbb.go"} 1000
-scc_code{language="Go",file="C:\\bbbb.go"} 1000
-scc_comments{language="Go",file="C:\\bbbb.go"} 1000
-scc_blanks{language="Go",file="C:\\bbbb.go"} 1000
-scc_complexity{language="Go",file="C:\\bbbb.go"} 1000
 scc_bytes{language="Go",file="C:\\bbbb.go"} 1000
 # EOF
 `
@@ -1177,6 +1407,8 @@ func TestFileSummarizeLong(t *testing.T) {
 // language and total Complexity/Lines columns summed each file's ratio instead of recomputing
 // from the aggregated complexity and code totals.
 func TestFileSummarizeLongWeightedComplexity(t *testing.T) {
+	pinLocale(t)
+
 	Files = false
 
 	inputChan := make(chan *FileJob, 1000)
@@ -1467,6 +1699,32 @@ func TestToHTMLTable(t *testing.T) {
 
 	if !strings.Contains(res, `<table id="scc-table">`) {
 		t.Error("Expected to have table element")
+	}
+}
+
+// Language names and file paths are attacker/user controlled, so they have to be
+// escaped or they break out of the cell and produce invalid HTML.
+func TestToHTMLTableEscapesLanguageAndLocation(t *testing.T) {
+	t.Cleanup(func() { Files = false })
+	Files = true
+
+	inputChan := make(chan *FileJob, 1000)
+	inputChan <- &FileJob{
+		Language: `<script>alert("x")</script>`,
+		Filename: "b&b.go",
+		Location: `./a<b>&"c".go`,
+	}
+	close(inputChan)
+	res := toHtmlTable(inputChan)
+
+	if strings.Contains(res, "<script>") {
+		t.Error("expected the language name to be escaped, got", res)
+	}
+	if !strings.Contains(res, `<th>&lt;script&gt;alert(&#34;x&#34;)&lt;/script&gt;</th>`) {
+		t.Error("expected escaped language cell, got", res)
+	}
+	if !strings.Contains(res, `<td>./a&lt;b&gt;&amp;&#34;c&#34;.go</td>`) {
+		t.Error("expected escaped location cell, got", res)
 	}
 }
 
@@ -1869,5 +2127,56 @@ func TestToJSON2Keys(t *testing.T) {
 	}
 	if !strings.Contains(res, `"estimatedPeople":`) {
 		t.Error("JSON2 estimatedPeople check failed")
+	}
+}
+
+// unicodeAwareTrimOneAtATime is what unicodeAwareTrim used to be, kept as the
+// oracle the rewritten one is checked against. It removes a rune at a time from
+// the front and asks the width again after each.
+func unicodeAwareTrimOneAtATime(tmp string, size int) string {
+	r := []rune(tmp)
+
+	if len(r) > size {
+		for runewidth.StringWidth(tmp) > size {
+			r = r[1:]
+			tmp = string(r)
+		}
+
+		tmp = "~" + strings.TrimSpace(tmp)
+	}
+
+	return tmp
+}
+
+func TestUnicodeAwareTrimMatchesOneAtATime(t *testing.T) {
+	inputs := []string{
+		"",
+		"a",
+		"abc",
+		"a/very/ordinary/looking/path/to/some/file.go",
+		"drivers/gpu/drm/amd/display/dc/dml2/dml21/src/dml2_core/dml2_core_dcn4_calcs.c",
+		"文中文中文中文中文中文中文中文中",
+		"a文b中c文d中e",
+		"éééééééééééééééééééé",
+		"ｆｕｌｌｗｉｄｔｈｆｉｌｅｎａｍｅ.go",
+		"   leading and trailing   ",
+		"🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂",
+		"mixed🙂文a b/c   ",
+		"👨\u200d👩\u200d👧\u200d👦",
+		"👨\u200d👩\u200d👧\u200d👦/src/main.go",
+		"a/👍🏽/b.go",
+		"🏳️\u200d🌈🏳️\u200d🌈/x.go",
+		strings.Repeat("x", 200),
+		strings.Repeat("文", 60),
+	}
+
+	for _, in := range inputs {
+		for size := 0; size <= 40; size++ {
+			want := unicodeAwareTrimOneAtATime(in, size)
+			got := unicodeAwareTrim(in, size)
+			if got != want {
+				t.Errorf("unicodeAwareTrim(%q, %d) = %q, one at a time gives %q", in, size, got, want)
+			}
+		}
 	}
 }
