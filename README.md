@@ -178,9 +178,9 @@ Other similar projects,
 - [gocloc](https://github.com/hhatto/gocloc) a sloc counter in Go inspired by tokei
 - [loc](https://github.com/cgag/loc) rust implementation similar to tokei but often faster
 - [loccount](https://gitlab.com/esr/loccount) Go implementation written and maintained by ESR
-- [mezura](https://github.com/subamanis/mezura) fast code counter in C++
+- [mezura](https://github.com/subamanis/mezura) fast code counter in Rust
 - [polyglot](https://github.com/vmchale/polyglot) ATS sloc counter
-- [tokei](https://github.com/XAMPPRocky/tokei) fast, accurate and written in rust
+- [tokei](https://github.com/XAMPPRocky/tokei) fast, accurate and written in Rust
 - [sloc](https://github.com/flosse/sloc) coffeescript code counter
 - [stto](https://github.com/mainak55512/stto) new Go code counter with a focus on performance
 - [linejudge](https://github.com/loc-conformance/linejudge) conformance and differential testing suite for line counters
