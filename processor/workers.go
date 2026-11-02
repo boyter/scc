@@ -611,6 +611,12 @@ func codeState(
 
 		case TComplexityPostfix:
 			countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
+			// Skip past it for the same reason, so the ? that ends a ?? is not
+			// counted again in a language where ? is a check of its own.
+			if i+offsetJump >= endPoint {
+				return index, currentState, endString, endComments, false
+			}
+			i += max(offsetJump, 1) - 1
 
 		case TCode:
 			if i+offsetJump >= endPoint {
@@ -711,6 +717,7 @@ func codeStateSlow(
 
 			case TComplexityPostfix:
 				countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
+				i += max(offsetJump, 1) - 1
 
 			case TCode:
 				i += max(offsetJump, 1) - 1
@@ -859,6 +866,7 @@ func blankState(
 			fileJob.ContentByteType[index] = ByteTypeCode
 		}
 		countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
+		index += max(offsetJump, 1) - 1
 
 	case TCode:
 		currentState = SCode

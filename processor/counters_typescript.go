@@ -327,8 +327,13 @@ func tsBlankState(content []byte, tally *counterTally, index, endPoint, floor in
 	case '`':
 		return index, SString, ecmaBacktick
 	case '?':
-		if !Complexity && ecmaPostfixToken(content, index) != 0 && ecmaPostfixCounts(content, index) {
-			tally.Complexity++
+		// Stepped over for the same reason as the equality family below.
+		if length := ecmaPostfixToken(content, index); !Complexity && length != 0 {
+			if ecmaPostfixCounts(content, index) {
+				tally.Complexity++
+			}
+
+			return index + length - 1, SCode, nil
 		}
 
 		return index, SCode, nil
@@ -416,8 +421,18 @@ func tsCodeState(content []byte, tally *counterTally, index, endPoint, floor int
 
 			return i, SCode, nil
 		case '?':
-			if ecmaPostfixToken(content, i) != 0 && ecmaPostfixCounts(content, i) {
-				tally.Complexity++
+			// Stepped over the same way as the equality family below, so the ?.
+			// in a??.5 is not read as a second check.
+			if length := ecmaPostfixToken(content, i); length != 0 {
+				if ecmaPostfixCounts(content, i) {
+					tally.Complexity++
+				}
+
+				if i+length >= endPoint {
+					return i, SCode, nil
+				}
+
+				i += length - 1
 			}
 		case '!', '=':
 			// The equality family, matched forwards at its first byte and

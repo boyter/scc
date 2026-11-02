@@ -24,9 +24,9 @@ var (
 
 // ecmaPostfixToken reports the length of the postfix complexity check that begins
 // at index, or zero where none does. The trie the generic loop asks takes the
-// longest match, so ??= is answered before ??, and the caller does not step
-// over what it matched: the generic loop does not either, which is why a??.b
-// counts twice, once for the ?? and once for the ?. that overlaps it.
+// longest match, so ??= is answered before ??, and the caller steps over what
+// it matched the way the generic loop does, which is why a??.5 counts the ??
+// alone and not the ?. that overlaps it.
 func ecmaPostfixToken(content []byte, index int) int {
 	if index+1 >= len(content) {
 		return 0
