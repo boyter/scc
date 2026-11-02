@@ -161,7 +161,6 @@ func TestCountStatsBacktickNameKotlin(t *testing.T) {
 	}
 }
 
-
 // Elixir writes a character's code point as ?c, so ?" and ?' are code. Their
 // quote opened a string that ran on to the next one and swallowed the
 // comments in between.
@@ -181,6 +180,8 @@ func TestCountStatsCharLiteralQuoteElixir(t *testing.T) {
 	}
 	if fileJob.Comment != 2 {
 		t.Errorf("Expected 2 comments got %d", fileJob.Comment)
+	}
+}
 
 // OCaml and Nim write a double quote character as '"'. Its quote
 // opened a string that ran on to the next one and swallowed the comments in
