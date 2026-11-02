@@ -169,3 +169,101 @@ Dim s = "x"
 		t.Errorf("Expected 2 comments got %d", fileJob.Comment)
 	}
 }
+
+// Visual Basic keywords are written capitalised. Each If, ElseIf, For, While,
+// Until, Case and AndAlso or OrElse counts once, while the End If, Exit For and
+// End While that close or leave a block do not, even with a comment after
+// them, and neither does the Select Case in front of the Case lines.
+func TestCountStatsVisualBasicComplexity(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Visual Basic",
+	}
+
+	fileJob.SetContent(`If a AndAlso b Then
+    For i = 1 To 10
+        If i = 5 Then Exit For ' found it
+        Continue For
+    Next
+ElseIf c OrElse d Then
+    While x < 3
+        x += 1
+    End While ' x is 3
+Else
+    Select Case x
+        Case 1
+        Case Else
+    End Select
+End If ' done
+Do
+Loop Until x > 5
+`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Complexity != 10 {
+		t.Errorf("Expected complexity 10 got %d", fileJob.Complexity)
+	}
+}
+
+// VBA has no AndAlso or OrElse, so its And and Or count instead.
+func TestCountStatsVisualBasicForApplicationsComplexity(t *testing.T) {
+	ProcessConstants()
+	fileJob := FileJob{
+		Language: "Visual Basic for Applications",
+	}
+
+	fileJob.SetContent(`If a And b Then
+    For Each c In d
+        If c Or e Then Exit For ' found it
+    Next
+ElseIf f Then
+    Do While g
+    Loop
+End If ' done
+Select Case h
+    Case 1
+    Case Else
+End Select
+`)
+
+	CountStats(&fileJob)
+
+	if fileJob.Complexity != 9 {
+		t.Errorf("Expected complexity 9 got %d", fileJob.Complexity)
+	}
+}
+
+// The Rem inside x.Remove(0) is not a comment, so the rest of the line is
+// still read: the string opened after it runs on to the next line, and the
+// OrElse after it counts. Classifying the content takes the slower scan, which
+// has to agree.
+func TestCountStatsVisualBasicRemInsideWord(t *testing.T) {
+	ProcessConstants()
+
+	for _, classify := range []bool{false, true} {
+		fileJob := FileJob{
+			Language:        "Visual Basic",
+			ClassifyContent: classify,
+		}
+
+		fileJob.SetContent(`Dim s = x.Remove(0) & "first
+' still in the string"
+' a comment
+If x.Remove(1) OrElse y Then
+End If
+`)
+
+		CountStats(&fileJob)
+
+		if fileJob.Code != 4 {
+			t.Errorf("classify %v: Expected 4 code got %d", classify, fileJob.Code)
+		}
+		if fileJob.Comment != 1 {
+			t.Errorf("classify %v: Expected 1 comments got %d", classify, fileJob.Comment)
+		}
+		if fileJob.Complexity != 2 {
+			t.Errorf("classify %v: Expected complexity 2 got %d", classify, fileJob.Complexity)
+		}
+	}
+}
