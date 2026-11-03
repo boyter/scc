@@ -75,6 +75,8 @@ func TestJavaScriptCounterAgreesOnHandWrittenFiles(t *testing.T) {
 			{"overlapping postfix opening a line", "let x = a\n??.5;\n"},
 			{"equals after a nullish assignment", "a ??== b;\nc\n??== d;\na??=== b;\n"},
 			{"postfix at the end of the file", "let x = a ??\n"},
+			{"postfix one byte from the end of the file", "let x = a??."},
+			{"nullish assignment one byte from the end of the file", "a ??=="},
 			{"ternary is not a check", "let v = a ? b : c;\n"},
 			{"else is not written with a brace", "if (a) {}\nelse{}\nelse {}\n"},
 			{"while and switch want a space", "while(a) {}\nswitch(b) {}\nwhile (c) {}\nswitch (d) {}\n"},

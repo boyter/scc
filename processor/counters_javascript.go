@@ -424,13 +424,8 @@ func jsCodeState(content []byte, tally *counterTally, index, endPoint, floor int
 					tally.Complexity++
 				}
 
-				// The generic loop gives up the rest of the line when the step
-				// would land on or past the end, reporting the byte it matched
-				// at rather than the last byte of the file.
-				if i+length >= endPoint {
-					return i, SCode, nil
-				}
-
+				// A step to the end falls out of the loop below, the same as
+				// the generic loop does for a postfix check.
 				i = jsPostfixEnd(content, i, length)
 			}
 		default:

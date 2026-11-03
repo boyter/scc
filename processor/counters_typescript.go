@@ -422,14 +422,12 @@ func tsCodeState(content []byte, tally *counterTally, index, endPoint, floor int
 			return i, SCode, nil
 		case '?':
 			// Stepped over the same way as the equality family below, so the ?.
-			// in a??.5 is not read as a second check.
+			// in a??.5 is not read as a second check. A step to the end falls
+			// out of the loop rather than going back to where it matched, the
+			// same as the generic loop does for a postfix check.
 			if length := ecmaPostfixToken(content, i); length != 0 {
 				if ecmaPostfixCounts(content, i) {
 					tally.Complexity++
-				}
-
-				if i+length >= endPoint {
-					return i, SCode, nil
 				}
 
 				i += length - 1
