@@ -117,8 +117,8 @@ func TestIssue115(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(output, "Perl") {
-		t.Fatalf("Should not print Perl, output:\n%s", output)
+	if !strings.Contains(output, "Perl") {
+		t.Fatalf("Should detect the extensionless Perl script in a dotted directory, output:\n%s", output)
 	}
 }
 
