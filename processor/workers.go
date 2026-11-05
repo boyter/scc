@@ -233,6 +233,19 @@ func countComplexityPostfix(fileJob *FileJob, index, offsetJump int, postfixExcl
 	fileJob.bumpCognitive()
 }
 
+// markCode classifies the bytes from start to end, both included, as code. A
+// postfix check is stepped over rather than walked a byte at a time, and the
+// bytes after its first are code all the same.
+func markCode(fileJob *FileJob, start, end int) {
+	if fileJob.ContentByteType == nil {
+		return
+	}
+
+	for i := start; i <= end; i++ {
+		fileJob.ContentByteType[i] = ByteTypeCode
+	}
+}
+
 // bumpComplexityLine adds one complexity tick to the line currently being
 // counted. No-op when TrackComplexityLines is off — ComplexityLine is left
 // empty by CountStats in that case, so there is no slot to bump.
@@ -612,6 +625,12 @@ func codeState(
 
 		case TComplexityPostfix:
 			countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
+			// Skip past it for the same reason, so the ? that ends a ?? is not
+			// counted again in a language where ? is a check of its own. Unlike
+			// the check above, a jump to the end falls out of the loop rather
+			// than going back to where the token began, which would have the
+			// next scan start inside it.
+			i += max(offsetJump, 1) - 1
 
 		case TCode:
 			if i+offsetJump >= endPoint {
@@ -712,6 +731,11 @@ func codeStateSlow(
 
 			case TComplexityPostfix:
 				countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
+				// Stepped over as in codeState. index follows the jump, so a loop
+				// that ends here reports where it landed, as codeState does.
+				end := i + max(offsetJump, 1) - 1
+				markCode(fileJob, i+1, end)
+				i, index = end, end
 
 			case TCode:
 				i += max(offsetJump, 1) - 1
@@ -856,10 +880,10 @@ func blankState(
 
 	case TComplexityPostfix:
 		currentState = SCode
-		if fileJob.ContentByteType != nil {
-			fileJob.ContentByteType[index] = ByteTypeCode
-		}
 		countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
+		end := index + max(offsetJump, 1) - 1
+		markCode(fileJob, index, end)
+		index = end
 
 	case TCode:
 		currentState = SCode

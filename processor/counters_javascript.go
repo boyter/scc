@@ -294,6 +294,20 @@ func jsComplexityAtLineStart(content []byte, index, floor int) bool {
 	return false
 }
 
+// jsPostfixEnd is the last byte of the postfix check of the given length at
+// index, which the scan steps over the way the generic loop does. An = right
+// after the one that ends ??= is stepped over with it: it can only be the
+// anchor of a == that begins inside the check, which the generic loop never
+// sees.
+func jsPostfixEnd(content []byte, index, length int) int {
+	end := index + length - 1
+	if content[end] == '=' && end+1 < len(content) && content[end+1] == '=' {
+		end++
+	}
+
+	return end
+}
+
 // jsBlankState looks at the first byte of content on a line.
 func jsBlankState(content []byte, tally *counterTally, index, endPoint, floor int) (int, counterState, []byte) {
 	switch content[index] {
@@ -323,8 +337,12 @@ func jsBlankState(content []byte, tally *counterTally, index, endPoint, floor in
 	case '`':
 		return index, SString, ecmaBacktick
 	case '?':
-		if !Complexity && ecmaPostfixToken(content, index) != 0 && ecmaPostfixCounts(content, index) {
-			tally.Complexity++
+		if length := ecmaPostfixToken(content, index); !Complexity && length != 0 {
+			if ecmaPostfixCounts(content, index) {
+				tally.Complexity++
+			}
+
+			return jsPostfixEnd(content, index, length), SCode, nil
 		}
 
 		return index, SCode, nil
@@ -401,8 +419,14 @@ func jsCodeState(content []byte, tally *counterTally, index, endPoint, floor int
 
 			return i, SCode, nil
 		case '?':
-			if ecmaPostfixToken(content, i) != 0 && ecmaPostfixCounts(content, i) {
-				tally.Complexity++
+			if length := ecmaPostfixToken(content, i); length != 0 {
+				if ecmaPostfixCounts(content, i) {
+					tally.Complexity++
+				}
+
+				// A step to the end falls out of the loop below, the same as
+				// the generic loop does for a postfix check.
+				i = jsPostfixEnd(content, i, length)
 			}
 		default:
 			// Ninety three percent of anchor stops fail, and three quarters of

@@ -1164,6 +1164,64 @@ func TestCountStatsComplexityCheckBeginningALongerOne(t *testing.T) {
 	}
 }
 
+// A postfix check is stepped over once it matches, the same as any other
+// check, so Zen C's ?? and ??= count once rather than again for the ? that ends
+// them, and the ?. inside JavaScript's a??.5 does not count as well. That holds
+// at the end of a file with no newline too.
+func TestCountStatsComplexityPostfixCheckCountsOnce(t *testing.T) {
+	ProcessConstants()
+
+	checks := []struct {
+		language string
+		content  string
+		want     int64
+	}{
+		{"Zen C", "let x = a ?? b;\n", 1},
+		{"Zen C", "let x = a??b;\n", 1},
+		{"Zen C", "a ??= b;\n", 1},
+		{"Zen C", "a??=b;\n", 1},
+		{"Zen C", "let x = a\n    ?? b;\n", 1},
+		{"Zen C", "let x = p?.x ?? q?.y;\n", 3},
+		{"Zen C", "let x = f()?;\n", 1},
+		{"Zen C", "let x = a > b ? a : b;\n", 1},
+		{"Zen C", "a??;", 1},
+		{"Zen C", "a??=;", 1},
+		{"Zen C", "a??=", 1},
+		{"Zen C", "a\n??=;", 1},
+		{"JavaScript", "let x = a??.5;\n", 1},
+		{"JavaScript", "let x = a??.", 1},
+		{"TypeScript", "let x = a??.5;\n", 1},
+		{"TypeScript", "let x = a??.", 1},
+		{"Rust", "let x = f()??;\n", 2},
+	}
+
+	for _, c := range checks {
+		for _, classify := range []bool{false, true} {
+			fileJob := FileJob{Language: c.language, ClassifyContent: classify}
+			fileJob.SetContent(c.content)
+			CountStats(&fileJob)
+			if fileJob.Complexity != c.want {
+				t.Errorf("%s: expected complexity of %d got %d for %q (classify %v)", c.language, c.want, fileJob.Complexity, c.content, classify)
+			}
+		}
+	}
+}
+
+// The bytes of a postfix check after its first are stepped over, and are still
+// classified as code, whether the check is in the middle of a line or opens one.
+func TestClassifyContentPostfixCheckIsCode(t *testing.T) {
+	ProcessConstants()
+
+	for _, content := range []string{"a??=b;\n", "a ?? b;\n", "a\n??=b;\n", "a\n?? b;\n", "a??;"} {
+		fileJob := FileJob{Language: "Zen C", ClassifyContent: true}
+		fileJob.SetContent(content)
+		CountStats(&fileJob)
+		if got := string(fileJob.FilterContentByType(ByteTypeCode)); got != content {
+			t.Errorf("expected %q as code got %q", content, got)
+		}
+	}
+}
+
 type linecounter struct {
 	blanks   int
 	comments int
