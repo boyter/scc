@@ -2644,6 +2644,37 @@
       }
     ]
   },
+  "Faber": {
+    "complexitychecks": [
+      "for ",
+      "for(",
+      "if ",
+      "if(",
+      "while ",
+      "while(",
+      "else ",
+      "else{",
+      "match ",
+      "match(",
+      "|| ",
+      "&& ",
+      "!= ",
+      "== "
+    ],
+    "extensions": ["fab"],
+    "line_comment": ["#"],
+    "multi_line": [],
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "»",
+        "start": "«"
+      }
+    ]
+  },
   "Factor": {
     "complexitychecks": [
       "if",

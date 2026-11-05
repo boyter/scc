@@ -946,6 +946,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"Elm",
 		"EmiT",
 		"F#",
+		"Faber",
 		"Factor",
 		"Flow9",
 		"FSL",
