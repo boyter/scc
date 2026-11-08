@@ -1907,6 +1907,7 @@
       "!= ",
       "== "
     ],
+    "doubledquote": true,
     "extensions": ["v"],
     "keywords": [
       "Require",
@@ -1933,6 +1934,7 @@
     "quotes": [
       {
         "end": "\"",
+        "ignoreEscape": true,
         "start": "\""
       }
     ]

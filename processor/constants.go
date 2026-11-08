@@ -3694,7 +3694,7 @@ var languageDatabase = map[string]Language{
 			{
 				Start:        "\"",
 				End:          "\"",
-				IgnoreEscape: false,
+				IgnoreEscape: true,
 				DocString:    false,
 				Delimited:    false,
 			},
@@ -3702,6 +3702,7 @@ var languageDatabase = map[string]Language{
 		NestedMultiLine: true,
 		LineSplice:      false,
 		Escape:          "",
+		DoubledQuote:    true,
 		CaseInsensitive: false,
 		CommentIsWord:   false,
 		CodeTokens:      []string{},
