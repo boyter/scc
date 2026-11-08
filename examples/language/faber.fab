@@ -1,0 +1,14 @@
+# Faber line comments start with # at column 0.
+# C-style // and /* */ are rejected by the language.
+
+print "Hello World"
+print "hash inside string is # not a comment"
+print «guillemet string with "quotes" inside»
+
+if true {
+    print "branch"
+}
+
+while false {
+    print "loop"
+}
