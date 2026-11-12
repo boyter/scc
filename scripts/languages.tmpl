@@ -61,6 +61,9 @@ var languageDatabase = map[string]Language{
 		{{- if $value.DoubledQuote}}
 		DoubledQuote: true,
 		{{- end}}
+		{{- if $value.CloserEscapes}}
+		CloserEscapes: {{quote $value.CloserEscapes}},
+		{{- end}}
 		CaseInsensitive: {{$value.CaseInsensitive}},
 		CommentIsWord: {{$value.CommentIsWord}},
 		CodeTokens: []string{

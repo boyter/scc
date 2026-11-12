@@ -5544,6 +5544,7 @@
       "!= ",
       "== "
     ],
+    "closerescapes": "$'\\",
     "extensions": ["nix"],
     "line_comment": ["#"],
     "multi_line": [["/*", "*/"]],
@@ -5551,6 +5552,11 @@
       {
         "end": "\"",
         "start": "\""
+      },
+      {
+        "end": "''",
+        "ignoreEscape": true,
+        "start": "''"
       }
     ]
   },
