@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"io"
 	"path"
+	"regexp"
 	"strings"
 
 	"github.com/go-git/go-git/v5"
@@ -21,6 +22,7 @@ import (
 // conventions need extra handling.
 type historyIgnore struct {
 	matcher gitignore.Matcher
+	exclude []*regexp.Regexp // -M / --not-match
 }
 
 func (h *historyIgnore) Match(p string, isDir bool) bool {
@@ -29,6 +31,26 @@ func (h *historyIgnore) Match(p string, isDir bool) bool {
 	}
 	parts := strings.Split(p, "/")
 	return h.matcher.Match(parts, isDir)
+}
+
+// Skip reports whether the history reports should leave out the file at p:
+// it is ignored by .ignore / .sccignore, or a plain scc run would not count it
+// because of --exclude-dir, -M, or the extension and filename rules.
+func (h *historyIgnore) Skip(p string) bool {
+	if h.Match(p, false) {
+		return true
+	}
+	if _, ok := detectForJob(p, path.Base(p)); !ok {
+		return true
+	}
+	for dir := path.Dir(p); dir != "."; dir = path.Dir(dir) {
+		for _, deny := range PathDenyList {
+			if dir == deny || strings.HasSuffix(dir, "/"+deny) {
+				return true
+			}
+		}
+	}
+	return h != nil && pathExcluded(p, h.exclude)
 }
 
 // buildHistoryIgnore scans the HEAD tree for .ignore and .sccignore blobs,
@@ -72,10 +94,16 @@ func buildHistoryIgnore(repo *git.Repository, head plumbing.Hash) (*historyIgnor
 		return nil, err
 	}
 
-	if len(patterns) == 0 {
-		return &historyIgnore{}, nil
+	h := &historyIgnore{}
+	for _, exclude := range Exclude {
+		if re, err := regexp.Compile(exclude); err == nil {
+			h.exclude = append(h.exclude, re)
+		}
 	}
-	return &historyIgnore{matcher: gitignore.NewMatcher(patterns)}, nil
+	if len(patterns) != 0 {
+		h.matcher = gitignore.NewMatcher(patterns)
+	}
+	return h, nil
 }
 
 func splitDomain(dir string) []string {

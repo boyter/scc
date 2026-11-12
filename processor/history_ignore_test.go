@@ -36,6 +36,24 @@ func TestHistoryIgnoreNilSafe(t *testing.T) {
 	}
 }
 
+func TestHistoryIgnoreSkipsWhatScanSkips(t *testing.T) {
+	ProcessConstants()
+	oldFiles, oldDirs := ExcludeFilename, PathDenyList
+	defer func() { ExcludeFilename, PathDenyList = oldFiles, oldDirs }()
+	ExcludeFilename = []string{"package-lock.json"}
+	PathDenyList = []string{"vendor"}
+
+	h := &historyIgnore{}
+	for _, p := range []string{"package-lock.json", "web/package-lock.json", "vendor/lib.go", "a/vendor/lib.go"} {
+		if !h.Skip(p) {
+			t.Errorf("%s should be skipped", p)
+		}
+	}
+	if h.Skip("vendored.go") {
+		t.Errorf("vendored.go should not be skipped")
+	}
+}
+
 func TestSplitDomain(t *testing.T) {
 	cases := []struct {
 		in   string

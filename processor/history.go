@@ -381,7 +381,7 @@ func buildBaselineForObserver(collected []*object.Commit, ignore *historyIgnore,
 		if f.Mode == filemode.Dir || f.Mode == filemode.Submodule || f.Mode == filemode.Symlink {
 			return nil
 		}
-		if ignore != nil && ignore.Match(f.Name, false) {
+		if ignore.Skip(f.Name) {
 			return nil
 		}
 		reader, err := f.Reader()
@@ -443,7 +443,7 @@ func buildHeadSnapshot(headCommit *object.Commit, ignore *historyIgnore, cache *
 		if f.Mode == filemode.Dir || f.Mode == filemode.Submodule || f.Mode == filemode.Symlink {
 			return nil
 		}
-		if ignore != nil && ignore.Match(f.Name, false) {
+		if ignore.Skip(f.Name) {
 			return nil
 		}
 		reader, err := f.Reader()
@@ -556,7 +556,7 @@ func buildFileChange(change *object.Change, ignore *historyIgnore, cache *blobCl
 		return FileChange{}, false
 	}
 
-	if ignore != nil && ignore.Match(path, false) {
+	if ignore.Skip(path) {
 		return FileChange{}, false
 	}
 
