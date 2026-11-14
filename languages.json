@@ -6591,8 +6591,8 @@
     "extensions": ["ts"],
     "heuristics": [
       {
-        "pattern": "<\\?xml",
-        "literals": ["<?xml", "<!DOCTYPE TS>", "<TS version="],
+        "pattern": "<!DOCTYPE TS>|<TS\\s+version=",
+        "literals": ["<!DOCTYPE TS>", "<TS"],
         "anchored": false
       }
     ],
