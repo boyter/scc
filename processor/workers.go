@@ -361,7 +361,7 @@ func resetLineState(currentState int64, spliced bool, ignoreEscape bool) int64 {
 	return resetState(currentState)
 }
 
-func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, currentState int64, ignoreEscape bool, escape byte, doubledQuote bool) (int, int64) {
+func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, currentState int64, ignoreEscape bool, escape byte, doubledQuote bool, closerEscapes []byte) (int, int64) {
 	// A closer that starts with a newline is a heredoc's, which only a whole
 	// line can match. The newline alone is the Zig line string, and is not.
 	if len(endString) > 1 && endString[0] == '\n' {
@@ -406,6 +406,20 @@ func stringState(fileJob *FileJob, index int, endPoint int, endString []byte, cu
 		if ignoreEscape || !is_escaped {
 			if checkForMatchSingle(fileJob.Content[i], index, endPoint, endString, fileJob) {
 				if ignoreEscape && closerRunsOn(fileJob.Content, i, endPoint, endString) {
+					continue
+				}
+
+				// A closer with one of the language's escape bytes after it is an
+				// escape, such as the ''$ of a Nix indented string, so step over
+				// the closer and the byte together and keep reading the string.
+				if ignoreEscape && closerEscapedAt(fileJob.Content, i, endPoint, endString, closerEscapes) {
+					for j := i + 1; j <= i+len(endString); j++ {
+						if fileJob.ContentByteType != nil {
+							fileJob.ContentByteType[j] = ByteTypeString
+						}
+					}
+					i += len(endString)
+					index = i
 					continue
 				}
 
@@ -455,6 +469,15 @@ func closerRunsOn(content []byte, index, endPoint int, closer []byte) bool {
 	next := index + len(closer)
 
 	return next < endPoint && content[next] == last
+}
+
+// closerEscapedAt reports whether the closer that matched at index has one of
+// the language's closer escape bytes straight after it, which makes the two an
+// escape inside the string rather than its end. See Language.CloserEscapes.
+func closerEscapedAt(content []byte, index, endPoint int, closer []byte, escapes []byte) bool {
+	next := index + len(closer)
+
+	return len(escapes) != 0 && next < endPoint && bytes.IndexByte(escapes, content[next]) != -1
 }
 
 // doubledCloserAt reports whether the closer of one byte that matched at index
@@ -1741,7 +1764,7 @@ func countLoopGeneric(fileJob *FileJob, langFeatures LanguageFeature, bomSkip, e
 					langFeatures,
 				)
 			case SString:
-				index, currentState = stringState(fileJob, index, endPoint, endString, currentState, ignoreEscape, langFeatures.Escape, langFeatures.DoubledQuote)
+				index, currentState = stringState(fileJob, index, endPoint, endString, currentState, ignoreEscape, langFeatures.Escape, langFeatures.DoubledQuote, langFeatures.CloserEscapes)
 			case SDocString:
 				// For a docstring we can either move into blank in which case we count it as a docstring
 				// or back into code in which case it should be counted as code

@@ -103,6 +103,11 @@ type Language struct {
 	// @"say ""hi""". Only a closer of one byte is read this way; a raw """
 	// closes on a run of quotes instead, see closerRunsOn.
 	DoubledQuote bool `json:"doubledquote"`
+	// CloserEscapes lists the bytes that make the closer of a string with no
+	// backslash escape into an escape when one of them follows it straight
+	// away. Nix ends its indented string with '' and writes ''$, ''' and ''\
+	// inside one for a literal $, '' and backslash escape, none of which end it.
+	CloserEscapes string `json:"closerescapes"`
 	// CaseInsensitive marks a language that reads its own keywords in any case,
 	// so REM, rem and rEm all open a comment. The tokens are expanded into
 	// every spelling when the language is compiled rather than the match being
@@ -143,6 +148,7 @@ type LanguageFeature struct {
 	CommentIsWord         bool
 	Escape                byte
 	DoubledQuote          bool
+	CloserEscapes         []byte
 	PostfixExcludes       [][]byte
 	ComplexityCheckMask   byte
 	SingleLineCommentMask byte
