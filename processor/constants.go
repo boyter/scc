@@ -12833,11 +12833,10 @@ var languageDatabase = map[string]Language{
 		Keywords:        []string{},
 		Heuristics: []Heuristic{
 			{
-				Pattern: "<\\?xml",
+				Pattern: "<!DOCTYPE TS>|<TS\\s+version=",
 				Literals: []string{
-					"<?xml",
 					"<!DOCTYPE TS>",
-					"<TS version=",
+					"<TS",
 				},
 				Anchored: false,
 			},

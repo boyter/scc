@@ -412,6 +412,16 @@ func TestGuessLanguageQtTranslationSource(t *testing.T) {
 	}
 }
 
+func TestGuessLanguageTypeScriptWithXmlString(t *testing.T) {
+	ProcessConstants()
+
+	content := []byte("export const sitemap = `<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset></urlset>`\n")
+	res := DetermineLanguage("", "", []string{"Qt Translation Source", "TypeScript"}, content)
+	if res != "TypeScript" {
+		t.Errorf("Expected guessed language to have been TypeScript, got %s", res)
+	}
+}
+
 func TestGuessLanguageProGuard(t *testing.T) {
 	ProcessConstants()
 
