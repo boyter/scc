@@ -451,6 +451,17 @@ func swiftCodeState(content []byte, tally *counterTally, index, endPoint, floor 
 		endPoint--
 	}
 
+	// The last byte of the file, which the loop below stops short of and the
+	// generic loop hands back on its own. The ? is the one check of Swift short
+	// enough to sit there.
+	if index == endPoint && index == len(content)-1 {
+		if content[index] == '?' && stop['?'] && wordStartsAt(content, index, floor) {
+			tally.Complexity++
+		}
+
+		return index, SCode, nil, false
+	}
+
 	mask := stopMask(stop)
 
 	for i := index; i < endPoint; i++ {

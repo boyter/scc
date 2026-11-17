@@ -1244,6 +1244,48 @@ func TestCountStatsComplexityCheckAtEndOfFile(t *testing.T) {
 	}
 }
 
+// A check that is the last byte of a file counts the same as it does with a
+// newline after it, Rust's ? in particular, while the tail of a longer check
+// that ends the file, the second ? of Zen C's ??, still does not count again.
+func TestCountStatsComplexityCheckOnLastByte(t *testing.T) {
+	ProcessConstants()
+
+	checks := []struct {
+		language string
+		content  string
+		want     int64
+	}{
+		{"Rust", "fn f() { x?", 1},
+		{"Rust", "x?", 1},
+		{"Rust", "let x = f()??", 2},
+		{"Rust", "let s = \"?", 0},
+		{"Rust", "// x?", 0},
+		{"Swift", "let v = c ?", 1},
+		{"Swift", "let v = c ??", 2},
+		{"Zen C", "let x = f()?", 1},
+		{"Zen C", "let x = a ??", 1},
+		{"Zen C", "??", 0},
+		{"Zen C", "a??", 1},
+		{"Factor", ": f ( -- ) t ?", 1},
+		{"Brainfuck", "++", 2},
+		{"Brainfuck", "[-]", 3},
+		{"Brainfuck", "+", 1},
+	}
+
+	for _, c := range checks {
+		for _, content := range []string{c.content, c.content + "\n"} {
+			for _, classify := range []bool{false, true} {
+				fileJob := FileJob{Language: c.language, ClassifyContent: classify}
+				fileJob.SetContent(content)
+				CountStats(&fileJob)
+				if fileJob.Complexity != c.want {
+					t.Errorf("%s: expected complexity of %d got %d for %q (classify %v)", c.language, c.want, fileJob.Complexity, content, classify)
+				}
+			}
+		}
+	}
+}
+
 // The bytes of a postfix check after its first are stepped over, and are still
 // classified as code, whether the check is in the middle of a line or opens one.
 func TestClassifyContentPostfixCheckIsCode(t *testing.T) {

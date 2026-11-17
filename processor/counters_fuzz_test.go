@@ -134,6 +134,8 @@ func FuzzSpecialisedCounter(f *testing.F) {
 		"&'a str",
 		"fn f<T: ?Sized>() {}",
 		"let x = f()?;",
+		"let x = f()?",
+		"let v = c ?",
 		"/* a /* b */ c */",
 		"\"\"\"",
 		"\"\"\"x",

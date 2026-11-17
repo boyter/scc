@@ -417,3 +417,17 @@ func (root *Trie) Match(token []byte) (int, int, []byte) {
 	}
 	return node.Type, depth, node.Close
 }
+
+// whole reports whether all of token is one token of the trie, which is the
+// case Match reports a length one short for: its walk runs off the end of the
+// slice with no byte left to stop on.
+func (root *Trie) whole(token []byte) bool {
+	node := root
+	for _, c := range token {
+		if node = node.Table[c]; node == nil {
+			return false
+		}
+	}
+
+	return node.Type != 0
+}

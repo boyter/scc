@@ -634,6 +634,17 @@ func rustCodeState(content []byte, tally *counterTally, index, endPoint, floor i
 		endPoint--
 	}
 
+	// The last byte of the file, which the loop below stops short of and the
+	// generic loop hands back on its own. The postfix ? is the one check of
+	// Rust short enough to sit there.
+	if index == endPoint && index == len(content)-1 {
+		if content[index] == '?' && stop['?'] && rustPostfixCounts(content, index) {
+			tally.Complexity++
+		}
+
+		return index, SCode, nil, false
+	}
+
 	mask := stopMask(stop)
 
 	for i := index; i < endPoint; i++ {

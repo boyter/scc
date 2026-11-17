@@ -246,6 +246,47 @@ func markCode(fileJob *FileJob, start, end int) {
 	}
 }
 
+// checkLength is how many bytes the complexity check found at index takes up.
+// That is the length Match reported, except for a check that runs to the very
+// end of the file, where Match comes up a byte short. Stepping that short left
+// the last byte to be read again on its own, which in Zen C counts the second ?
+// of a ?? that ends the file as a check of its own.
+func checkLength(tokens *Trie, content []byte, index, offsetJump int) int {
+	if index+offsetJump == len(content)-1 && tokens.whole(content[index:]) {
+		return offsetJump + 1
+	}
+
+	return max(offsetJump, 1)
+}
+
+// markLastByte classifies the last byte of the file as code when a check that
+// runs to it is stepped over. The caller is handed back that byte and so never
+// classifies it, where before the step came up short and left it to the caller.
+func markLastByte(fileJob *FileJob, end int) {
+	if end == len(fileJob.Content)-1 {
+		markCode(fileJob, end, end)
+	}
+}
+
+// countCheckOnLastByte counts a complexity check that sits on the last byte of
+// the file. The code scan stops a byte short of the end, leaving that byte to
+// the caller as the end of the line, so a check of one byte there, Rust's ? with
+// no newline after it, was never looked at. Only a check is looked for: a quote
+// or a comment opener on the last byte has no line left to change.
+func countCheckOnLastByte(fileJob *FileJob, index int, langFeatures LanguageFeature) {
+	switch tokenType, offsetJump, _ := langFeatures.Tokens.Match(fileJob.Content[index:]); tokenType {
+	case TComplexity:
+		if (index == 0 || !isIdentifierContinue(fileJob.Content[index-1])) && ibmiComplexityToken(fileJob, index, offsetJump) {
+			fileJob.Complexity++
+			fileJob.bumpComplexityLine()
+			fileJob.bumpCognitive()
+		}
+
+	case TComplexityPostfix:
+		countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
+	}
+}
+
 // bumpComplexityLine adds one complexity tick to the line currently being
 // counted. No-op when TrackComplexityLines is off — ComplexityLine is left
 // empty by CountStats in that case, so there is no slot to bump.
@@ -556,6 +597,13 @@ func codeState(
 	stop := langFeatures.TokenFirst
 	start := index
 
+	// The loop below stops a byte short of the end of the file, so the last
+	// byte is handed back here on its own once the line has run that far.
+	if index == endPoint && index == len(content)-1 {
+		countCheckOnLastByte(fileJob, index, langFeatures)
+		return index, currentState, endString, endComments, false
+	}
+
 	i := start
 	for ; i < endPoint; i++ {
 		curByte := content[i]
@@ -641,13 +689,13 @@ func codeState(
 			// A jump to the end falls out of the loop rather than going back to
 			// where the token began, which would have the next scan start inside
 			// it and count the 為是 after all when 恆為是 ends the last line.
-			i += max(offsetJump, 1) - 1
+			i += checkLength(langFeatures.Tokens, content, i, offsetJump) - 1
 
 		case TComplexityPostfix:
 			countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
 			// Skip past it for the same reason, so the ? that ends a ?? is not
 			// counted again in a language where ? is a check of its own.
-			i += max(offsetJump, 1) - 1
+			i += checkLength(langFeatures.Tokens, content, i, offsetJump) - 1
 
 		case TCode:
 			if i+offsetJump >= endPoint {
@@ -664,10 +712,10 @@ func codeState(
 	}
 
 	// The byte at a time scan reports the last byte it looked at, which after a
-	// run to the end is the one before endPoint. Skipping over bytes does not
-	// change which byte that is.
+	// run to the end is the one before endPoint, or endPoint itself when the
+	// loop got there by stepping over a check that ends the file.
 	if endPoint > start {
-		index = endPoint - 1
+		index = min(i, endPoint+1) - 1
 	}
 
 	return index, currentState, endString, endComments, false
@@ -685,6 +733,12 @@ func codeStateSlow(
 	endComments [][]byte,
 	langFeatures LanguageFeature,
 ) (int, int64, []byte, [][]byte, bool) {
+	// The last byte of the file, as in codeState.
+	if index == endPoint && index == len(fileJob.Content)-1 {
+		countCheckOnLastByte(fileJob, index, langFeatures)
+		return index, currentState, endString, endComments, false
+	}
+
 	for i := index; i < endPoint; i++ {
 		curByte := fileJob.Content[i]
 		index = i
@@ -746,14 +800,15 @@ func codeStateSlow(
 				// (e.g. 為是 inside 恆為是) is not also counted. See #466. index
 				// follows the jump, so a loop that ends here reports where it
 				// landed, as codeState does.
-				end := i + max(offsetJump, 1) - 1
+				end := i + checkLength(langFeatures.Tokens, fileJob.Content, i, offsetJump) - 1
+				markLastByte(fileJob, end)
 				i, index = end, end
 
 			case TComplexityPostfix:
 				countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
 				// Stepped over as in codeState. index follows the jump, so a loop
 				// that ends here reports where it landed, as codeState does.
-				end := i + max(offsetJump, 1) - 1
+				end := i + checkLength(langFeatures.Tokens, fileJob.Content, i, offsetJump) - 1
 				markCode(fileJob, i+1, end)
 				i, index = end, end
 
@@ -896,12 +951,13 @@ func blankState(
 		}
 		// Skip past the matched token so a shorter token overlapping it
 		// (e.g. 為是 inside 恆為是) is not also counted. See #466.
-		index += max(offsetJump, 1) - 1
+		index += checkLength(langFeatures.Tokens, fileJob.Content, index, offsetJump) - 1
+		markLastByte(fileJob, index)
 
 	case TComplexityPostfix:
 		currentState = SCode
 		countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
-		end := index + max(offsetJump, 1) - 1
+		end := index + checkLength(langFeatures.Tokens, fileJob.Content, index, offsetJump) - 1
 		markCode(fileJob, index, end)
 		index = end
 
