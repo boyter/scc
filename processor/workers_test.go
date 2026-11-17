@@ -1207,6 +1207,43 @@ func TestCountStatsComplexityPostfixCheckCountsOnce(t *testing.T) {
 	}
 }
 
+// A check that ends a file, or ends the last line, is stepped over the same as
+// anywhere else, so a shorter check inside it does not count as well, the ==
+// in TypeScript's === or the 為是 in wenyan's 恆為是.
+func TestCountStatsComplexityCheckAtEndOfFile(t *testing.T) {
+	ProcessConstants()
+
+	checks := []struct {
+		language string
+		content  string
+		want     int64
+	}{
+		{"TypeScript", "let x = a === b;\n", 1},
+		{"TypeScript", "let x = a === b", 1},
+		{"TypeScript", "let x = a !== b", 1},
+		{"TypeScript", "a === b", 1},
+		{"ReScript", "let x = a === b", 1},
+		{"Raku", "my $x = $a !== 1", 1},
+		{"wenyan", "若「甲」恆為是者。\n", 2},
+		{"wenyan", "若「甲」恆為是\n", 2},
+		{"wenyan", "若「甲」恆為是", 2},
+		{"Factor", ": f ( -- ) t [ 1 ] [ 2 ] ?if ;\n", 1},
+		{"Factor", ": f ( -- ) t [ 1 ] [ 2 ] ?if\n", 1},
+		{"Factor", ": f ( -- ) t [ 1 ] [ 2 ] ?if", 1},
+	}
+
+	for _, c := range checks {
+		for _, classify := range []bool{false, true} {
+			fileJob := FileJob{Language: c.language, ClassifyContent: classify}
+			fileJob.SetContent(c.content)
+			CountStats(&fileJob)
+			if fileJob.Complexity != c.want {
+				t.Errorf("%s: expected complexity of %d got %d for %q (classify %v)", c.language, c.want, fileJob.Complexity, c.content, classify)
+			}
+		}
+	}
+}
+
 // The bytes of a postfix check after its first are stepped over, and are still
 // classified as code, whether the check is in the middle of a line or opens one.
 func TestClassifyContentPostfixCheckIsCode(t *testing.T) {

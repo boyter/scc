@@ -442,13 +442,9 @@ func tsCodeState(content []byte, tally *counterTally, index, endPoint, floor int
 					tally.Complexity++
 				}
 
-				// The generic loop gives up the rest of the line when the step
-				// would land on or past the end, reporting the byte it matched
-				// at rather than the last byte of the file.
-				if i+length >= endPoint {
-					return i, SCode, nil
-				}
-
+				// A step to the end falls out of the loop, the same as the
+				// generic loop does, so the == inside a === that ends the file
+				// is not read again.
 				i += length - 1
 			}
 		default:

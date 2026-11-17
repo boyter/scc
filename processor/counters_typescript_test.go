@@ -42,6 +42,8 @@ func TestTypeScriptCounterAgreesOnHandWrittenFiles(t *testing.T) {
 			{"strict equality at the start of a line", "const v = a\n!== b;\n"},
 			{"equality at the end of the file", "const v = a === "},
 			{"equality with nothing after it", "a ==="},
+			{"strict equality one byte from the end of the file", "const v = a === b"},
+			{"strict inequality one byte from the end of the file", "const v = a !== b"},
 			{"assignment is not a check", "let x = 1;\nlet y = 2;\n"},
 			{"arrow is not a check", "const f = () => 1;\n"},
 			{"type annotations", "function f(a: string, b?: number): void {}\n"},
