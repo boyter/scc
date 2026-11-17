@@ -638,21 +638,15 @@ func codeState(
 			// Skip past the matched token so a shorter token overlapping it
 			// (e.g. 為是 inside 恆為是) is not also counted. See #466.
 			//
-			// A jump that lands on or past the end leaves the byte at a time
-			// scan sitting on the token it just matched, so say so rather than
-			// falling out of the loop and reporting the last byte of the file.
-			if i+offsetJump >= endPoint {
-				return index, currentState, endString, endComments, false
-			}
+			// A jump to the end falls out of the loop rather than going back to
+			// where the token began, which would have the next scan start inside
+			// it and count the 為是 after all when 恆為是 ends the last line.
 			i += max(offsetJump, 1) - 1
 
 		case TComplexityPostfix:
 			countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
 			// Skip past it for the same reason, so the ? that ends a ?? is not
-			// counted again in a language where ? is a check of its own. Unlike
-			// the check above, a jump to the end falls out of the loop rather
-			// than going back to where the token began, which would have the
-			// next scan start inside it.
+			// counted again in a language where ? is a check of its own.
 			i += max(offsetJump, 1) - 1
 
 		case TCode:
@@ -749,8 +743,11 @@ func codeStateSlow(
 					fileJob.bumpCognitive()
 				}
 				// Skip past the matched token so a shorter token overlapping it
-				// (e.g. 為是 inside 恆為是) is not also counted. See #466.
-				i += max(offsetJump, 1) - 1
+				// (e.g. 為是 inside 恆為是) is not also counted. See #466. index
+				// follows the jump, so a loop that ends here reports where it
+				// landed, as codeState does.
+				end := i + max(offsetJump, 1) - 1
+				i, index = end, end
 
 			case TComplexityPostfix:
 				countComplexityPostfix(fileJob, index, offsetJump, langFeatures.PostfixExcludes)
