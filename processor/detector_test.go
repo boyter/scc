@@ -326,6 +326,25 @@ func TestScanSheBang(t *testing.T) {
 	}
 }
 
+func TestDetectSheBangEnvSplitString(t *testing.T) {
+	ProcessConstants()
+
+	cases := map[string]string{
+		"#!/usr/bin/env -S python3 -u":            "Python",
+		"#!/usr/bin/env -Spython3":                "Python",
+		"#!/usr/bin/env -S node --flag":           "JavaScript",
+		"#!/usr/bin/env FOO=bar python3":          "Python",
+		"#!/usr/bin/env --split-string python3":   "Python",
+		"#!/usr/bin/env -u ignored -S python3 -u": "Python",
+	}
+	for shebang, want := range cases {
+		got, err := DetectSheBang([]byte(shebang))
+		if err != nil || got != want {
+			t.Errorf("DetectSheBang(%q) = %q, %v; want %q", shebang, got, err, want)
+		}
+	}
+}
+
 // Randomly try things to see what happens
 func TestScanSheBangFuzz(t *testing.T) {
 	for range 1000 {
