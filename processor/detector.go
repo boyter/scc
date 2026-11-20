@@ -78,61 +78,45 @@ func DetectSheBang(content []byte) (string, error) {
 }
 
 func scanForSheBang(content []byte) (string, error) {
-	state := 0
-	lastSlash := 0
-
-	candidate1 := ""
-	candidate2 := ""
-
-loop:
-	for i := range content {
-		switch state {
-		case 0: // Deals with whitespace after #! and before first /
-			if content[i] == '/' {
-				lastSlash = i
-				state = 1
-			}
-		case 1: // Once we found the first / keep going till we hit whitespace
-			if content[i] == '/' {
-				lastSlash = i
-			}
-
-			// when at the end pull out the candidate
-			if i == len(content)-1 {
-				candidate1 = string(content[lastSlash+1 : i+1])
-			}
-
-			// between last slash and here is the first candidate which is either env or Perl/PHP/Python etc..
-			if isWhitespace(content[i]) {
-				// mark from lastSlash to here as first argument
-				candidate1 = string(content[lastSlash+1 : i])
-				state = 2
-			}
-		case 2: // We have the first candidate, see if there is another
-			// go till end of whitespace, mark that spot as new start
-			if !isWhitespace(content[i]) {
-				lastSlash = i
-				state = 3
-			}
-		case 3:
-			if i == len(content)-1 {
-				candidate2 = string(content[lastSlash : i+1])
-			}
-
-			if isWhitespace(content[i]) {
-				candidate2 = string(content[lastSlash:i])
-				state = 4
-			}
-		case 4:
-			break loop
-		}
+	line := strings.TrimSpace(strings.TrimPrefix(string(content), "#!"))
+	fields := strings.Fields(line)
+	if len(fields) == 0 {
+		return "", errUnableToDetermineShebangCmd
 	}
 
-	switch {
-	case candidate1 == "env":
-		return candidate2, nil
-	case candidate1 != "":
-		return candidate1, nil
+	command := func(value string) string {
+		if i := strings.LastIndexByte(value, '/'); i >= 0 {
+			return value[i+1:]
+		}
+		return value
+	}
+
+	interpreter := command(fields[0])
+	if interpreter != "env" {
+		return interpreter, nil
+	}
+
+	for i := 1; i < len(fields); i++ {
+		arg := fields[i]
+		if arg == "--" || strings.HasPrefix(arg, "-") {
+			// GNU env's -S/--split-string options may be written with the
+			// command attached (-Spython3); the other options are flags.
+			if strings.HasPrefix(arg, "-S") && len(arg) > 2 {
+				return command(arg[2:]), nil
+			}
+			if strings.HasPrefix(arg, "--split-string=") {
+				return command(strings.TrimPrefix(arg, "--split-string=")), nil
+			}
+			if arg == "-u" || arg == "-C" || arg == "--unset" || arg == "--chdir" || arg == "--argv0" {
+				i++
+			}
+			continue
+		}
+		if strings.Contains(arg, "=") {
+			// Environment assignments precede the command when using env.
+			continue
+		}
+		return command(arg), nil
 	}
 
 	return "", errUnableToDetermineShebangCmd
