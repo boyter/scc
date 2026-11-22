@@ -6631,6 +6631,43 @@
     "quotes": [],
     "shebangs": ["Rscript"]
   },
+  "RON": {
+    "complexitychecks": [],
+    "extensions": ["ron"],
+    "line_comment": ["//"],
+    "multi_line": [["/*", "*/"]],
+    "nestedmultiline": true,
+    "quotes": [
+      {
+        "end": "\"",
+        "start": "\""
+      },
+      {
+        "end": "'",
+        "start": "'"
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"",
+        "start": "r\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"#",
+        "start": "r#\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"##",
+        "start": "r##\""
+      },
+      {
+        "ignoreEscape": true,
+        "end": "\"###",
+        "start": "r###\""
+      }
+    ]
+  },
   "RPG": {
     "complexitychecks": ["COMP", "IF", "ELSEIF", "WHEN", "DOW", "DOU", "FOR", "IFEQ", "IFNE", "IFLT", "IFLE", "IFGT", "IFGE", "WHENEQ", "WHENNE", "WHENLT", "WHENLE", "WHENGT", "WHENGE", "DOWEQ", "DOWNE", "DOWLT", "DOWLE", "DOWGT", "DOWGE", "DOUEQ", "DOUNE", "DOULT", "DOULE", "DOUGT", "DOUGE", "CABEQ", "CABNE", "CABLT", "CABLE", "CABGT", "CABGE", "CASEQ", "CASNE", "CASLT", "CASLE", "CASGT", "CASGE"],
     "caseinsensitive": true,
