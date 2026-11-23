@@ -12905,6 +12905,77 @@ var languageDatabase = map[string]Language{
 		FileNames:       []string{},
 		SheBangs:        []string{},
 	},
+	"RON": {
+		LineComment: []string{
+			"//",
+		},
+		ComplexityChecks: []string{},
+		Extensions: []string{
+			"ron",
+		},
+		ExtensionFile: false,
+		MultiLine: [][]string{
+			{
+				"/*",
+				"*/",
+			},
+		},
+		Quotes: []Quote{
+			{
+				Start:        "\"",
+				End:          "\"",
+				IgnoreEscape: false,
+				DocString:    false,
+				Delimited:    false,
+			},
+			{
+				Start:        "'",
+				End:          "'",
+				IgnoreEscape: false,
+				DocString:    false,
+				Delimited:    false,
+			},
+			{
+				Start:        "r\"",
+				End:          "\"",
+				IgnoreEscape: true,
+				DocString:    false,
+				Delimited:    false,
+			},
+			{
+				Start:        "r#\"",
+				End:          "\"#",
+				IgnoreEscape: true,
+				DocString:    false,
+				Delimited:    false,
+			},
+			{
+				Start:        "r##\"",
+				End:          "\"##",
+				IgnoreEscape: true,
+				DocString:    false,
+				Delimited:    false,
+			},
+			{
+				Start:        "r###\"",
+				End:          "\"###",
+				IgnoreEscape: true,
+				DocString:    false,
+				Delimited:    false,
+			},
+		},
+		NestedMultiLine: true,
+		LineSplice:      false,
+		Escape:          "",
+		CaseInsensitive: false,
+		CommentIsWord:   false,
+		CodeTokens:      []string{},
+		Heredoc:         false,
+		Keywords:        []string{},
+		Heuristics:      []Heuristic{},
+		FileNames:       []string{},
+		SheBangs:        []string{},
+	},
 	"RPG": {
 		LineComment: []string{},
 		ComplexityChecks: []string{

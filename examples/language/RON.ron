@@ -1,0 +1,39 @@
+// testing
+Config(
+    title: "RON examples",
+
+    int_value: 42,
+    float_value: 3.1415,
+    is_active: true,
+    initial: 'a',
+
+    colors: ["red", "green", "blue"],
+
+    /* servers */
+    servers: [
+        Server(
+            name: "alpha",
+            ip: "192.168.1.1",
+        ),
+        Server(
+            name: "beta",
+            ip: "192.168.1.2",
+        ),
+    ],
+
+    database: (
+        server: "127.0.1.1",
+        ports: [8001, 8002, 8003],
+        connection_max: 5000,
+        enabled: true,
+    ),
+
+    // nested
+    owner: Some((
+        name: "scc",
+        contact: {
+            "address": "test",
+            "phone": "+xx-xxx-xxx-xxxx",
+        },
+    )),
+)

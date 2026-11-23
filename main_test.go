@@ -1015,6 +1015,7 @@ func TestSpecificLanguages(t *testing.T) {
 		"Rebol",
 		"Redscript",
 		"Rich Text Format",
+		"RON",
 		"Ruby",
 		"Rust",
 		"Scala",
