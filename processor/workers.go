@@ -1554,6 +1554,17 @@ func (ctx processorContext) fileProcessorWorker(input chan *FileJob, output chan
 func (ctx processorContext) processFile(job *FileJob) bool {
 	fileStartTime := makeTimestampNano()
 
+	// UTF-16 with a BOM is counted as the UTF-8 it decodes to, from language
+	// detection on, so every step sees the same text. The counters walk
+	// job.Bytes as the content length, so it follows the decoded text while
+	// counting and goes back to the size on disk for the report.
+	if decoded, ok := decodeUTF16BOM(job.Content); ok {
+		diskBytes := job.Bytes
+		job.Content = decoded
+		job.Bytes = int64(len(decoded))
+		defer func() { job.Bytes = diskBytes }()
+	}
+
 	contents := job.Content
 
 	// Needs to always run to ensure the language is set

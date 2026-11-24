@@ -774,6 +774,14 @@ func classifyHistoryBlob(path string, blob []byte) (*FileJob, []LineType, bool) 
 		TrackComplexityLines: true,
 	}
 
+	// Same transcoding as processFile, so history classifies a UTF-16 file's
+	// lines rather than dropping it as binary.
+	if decoded, ok := decodeUTF16BOM(blob); ok {
+		blob = decoded
+		job.Content = decoded
+		job.Bytes = int64(len(decoded))
+	}
+
 	job.Language = DetermineLanguage(job.Filename, job.Language, job.PossibleLanguages, job.Content)
 	if job.Language == SheBang {
 		cutoff := min(len(blob), 200)

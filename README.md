@@ -1043,6 +1043,20 @@ For example to exclude files over 1,000 lines and 50kb you could use the followi
 
 `scc --no-large --large-byte-count 50000 --large-line-count 1000`
 
+`--large-byte-count` and the Bytes column always use the file's size on disk.
+
+### Text Encodings
+
+`scc` counts UTF-8 and ASCII, with or without a UTF-8 BOM. A file that opens
+with a UTF-16 byte order mark (`FF FE` little endian, `FE FF` big endian), as
+SQL Server Management Studio and Visual Studio save by default, is decoded to
+UTF-8 before language detection and counting. Its lines, code, comments and
+complexity are those of the decoded text, while the Bytes column stays the
+size on disk. With `-d`, a UTF-16 copy of a UTF-8 file counts as a duplicate.
+
+UTF-16 without a BOM, and UTF-32, cannot be told apart from binary cheaply and
+are skipped as binary. Run with `-v` to see which files were skipped.
+
 ### Minified/Generated File Detection
 
 You can have `scc` identify and optionally remove files identified as being minified or generated from the output.
