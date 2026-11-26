@@ -37,6 +37,26 @@ var (
 	locationLogMutex  = sync.Mutex{}
 )
 
+// maxTrackedLocations bounds locationTracker so that requests for an endless
+// stream of unique paths cannot grow it without limit.
+const maxTrackedLocations = 1000
+
+// allowedProviders are the only hosts we will clone from. The provider comes
+// straight from the request path and is spliced into the clone URL as the
+// host, so anything not on this list must be rejected before building it.
+var allowedProviders = map[string]bool{
+	"github":    true,
+	"gitlab":    true,
+	"bitbucket": true,
+	"codeberg":  true,
+	"git.sr.ht": true,
+}
+
+// validPathPart limits user and repo segments to characters that appear in
+// real user and repository names (sr.ht users are prefixed with ~), so they
+// cannot carry URL syntax such as ?, #, @ or : into the clone URL.
+var validPathPart = regexp.MustCompile(`^[a-z0-9._~-]+$`)
+
 func intPtr(i int) *int {
 	return &i
 }
@@ -136,7 +156,9 @@ func appendLocationLog(log string) {
 		return
 	}
 	locationLog = append(locationLog, log)
-	locationTracker[log] = locationTracker[log] + 1
+	if _, ok := locationTracker[log]; ok || len(locationTracker) < maxTrackedLocations {
+		locationTracker[log] = locationTracker[log] + 1
+	}
 
 	if len(locationLog) > 100 {
 		locationLog = locationLog[1:]
@@ -218,7 +240,8 @@ func (l *location) String() string {
 // that contains the location user and repo which is what most
 // repositories need
 // returns an error if we get anything other than 3 parts since thats
-// the format we expect
+// the format we expect, if the provider is not one we support, or if
+// the user or repo contain characters outside a conservative allowlist
 func processUrlPath(path string) (location, error) {
 	path = strings.ToLower(path)
 	path = strings.TrimPrefix(path, "/")
@@ -230,6 +253,16 @@ func processUrlPath(path string) (location, error) {
 
 	if s[0] == "sr.ht" {
 		s[0] = "git.sr.ht"
+	}
+
+	if !allowedProviders[s[0]] {
+		return location{}, errors.New("unsupported provider")
+	}
+
+	for _, part := range s[1:] {
+		if part == "." || part == ".." || !validPathPart.MatchString(part) {
+			return location{}, errors.New("invalid user or repo")
+		}
 	}
 
 	return location{

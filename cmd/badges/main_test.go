@@ -3,6 +3,7 @@ package main
 import (
 	"net/url"
 	"reflect"
+	"strconv"
 	"testing"
 )
 
@@ -312,4 +313,58 @@ func Test_locationString_NilPanic(t *testing.T) {
 
 	// Panics before the fix: runtime error: invalid memory address or nil pointer dereference
 	_ = loc.String()
+}
+
+func Test_processUrlPath_Rejects(t *testing.T) {
+	bad := []string{
+		"/10.0.0.5:3000?/u/r",       // SSRF: %3F decoded to ? by net/http
+		"/10.0.0.5:3000#/u/r",       // fragment variant
+		"/localhost/u/r",            // unsupported host
+		"/evil.example/u/r",         // unsupported host
+		"/169.254.169.254/latest/m", // metadata endpoint
+		"/github/u@evil/r",          // userinfo-like syntax in user
+		"/github/u/r?x",             // query syntax in repo
+		"/github/../r",              // dot segment
+		"/github/u/..",              // dot segment
+		"/github/u:1/r",             // port-like syntax
+	}
+	for _, p := range bad {
+		if _, err := processUrlPath(p); err == nil {
+			t.Errorf("processUrlPath(%q) expected error", p)
+		}
+	}
+}
+
+func Test_processUrlPath_Accepts(t *testing.T) {
+	good := map[string]string{
+		"/github/boyter/scc/":        "https://github.com/boyter/scc.git",
+		"/gitlab/user/repo":          "https://gitlab.com/user/repo.git",
+		"/bitbucket/user/repo":       "https://bitbucket.org/user/repo.git",
+		"/codeberg/user/repo.name_1": "https://codeberg.org/user/repo.name_1.git",
+		"/sr.ht/~sircmpwn/scdoc":     "https://git.sr.ht/~sircmpwn/scdoc",
+	}
+	for p, want := range good {
+		loc, err := processUrlPath(p)
+		if err != nil {
+			t.Errorf("processUrlPath(%q) unexpected error %v", p, err)
+			continue
+		}
+		if got := loc.String(); got != want {
+			t.Errorf("processUrlPath(%q).String() = %q, want %q", p, got, want)
+		}
+	}
+}
+
+func Test_appendLocationLog_Bounded(t *testing.T) {
+	locationLogMutex.Lock()
+	locationLog = []string{}
+	locationTracker = map[string]int{}
+	locationLogMutex.Unlock()
+
+	for i := 0; i < maxTrackedLocations*2; i++ {
+		appendLocationLog("https://github.com/u/r" + strconv.Itoa(i) + ".git")
+	}
+	if len(locationTracker) > maxTrackedLocations {
+		t.Errorf("locationTracker grew to %d, want <= %d", len(locationTracker), maxTrackedLocations)
+	}
 }
