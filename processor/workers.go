@@ -234,7 +234,7 @@ func countComplexityPostfix(fileJob *FileJob, index, offsetJump int, postfixExcl
 }
 
 // markCode classifies the bytes from start to end, both included, as code. A
-// postfix check is stepped over rather than walked a byte at a time, and the
+// complexity check is stepped over rather than walked a byte at a time, and the
 // bytes after its first are code all the same.
 func markCode(fileJob *FileJob, start, end int) {
 	if fileJob.ContentByteType == nil {
@@ -257,15 +257,6 @@ func checkLength(tokens *Trie, content []byte, index, offsetJump int) int {
 	}
 
 	return max(offsetJump, 1)
-}
-
-// markLastByte classifies the last byte of the file as code when a check that
-// runs to it is stepped over. The caller is handed back that byte and so never
-// classifies it, where before the step came up short and left it to the caller.
-func markLastByte(fileJob *FileJob, end int) {
-	if end == len(fileJob.Content)-1 {
-		markCode(fileJob, end, end)
-	}
 }
 
 // countCheckOnLastByte counts a complexity check that sits on the last byte of
@@ -799,9 +790,9 @@ func codeStateSlow(
 				// Skip past the matched token so a shorter token overlapping it
 				// (e.g. 為是 inside 恆為是) is not also counted. See #466. index
 				// follows the jump, so a loop that ends here reports where it
-				// landed, as codeState does.
+				// landed, as codeState does. The bytes stepped over are code.
 				end := i + checkLength(langFeatures.Tokens, fileJob.Content, i, offsetJump) - 1
-				markLastByte(fileJob, end)
+				markCode(fileJob, i+1, end)
 				i, index = end, end
 
 			case TComplexityPostfix:
@@ -950,9 +941,11 @@ func blankState(
 			fileJob.bumpCognitive()
 		}
 		// Skip past the matched token so a shorter token overlapping it
-		// (e.g. 為是 inside 恆為是) is not also counted. See #466.
-		index += checkLength(langFeatures.Tokens, fileJob.Content, index, offsetJump) - 1
-		markLastByte(fileJob, index)
+		// (e.g. 為是 inside 恆為是) is not also counted. See #466. The bytes
+		// stepped over are code.
+		end := index + checkLength(langFeatures.Tokens, fileJob.Content, index, offsetJump) - 1
+		markCode(fileJob, index, end)
+		index = end
 
 	case TComplexityPostfix:
 		currentState = SCode
