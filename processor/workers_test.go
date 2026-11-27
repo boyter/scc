@@ -1301,6 +1301,29 @@ func TestClassifyContentPostfixCheckIsCode(t *testing.T) {
 	}
 }
 
+// The same goes for the bytes of any other check, in the middle of a line or
+// opening one. Only the first byte of the if, the else or the && was code, and
+// the rest of it was left blank.
+func TestClassifyContentComplexityCheckIsCode(t *testing.T) {
+	ProcessConstants()
+
+	for _, c := range []struct{ language, content string }{
+		{"Go", "if x {\n}\n"},
+		{"Go", "x := 1; if y {\n"},
+		{"Go", "x\n} else if y {\n"},
+		{"Java", "a && b;\n"},
+		{"Java", "a\n&& b;\n"},
+		{"Go", "x\nif "},
+	} {
+		fileJob := FileJob{Language: c.language, ClassifyContent: true}
+		fileJob.SetContent(c.content)
+		CountStats(&fileJob)
+		if got := string(fileJob.FilterContentByType(ByteTypeCode)); got != c.content {
+			t.Errorf("%s: expected %q as code got %q", c.language, c.content, got)
+		}
+	}
+}
+
 type linecounter struct {
 	blanks   int
 	comments int
